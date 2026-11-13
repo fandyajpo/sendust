@@ -29,7 +29,7 @@
 | [P02](../phases/phase-02.md) | Architecture | [P02-003](../phases/phase-02.md) | Design transport lifecycle, concurrency, and timeout budgets | L | P02-001 | COMPLETED |
 | [P02](../phases/phase-02.md) | Architecture | [P02-004](../phases/phase-02.md) | Specify memory ownership, limits, and attachment policy | M | P02-001 | COMPLETED |
 | [P02](../phases/phase-02.md) | Architecture | [P02-005](../phases/phase-02.md) | Architecture review, ADR freeze, and implementation handoff | S | P02-001, P02-002, P02-003, P02-004 | COMPLETED |
-| [P03](../phases/phase-03.md) | Repository | [P03-001](../phases/phase-03.md) | Create the workspace and two-crate skeleton | M | P02-005 | NOT STARTED |
+| [P03](../phases/phase-03.md) | Repository | [P03-001](../phases/phase-03.md) | Create the workspace and two-crate skeleton | M | P02-005, A01-004 | NOT STARTED |
 | [P03](../phases/phase-03.md) | Repository | [P03-002](../phases/phase-03.md) | Define dependency pinning, feature, and license policy | S | P03-001, P01-002 | NOT STARTED |
 | [P03](../phases/phase-03.md) | Repository | [P03-003](../phases/phase-03.md) | Establish formatting, linting, type-check, and unit-test commands | M | P03-001 | NOT STARTED |
 | [P03](../phases/phase-03.md) | Repository | [P03-004](../phases/phase-03.md) | Scaffold deterministic fake SMTP and TLS test harness seams | L | P03-001 | NOT STARTED |
