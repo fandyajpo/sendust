@@ -56,7 +56,7 @@ In scope: RC verification, approval review, publication checklist, publication e
 
 ## Technical implementation details
 
-Publication is gated by the frozen architecture. The artifact must contain exactly the two-crate implementation exposed through napi: `TS -> napi -> core -> lettre`, with `lettre 0.11.23`, Tokio 1 managed by napi, and rustls `ring`/`webpki-roots` with verification always on. No custom SMTP unless Phase 01 explicitly justified it. MVP has no pooling and no automatic retries; success means relay acceptance, not delivery; post-DATA ambiguity is `unknown` and not retried. One active send returns `BUSY`; no queue. Close is explicit and bounded by 125s, never GC-dependent. Timeouts are connect 10s, operation 30s, total 120s, close 125s, finite and tunable. JS buffers are copied before async. Attachments are opt-in, regular-file only, no URLs, with caps of 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, and 30 MiB wire. Envelope local parts are ASCII, domains IDNA, display/body Unicode; SMTPUTF8 is post-MVP. AbortSignal is optional and not required. Candidate Node 22/24/26 claims must match validated evidence.
+Publication is gated by the architecture approved at P02-005. The artifact must contain exactly the two-crate implementation exposed through napi: `TS -> napi -> core -> lettre`, with `lettre 0.11.23`, Tokio 1 managed by napi, and rustls `ring`/`webpki-roots` with verification always on. No custom SMTP unless Phase 01 explicitly justified it. MVP has no pooling and no automatic retries; success means relay acceptance, not delivery; an explicit negative final DATA reply is `rejected`; a missing/indeterminate final reply after DATA may have reached the relay is `unknown`; neither is retried. One active send returns `BUSY`; no queue. Close is explicit and bounded by 125s, never GC-dependent. Timeouts are connect 10s, operation 30s, total 120s, close 125s, finite and tunable. JS buffers are copied before async. Attachments are opt-in, regular-file only, no URLs, with caps of 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, and 30 MiB wire. Envelope local parts are ASCII, domains IDNA, display/body Unicode; SMTPUTF8 is post-MVP. AbortSignal is optional and not required. Candidate Node 22/24/26 claims must match validated evidence.
 
 ## Dependencies
 
@@ -68,7 +68,7 @@ Publishing the wrong artifact, stale release notes, unsupported platform claims,
 
 ## Testing requirements
 
-From the exact candidate artifact, run accepted send, pre-DATA rejection, mixed RCPT ADR behavior, post-DATA `451` unknown, BUSY, double close, send-after-close, TLS certificate failure, attachment opt-in disabled/enabled, cap rejection, and buffer mutation smoke. Run from a clean consumer against local fake SMTP/TLS only. Verify published artifact hash, install path, native binary selection, documentation links, and support matrix. Add negative tests for unauthorized publication and hash mismatch.
+From the exact candidate artifact, run accepted send, pre-DATA rejection, mixed RCPT ADR behavior, explicit final DATA `451` rejection and missing-final-reply-after-DATA unknown, BUSY, double close, send-after-close, TLS certificate failure, attachment opt-in disabled/enabled, cap rejection, and buffer mutation smoke. Run from a clean consumer against local fake SMTP/TLS only. Verify published artifact hash, install path, native binary selection, documentation links, and support matrix. Add negative tests for unauthorized publication and hash mismatch.
 
 ## Acceptance criteria
 
