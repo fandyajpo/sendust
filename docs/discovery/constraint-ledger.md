@@ -11,8 +11,8 @@ This ledger maps every authoritative constraint C-01 through C-30 to its archite
 | C-01 | Exactly two Rust crates; core has no Node linkage | ADR-0001 | P02-001, P03-001, P04-005; dependency-tree check | Architecture defined |
 | C-02 | TS → napi → core → lettre; dependencies point downward | ADR-0001/0002 | P02-001, P03-001, P09-001; dependency graph | Architecture defined |
 | C-03 | lettre 0.11.23; no custom SMTP without proof | ADR-0002 | P01-001/P01-003; P06-001/P06-005 | Source-reviewed; lower-level API selected |
-| C-04 | napi-managed Tokio 1; no second runtime | ADR-0004 | P01-004, P05-003; runtime integration tests | Docs-reviewed; runtime probe remains |
-| C-05 | Node-API 8 | ADR-0004 | P01-004, P05-001, P14-004; ABI matrix | Source-compatible; runtime tests remain |
+| C-04 | napi-managed Tokio 1; no second runtime | ADR-0004 | P01-004, P05-003; runtime integration tests | Source-reviewed; napi async feature enables tokio_rt; runtime probe remains |
+| C-05 | Node-API 8 | ADR-0004 | P01-004, P05-001, P14-004; ABI matrix | napi8 feature explicitly required; runtime tests remain |
 | C-06 | Node 22/24/26 are candidates only | ADR-0004/0011 | P01-004, P14-004, P15-001; blocking CI matrix | Candidate-only |
 | C-07 | rustls + ring + webpki-roots; verification on; TLS 1.2 minimum | ADR-0003 | P01-002, P06-002, P11-002; certificate fixtures | Feature graph source-reviewed; compile/fixtures remain |
 | C-08 | One active send per transport; immediate BUSY | ADR-0006 | P02-003, P04-004, P09-004, P10-001; race tests | Architecture defined |
