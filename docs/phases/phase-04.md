@@ -70,7 +70,7 @@ Phase 04 requires Phase 03 approval. P04-001/002/003/004 depend on P03-005 and t
 - IDNA mapping can change domain length and label validity; punycode boundaries need coverage.
 - Timeouts implemented as independent timers can exceed total; shared deadlines are mandatory.
 - Close during an in-flight lettre future may drop it at an unsafe point; drop behavior must be tested for leaks and hangs.
-- Partial RCPT status may be inaccessible; the conservative pre-DATA rejection path must be first-class.
+- The pinned lower-level API exposes RCPT replies; the remaining risk is whether mixed-recipient behavior matches the source contract under real SMTP dialogue. If not, block and supersede ADR-0005.
 - Attachment reads may hit special files or change between stat and read; reject non-regular and bound reads.
 
 ## Testing requirements
@@ -93,7 +93,7 @@ Core tests are Rust unit/integration tests with no Node runtime. Required concre
 
 - Core implements all MVP validation, limits, state, timeout, and SMTP orchestration with relay-accepted semantics.
 - Core has no Node linkage and all tests run as Rust tests.
-- Recipient behavior matches the research ADR, including conservative pre-DATA rejection when partial status is unavailable.
+- Recipient behavior matches ADR-0005: explicit RCPT refusals are preserved, accepted recipients share one DATA transaction, and no per-recipient message fan-out occurs.
 - No custom SMTP, pooling, retries, SMTPUTF8, URL attachments, or GC-dependent close.
 - Fault fixtures pass locally without external network.
 
