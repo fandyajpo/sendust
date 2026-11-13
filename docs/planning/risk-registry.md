@@ -52,7 +52,7 @@ Likelihood: Low / Medium / High. Impact: Low / Medium / High / Critical.
 | R-032 | musl targets cannot be built or runtime-tested in CI | Medium | Medium | Decide in P14-003; drop target or label unsupported; never silently claim | P14 | OPEN |
 | R-033 | Windows MSVC runtime dependency surprises consumers | Low | Medium | Document runtime requirement; clean-install test | P14, P15 | OPEN |
 | R-034 | Documentation implies delivery or automatic retry | Medium | High | Semantic contract; prohibited-claims checklist; docs accuracy gate | P15 | PLANNED |
-| R-035 | Scope creep adds pooling, retry, templates, provider APIs, or queue/job infrastructure | Medium | High | Feature matrix; non-goals; gate review; post-MVP only through P18 | All gates | PLANNED |
+| R-035 | Scope creep adds pooling, retry, templates, provider APIs, or queue/job infrastructure | Medium | High | Feature matrix; non-goals; gate review; queue/job work requires a separate product decision and is not implicitly eligible for P18 | All gates | PLANNED |
 | R-036 | TypeScript wrapper and Rust core drift in status/error semantics | Medium | High | Single mapping source; golden tests; no wrapper reinterpretation | P09, P12 | PLANNED |
 | R-037 | Dual ESM/CJS packaging creates duplicate class identities or native loads | Low | Medium | Single shared implementation; mixed-format test; loader cache | P14 | PLANNED |
 | R-038 | Premature optimization destabilizes correctness | Medium | Medium | Budgets before measurement; optimize only measured hotspots; re-run QA | P13 | PLANNED |
