@@ -76,7 +76,7 @@ Enforced by P02-003, P04-004, P09-004, P10-001.
 
 ### C-10 — Timeout budgets
 
-Defaults: connect 10 s, per-operation 30 s, total send 120 s, close/drain 125 s. Every value MUST be finite and tunable within documented bounds; zero, negative, `NaN`, and infinite values MUST be rejected. Exact stage attribution MUST be reported only where P01-003 proves it observable. **UNRESOLVED:** stage observability (P01-003).
+Defaults: connect 10 s, per-operation 30 s, total send 120 s, close/drain 125 s. Every value MUST be finite and tunable within documented bounds; zero, negative, `NaN`, and infinite values MUST be rejected. Exact stage attribution MUST be reported only where P01-003 proves it observable. Stage attribution is limited to coarse public API operations; internal socket sub-stage timing is not promised.
 
 Enforced by P01-003, P02-003, P04-004, P10-002.
 
@@ -130,11 +130,9 @@ AbortSignal support is optional and MUST NOT be required for MVP. Bounded close 
 
 Enforced by P02-003, P09-004, P18-002.
 
-### C-18 — Recipient partial failure — UNRESOLVED
+### C-18 — Recipient-level SMTP outcomes
 
-Whether lettre’s async SMTP API exposes per-recipient RCPT status is **UNRESOLVED**. P01-003 MUST inspect the lower-level async connection API; P06-003 MUST implement the outcome.
-
-If per-recipient status is inaccessible, Sendust MUST reject the entire envelope before DATA and retain honest `unknown`/`attempted` statuses. Sendust MUST NOT send independent per-recipient messages to simulate partial success.
+Sendust MUST observe each RCPT reply through lettre's public lower-level async connection API. A 2xx RCPT reply is accepted at the envelope stage; a 4xx/5xx reply is a definitive rejection for that recipient. If at least one recipient is accepted, Sendust MUST submit exactly one DATA transaction to the accepted-recipient subset. A recipient is `accepted` only after positive final DATA. If final DATA is explicitly refused, those accepted-RCPT recipients become `rejected`; if final disposition is unknown, they become `unknown`. Sendust MUST NOT send independent per-recipient messages.
 
 Enforced by P01-003, P02-002, P06-003, P09-002.
 
