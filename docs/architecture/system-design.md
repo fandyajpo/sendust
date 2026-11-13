@@ -272,7 +272,7 @@ export interface TransportOptions {
 
 export interface Message {
   from: string | { name?: string; address: string };
-  to: Array<string | { name?: string; address: string }>;
+  to?: Array<string | { name?: string; address: string }>;
   cc?: Array<string | { name?: string; address: string }>;
   bcc?: Array<string | { name?: string; address: string }>;
   replyTo?: Array<string | { name?: string; address: string }>;
