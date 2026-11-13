@@ -22,7 +22,7 @@
 5. lettre's connect timeout only bounds TCP attempts. Sendust must apply an outer connect deadline around DNS, connect, greeting, EHLO, and TLS negotiation.
 6. Use lettre features with defaults disabled: smtp-transport, tokio1-rustls, ring, webpki-roots. This excludes lettre's default pool and native-tls features. Compilation is a P03-002 hard gate.
 7. Required STARTTLS has no plaintext fallback. Implicit TLS is also supported. Certificate and hostname verification stay enabled; lettre's dangerous bypass builder methods are prohibited and never exposed by Sendust.
-8. Node 22/24/26 remain candidates; no support claim is made until blocking CI tests pass.
+8. napi 3.16.2 defaults to napi4; Sendust explicitly enables napi8 and async. Node 22/24/26 remain candidates; no support claim is made until blocking CI tests pass.
 
 ## Environment limitation
 
