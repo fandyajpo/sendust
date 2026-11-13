@@ -70,6 +70,12 @@ jobs:
       - name: Documentation structure
         run: node scripts/check-docs.mjs
 
+      - name: Secret scan self-test
+        run: node scripts/check-secrets.mjs --selftest
+
+      - name: Secret scan
+        run: node scripts/check-secrets.mjs
+
   typescript:
     name: TypeScript (Node.js ${{ matrix.node-version }})
     runs-on: ubuntu-latest

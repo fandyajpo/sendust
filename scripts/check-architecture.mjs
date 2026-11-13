@@ -262,6 +262,27 @@ function checkTestHarness() {
       fail(`missing TLS fixture tests/fixtures/tls/${name}`);
     }
   }
+
+  // The test CA and intermediate signing keys must never be committed: only
+  // certificates and the leaf keys needed to serve them belong in the repo.
+  for (const name of ["ca.key", "intermediate.key"]) {
+    if (existsSync(join(tlsDir, name))) {
+      fail(`TLS fixtures must not contain a signing key: tests/fixtures/tls/${name}`);
+    }
+  }
+
+  const leafKeys = new Set([
+    "valid-server.key",
+    "self-signed.key",
+    "expired.key",
+    "wrong-host.key",
+    "incomplete-chain.key",
+  ]);
+  for (const name of readdirSync(tlsDir)) {
+    if (name.endsWith(".key") && !leafKeys.has(name)) {
+      fail(`unexpected private key in TLS fixtures: tests/fixtures/tls/${name}`);
+    }
+  }
 }
 
 checkWorkspaceShape();

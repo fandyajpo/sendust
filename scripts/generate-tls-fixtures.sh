@@ -5,6 +5,12 @@
 # network access. The generated key material is test-only and has no value
 # outside this repository.
 #
+# Trust-anchor and intermediate signing keys are written to a temporary
+# directory and discarded. Only certificates and leaf server keys are committed,
+# so nothing in this repository can sign a new certificate. Re-running the
+# script mints a new test CA and replaces every fixture; commit that as one
+# change.
+#
 # Usage: scripts/generate-tls-fixtures.sh [output-dir]
 set -euo pipefail
 
@@ -50,8 +56,8 @@ keyUsage=critical,keyCertSign,cRLSign
 EXT
 
 # --- Trust anchor ----------------------------------------------------------
-key "$dest/ca.key"
-openssl req -x509 -new -key "$dest/ca.key" -out "$dest/ca.crt" \
+key "$work/ca.key"
+openssl req -x509 -new -key "$work/ca.key" -out "$dest/ca.crt" \
   -not_before "$not_before" -not_after "$not_after" \
   -subj "$subject/CN=Sendust Test Root CA" \
   -addext "basicConstraints=critical,CA:TRUE" \
@@ -60,7 +66,7 @@ openssl req -x509 -new -key "$dest/ca.key" -out "$dest/ca.crt" \
 # --- Valid server certificate signed by the trust anchor -------------------
 key "$dest/valid-server.key"
 csr "$dest/valid-server.key" "$work/valid.csr" "$subject/CN=localhost"
-openssl x509 -req -in "$work/valid.csr" -CA "$dest/ca.crt" -CAkey "$dest/ca.key" \
+openssl x509 -req -in "$work/valid.csr" -CA "$dest/ca.crt" -CAkey "$work/ca.key" \
   -set_serial 1001 -not_before "$not_before" -not_after "$not_after" \
   -extfile "$work/server.ext" -out "$dest/valid-server.crt" 2>/dev/null
 
@@ -77,27 +83,27 @@ openssl req -x509 -new -key "$dest/self-signed.key" -out "$dest/self-signed.crt"
 # --- Expired server certificate (validity window in the past) --------------
 key "$dest/expired.key"
 csr "$dest/expired.key" "$work/expired.csr" "$subject/CN=localhost"
-openssl x509 -req -in "$work/expired.csr" -CA "$dest/ca.crt" -CAkey "$dest/ca.key" \
+openssl x509 -req -in "$work/expired.csr" -CA "$dest/ca.crt" -CAkey "$work/ca.key" \
   -set_serial 1002 -not_before "$expired_before" -not_after "$expired_after" \
   -extfile "$work/server.ext" -out "$dest/expired.crt" 2>/dev/null
 
 # --- Certificate for the wrong hostname ------------------------------------
 key "$dest/wrong-host.key"
 csr "$dest/wrong-host.key" "$work/wrong-host.csr" "$subject/CN=wrong.example"
-openssl x509 -req -in "$work/wrong-host.csr" -CA "$dest/ca.crt" -CAkey "$dest/ca.key" \
+openssl x509 -req -in "$work/wrong-host.csr" -CA "$dest/ca.crt" -CAkey "$work/ca.key" \
   -set_serial 1003 -not_before "$not_before" -not_after "$not_after" \
   -extfile "$work/wrong-host.ext" -out "$dest/wrong-host.crt" 2>/dev/null
 
 # --- Incomplete chain: leaf issued by an intermediate whose CA is withheld -#
-key "$dest/intermediate.key"
-csr "$dest/intermediate.key" "$work/intermediate.csr" "$subject/CN=Sendust Test Intermediate CA"
-openssl x509 -req -in "$work/intermediate.csr" -CA "$dest/ca.crt" -CAkey "$dest/ca.key" \
+key "$work/intermediate.key"
+csr "$work/intermediate.key" "$work/intermediate.csr" "$subject/CN=Sendust Test Intermediate CA"
+openssl x509 -req -in "$work/intermediate.csr" -CA "$dest/ca.crt" -CAkey "$work/ca.key" \
   -set_serial 2001 -not_before "$not_before" -not_after "$not_after" \
   -extfile "$work/intermediate.ext" -out "$dest/intermediate.crt" 2>/dev/null
 
 key "$dest/incomplete-chain.key"
 csr "$dest/incomplete-chain.key" "$work/incomplete.csr" "$subject/CN=localhost"
-openssl x509 -req -in "$work/incomplete.csr" -CA "$dest/intermediate.crt" -CAkey "$dest/intermediate.key" \
+openssl x509 -req -in "$work/incomplete.csr" -CA "$dest/intermediate.crt" -CAkey "$work/intermediate.key" \
   -set_serial 2002 -not_before "$not_before" -not_after "$not_after" \
   -extfile "$work/server.ext" -out "$dest/incomplete-chain.crt" 2>/dev/null
 
@@ -107,4 +113,4 @@ printf '%s\n' \
   'c2VuZHVzdC10ZXN0LW1hbGZvcm1lZC1jZXJ0aWZpY2F0ZQ==' \
   '-----END CERTIFICATE-----' > "$dest/malformed.pem"
 
-echo "generated TLS fixtures in $dest"
+echo "generated TLS fixtures in $dest (authority keys discarded)"
