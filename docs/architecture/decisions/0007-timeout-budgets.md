@@ -1,6 +1,6 @@
 # ADR-0007 — Finite timeout budgets and limited stage attribution
 
-**Status:** ACCEPTED (coarse-stage design); runtime timing validation required at P10-002  
+**Status:** ACCEPTED (architecture baseline; coarse-stage design); runtime timing validation required at P10-002  
 **Date:** 2026-11-13  
 **Deciders:** Architecture review (P02-005)  
 **Validated by:** P01-003, P04-004, P10-002
