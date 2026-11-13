@@ -22,7 +22,7 @@
 | [P01](../phases/phase-01.md) | Research | [P01-001](../phases/phase-01.md) | Analyze lettre 0.11.23 async SMTP and version constraints | M | P00-005 | COMPLETED |
 | [P01](../phases/phase-01.md) | Research | [P01-002](../phases/phase-01.md) | Validate rustls ring/webpki-roots feature and verification posture | S | P01-001 | COMPLETED |
 | [P01](../phases/phase-01.md) | Research | [P01-003](../phases/phase-01.md) | Determine recipient partial-failure and timeout-stage observability | L | P01-001 | COMPLETED |
-| [P01](../phases/phase-01.md) | Research | [P01-004](../phases/phase-01.md) | Validate Node 22/24/26, Node-API 8, and napi-managed Tokio lifecycle | M | P00-005 | COMPLETED |
+| [P01](../phases/phase-01.md) | Research | [P01-004](../phases/phase-01.md) | Research Node-API 8 and define Node runtime/lifecycle probe plan | M | P00-005 | COMPLETED |
 | [P01](../phases/phase-01.md) | Research | [P01-005](../phases/phase-01.md) | Research decision gate and ADR handoff | S | P01-001, P01-002, P01-003, P01-004 | COMPLETED |
 | [P02](../phases/phase-02.md) | Architecture | [P02-001](../phases/phase-02.md) | Define crate boundaries and dependency direction | M | P01-005 | COMPLETED |
 | [P02](../phases/phase-02.md) | Architecture | [P02-002](../phases/phase-02.md) | Specify the public status, result, and error contract | L | P02-001, P01-003 | COMPLETED |
