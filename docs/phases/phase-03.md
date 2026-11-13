@@ -129,9 +129,9 @@ requires the P03-005 gate record. The lockfile-gated `npm ci` and `--locked`
 paths are also still unexercised; CI falls back to `npm install` and emits a
 warning until the lockfile is committed.
 
-`Cargo.lock` and `package-lock.json` are not committed yet. CI installs with
-`npm install` and emits a warning until the lockfile is committed from a
-pinned-toolchain run; that fallback is removed once the lockfile lands.
+`Cargo.lock` is committed and every Rust CI command runs with `--locked`.
+`package-lock.json` is not committed yet: CI installs with `npm install` and
+emits a warning until that lockfile is committed from a pinned-npm run.
 
 
 ## Multi-runtime amendment requirements

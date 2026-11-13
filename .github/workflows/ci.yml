@@ -28,14 +28,14 @@ jobs:
         run: cargo fmt --all -- --check
 
       - name: Rust lint
-        run: cargo clippy --workspace --all-targets -- -D warnings
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
 
       # Proves the core needs neither Node headers nor the NAPI crate.
       - name: Core-only unit tests
-        run: cargo test -p sendust-core --all-targets
+        run: cargo test -p sendust-core --all-targets --locked
 
       - name: Fake SMTP harness self-tests
-        run: cargo test -p sendust-core --test harness_self_test
+        run: cargo test -p sendust-core --test harness_self_test --locked
 
       - name: Verify committed TLS fixtures
         run: |
@@ -48,10 +48,10 @@ jobs:
           ! openssl x509 -in malformed.pem -noout
 
       - name: Native binding compiles
-        run: cargo check -p sendust-napi --all-targets
+        run: cargo check -p sendust-napi --all-targets --locked
 
       - name: Workspace Rust tests
-        run: cargo test --workspace --all-targets
+        run: cargo test --workspace --all-targets --locked
 
   checks:
     name: Architecture and documentation checks
@@ -62,7 +62,7 @@ jobs:
       - name: Verify pinned Rust toolchain
         run: |
           rustup show
-          cargo metadata --format-version 1 --no-deps > /dev/null
+          cargo metadata --format-version 1 --no-deps --locked > /dev/null
 
       - name: Architecture and module boundaries
         run: node scripts/check-architecture.mjs
