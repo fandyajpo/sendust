@@ -6,7 +6,7 @@
 
 ## Objective
 
-Expose the Rust core through a minimal Node-API 8 binding while preserving ownership, error, lifecycle, and runtime guarantees.
+Expose the Rust core through a minimal Node-API 8 binding while preserving ownership, error, lifecycle, and runtime guarantees across Node.js, Bun, and Deno.
 
 ## Scope
 
@@ -36,7 +36,7 @@ In scope: `crates/sendust-napi/src`, copied Buffer inputs, napi-managed Tokio 1 
 - **Status:** NOT STARTED
 - **Prerequisites:** P05-001, P04-004
 - **Description:** Run core futures through napi’s Tokio 1-managed runtime, retain explicit transport ownership, implement idempotent close and bounded drain, and map overlapping sends to immediate `BUSY`. Do not create a custom runtime or GC-dependent finalizer behavior.
-- **Evidence criteria:** Node tests cover close during connect/DATA, double close, send after close, concurrent send, forced GC, and process exit. Close completes or reports deadline failure by 125s.
+- **Evidence criteria:** Blocking tests on Node.js, Bun, and Deno cover close during connect/DATA, double close, send after close, concurrent send, forced GC where supported, and process exit. Close completes or reports deadline failure by 125s.
 
 ### P05-004 — Implement stable result/error conversion
 
@@ -51,7 +51,7 @@ In scope: `crates/sendust-napi/src`, copied Buffer inputs, napi-managed Tokio 1 
 - **Size:** S
 - **Status:** NOT STARTED
 - **Prerequisites:** P05-001, P05-002, P05-003, P05-004
-- **Description:** Verify Node-API 8 compilation, core isolation, ownership, lifecycle, and mapping against the architecture contract on candidate Node 22/24/26.
+- **Description:** Verify Node-API 8 compilation, core isolation, ownership, lifecycle, and mapping against the architecture contract on pinned Node.js, Bun, and Deno versions.
 - **Evidence criteria:** Binding tests pass on every available candidate; unsupported candidates are documented. Core still builds without Node. All five tasks have evidence and no API drift.
 
 ## Technical implementation details
@@ -68,7 +68,7 @@ Borrowed memory, runtime ownership mistakes, finalizer races, Node-version diffe
 
 ## Testing requirements
 
-Use local fake SMTP/TLS fixtures for success, mixed RCPT, explicit final DATA `451` rejection, missing-final-reply-after-DATA unknown, TLS failures, resets, and delays. Add Buffer mutation/detachment, concurrent `BUSY`, explicit close, close deadline, double close, send-after-close, redaction, and Node 22/24/26 lifecycle tests. No external network or production credentials.
+Use local fake SMTP/TLS fixtures for success, mixed RCPT, explicit final DATA `451` rejection, missing-final-reply-after-DATA unknown, TLS failures, resets, and delays. Add Buffer mutation/detachment, concurrent `BUSY`, explicit close, close deadline, double close, send-after-close, redaction, and pinned Node.js, Bun, and Deno lifecycle tests. No external network or production credentials.
 
 ## Acceptance criteria
 
