@@ -36,7 +36,7 @@ In scope: relay session configuration, TLS and authentication, MAIL/RCPT/DATA tr
 - **Status:** NOT STARTED
 - **Prerequisites:** P01-003, P06-001
 - **Description:** Implement the P01-003 / ADR-0005 selected behavior: use AsyncSmtpConnection.command(Rcpt::new(...)) and Error::status() to observe each recipient reply. Continue after explicit 4xx/5xx RCPT refusal; if no recipient is accepted, do not issue DATA. Otherwise send exactly one DATA transaction to the accepted subset. No fallback to whole-envelope rejection and no per-recipient message fan-out.
-- **Evidence criteria:** Implementation evidence shows either honest per-recipient RCPT results or explicit pre-DATA envelope rejection when any recipient is rejected. Mixed fixture first `250`, second `550` produces the ADR outcome and never sends separate messages. Data after a pre-DATA rejection is asserted absent. The gate record names the lower-level API inspected or documents inaccessibility.
+- **Evidence criteria:** Mixed fixture first `250`, second `550` records the first recipient as accepted only after final DATA 2xx and the second as rejected. Exactly one DATA transaction is sent to the accepted subset. When every RCPT reply is negative, no DATA command is sent. No per-recipient independent message is ever sent.
 
 ### P06-004 — Normalize SMTP responses, unknown-after-DATA, and no-retry behavior
 
