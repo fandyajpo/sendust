@@ -16,31 +16,32 @@ This documentation set is the source of truth for product scope, requirements, a
 | 5 | [Constraint ledger](discovery/constraint-ledger.md) | C-01..C-30 traceability |
 | 6 | [Threat model](discovery/threat-model.md) | Assets, trust boundaries, and abuse cases |
 | 7 | [lettre source validation](research/lettre-0.11.23-validation.md) | Pinned API and feature research |
-| 8 | [Architecture overview](architecture/overview.md) | Approved architecture shape and boundaries |
-| 9 | [System design](architecture/system-design.md) | Modules, types, state machine, test seams |
-| 10 | [Public API contract](architecture/public-api.md) | Approved design contract; implementation gate P09 |
-| 11 | [Data flow](architecture/data-flow.md) | Send and close across layers |
-| 12 | [Error model](architecture/error-model.md) | Outcomes, error codes, redaction |
-| 13 | [Architecture approval matrix](architecture/approval-matrix.md) | Approved decisions and downstream validations |
-| 14 | [ADR index](architecture/decisions/README.md) | Architecture decision records |
-| 15 | [Master roadmap](planning/master-roadmap.md) | All 19 phases and outcomes |
-| 16 | [Phase index](planning/phase-index.md) | Entry point to every phase plan |
-| 17 | [Task registry](planning/task-registry.md) | All 95 tasks and prerequisites |
-| 18 | [Dependency graph](planning/dependency-graph.md) | Phase DAG and critical path |
-| 19 | [Milestones](planning/milestones.md) | M0–M7 exit criteria |
-| 20 | [Quality gates](planning/quality-gates.md) | QG-00–QG-17 |
-| 21 | [Definition of done](planning/definition-of-done.md) | Evidence rules |
-| 22 | [Risk registry](planning/risk-registry.md) | Risk IDs, mitigations, owners |
-| 23 | [Dependency research](engineering/dependency-research.md) | Observed facts and sources |
-| 24 | [Testing strategy](engineering/testing-strategy.md) | Test layers, fixtures, fault matrix |
-| 25 | [Security strategy](engineering/security-strategy.md) | TLS, injection, redaction, supply chain |
-| 26 | [Reliability strategy](engineering/reliability-strategy.md) | Lifecycle, timeouts, races, cleanup |
-| 27 | [Performance strategy](engineering/performance-strategy.md) | Budgets and measurement |
-| 28 | [Distribution strategy](engineering/distribution-strategy.md) | Platform matrix and native artifacts |
-| 29 | [Release strategy](engineering/release-strategy.md) | Versioning, RC, publication, rollback |
-| 30 | [QG-00 discovery gate](gates/phase-00-discovery.md) | Discovery approval evidence |
-| 31 | [QG-01 research gate](gates/phase-01-research.md) | Research approval evidence |
-| 32 | [QG-02 architecture gate](gates/phase-02-architecture-approval.md) | Architecture approval evidence |
+| 8 | [Node runtime validation plan](research/node-runtime-validation-plan.md) | Node-API 8 candidate matrix and lifecycle probes |
+| 9 | [Architecture overview](architecture/overview.md) | Approved architecture shape and boundaries |
+| 10 | [System design](architecture/system-design.md) | Modules, types, state machine, test seams |
+| 11 | [Public API contract](architecture/public-api.md) | Approved design contract; implementation gate P09 |
+| 12 | [Data flow](architecture/data-flow.md) | Send and close across layers |
+| 13 | [Error model](architecture/error-model.md) | Outcomes, error codes, redaction |
+| 14 | [Architecture approval matrix](architecture/approval-matrix.md) | Approved decisions and downstream validations |
+| 15 | [ADR index](architecture/decisions/README.md) | Architecture decision records |
+| 16 | [Master roadmap](planning/master-roadmap.md) | All 19 phases and outcomes |
+| 17 | [Phase index](planning/phase-index.md) | Entry point to every phase plan |
+| 18 | [Task registry](planning/task-registry.md) | All 95 tasks and prerequisites |
+| 19 | [Dependency graph](planning/dependency-graph.md) | Phase DAG and critical path |
+| 20 | [Milestones](planning/milestones.md) | M0–M7 exit criteria |
+| 21 | [Quality gates](planning/quality-gates.md) | QG-00–QG-17 |
+| 22 | [Definition of done](planning/definition-of-done.md) | Evidence rules |
+| 23 | [Risk registry](planning/risk-registry.md) | Risk IDs, mitigations, owners |
+| 24 | [Dependency research](engineering/dependency-research.md) | Observed facts and sources |
+| 25 | [Testing strategy](engineering/testing-strategy.md) | Test layers, fixtures, fault matrix |
+| 26 | [Security strategy](engineering/security-strategy.md) | TLS, injection, redaction, supply chain |
+| 27 | [Reliability strategy](engineering/reliability-strategy.md) | Lifecycle, timeouts, races, cleanup |
+| 28 | [Performance strategy](engineering/performance-strategy.md) | Budgets and measurement |
+| 29 | [Distribution strategy](engineering/distribution-strategy.md) | Platform matrix and native artifacts |
+| 30 | [Release strategy](engineering/release-strategy.md) | Versioning, RC, publication, rollback |
+| 31 | [QG-00 discovery gate](gates/phase-00-discovery.md) | Discovery approval evidence |
+| 32 | [QG-01 research gate](gates/phase-01-research.md) | Research approval evidence |
+| 33 | [QG-02 architecture gate](gates/phase-02-architecture-approval.md) | Architecture approval evidence |
 
 ## 2. Directory map
 
@@ -51,7 +52,7 @@ This documentation set is the source of truth for product scope, requirements, a
     │   ├── constraint-ledger.md
     │   └── threat-model.md
     ├── research/
-    │   └── lettre-0.11.23-validation.md
+    │   ├── lettre-0.11.23-validation.md\n│   └── node-runtime-validation-plan.md
     ├── gates/
     │   ├── phase-00-discovery.md
     │   ├── phase-01-research.md
