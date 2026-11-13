@@ -140,7 +140,7 @@
 ## 6. Research conclusions that constrain the plan
 
 1. Use lettre 0.11.23's public lower-level AsyncSmtpConnection API; do not write a custom SMTP client.
-2. Use napi-rs v3 with the napi-managed Tokio 1 runtime; do not create a second runtime.
+2. Pin napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0; enable napi8 and async explicitly; use the napi-managed Tokio 1 runtime and do not create a second runtime.
 3. Node-API 8 is the approved ABI design floor; compile/runtime validation remains P05/P14 work.
 4. Use the source-reviewed lettre feature set: defaults off, smtp-transport, tokio1-rustls, ring, webpki-roots. Cargo build/tree validation remains P03-002.
 5. Treat Node 22/24/26 as candidates only; see the [runtime validation plan](../research/node-runtime-validation-plan.md).
