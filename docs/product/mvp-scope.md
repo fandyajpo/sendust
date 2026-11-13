@@ -118,7 +118,11 @@ Any addition requires:
 
 Features cannot enter the MVP through implementation first and documentation later. Anything discovered mid-implementation that is not in this scope is recorded as post-MVP unless it is required for correctness or security; security fixes are always in scope.
 
-## 6. Runtime and platform target policy\n\nNode.js, Bun, and Deno are required MVP runtimes. Support is not claimed until the exact runtime version and OS/CPU/ABI combination passes blocking Sendust CI. Deno requires local node_modules and --allow-ffi. Initial platform candidates are Linux x64 glibc, Linux ARM64 glibc, Linux x64 musl, macOS x64, macOS ARM64, and Windows x64 MSVC; Linux ARM64 musl remains an extended candidate. See ADR-0015.\n\n## 7. Known limitations to document at release
+## 6. Runtime and platform target policy
+
+Node.js, Bun, and Deno are required MVP runtimes. Support is not claimed until the exact runtime version and OS/CPU/ABI combination passes blocking Sendust CI. Deno requires local `node_modules` and `--allow-ffi`. Initial platform candidates are Linux x64 glibc, Linux ARM64 glibc, Linux x64 musl, macOS x64, macOS ARM64, and Windows x64 MSVC; Linux ARM64 musl remains an extended candidate. See [ADR-0015](../architecture/decisions/0015-multi-runtime-support.md).
+
+## 7. Known limitations to document at release
 
 - One active send per transport; no internal queue, worker, scheduler, or queue adapter. Queueing and scheduling remain caller-owned.
 - No automatic retry; `unknown` requires caller judgment.
