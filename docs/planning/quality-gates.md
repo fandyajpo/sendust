@@ -33,19 +33,19 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 | Constraint ledger | Every constraint C-01..C-30 has an owner task and validation path | P00-002 ledger |
 | Provenance | Version claims labeled observed or candidate, with sources | P00-003 table |
 | Threat boundary | Assets, trust boundaries, abuse cases, test-environment policy | P00-004 record |
-| Handoff | ADR seeds with deadlines, no unowned mandatory question | P00-005 gate record |
+| Handoff | ADR decisions and named downstream validation gates | [QG-00 gate record](../gates/phase-00-discovery.md) |
 
 ## QG-01 — Research evidence
 
 | Check | Requirement | Evidence |
 | --- | --- | --- |
-| lettre API | Chosen async API documented with citations; no assumed partial status | P01-001 matrix |
-| TLS features | Exact feature set composes; verification cannot be disabled | P01-002 matrix |
-| Recipient/timeouts | Observability table; explicit ADR decision | P01-003 report |
+| lettre API | Chosen async API documented with pinned-source citations and per-recipient visibility | [P01 source report](../research/lettre-0.11.23-validation.md) |
+| TLS features | Exact feature graph source-reviewed; compile and certificate fixtures remain implementation gates | [P01 source report](../research/lettre-0.11.23-validation.md) |
+| Recipient/timeouts | Source-observed RCPT API; coarse-stage table; explicit ADR decisions | [P01 source report](../research/lettre-0.11.23-validation.md) |
 | Node lifecycle | Node 22/24/26 labeled candidate/probed/supported; GC and close probe plan | P01-004 matrix |
-| Decision record | Every mandatory uncertainty decided or given an architecture deadline | P01-005 record |
+| Decision record | Every mandatory design question selected; implementation proofs have named gates | [QG-01 gate record](../gates/phase-01-research.md) |
 
-## QG-02 — Architecture freeze
+## QG-02 — Architecture approval (design baseline)
 
 | Check | Requirement | Evidence |
 | --- | --- | --- |
@@ -56,7 +56,7 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 | Ownership | Copy-before-async; no borrowed JS memory | P02-004 |
 | Limits | 100 recipients, 10/20/30 MiB caps; deterministic precedence | P02-004 |
 | ADRs | All mandatory ADRs accepted or explicitly blocked | ADR index |
-| Traceability | Every constraint maps to implementation and test tasks | P02-005 matrix |
+| Traceability | C-01..C-30 map to ADRs, implementation tasks, and test gates | [Architecture approval matrix](../architecture/approval-matrix.md) |
 
 ## QG-03 — Repository baseline
 
