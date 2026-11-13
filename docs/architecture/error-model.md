@@ -103,10 +103,10 @@ export type ErrorCategory =
 | `AUTH_UNSUPPORTED` | authentication | async | Relay offered no supported mechanism | No |
 | `PROTOCOL_REJECTED` | protocol | async | Malformed or unexpected protocol failure that prevents a trustworthy outcome; definitive SMTP refusals are `rejected` outcomes | No |
 | `PROTOCOL_UNEXPECTED_RESPONSE` | protocol | async | Malformed/unexpected reply | Maybe |
-| `PROTOCOL_CONNECTION_RESET` | protocol | async | Peer closed unexpectedly | Maybe, with duplicate risk after DATA |
+| `PROTOCOL_CONNECTION_RESET` | protocol | async | Peer closed unexpectedly | Only when known to be pre-DATA; if final disposition is uncertain after DATA, return `unknown` and do not automatically retry |
 | `TIMEOUT_CONNECT` | timeout | async | Connect budget exceeded | Yes |
-| `TIMEOUT_OPERATION` | timeout | async | Operation budget exceeded | Yes, with duplicate risk if after DATA |
-| `TIMEOUT_TOTAL` | timeout | async | Total send budget exceeded | Yes, with duplicate risk if after DATA |
+| `TIMEOUT_OPERATION` | timeout | async | Operation budget exceeded | Only when known to be pre-DATA; after DATA uncertainty, return `unknown` and do not automatically retry |
+| `TIMEOUT_TOTAL` | timeout | async | Total send budget exceeded | Only when known to be pre-DATA; after DATA uncertainty, return `unknown` and do not automatically retry |
 | `TIMEOUT_CLOSE` | timeout | async | Close drain exceeded budget | Process-level concern |
 | `TRANSPORT_CLOSED` | closed | async | Send after close or during close | No |
 | `TRANSPORT_BUSY` | busy | async | A send is already active | No, wait for completion |
