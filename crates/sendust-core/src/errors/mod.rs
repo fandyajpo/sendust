@@ -1,0 +1,1 @@
+//! Stable internal error taxonomy.

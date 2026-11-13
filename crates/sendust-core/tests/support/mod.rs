@@ -1,0 +1,348 @@
+#![allow(dead_code)]
+//! Deterministic fake SMTP server for Sendust integration tests.
+//!
+//! Binds loopback only, on an ephemeral port, and never contacts an external
+//! network. Dialogues are scripted per stage, delays are injected rather than
+//! slept for arbitrarily, and every received line plus the DATA body is
+//! captured for assertions. See `docs/engineering/test-harness-contract.md`.
+
+use std::io::{self, BufRead, BufReader, Write};
+use std::net::{Shutdown, SocketAddr, TcpListener, TcpStream};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
+use std::thread::{self, JoinHandle};
+use std::time::Duration;
+
+/// The only address the harness ever binds.
+pub const LOOPBACK: &str = "127.0.0.1";
+
+/// SMTP stages that a script can answer or delay.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Stage {
+    Greeting,
+    Ehlo,
+    StartTls,
+    Auth,
+    Mail,
+    Rcpt,
+    Data,
+    Quit,
+}
+
+/// A complete, possibly multiline, SMTP reply.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Reply {
+    lines: Vec<String>,
+}
+
+impl Reply {
+    pub fn line(line: impl Into<String>) -> Self {
+        Self {
+            lines: vec![line.into()],
+        }
+    }
+
+    pub fn lines(lines: &[&str]) -> Self {
+        Self {
+            lines: lines.iter().map(|line| (*line).to_string()).collect(),
+        }
+    }
+
+    pub fn is_final(&self, code: &str) -> bool {
+        self.lines.last().is_some_and(|line| line.starts_with(code))
+    }
+}
+
+/// What the server does after the message body terminator.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AfterBody {
+    /// Write this final reply. A 2xx means accepted, 4xx/5xx means rejected.
+    Reply(Reply),
+    /// Drop the connection without a final reply: the client cannot know the
+    /// disposition and must report `unknown`. A hard TCP reset is produced by
+    /// P06's TLS/fault tests when a socket is closed with unread data; the
+    /// observable contract here is identical: no final reply.
+    Close,
+}
+
+/// Scripted behavior for every connection the harness accepts.
+#[derive(Debug, Clone)]
+pub struct Script {
+    pub greeting: Reply,
+    pub ehlo: Reply,
+    pub start_tls: Reply,
+    pub auth: Reply,
+    pub mail: Reply,
+    /// Reply per `RCPT TO` index; the last entry repeats.
+    pub rcpt: Vec<Reply>,
+    pub data: Reply,
+    pub after_body: AfterBody,
+    pub quit: Reply,
+    pub unknown: Reply,
+    /// Injected delay applied before the reply of a stage.
+    pub delays: Vec<(Stage, Duration)>,
+}
+
+impl Default for Script {
+    fn default() -> Self {
+        Self {
+            greeting: Reply::line("220 sendust.test ESMTP ready"),
+            ehlo: Reply::lines(&["250-sendust.test", "250-PIPELINING", "250 8BITMIME"]),
+            start_tls: Reply::line("220 2.0.0 Ready to start TLS"),
+            auth: Reply::line("235 2.7.0 Authentication successful"),
+            mail: Reply::line("250 2.1.0 Sender ok"),
+            rcpt: vec![Reply::line("250 2.1.5 Recipient ok")],
+            data: Reply::line("354 End data with <CR><LF>.<CR><LF>"),
+            after_body: AfterBody::Reply(Reply::line("250 2.0.0 Message accepted")),
+            quit: Reply::line("221 2.0.0 Bye"),
+            unknown: Reply::line("500 5.5.2 Command unrecognized"),
+            delays: Vec::new(),
+        }
+    }
+}
+
+impl Script {
+    pub fn rcpt_reply(mut self, reply: Reply) -> Self {
+        self.rcpt = vec![reply];
+        self
+    }
+
+    pub fn rcpt_replies(mut self, replies: Vec<Reply>) -> Self {
+        self.rcpt = replies;
+        self
+    }
+
+    pub fn after_body(mut self, after_body: AfterBody) -> Self {
+        self.after_body = after_body;
+        self
+    }
+
+    pub fn delay(mut self, stage: Stage, duration: Duration) -> Self {
+        self.delays.push((stage, duration));
+        self
+    }
+
+    fn delay_for(&self, stage: Stage) -> Option<Duration> {
+        self.delays
+            .iter()
+            .filter(|(configured, _)| *configured == stage)
+            .map(|(_, duration)| *duration)
+            .max()
+    }
+}
+
+/// Everything the client sent, in order.
+#[derive(Debug, Default)]
+pub struct Trace {
+    lines: Mutex<Vec<String>>,
+    body: Mutex<Vec<u8>>,
+}
+
+impl Trace {
+    pub fn lines(&self) -> Vec<String> {
+        self.lines
+            .lock()
+            .map(|lines| lines.clone())
+            .unwrap_or_default()
+    }
+
+    pub fn body(&self) -> Vec<u8> {
+        self.body
+            .lock()
+            .map(|body| body.clone())
+            .unwrap_or_default()
+    }
+
+    pub fn body_text(&self) -> String {
+        String::from_utf8_lossy(&self.body()).into_owned()
+    }
+
+    pub fn count_prefix(&self, prefix: &str) -> usize {
+        self.lines()
+            .iter()
+            .filter(|line| line.to_ascii_uppercase().starts_with(prefix))
+            .count()
+    }
+
+    fn push_line(&self, line: &str) {
+        if let Ok(mut lines) = self.lines.lock() {
+            lines.push(line.to_string());
+        }
+    }
+
+    fn push_body(&self, bytes: &[u8]) {
+        if let Ok(mut body) = self.body.lock() {
+            body.extend_from_slice(bytes);
+        }
+    }
+}
+
+/// A running fake SMTP server on an ephemeral loopback port.
+pub struct FakeSmtp {
+    addr: SocketAddr,
+    stop: Arc<AtomicBool>,
+    handle: Option<JoinHandle<()>>,
+    trace: Arc<Trace>,
+}
+
+impl FakeSmtp {
+    pub fn start(script: Script) -> io::Result<Self> {
+        let listener = TcpListener::bind((LOOPBACK, 0))?;
+        let addr = listener.local_addr()?;
+        let stop = Arc::new(AtomicBool::new(false));
+        let trace = Arc::new(Trace::default());
+
+        let thread_stop = Arc::clone(&stop);
+        let thread_trace = Arc::clone(&trace);
+        let handle = thread::Builder::new()
+            .name("sendust-fake-smtp".to_string())
+            .spawn(move || {
+                for incoming in listener.incoming() {
+                    if thread_stop.load(Ordering::SeqCst) {
+                        break;
+                    }
+                    match incoming {
+                        Ok(stream) => serve(stream, &script, &thread_trace),
+                        Err(_) => break,
+                    }
+                }
+            })?;
+
+        Ok(Self {
+            addr,
+            stop,
+            handle: Some(handle),
+            trace,
+        })
+    }
+
+    pub fn addr(&self) -> SocketAddr {
+        self.addr
+    }
+
+    pub fn trace(&self) -> &Trace {
+        &self.trace
+    }
+
+    fn stop_inner(&mut self) {
+        self.stop.store(true, Ordering::SeqCst);
+        // Wake the blocking accept so the thread can observe `stop`.
+        let _ = TcpStream::connect(self.addr);
+        if let Some(handle) = self.handle.take() {
+            let _ = handle.join();
+        }
+    }
+}
+
+impl Drop for FakeSmtp {
+    fn drop(&mut self) {
+        self.stop_inner();
+    }
+}
+
+fn serve(mut stream: TcpStream, script: &Script, trace: &Trace) {
+    let _ = stream.set_read_timeout(Some(Duration::from_secs(10)));
+    let _ = stream.set_write_timeout(Some(Duration::from_secs(10)));
+    let Ok(reader_stream) = stream.try_clone() else {
+        return;
+    };
+    let mut reader = BufReader::new(reader_stream);
+
+    if let Some(delay) = script.delay_for(Stage::Greeting) {
+        thread::sleep(delay);
+    }
+    if write_reply(&mut stream, &script.greeting).is_err() {
+        return;
+    }
+
+    let mut in_data = false;
+    let mut rcpt_index = 0usize;
+
+    loop {
+        let mut line = String::new();
+        match reader.read_line(&mut line) {
+            Ok(0) | Err(_) => return,
+            Ok(_) => {}
+        }
+        let trimmed = line.trim_end_matches(['\r', '\n']).to_string();
+
+        if in_data {
+            if trimmed == "." {
+                in_data = false;
+                trace.push_line("<DATA-END>");
+                match &script.after_body {
+                    AfterBody::Reply(reply) => {
+                        let _ = write_reply(&mut stream, reply);
+                    }
+                    AfterBody::Close => {
+                        let _ = stream.shutdown(Shutdown::Both);
+                        return;
+                    }
+                }
+                continue;
+            }
+            trace.push_body(trimmed.as_bytes());
+            trace.push_body(b"\r\n");
+            continue;
+        }
+
+        trace.push_line(&trimmed);
+        let (verb, rest) = split_command(&trimmed);
+
+        let selection = match verb.as_str() {
+            "EHLO" | "HELO" => Some((Stage::Ehlo, &script.ehlo)),
+            "STARTTLS" => Some((Stage::StartTls, &script.start_tls)),
+            "AUTH" => Some((Stage::Auth, &script.auth)),
+            "MAIL" => Some((Stage::Mail, &script.mail)),
+            "RCPT" => {
+                let reply = script
+                    .rcpt
+                    .get(rcpt_index)
+                    .or_else(|| script.rcpt.last())
+                    .unwrap_or(&script.mail);
+                rcpt_index += 1;
+                Some((Stage::Rcpt, reply))
+            }
+            "DATA" => Some((Stage::Data, &script.data)),
+            "QUIT" => Some((Stage::Quit, &script.quit)),
+            _ => None,
+        };
+
+        let Some((stage, reply)) = selection else {
+            let _ = write_reply(&mut stream, &script.unknown);
+            let _ = rest;
+            continue;
+        };
+
+        if let Some(delay) = script.delay_for(stage) {
+            thread::sleep(delay);
+        }
+        if write_reply(&mut stream, reply).is_err() {
+            return;
+        }
+
+        if stage == Stage::Data {
+            in_data = reply.is_final("354");
+        }
+        if stage == Stage::Quit {
+            return;
+        }
+    }
+}
+
+fn split_command(line: &str) -> (String, String) {
+    let mut parts = line.splitn(2, ' ');
+    let verb = parts.next().unwrap_or_default().to_ascii_uppercase();
+    let rest = parts.next().unwrap_or_default().to_string();
+    (verb, rest)
+}
+
+fn write_reply(stream: &mut TcpStream, reply: &Reply) -> io::Result<()> {
+    let mut out = String::new();
+    for line in &reply.lines {
+        out.push_str(line);
+        out.push_str("\r\n");
+    }
+    stream.write_all(out.as_bytes())?;
+    stream.flush()
+}

@@ -1,0 +1,23 @@
+[package]
+name = "sendust-napi"
+description = "Thin Node-API inbound adapter for the Sendust core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+build = "build.rs"
+
+[lib]
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+sendust-core = { path = "../sendust-core", version = "=0.1.0" }
+napi.workspace = true
+napi-derive.workspace = true
+
+[build-dependencies]
+napi-build.workspace = true

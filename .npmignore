@@ -1,0 +1,8 @@
+# Never publish test material: it contains the loopback-only TLS fixture keys.
+/tests/
+
+# Sources, tooling, and CI are not part of the published package.
+/crates/
+/.github/
+/scripts/
+/target/

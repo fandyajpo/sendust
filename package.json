@@ -1,0 +1,16 @@
+{
+  "name": "sendust",
+  "version": "0.1.0",
+  "description": "Standalone native email delivery engine for Node.js, Bun, and Deno",
+  "type": "module",
+  "workspaces": ["ts"],
+  "scripts": {
+    "check:architecture": "node scripts/check-architecture.mjs",
+    "check:docs": "node scripts/check-docs.mjs",
+    "check": "npm run check:architecture && npm run check:docs",
+    "lint": "npm --workspace ./ts run lint",
+    "format:check": "npm --workspace ./ts run format:check",
+    "typecheck": "npm --workspace ./ts run typecheck",
+    "test": "npm --workspace ./ts run test"
+  }
+}

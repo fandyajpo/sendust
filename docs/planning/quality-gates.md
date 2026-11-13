@@ -101,6 +101,8 @@ A02 approves module design only. It does not prove that the source tree, depende
 | Test seams | Fake SMTP/TLS harness starts, scripts responses, shuts down deterministically | Harness test |
 | No placeholders | No `todo!()`, `unimplemented!()`, or stub modules claimed as complete | Search report |
 
+Gate record: [QG-03 repository baseline record](../gates/phase-03-repository-baseline.md) — APPROVED.
+
 ## QG-04 — Rust safety and core tests
 
 | Check | Requirement | Evidence |
