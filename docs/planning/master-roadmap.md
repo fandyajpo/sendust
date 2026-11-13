@@ -190,3 +190,8 @@ A phase is done only when its completion gate is approved with linked evidence. 
 ## 5. Explicit non-goals for the roadmap
 
 No deadlines, no story points, no velocity, no team-size assumptions, no enterprise architecture, no features outside [mvp-scope.md](../product/mvp-scope.md). Post-MVP work is planned only as research, not as committed scope. Queueing, workers, persistence, scheduling, retry orchestration, and queue adapters are not planned deliverables.
+
+
+## Multi-runtime architecture amendment
+
+Architecture Amendment A01 is approved at design level. Node.js, Bun, and Deno are required MVP runtimes; P03 establishes the CI and runtime-neutral loader guardrails, P05 validates native binding/lifecycle behavior, and P14 validates the runtime × OS × CPU × ABI distribution matrix. This does not mark any runtime or platform as already supported. See ADR-0015 and the A01 gate record.
