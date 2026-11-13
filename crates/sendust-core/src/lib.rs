@@ -31,6 +31,7 @@ pub use crate::ports::{DeliveryPort, DeliveryRequest};
 pub use crate::results::{
     AmbiguityStage, DeliveryStatus, RecipientOutcome, RecipientStatus, SendOutcome, SmtpResponse,
 };
+pub use crate::transports::smtp::{SmtpConfig, SmtpCredentials, SmtpSecurity, SmtpTransport};
 pub use crate::validation::{Failures as ValidationFailures, ValidationStage, validate_in_order};
 
 /// Crate version, surfaced to the binding for diagnostics.

@@ -18,8 +18,8 @@ A direct dependency may be added only through the review in section 6. Transitiv
 | `napi-build` | `=2.6.0` | build | — | on | `sendust-napi` | Binding build setup |
 | `idna` | `=1.1.0` | normal | `std`, `compiled_data` | off | `sendust-core` | IDNA/UTS #46 domain conversion for envelope addresses |
 | `base64` | `=0.23.1` | normal | default | on | `sendust-core` | MIME transfer encoding (ADR-0010) |
-| `tokio` | `=1.54.1` | dev | `rt`, `macros` | off | `sendust-core` | Async test runtime for core send tests |
-| `rustls` | `=0.23.46` | dev | `std`, `tls12`, `ring` | off | `sendust-core` | TLS server and client for the fake SMTP harness |
+| `tokio` | `=1.54.1` | normal, dev | `time`; dev-only `rt`, `macros` | off | `sendust-core` | Deadline enforcement for the SMTP adapter; core never builds a runtime |
+| `rustls` | `=0.23.46` | normal, dev | `std`, `tls12`, `ring` | off | `sendust-core` | Typed TLS error classification in the SMTP adapter and the TLS test harness |
 
 `sendust-core` declares no build script and no binding, runtime, or Node.js dependency. `sendust-napi` depends on `sendust-core` and never the reverse. `lettre` is declared once, at workspace level, and must not appear in `sendust-napi`.
 
@@ -27,6 +27,8 @@ A direct dependency may be added only through the review in section 6. Transitiv
 `idna` was already present transitively through `lettre`/`url` at the same version; it is declared directly so the core cannot silently drift from the resolver's choice, and it adds no new transitive weight.
 
 Test-only dependencies (MIME verification, fake SMTP/TLS tooling, benchmarks) are introduced by the phase that needs them, pinned exactly at that time, recorded in this table with kind `dev`, and never enabled for published artifacts.
+
+`tokio` and `rustls` were already present transitively at these exact versions through `lettre`. `tokio` is now a normal pin because the adapter bounds every SMTP step with the caller's timer; `rustls` is a normal pin because the adapter downcasts the typed rustls cause to distinguish `TLS_CERTIFICATE` from `TLS_HANDSHAKE`. Neither adds a new transitive dependency.
 
 ## 3. Feature and transitive policy
 

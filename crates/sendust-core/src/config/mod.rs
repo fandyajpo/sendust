@@ -3,9 +3,9 @@
 //! Hard caps come from ADR-0009. A transport may lower a limit but must never
 //! raise it above the approved maximum; `Limits::with_*` enforces that rule.
 
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
-use crate::errors::{Error, ErrorCode};
+use crate::errors::{Error, ErrorCode, ErrorDetails, Stage};
 
 /// One mebibyte, the unit used by the approved caps.
 pub const MIB: u64 = 1024 * 1024;
@@ -187,9 +187,80 @@ fn invalid_timeout() -> Error {
     Error::new(ErrorCode::ValidationInvalidTimeout)
 }
 
+/// Per-send deadlines derived from a [`Timeouts`] value and one start instant.
+///
+/// A single total deadline governs the send, so independent timers cannot
+/// overrun it. `operation` bounds each command/response wait; `connect` bounds
+/// DNS, TCP, greeting, EHLO, and TLS as one outer boundary.
+#[derive(Debug, Clone, Copy)]
+pub struct SendDeadlines {
+    started: Instant,
+    connect_by: Instant,
+    total_by: Instant,
+    operation: Duration,
+}
+
+impl SendDeadlines {
+    pub fn start(timeouts: Timeouts, now: Instant) -> Self {
+        Self {
+            started: now,
+            connect_by: now + timeouts.connect(),
+            total_by: now + timeouts.total(),
+            operation: timeouts.operation(),
+        }
+    }
+
+    pub fn connect_by(&self) -> Instant {
+        self.connect_by
+    }
+
+    pub fn total_by(&self) -> Instant {
+        self.total_by
+    }
+
+    pub fn elapsed(&self, now: Instant) -> Duration {
+        now.saturating_duration_since(self.started)
+    }
+
+    pub fn remaining_total(&self, now: Instant) -> Duration {
+        self.total_by.saturating_duration_since(now)
+    }
+
+    pub fn connect_expired(&self, now: Instant) -> bool {
+        now >= self.connect_by || now >= self.total_by
+    }
+
+    pub fn operation_expired(&self, now: Instant) -> bool {
+        now >= self.operation_deadline(now) || now >= self.total_by
+    }
+
+    /// Deadline for a single command: the operation budget, capped by the total.
+    pub fn operation_deadline(&self, now: Instant) -> Instant {
+        std::cmp::min(now + self.operation, self.total_by)
+    }
+
+    /// Honest timeout classification: connect only before the session is up.
+    pub fn timeout_error(&self, now: Instant, connected: bool, stage: Stage) -> Error {
+        let code = if !connected && now >= self.connect_by {
+            ErrorCode::TimeoutConnect
+        } else if now >= self.total_by {
+            ErrorCode::TimeoutTotal
+        } else {
+            ErrorCode::TimeoutOperation
+        };
+
+        Error::new(code).with_details(
+            ErrorDetails::default()
+                .stage(stage)
+                .elapsed_ms(u64::try_from(self.elapsed(now).as_millis()).unwrap_or(u64::MAX)),
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::Instant;
 
     #[test]
     fn defaults_match_the_approved_caps() {
@@ -293,5 +364,67 @@ mod tests {
                 ErrorCode::ValidationInvalidOption
             );
         }
+    }
+
+    #[test]
+    fn deadlines_use_the_approved_budgets() {
+        let now = Instant::now();
+        let deadlines = SendDeadlines::start(Timeouts::default(), now);
+
+        assert_eq!(deadlines.connect_by(), now + Duration::from_secs(10));
+        assert_eq!(deadlines.total_by(), now + Duration::from_secs(120));
+        assert!(
+            !deadlines.connect_expired(now + Duration::from_secs(10) - Duration::from_millis(1))
+        );
+        assert!(deadlines.connect_expired(now + Duration::from_secs(10)));
+    }
+
+    #[test]
+    fn operation_deadline_is_capped_by_the_total() {
+        let now = Instant::now();
+        let deadlines = SendDeadlines::start(Timeouts::default(), now);
+
+        assert_eq!(
+            deadlines.operation_deadline(now),
+            now + Duration::from_secs(30)
+        );
+
+        let late = now + Duration::from_secs(100);
+        assert_eq!(
+            deadlines.operation_deadline(late),
+            now + Duration::from_secs(120)
+        );
+        assert!(deadlines.operation_expired(now + Duration::from_secs(120)));
+    }
+
+    #[test]
+    fn remaining_total_never_underflows() {
+        let now = Instant::now();
+        let deadlines = SendDeadlines::start(Timeouts::default(), now);
+        assert_eq!(deadlines.remaining_total(now), Duration::from_secs(120));
+        assert_eq!(
+            deadlines.remaining_total(now + Duration::from_secs(200)),
+            Duration::ZERO
+        );
+    }
+
+    #[test]
+    fn timeout_classification_is_honest_about_the_connect_phase() {
+        let now = Instant::now();
+        let deadlines = SendDeadlines::start(Timeouts::default(), now);
+
+        let connect =
+            deadlines.timeout_error(now + Duration::from_secs(10), false, Stage::ConnectionSetup);
+        assert_eq!(connect.code(), ErrorCode::TimeoutConnect);
+        assert_eq!(
+            connect.details().operation_stage(),
+            Some(Stage::ConnectionSetup)
+        );
+
+        let total = deadlines.timeout_error(now + Duration::from_secs(120), true, Stage::DataBody);
+        assert_eq!(total.code(), ErrorCode::TimeoutTotal);
+
+        let operation = deadlines.timeout_error(now + Duration::from_secs(40), true, Stage::Mail);
+        assert_eq!(operation.code(), ErrorCode::TimeoutOperation);
     }
 }

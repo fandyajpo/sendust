@@ -82,7 +82,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P03 are COMPLETED with approved evidence. P04 is IN PROGRESS: P04-001–P04-004 are IN REVIEW and P04-005–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P03 are COMPLETED with approved evidence. P04 is IN PROGRESS: P04-001–P04-005 are IN REVIEW and P05–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -103,10 +103,9 @@ P00–P03 are COMPLETED with approved evidence. P04 is IN PROGRESS: P04-001–P0
 | QG-01 Research | APPROVED with implementation validation gates |
 | QG-02 Architecture | APPROVED at design level |
 | P03-001–P03-005 | COMPLETED |
-| P04-001–P04-004 | IN REVIEW |
-| P04-005 | IN PROGRESS |
+| P04-001–P04-005 | IN REVIEW |
 | P05–P18 | NOT STARTED |
-| Next task | P04-005 (remaining) — lettre SMTP adapter and core fault matrix |
+| Next task | PHASE-04 gate review (P04-005) — adapter and fault matrix pass locally; CI evidence pending |
 
 ## 5. Conventions
 
