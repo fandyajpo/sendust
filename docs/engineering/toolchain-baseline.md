@@ -63,16 +63,18 @@ All commands below run from the repository root unless the row states otherwise.
 | Core-only unit tests | `cargo test -p sendust-core --all-targets` | Exit 0 without Node headers/runtime or napi crate |
 | Native binding compile | `cargo check -p sendust-napi --all-targets` | Exit 0 for the host target |
 | Workspace Rust tests | `cargo test --workspace --all-targets` | Exit 0 |
-| Crate/dependency audit | `cargo metadata --format-version 1 --no-deps` and the P03 architecture guard | Exactly two Rust packages; dependency direction is valid |
+| Crate/dependency audit | `cargo metadata --format-version 1 --no-deps` then `node scripts/check-architecture.mjs` | Exactly two Rust packages; dependency direction and forbidden dependencies are valid |
+| Documentation structure audit | `node scripts/check-docs.mjs` | Relative links, IDs, phase/task counts, and index references are valid |
 | JavaScript install | `npm ci` | Reproducible install from the committed root lockfile |
-| TypeScript format/lint | `npm run lint` | Biome exits 0 |
-| TypeScript typecheck | `npm run typecheck` | TypeScript exits 0 with strict settings |
-| TypeScript unit/contract tests | `npm run test` | Vitest exits 0 |
+| TypeScript lint | `npm --workspace ./ts run lint` | Biome exits 0 |
+| TypeScript formatting | `npm --workspace ./ts run format:check` | Biome exits 0 with no diff |
+| TypeScript typecheck | `npm --workspace ./ts run typecheck` | TypeScript exits 0 with strict settings |
+| TypeScript unit/contract tests | `npm --workspace ./ts run test` | Vitest exits 0 |
 | Node runtime smoke | `node tests/runtime/smoke.mjs` | Native addon loads; fake-relay send and close pass |
 | Bun runtime smoke | `bun run tests/runtime/smoke.mjs` | Same observable contract |
 | Deno runtime smoke | `deno run --allow-ffi --allow-read tests/runtime/smoke.mjs` | Same observable contract using local `node_modules` |
 
-P03-003 must create the scripts and architecture guard that make these commands real. If a command cannot be implemented as written, P03-003 must propose a precise replacement and update this file, phase plan, and CI contract in the same change. Never silently substitute commands.
+P03-003 must create the npm workspace scripts, `scripts/check-architecture.mjs`, and `scripts/check-docs.mjs` that make these commands real. The documentation checker must validate Markdown links, duplicate/missing requirement/task/ADR/gate IDs, phase/task counts, registry-to-phase task title/prerequisite parity, gate-index coverage, and runtime/toolchain claims against this file. If a command cannot be implemented as written, P03-003 must propose a precise replacement and update this file, phase plan, and CI contract in the same change. Never silently substitute commands.
 
 ## 5. CI and reproducibility rules
 
