@@ -16,7 +16,7 @@ A caller should branch on `result.status` for delivery semantics and on `error.c
 
 ```ts
 export type DeliveryStatus = "accepted" | "rejected" | "unknown";
-export type RecipientStatus = "accepted" | "rejected" | "attempted" | "unknown";
+export type RecipientStatus = "accepted" | "rejected" | "unknown";
 
 export interface SendResult {
   status: DeliveryStatus;
@@ -38,11 +38,10 @@ export interface SendResult {
 | Status | Meaning |
 | --- | --- |
 | `accepted` | The relay accepted this recipient (RCPT 2xx) **and** the message was accepted. |
-| `rejected` | The relay rejected this recipient (RCPT 4xx/5xx) and the policy rejected the envelope before DATA. |
-| `attempted` | The recipient was included in the envelope, but its individual fate is not observable. Used when the whole envelope is rejected or the result is unknown. |
+| `rejected` | The relay explicitly refused this recipient at RCPT, or accepted its RCPT but explicitly refused the final DATA transaction. |
 | `unknown` | The recipient was part of an envelope whose final status is unknown. |
 
-**Critical rule (ADR-0005):** Sendust does not assume per-recipient RCPT status is observable through the high-level lettre transport. If P01-003 proves it is unavailable, mixed RCPT responses cause the entire envelope to be rejected before DATA; recipients are reported as `rejected` where the server explicitly rejected them and `attempted` otherwise. Sendust never sends one message per recipient to manufacture partial success.
+**Critical rule (ADR-0005):** Sendust uses lettre's public lower-level async connection API to observe each RCPT reply. Explicitly refused recipients remain `rejected`; accepted recipients are sent one shared DATA transaction. RCPT acceptance alone never means message acceptance. A recipient becomes `accepted` only after positive final DATA. If final disposition is unknown, accepted-RCPT recipients become `unknown`. Sendust never sends one message per recipient.
 
 ### 2.3 No delivery claim
 
@@ -121,7 +120,7 @@ Codes are append-only within a major version. Removing or renaming a code is a b
 - `smtpCode` (number) and `smtpEnhancedCode` (string) when the relay supplied them.
 - `host` and `port`.
 - `timeoutMs` and `elapsedMs`.
-- `stage` only when P01-003 proved that stage attribution is observable.
+- `stage` only for coarse public-call boundaries documented by P01-003; never infer internal socket sub-stages.
 - `recipient` for a validation error tied to one address.
 
 `details` must never include passwords, full bodies, attachment bytes, tokens, or absolute paths.
@@ -161,7 +160,7 @@ When multiple validation failures exist, the first failure in the deterministic 
 7. Attachment byte caps.
 8. Wire cap.
 
-This prevents nondeterministic messages and makes tests stable. The proposed order is to be approved in P02-002 and implemented/tested in P04-001.
+This prevents nondeterministic messages and makes tests stable. The deterministic order is approved at P02-002 and implemented/tested in P04-001.
 
 ## 6. Redaction rules
 
