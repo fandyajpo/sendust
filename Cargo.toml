@@ -26,6 +26,10 @@ base64 = { version = "=0.23.1" }
 # transitively via lettre/url; pinned directly so core cannot drift from it.
 idna = { version = "=1.1.0", default-features = false, features = ["std", "compiled_data"] }
 
+# Test-only TLS server/client for the fake SMTP harness. lettre already pulls
+# this exact rustls version with the ring provider.
+rustls = { version = "=0.23.46", default-features = false, features = ["std", "tls12", "ring"] }
+
 # Test-only async runtime for core send tests. lettre already pulls this exact
 # Tokio version; the dev dependency only makes the features explicit.
 tokio = { version = "=1.54.1", default-features = false, features = ["rt", "macros"] }

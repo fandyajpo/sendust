@@ -545,6 +545,7 @@ dependencies = [
  "base64",
  "idna",
  "lettre",
+ "rustls",
  "tokio",
 ]
 

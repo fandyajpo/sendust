@@ -6,12 +6,16 @@
 //! slept for arbitrarily, and every received line plus the DATA body is
 //! captured for assertions. See `docs/engineering/test-harness-contract.md`.
 
-use std::io::{self, BufRead, BufReader, Write};
+use std::io::{self, Read, Write};
 use std::net::{Shutdown, SocketAddr, TcpListener, TcpStream};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
+
+use rustls::{ServerConnection, StreamOwned};
+
+pub mod tls;
 
 /// The only address the harness ever binds.
 pub const LOOPBACK: &str = "127.0.0.1";
@@ -81,6 +85,8 @@ pub struct Script {
     pub unknown: Reply,
     /// Injected delay applied before the reply of a stage.
     pub delays: Vec<(Stage, Duration)>,
+    /// When set, the harness completes an implicit TLS handshake first.
+    pub tls: Option<Arc<rustls::ServerConfig>>,
 }
 
 impl Default for Script {
@@ -97,6 +103,7 @@ impl Default for Script {
             quit: Reply::line("221 2.0.0 Bye"),
             unknown: Reply::line("500 5.5.2 Command unrecognized"),
             delays: Vec::new(),
+            tls: None,
         }
     }
 }
@@ -240,18 +247,67 @@ impl Drop for FakeSmtp {
     }
 }
 
-fn serve(mut stream: TcpStream, script: &Script, trace: &Trace) {
+/// A connection the harness can talk over: plaintext or implicit TLS.
+enum Conn {
+    Plain(TcpStream),
+    Tls(Box<StreamOwned<ServerConnection, TcpStream>>),
+}
+
+impl Read for Conn {
+    fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+        match self {
+            Self::Plain(stream) => stream.read(buffer),
+            Self::Tls(stream) => stream.read(buffer),
+        }
+    }
+}
+
+impl Write for Conn {
+    fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
+        match self {
+            Self::Plain(stream) => stream.write(buffer),
+            Self::Tls(stream) => stream.write(buffer),
+        }
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        match self {
+            Self::Plain(stream) => stream.flush(),
+            Self::Tls(stream) => stream.flush(),
+        }
+    }
+}
+
+impl Conn {
+    fn shutdown(self) {
+        match self {
+            Self::Plain(stream) => {
+                let _ = stream.shutdown(Shutdown::Both);
+            }
+            Self::Tls(stream) => {
+                let _ = stream.sock.shutdown(Shutdown::Both);
+            }
+        }
+    }
+}
+
+fn serve(stream: TcpStream, script: &Script, trace: &Trace) {
     let _ = stream.set_read_timeout(Some(Duration::from_secs(10)));
     let _ = stream.set_write_timeout(Some(Duration::from_secs(10)));
-    let Ok(reader_stream) = stream.try_clone() else {
-        return;
+
+    let mut conn = match &script.tls {
+        Some(config) => match ServerConnection::new(Arc::clone(config)) {
+            Ok(session) => Conn::Tls(Box::new(StreamOwned::new(session, stream))),
+            Err(_) => return,
+        },
+        None => Conn::Plain(stream),
     };
-    let mut reader = BufReader::new(reader_stream);
 
     if let Some(delay) = script.delay_for(Stage::Greeting) {
         thread::sleep(delay);
     }
-    if write_reply(&mut stream, &script.greeting).is_err() {
+    if write_reply(&mut conn, &script.greeting).is_err() {
+        conn.shutdown();
         return;
     }
 
@@ -260,11 +316,14 @@ fn serve(mut stream: TcpStream, script: &Script, trace: &Trace) {
 
     loop {
         let mut line = String::new();
-        match reader.read_line(&mut line) {
-            Ok(0) | Err(_) => return,
-            Ok(_) => {}
+        match tls::read_line(&mut conn, &mut line) {
+            Ok(true) => {}
+            Ok(false) | Err(_) => {
+                conn.shutdown();
+                return;
+            }
         }
-        let trimmed = line.trim_end_matches(['\r', '\n']).to_string();
+        let trimmed = line;
 
         if in_data {
             if trimmed == "." {
@@ -272,10 +331,10 @@ fn serve(mut stream: TcpStream, script: &Script, trace: &Trace) {
                 trace.push_line("<DATA-END>");
                 match &script.after_body {
                     AfterBody::Reply(reply) => {
-                        let _ = write_reply(&mut stream, reply);
+                        let _ = write_reply(&mut conn, reply);
                     }
                     AfterBody::Close => {
-                        let _ = stream.shutdown(Shutdown::Both);
+                        conn.shutdown();
                         return;
                     }
                 }
@@ -309,7 +368,7 @@ fn serve(mut stream: TcpStream, script: &Script, trace: &Trace) {
         };
 
         let Some((stage, reply)) = selection else {
-            let _ = write_reply(&mut stream, &script.unknown);
+            let _ = write_reply(&mut conn, &script.unknown);
             let _ = rest;
             continue;
         };
@@ -317,7 +376,8 @@ fn serve(mut stream: TcpStream, script: &Script, trace: &Trace) {
         if let Some(delay) = script.delay_for(stage) {
             thread::sleep(delay);
         }
-        if write_reply(&mut stream, reply).is_err() {
+        if write_reply(&mut conn, reply).is_err() {
+            conn.shutdown();
             return;
         }
 
@@ -325,6 +385,7 @@ fn serve(mut stream: TcpStream, script: &Script, trace: &Trace) {
             in_data = reply.is_final("354");
         }
         if stage == Stage::Quit {
+            conn.shutdown();
             return;
         }
     }
@@ -337,7 +398,7 @@ fn split_command(line: &str) -> (String, String) {
     (verb, rest)
 }
 
-fn write_reply(stream: &mut TcpStream, reply: &Reply) -> io::Result<()> {
+fn write_reply<W: Write>(stream: &mut W, reply: &Reply) -> io::Result<()> {
     let mut out = String::new();
     for line in &reply.lines {
         out.push_str(line);

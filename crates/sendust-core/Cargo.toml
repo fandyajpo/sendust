@@ -19,3 +19,4 @@ base64.workspace = true
 
 [dev-dependencies]
 tokio.workspace = true
+rustls.workspace = true
