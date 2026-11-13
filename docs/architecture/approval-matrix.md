@@ -48,7 +48,8 @@ The TypeScript wrapper is the only public package surface. It exposes createTran
 | --- | --- | --- |
 | Connection/TLS/AUTH fails before envelope | Promise rejects with operational error | No SendResult |
 | MAIL FROM explicit 4xx/5xx | rejected | All recipients rejected at envelope level |
-| RCPT 4xx/5xx for one recipient | Continue with other recipients | That recipient rejected |
+| RCPT ordinary 4xx/5xx for one recipient | Continue with other recipients | That recipient rejected |
+| RCPT 421 | Stop; do not send DATA | Overall rejected; no recipient accepted as a message |
 | All RCPT recipients rejected | rejected; do not send DATA | All recipients rejected |
 | Some RCPT accepted, final DATA 2xx | accepted | RCPT-accepted recipients accepted; refused recipients rejected |
 | DATA command refused before body | rejected | RCPT-accepted recipients rejected; prior RCPT refusals remain rejected |
