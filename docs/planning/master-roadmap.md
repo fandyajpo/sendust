@@ -12,14 +12,14 @@ This roadmap summarizes the 19 phase plans. Detailed tasks, tests, acceptance cr
 | --- | --- | --- |
 | P00 Discovery | Problem, constraints, semantics, threat boundary, and open questions fixed | PHASE-00 |
 | P01 Research | lettre, rustls, recipient observability, and Node lifecycle resolved with evidence | PHASE-01 |
-| P02 Architecture | Two-crate design, status/error contract, lifecycle, ownership, and limits frozen | PHASE-02 |
+| P02 Architecture | Approve two-crate design, status/error contract, lifecycle, ownership, and limits | PHASE-02 |
 | P03 Repository | Workspace, toolchain, policies, and deterministic test seams exist | PHASE-03 |
 | P04 Rust core | Validation, message model, state machine, and lettre orchestration compile and pass core tests | PHASE-04 |
 | P05 Binding | Node-API 8 adapter exposes core with owned memory and stable mapping | PHASE-05 |
 | P06 SMTP | Relay sessions, TLS/auth, recipient policy, and response normalization pass the fault matrix | PHASE-06 |
 | P07 MIME | Headers, alternative bodies, filenames, and deterministic serialization conform to MIME | PHASE-07 |
 | P08 Attachments | Opt-in files, safe reads, caps, and MIME integration pass the attachment matrix | PHASE-08 |
-| P09 Public API | TypeScript transport, send, close, results, and errors match the frozen contract | PHASE-09 |
+| P09 Public API | Approve TypeScript transport, send, close, results, and errors against the architecture contract | PHASE-09 |
 | P10 Reliability | Races, timeout interaction, cleanup, and fault injection are hardened | PHASE-10 |
 | P11 Security | Threat model, TLS/auth, injection, attachments, ownership, and redaction are signed off | PHASE-11 |
 | P12 QA | Requirements-to-test traceability and full integration coverage pass | PHASE-12 |
