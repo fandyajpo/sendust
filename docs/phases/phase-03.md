@@ -1,6 +1,6 @@
 # Phase 03 — Repository
 
-**Phase status:** IN PROGRESS  
+**Phase status:** IN REVIEW  
 **Phase dependency:** Phase 02, Architecture Amendment A01, and Architecture Amendment A02  
 **Companion references:** [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [release strategy](../engineering/release-strategy.md)
 
@@ -49,7 +49,7 @@ In scope: workspace layout, crate manifests, `ts/src` package skeleton, test dir
 ### P03-005 — Repository gate and baseline verification
 
 - **Size:** S
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P03-001, P03-002, P03-003, P03-004
 - **Description:** Validate the skeleton against the architecture handoff: exactly two crates, correct dependency direction, no product logic, no secrets, reproducible formatting/lint/type-check/test command definitions, and a complete fake-service seam plan. Record any deferred setup as a named task input rather than hidden debt.
 - **Evidence criteria:** Gate record includes layout verification, dependency-direction check, secret scan, command matrix review, and fixture catalog completeness. No application code exists beyond placeholders. The repository phase is marked `APPROVED` only when Phase 04 can add core modules without structural changes.
@@ -107,10 +107,10 @@ Gate `PHASE-03` is `APPROVED` when P03-005 proves the structure, dependency dire
 
 ## Status
 
-IN PROGRESS. P03-001 to P03-004 are IN REVIEW: the two-crate workspace
-skeleton, the dependency and feature policy, the canonical quality-command
-scripts, and the fake SMTP/TLS test seams exist and are verified. P03-005
-remains NOT STARTED.
+IN REVIEW. Every P03 task has its deliverable and evidence, and the QG-03
+record is prepared for independent review. The two-crate workspace, dependency
+and feature policy, quality-command scripts, and fake SMTP/TLS test seams are
+implemented and verified in CI.
 
 ## Evidence log
 
@@ -120,16 +120,17 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 | --- | --- | --- |
 | P03-001 | Two-crate workspace, manifests, module tree, `ts/src` skeleton, `rust-toolchain.toml`; `cargo metadata --format-version 1 --no-deps` reports exactly `sendust-core` and `sendust-napi` | IMPLEMENTED, STATICALLY REVIEWED |
 | P03-002 | [Dependency policy](../engineering/dependency-policy.md) plus workspace pins; `cargo tree -e features` resolves `lettre` 0.11.23 with only `smtp-transport`, `tokio1-rustls`, `ring`, and `webpki-roots`, with no `pool` or `native-tls`; a core unit test constructs the pinned `SmtpTransport` builder, so a dropped transport feature fails the build | IMPLEMENTED, STATICALLY REVIEWED |
+| P03-005 | [QG-03 repository baseline record](../gates/phase-03-repository-baseline.md) covering layout, dependency direction, command matrix, fixture catalog, secret scan, and a full CI run | IN REVIEW — awaiting independent review |
 | P03-003 | `scripts/check-architecture.mjs`, `scripts/check-docs.mjs`, npm workspace scripts, `.github/workflows/ci.yml`; `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test -p sendust-core --all-targets`, `cargo test --workspace --all-targets`, and the four `npm --workspace ./ts run` commands exited 0; CI now runs every Rust command with `--locked` | EXECUTED PASS in a development container (Rust 1.100.0, Node.js 24.22.x) and in Sendust CI on branch `feat/p03-repository-skeleton`: the Rust workspace, Architecture and documentation checks, TypeScript (Node.js 22.23.5, 24.22.3, 26.13.1), Bun 1.4.4, and Deno 2.9.8 jobs all passed |
 | P03-004 | `crates/sendust-core/tests/support/mod.rs` (loopback-only fake SMTP: scripted per-stage replies, per-recipient RCPT, injected delays, command trace), `crates/sendust-core/tests/harness_self_test.rs` (7 passing tests), `scripts/generate-tls-fixtures.sh` (authority keys discarded, leaf keys only), committed `tests/fixtures/tls/*`, and `scripts/check-secrets.mjs` with a self-test that proves detection; contract in [the harness contract](../engineering/test-harness-contract.md) | IMPLEMENTED, EXECUTED PASS locally and in CI |
 
-Executed evidence now exists in a local toolchain and in Sendust CI on branch
-`feat/p03-repository-skeleton`. Gate PHASE-03 remains unapproved and still
-requires the P03-005 gate record.
+Executed evidence exists in a local toolchain and in Sendust CI on branch
+`feat/p03-repository-skeleton`. Gate PHASE-03 is **IN REVIEW**, not approved:
+the record at [phase-03-repository-baseline](../gates/phase-03-repository-baseline.md)
+needs an independent reviewer.
 
 `Cargo.lock` is committed and every Rust CI command runs with `--locked`.
-`package-lock.json` is not committed yet: CI installs with `npm install` and
-emits a warning until that lockfile is committed from a pinned-npm run.
+`package-lock.json` is committed and CI installs with `npm ci`.
 
 
 ## Multi-runtime amendment requirements

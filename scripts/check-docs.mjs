@@ -31,6 +31,7 @@ const REQUIRED_FILES = [
   "docs/planning/task-registry.md",
   "docs/planning/quality-gates.md",
   "docs/planning/definition-of-done.md",
+  "docs/gates/phase-03-repository-baseline.md",
   "docs/architecture/decisions/README.md",
 ];
 
@@ -197,6 +198,32 @@ function checkPhaseIndex() {
   }
 }
 
+function checkGateIndex() {
+  const gates = read("docs/planning/quality-gates.md");
+  const listed = [...gates.matchAll(/^\| (QG-[A-Z0-9]+) \|/gm)].map((match) => match[1]);
+  const detailed = [...gates.matchAll(/^## (QG-[A-Z0-9]+) — /gm)].map((match) => match[1]);
+
+  const duplicates = listed.filter((id, index) => listed.indexOf(id) !== index);
+  if (duplicates.length > 0) {
+    fail(`duplicate gate ids in the gate index: ${[...new Set(duplicates)].join(", ")}`);
+  }
+  for (const id of listed) {
+    if (!detailed.includes(id)) fail(`gate ${id} is listed in the gate index but has no detail section`);
+  }
+  for (const id of detailed) {
+    if (!listed.includes(id)) fail(`gate ${id} has a detail section but is missing from the gate index`);
+  }
+
+  for (const name of readdirSync(join(ROOT, "docs/phases")).filter((file) =>
+    /^phase-\d{2}\.md$/.test(file),
+  )) {
+    const phase = name.slice(6, 8);
+    if (!read(`docs/phases/${name}`).includes(`PHASE-${phase}`)) {
+      fail(`docs/phases/${name} does not name its completion gate PHASE-${phase}`);
+    }
+  }
+}
+
 function readPin(baseline, pattern, label) {
   const match = pattern.exec(baseline);
   if (!match) {
@@ -271,6 +298,7 @@ checkLinks();
 checkTaskRegistry();
 checkDecisionIndex();
 checkPhaseIndex();
+checkGateIndex();
 checkToolchainPins();
 checkDependencyPins();
 
