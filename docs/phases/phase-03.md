@@ -36,7 +36,7 @@ In scope: workspace layout, crate manifests, `ts/src` package skeleton, test dir
 - **Status:** NOT STARTED
 - **Prerequisites:** P03-001
 - **Description:** Implement the exact command matrix in the [toolchain baseline](../engineering/toolchain-baseline.md): Rust fmt/clippy/core-only tests/binding checks; npm install; Biome lint; TypeScript strict typecheck; Vitest; and direct Node.js/Bun/Deno smoke entry points. Use the pinned exact tool versions and one root npm lockfile. Specify fail-fast ordering and CI expectations, including a guard that core commands never require a Node runtime.
-- **Evidence criteria:** Every command in the toolchain baseline exists as a script or executable entry point, has a defined working directory and expected exit code, and runs in CI with exact pinned tool versions. A core-only job proves no Node linkage. TypeScript and napi checks are separate. The matrix is referenced by every later task’s evidence requirements.
+- **Evidence criteria:** Every command in the toolchain baseline exists as a script or executable entry point, has a defined working directory and expected exit code, and runs in CI with exact pinned tool versions. The architecture checker rejects extra Rust crates, reverse dependencies, and runtime-specific policy in core. The documentation checker validates links, IDs, phase/task counts, registry-to-phase task parity, gate indexes, and toolchain pin references. A core-only job proves no Node linkage. TypeScript and napi checks are separate. The matrix is referenced by every later task’s evidence requirements.
 
 ### P03-004 — Scaffold deterministic fake SMTP and TLS test harness seams
 
