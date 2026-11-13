@@ -13,6 +13,7 @@ sendust/
 ├── Cargo.toml
 ├── rust-toolchain.toml
 ├── Cargo.lock
+├── package.json                 # published root package manifest
 ├── crates/
 │   ├── sendust-core/
 │   │   ├── Cargo.toml
