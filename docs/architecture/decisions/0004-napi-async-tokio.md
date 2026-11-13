@@ -1,6 +1,6 @@
 # ADR-0004 — napi-rs async exports on the napi-managed Tokio 1 runtime
 
-**Status:** ACCEPTED (design); Node-API 8 selected, runtime verification pending P05-003/P14-004  
+**Status:** ACCEPTED (architecture baseline); Node-API 8 selected, runtime verification pending P05-003/P14-004  
 **Date:** 2026-11-13  
 **Deciders:** Architecture review (P02-005)  
 **Source-reviewed by:** P01-004  
