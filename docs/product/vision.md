@@ -37,6 +37,7 @@ Non-personas for MVP: marketing operators, campaign managers, mailbox hosting ad
 5. **Secure defaults, no escape hatch.** Certificate verification cannot be disabled. Filesystem attachment access is opt-in. Credentials are redacted from errors.
 6. **Native without pain.** npm installation selects a prebuilt binary. No postinstall download, no compiler requirement for consumers.
 7. **Evidence over assertion.** A phase is complete only with executable tests, artifacts, or reviewed records.
+8. **Modular without fragmentation.** Keep one product and one shared native engine, with strict internal module ownership and dependency boundaries. Do not split into crates, services, or plugins without evidence.
 
 ## 4. Product scope
 
