@@ -10,28 +10,27 @@ All paths below describe the approved design baseline; application source has no
 
 ```text
 sendust/
-├── Cargo.toml                      # workspace, shared profile/lints
-├── rust-toolchain.toml             # pinned stable toolchain
-├── Cargo.lock                      # committed for reproducible builds
+├── Cargo.toml
+├── rust-toolchain.toml
+├── Cargo.lock
 ├── crates/
 │   ├── sendust-core/
 │   │   ├── Cargo.toml
 │   │   └── src/
-│   │       ├── lib.rs
-│   │       ├── error.rs
-│   │       ├── address.rs
-│   │       ├── headers.rs
-│   │       ├── message.rs
-│   │       ├── limits.rs
-│   │       ├── mime.rs
-│   │       ├── attachment.rs
-│   │       ├── transport/
-│   │       │   ├── mod.rs
-│   │       │   ├── state.rs
-│   │       │   ├── smtp.rs
-│   │       │   └── timeout.rs
-│   │       └── result.rs
-│   │   └── tests/                  # Rust integration tests, fake relay harness
+│   │       ├── lib.rs                 # narrow public facade
+│   │       ├── config/
+│   │       ├── address/
+│   │       ├── message/
+│   │       ├── validation/
+│   │       ├── attachments/
+│   │       ├── mime/
+│   │       ├── delivery/
+│   │       ├── ports/
+│   │       ├── transports/
+│   │       │   └── smtp/
+│   │       ├── lifecycle/
+│   │       ├── errors/
+│   │       └── results/
 │   └── sendust-napi/
 │       ├── Cargo.toml
 │       ├── build.rs
@@ -44,20 +43,21 @@ sendust/
 │   ├── package.json
 │   ├── tsconfig.json
 │   └── src/
-│       ├── index.ts                # public exports
+│       ├── index.ts
 │       ├── transport.ts
 │       ├── types.ts
 │       ├── errors.ts
-│       └── loader.ts               # generated loader integration point
-├── tests/                          # JS integration + type tests + clean-consumer fixtures
+│       └── loader.ts
+├── tests/
 │   ├── integration/
 │   ├── types/
+│   ├── consumer/
+│   ├── security/
 │   └── fixtures/
-│       ├── smtp/                   # scripted SMTP server harness
-│       └── tls/                    # certificates for negative tests
+│       ├── smtp/
+│       └── tls/
 ├── .github/workflows/
-├── docs/
-└── package.json                    # root package manifest (published)
+└── docs/
 ```
 
 The root `package.json` is the published artifact. `ts/package.json` is the build workspace for the TypeScript wrapper; the release process composes both. The exact split is decided in P14-002 and must not leak workspace paths into the published package.
