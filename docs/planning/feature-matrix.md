@@ -262,7 +262,7 @@ Each functional and non-functional requirement maps to at least one feature row 
 | C-23 | F-DIS-11 |
 | C-24 | All rows; enforced by quality gates |
 | C-25 | All rows; documentation rule |
-| C-26 | F-DIS-01 through F-DIS-10 |
+| C-26, C-35, C-36 | F-DIS-01 through F-DIS-18 |
 | C-27 | F-DX-04, F-DIS-12 |
 | C-28 | F-SMTP-12 |
 | C-29 | F-SEC-02 |

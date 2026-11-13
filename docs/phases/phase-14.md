@@ -86,6 +86,10 @@ Early smoke report, package metadata contract, cross-platform artifact matrix, c
 
 `PHASE-14` is approved only when P14-005 proves clean install/load behavior across the declared matrix, honest support claims, and no distribution-induced contract or security regression. Phase 16 may begin only after this gate.
 
+## Multi-runtime amendment requirements
+
+P14 must test the intersection of each claimed runtime and platform target. Required runtimes are Node.js, Bun, and Deno. A target must pass clean install, native load, correct binary selection, accepted fake-SMTP send, mixed-recipient/final-DATA outcomes, Buffer ownership, BUSY, close/shutdown, TLS verification, and error mapping. Deno clean installs must verify local node_modules and --allow-ffi. No target may be published based only on compilation or upstream framework claims.
+
 ## Status
 
 NOT STARTED.

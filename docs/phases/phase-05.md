@@ -85,6 +85,10 @@ Binding exports, ownership conversion layer, lifecycle adapter, result/error map
 
 `PHASE-05` is approved only when P05-005 proves the adapter preserves all core semantics across candidate runtimes and does not introduce Node linkage into core.
 
+## Multi-runtime amendment requirements
+
+P05 is not complete when only Node.js passes. The full binding contract must pass on all required runtimes: native loading, Promise behavior, SMTP outcomes, owned-buffer snapshot, BUSY, explicit close, close races, process shutdown, TLS fixtures, and stable errors. Record exact runtime versions and CI evidence. Deno tests must use local node_modules and --allow-ffi. If the shared Node-API addon fails on an alternate runtime, investigate the smallest loader/binding correction; do not add a separate Rust adapter without a superseding ADR.
+
 ## Status
 
 NOT STARTED.
