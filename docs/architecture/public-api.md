@@ -1,6 +1,6 @@
 # Sendust — Public API Contract
 
-**Status:** proposed; frozen at `PHASE-02`, implemented in `PHASE-09`.  
+**Status:** proposed; architecture approval is gated by P02-005 and public API approval by P09-005. Both phases remain `NOT STARTED`.  
 **Types are illustrative:** the authoritative declarations are generated/implemented in P09-001; this document defines behavior, not final syntax.
 
 ## 1. Surface
