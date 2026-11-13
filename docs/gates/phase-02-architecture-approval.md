@@ -16,7 +16,7 @@
 | TLS security policy | PASS (design) | TLS 1.2 minimum; WebPKI roots; hostname+chain verification; implicit TLS or required STARTTLS; no bypass/fallback |
 | Runtime ownership | PASS (design) | napi-rs managed Tokio 1; no second runtime; Node-API 8 proposed |
 | Delivery status | PASS | Final DATA 2xx accepted; explicit final 4xx/5xx rejected; indeterminate final disposition unknown; no mailbox-delivery claim |
-| Recipient semantics | PASS (source/API) | Each RCPT reply observable; one DATA to accepted subset; recipient accepted only after final DATA 2xx |
+| Recipient semantics | PASS (source/API) | Each RCPT reply observable; ordinary refusals are recipient-level; 421 stops session; one DATA to accepted subset; recipient accepted only after final DATA 2xx |
 | Error taxonomy | PASS | Operational failures use stable typed errors; delivery outcomes use result values |
 | Lifecycle | PASS (design) | One active send, immediate BUSY, open→closing→closed, explicit bounded close, no GC dependency |
 | Timeout model | PASS (design) | Connect ≤10s, operation ≤30s, total ≤120s, close ≤125s; lower-only; connect/operation ≤ total ≤ close; outer connect deadline covers DNS/greeting/EHLO/TLS |
