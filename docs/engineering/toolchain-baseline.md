@@ -30,9 +30,9 @@ These are exact CI candidates, not support claims. A runtime becomes supported o
 Do not test or publish Node.js 27 alpha as an MVP target. Do not use floating `latest`, `lts`, or `stable` tags in CI. Patch updates require a reviewed baseline update and synchronized CI/docs changes.
 
 Official version sources:
-- Node.js: https://nodejs.org/en/download/ and https://nodejs.org/en/about/previous-releases
-- Bun: https://bun.com/
-- Deno: https://github.com/denoland/deno/releases
+- Node.js: https://github.com/nodejs/node/releases/tag/v22.23.5, https://github.com/nodejs/node/releases/tag/v24.22.3, and https://github.com/nodejs/node/releases/tag/v26.13.1
+- Bun: https://github.com/oven-sh/bun/releases/tag/bun-v1.4.4
+- Deno: https://github.com/denoland/deno/releases/tag/v2.9.8
 
 ## 3. JavaScript development toolchain
 
@@ -47,10 +47,10 @@ Official version sources:
 These are exact development-tool pins for the baseline, not consumer runtime dependencies. Install exact versions without caret or tilde ranges and commit one npm lockfile. Runtime compatibility tests must not depend on Vitest running inside Bun or Deno; use a small runtime-neutral smoke entry point executed directly by each runtime.
 
 Official version sources:
-- npm: https://docs.npmjs.com/cli/using-npm/changelog/
-- TypeScript: https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/
-- Biome: https://github.com/biomejs/biome/releases
-- Vitest: https://vitest.dev/blog/vitest-5-1
+- npm: https://github.com/npm/cli/releases/tag/v12.2.2
+- TypeScript: https://github.com/microsoft/TypeScript/releases/tag/v7.0.2
+- Biome: https://github.com/biomejs/biome/releases/tag/@biomejs/biome@2.6.7
+- Vitest: https://github.com/vitest-dev/vitest/releases/tag/v5.1.0
 
 ## 4. Canonical command matrix
 
