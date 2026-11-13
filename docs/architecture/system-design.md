@@ -120,9 +120,11 @@ pub enum SendOutcome {
     Unknown { recipients: Vec<RecipientOutcome>, stage: AmbiguityStage },
 }
 
+pub enum RecipientStatus { Accepted, Rejected, Unknown }
+
 pub struct RecipientOutcome {
     pub address: String,
-    pub status: RecipientStatus,   // Accepted | Rejected | Unknown
+    pub status: RecipientStatus,
 }
 ```
 
