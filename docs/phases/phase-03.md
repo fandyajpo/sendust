@@ -1,7 +1,7 @@
 # Phase 03 — Repository
 
 **Phase status:** NOT STARTED  
-**Phase dependency:** Phase 02 and Architecture Amendment A01  
+**Phase dependency:** Phase 02, Architecture Amendment A01, and Architecture Amendment A02  
 **Companion references:** [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [release strategy](../engineering/release-strategy.md)
 
 ## Objective
@@ -18,7 +18,7 @@ In scope: workspace layout, crate manifests, `ts/src` package skeleton, test dir
 
 - **Size:** M
 - **Status:** NOT STARTED
-- **Prerequisites:** P02-005, A01-004
+- **Prerequisites:** P02-005, A01-004, A02-003
 - **Description:** Specify the workspace layout with exactly two crates at `crates/sendust-core/src` and `crates/sendust-napi/src`, plus `ts/src` and `tests/`. Define root workspace membership, a stable Rust toolchain at or above 1.88 (required by napi 3.16.2), shared lint/format configuration, and crate responsibilities. Core must compile without Node headers or napi dependencies; napi depends on core and the binding toolkit. Include placeholder module trees that reflect architecture boundaries without implementing product logic.
 - **Evidence criteria:** Layout tree matches the proposed paths exactly and contains no third Rust crate. Core manifest has no napi/Node dependency; napi manifest depends on core. A documented check fails if a reverse dependency or extra crate appears. `cargo metadata` and package discovery are part of the acceptance evidence.
 
@@ -60,7 +60,7 @@ The repository is a Rust workspace plus a TypeScript package. Proposed paths are
 
 ## Dependencies
 
-Phase 03 requires Phase 02 approval and A01-004. P03-001 depends on P02-005 and A01-004; P03-002 depends on P03-001 and P01-002; P03-003 and P03-004 depend on P03-001; P03-005 depends on all repository tasks. Phase 04 requires P03-005.
+Phase 03 requires Phase 02 approval, A01-004, and A02-003. P03-001 depends on P02-005, A01-004, and A02-003; P03-002 depends on P03-001 and P01-002; P03-003 and P03-004 depend on P03-001; P03-005 depends on all repository tasks. Phase 04 requires P03-005.
 
 ## Risks and edge cases
 
