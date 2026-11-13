@@ -54,7 +54,7 @@ Non-personas for MVP: marketing operators, campaign managers, mailbox hosting ad
 
 ### Post-MVP candidates
 
-Connection pooling, carefully scoped retry research, SMTPUTF8, AbortSignal-based cancellation, streaming attachments, additional transports, DKIM, and observability hooks may be evaluated separately. Queue/job orchestration and queue adapters are **held outside the current product roadmap**: no API, adapter contract, persistence model, worker, or implementation is being designed. See [MVP scope](mvp-scope.md) and the [feature matrix](../planning/feature-matrix.md).
+Connection pooling, carefully scoped retry research, SMTPUTF8, public AbortSignal cancellation, streaming attachments, additional transports, DKIM, and observability hooks may be evaluated separately. Queue/job orchestration and queue adapters are **held outside the current product roadmap**: no API, adapter contract, persistence model, worker, or implementation is being designed. See [MVP scope](mvp-scope.md) and the [feature matrix](../planning/feature-matrix.md).
 
 ### Explicit non-goals
 
