@@ -181,3 +181,10 @@ Coverage is diagnostic, not a target. Minimum expectations:
 2. Record a risk ID and owner.
 3. Quarantined tests do not count as gate evidence.
 4. Do not use retries to mask flakiness.
+
+
+## Multi-runtime test policy
+
+Under ADR-0015, Node.js, Bun, and Deno are required MVP runtime targets. The native addon suite is blocking on all three pinned runtimes. Test the exact Sendust artifact, not only a framework compatibility probe. The suite includes native loading, Promise behavior, SMTP accepted/rejected/unknown outcomes, owned-buffer snapshot, BUSY, explicit close, close races, process shutdown, TLS verification, and stable error mapping.
+
+The platform axis is tested separately and then combined with the runtime axis for every support claim. Record exact runtime version, OS, CPU, libc/minimum OS, artifact checksum, and CI run. Deno tests use local node_modules and explicit --allow-ffi. No test may rely on install scripts or external binary downloads.
