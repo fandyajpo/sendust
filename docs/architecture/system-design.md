@@ -175,7 +175,7 @@ Rules:
 
 - One `send` in flight. A second `send` returns `BUSY` immediately without dialing.
 - `close()` is idempotent. Concurrent `close()` calls share the same drain.
-- `close()` during connect/auth/DATA requests cancellation of the in-flight operation and waits up to the close budget.
+- `close()` atomically transitions to `closing`, signals cancellation, and waits up to the close budget. The active send checks cancellation at every coarse SMTP boundary. If message transmission has begun and its final disposition cannot be established, the send resolves as `Unknown`; before message transmission it returns a cancellation/closed error or a definitive rejection.
 - Cancellation before DATA acceptance is possible may end as an operational cancellation/timeout error. If the DATA terminator may have reached the relay and no final reply is observed, the send outcome is `Unknown`; close cannot turn this into a definite rejection.
 - The close budget (125 s) is greater than the total send budget (120 s) so a close during a maximal send can still drain.
 - After `closed`, every `send` returns `CLOSED`.
@@ -189,24 +189,21 @@ A single absolute deadline is computed per send:
 deadline = start + min(total, remaining close budget)
 ```
 
-- `connect` bounds TCP + TLS/STARTTLS establishment.
+- `connect` bounds DNS + TCP + greeting + EHLO + implicit TLS/required STARTTLS negotiation through one outer deadline. lettre's inner timeout only bounds TCP attempts; Sendust must wrap the complete connection future.
 - `operation` bounds each SMTP command/response wait.
 - `total` bounds the entire send, including composition wait and DATA.
-- A stage timer may fire earlier; the reported error names the category and elapsed budget. Exact per-stage attribution is limited to what P01-003 proved.
+- An operation timer wraps each public lettre operation. Report only coarse boundaries: connection setup; AUTH; MAIL; each RCPT; DATA command; DATA body+terminator+final response; cleanup. Do not claim internal socket-read/write attribution.
 - All durations must be finite and > 0; `0`, negative, `NaN`, and infinity are rejected.
 
 ### 2.6 SMTP orchestration
 
-- Core builds a lettre async SMTP transport per send (no pool).
-- TLS is configured with rustls `ring` + `webpki-roots` per P01-002. Verification is never configurable off.
-- Auth is PLAIN or LOGIN; unsupported mechanisms are rejected at configuration time.
-- The envelope is submitted as a whole. Recipient policy follows ADR-0005:
-  - If per-recipient RCPT status is observable through the chosen API, report it honestly.
-  - Otherwise reject the whole envelope before DATA when any recipient is rejected, and report `unknown`/`attempted` where certainty is unavailable.
-  - Never send one message per recipient.
-- A positive final DATA reply (2xx) → `Accepted`.
+- Core creates one `AsyncSmtpConnection` per send (no pool), using lettre's public lower-level async connection API. The selected API is required for individual RCPT responses; Sendust does not implement SMTP parsing or command formatting.
+- lettre features are pinned with `default-features = false` and `smtp-transport`, `tokio1-rustls`, `ring`, and `webpki-roots`; this excludes lettre's default pool/native-tls features. Cargo compilation is a P03-002 hard gate. Build `TlsParameters` with `CertificateStore::WebpkiRoots` and TLS 1.2 minimum. Never call dangerous certificate/hostname bypass methods. Implicit TLS uses `connect_tokio1` with TLS parameters; STARTTLS connects without TLS then requires `can_starttls()` and `starttls()` before AUTH. No plaintext fallback.
+- Auth uses lettre `Credentials` and only `Mechanism::Plain` / `Mechanism::Login`, after TLS. Validate the returned AUTH response is 235; do not treat arbitrary 2xx/3xx as authenticated.
+- Send one `MAIL FROM`, then one `RCPT TO` command per recipient through `AsyncSmtpConnection::command`. Record exact 2xx acceptance and 4xx/5xx rejection using `Error::status()`; check response classes explicitly because lettre treats both 2xx and 3xx as generic positive responses. If no recipient is accepted, do not issue DATA. Otherwise issue exactly one DATA transaction for the accepted-recipient envelope. This is one message/one SMTP transaction, not per-recipient message fan-out.
+- Require DATA command reply 354 before sending body bytes. A positive final DATA reply (2xx) → `Accepted` for RCPT-accepted recipients; explicit RCPT refusals remain `Rejected`.
 - An explicit negative final DATA reply (4xx/5xx) → `Rejected`; this is a known refusal, not an ambiguous result.
-- Missing final reply after the DATA terminator may have reached the relay → `Unknown`; no retry.
+- An explicit negative final DATA reply (4xx/5xx) → `Rejected` for the accepted-recipient subset. A transport/write/read error once `message()` begins is conservatively `Unknown`, because lettre does not expose a public checkpoint proving whether the DATA terminator reached the relay. No retry.
 - Connection, TLS, and AUTH failures before message submission are operational errors, not `Rejected` delivery outcomes.
 
 ### 2.7 Attachment policy
@@ -239,7 +236,7 @@ Names and casing follow napi-rs conventions; the TypeScript wrapper re-exports t
 
 ### 3.2 Conversion rules
 
-- `Buffer`/`ArrayBuffer`/typed arrays → `Vec<u8>` copy before async.
+- `Buffer`/`ArrayBuffer`/typed arrays are synchronously snapshotted into Rust-owned `Vec<u8>` before async work is scheduled. Do not retain `BufferSlice`, raw N-API pointers, or JS-backed views across an await.
 - Strings → `String` with UTF-8 validation; invalid UTF-16 is rejected, not lossily replaced.
 - Numbers → bounded integer conversion with range checks; no silent truncation.
 - Options objects → core structs with unknown fields rejected or ignored per the proposed contract (P02-002 approval pending; proposed default: reject unknown keys to prevent typos).
@@ -248,11 +245,11 @@ Names and casing follow napi-rs conventions; the TypeScript wrapper re-exports t
 
 ### 3.3 Async model
 
-- `#[napi] pub async fn` runs on the napi-managed Tokio 1 runtime.
+- N-API synchronous entrypoints snapshot JS values and reserve the send slot before scheduling async work; an internal opaque operation owns the Rust data. The async execution method returns a Promise and runs on napi-managed Tokio 1. The TypeScript wrapper exposes only `send()`/`close()` and converts synchronous preparation errors to Promise rejections.
 - The binding never creates a runtime.
 - The transport is retained for the lifetime of in-flight work via explicit ownership, not GC reachability.
 - Blocking file reads run on a blocking pool (`tokio::task::spawn_blocking` or equivalent), never on the reactor thread.
-- `close()` cancels/awaits the in-flight send within the close budget.
+- `beginClose()` synchronously transitions state and signals cancellation; `waitClosed()` returns a Promise that awaits bounded cleanup. The public TypeScript `close()` composes these internal methods.
 
 ## 4. `ts/src`
 
