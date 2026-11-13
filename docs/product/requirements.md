@@ -132,7 +132,7 @@ Enforced by P02-003, P09-004, P18-002.
 
 ### C-18 — Recipient-level SMTP outcomes
 
-Sendust MUST observe each RCPT reply through lettre's public lower-level async connection API. A 2xx RCPT reply is accepted at the envelope stage; a 4xx/5xx reply is a definitive rejection for that recipient. If at least one recipient is accepted, Sendust MUST submit exactly one DATA transaction to the accepted-recipient subset. A recipient is `accepted` only after positive final DATA. If final DATA is explicitly refused, those accepted-RCPT recipients become `rejected`; if final disposition is unknown, they become `unknown`. Sendust MUST NOT send independent per-recipient messages.
+Sendust MUST observe each RCPT reply through lettre's public lower-level async connection API. A 2xx RCPT reply is accepted at the envelope stage; an ordinary 4xx/5xx reply is a definitive rejection for that recipient. A 421 reply closes the session, so Sendust MUST stop recipient collection and MUST NOT issue DATA even if earlier RCPT replies were 2xx. Otherwise, if at least one recipient is accepted, Sendust MUST submit exactly one DATA transaction to the accepted-recipient subset. A recipient is `accepted` only after positive final DATA. If final DATA is explicitly refused, those accepted-RCPT recipients become `rejected`; if final disposition is unknown, they become `unknown`. Sendust MUST NOT send independent per-recipient messages.
 
 Enforced by P01-003, P02-002, P06-003, P09-002.
 
