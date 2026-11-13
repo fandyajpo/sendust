@@ -19,7 +19,7 @@ In scope: TypeScript types, transport factory/options, send method, close method
 - **Size:** L
 - **Status:** NOT STARTED
 - **Prerequisites:** P05-005, P06-005
-- **Description:** Define the public `Transport` with open configuration, one `send` operation, and explicit `close`. Expose options for relay, TLS, auth, timeouts, attachments opt-in, and caps, with defaults matching architecture. Types must represent relay-accepted results and honest unknown/attempted statuses. Close is required for deterministic shutdown; AbortSignal is optional and not required for MVP.
+- **Description:** Define the public `Transport` with open configuration, one `send` operation, and explicit `close`. Expose options for relay, TLS, auth, timeouts, attachments opt-in, and caps, with defaults matching architecture. Types must represent relay-accepted results and recipient accepted/rejected/unknown statuses. Close is required for deterministic shutdown; AbortSignal is optional and not required for MVP.
 - **Evidence criteria:** Type declarations compile and include no `any` escape for results/errors. API docs state success means relay acceptance, not delivery, and that one active send returns `BUSY`. Timeout defaults are visible: connect 10s, operation 30s, total 120s, close 125s.
 
 ### P09-002 — Implement send composition and result mapping
@@ -27,7 +27,7 @@ In scope: TypeScript types, transport factory/options, send method, close method
 - **Size:** L
 - **Status:** NOT STARTED
 - **Prerequisites:** P09-001, P06-005
-- **Description:** Implement `send` by validating public input, calling napi, and mapping results without reinterpreting core statuses. Compose message body, recipients, and attachments through the binding. Enforce no retry and no per-recipient fan-out. Surface `accepted`, `rejected`, `unknown`, `attempted`, and `BUSY` exactly as defined.
+- **Description:** Implement `send` by validating public input, calling napi, and mapping results without reinterpreting core statuses. Compose message body, recipients, and attachments through the binding. Enforce no retry and no per-recipient fan-out. Surface overall `accepted`, `rejected`, `unknown`, recipient accepted/rejected/unknown, and `BUSY` exactly as defined.
 - **Evidence criteria:** Tests cover successful relay acceptance, pre-DATA rejection, mixed RCPT ADR behavior, explicit final DATA rejection and genuinely unknown post-DATA disposition, and concurrent `BUSY`. Assert only one SMTP transaction for unknown results. Result objects contain no delivery claim.
 
 ### P09-003 — Implement public error classes and redaction
@@ -73,7 +73,7 @@ Use fake SMTP/TLS fixtures for success, pre-DATA rejection, mixed RCPT, explicit
 ## Acceptance criteria
 
 - Public API exposes only the frozen MVP contract and compiles with strict types.
-- Send results honestly represent relay acceptance, rejection, unknown, attempted, and BUSY.
+- Send results honestly represent relay acceptance, rejection, unknown, recipient statuses, and BUSY.
 - Close and lifecycle are explicit and bounded; no queue or GC dependency.
 - Errors are stable, catchable, and redacted.
 - No pooling, retry, SMTPUTF8, URL attachment, or required AbortSignal.
