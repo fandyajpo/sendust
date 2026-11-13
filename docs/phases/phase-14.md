@@ -43,8 +43,8 @@ In scope: package metadata, native artifact layout, clean-install smoke, platfor
 - **Size:** L
 - **Status:** NOT STARTED
 - **Prerequisites:** P14-003
-- **Description:** Define clean-environment tests for each supported target and candidate Node version: install from local artifacts, import, verify native binary selection, run a fake-relay accepted send, exercise BUSY, run close, and confirm no post-close work. Include missing-binary and wrong-architecture negative tests.
-- **Evidence criteria:** Matrix records pass/fail/unsupported per OS, arch, and Node candidate. Negative tests produce actionable errors. Loaded binary path and version are recorded. No test contacts a real relay or requires a compiler at consumer install time unless explicitly documented.
+- **Description:** Define clean-environment tests for each supported target and pinned Node.js, Bun, and Deno version: install from local artifacts, import, verify native binary selection, run a fake-relay accepted send, exercise BUSY, run close, and confirm no post-close work. Include missing-binary and wrong-architecture negative tests.
+- **Evidence criteria:** Matrix records pass/fail/unsupported per runtime version, OS, arch, and ABI/libc. Negative tests produce actionable errors. Loaded binary path and version are recorded. No test contacts a real relay or requires a compiler at consumer install time unless explicitly documented.
 
 ### P14-005 — Final distribution gate using QA and performance evidence
 
@@ -52,7 +52,7 @@ In scope: package metadata, native artifact layout, clean-install smoke, platfor
 - **Status:** NOT STARTED
 - **Prerequisites:** P14-004, P12-005, P13-005
 - **Description:** Run the final distribution matrix after QA and performance gates. Confirm clean installs, native loading, accepted/unknown/BUSY/close behavior, bounded resource use, and honest support declarations. Reconcile the early smoke with the final matrix and document any target dropped.
-- **Evidence criteria:** Gate package includes per-target install/load/send evidence, candidate Node results, negative tests, performance limitations, and support matrix. No unsupported target is advertised. No install-time secret or external network dependency exists. Phase 16 may consume P14-005.
+- **Evidence criteria:** Gate package includes per-target install/load/send evidence, Node.js, Bun, and Deno results, negative tests, performance limitations, and support matrix. No unsupported target is advertised. No install-time secret or external network dependency exists. Phase 16 may consume P14-005.
 
 ## Technical implementation details
 
@@ -85,6 +85,10 @@ Early smoke report, package metadata contract, cross-platform artifact matrix, c
 ## Completion gate
 
 `PHASE-14` is approved only when P14-005 proves clean install/load behavior across the declared matrix, honest support claims, and no distribution-induced contract or security regression. Phase 16 may begin only after this gate.
+
+## Multi-runtime amendment requirements
+
+P14 must test the intersection of each claimed runtime and platform target. Required runtimes are Node.js, Bun, and Deno. A target must pass clean install, native load, correct binary selection, accepted fake-SMTP send, mixed-recipient/final-DATA outcomes, Buffer ownership, BUSY, close/shutdown, TLS verification, and error mapping. Deno clean installs must verify local node_modules and --allow-ffi. No target may be published based only on compilation or upstream framework claims.
 
 ## Status
 
