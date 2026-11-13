@@ -61,7 +61,7 @@ sendust/
 └── docs/
 ```
 
-The root `package.json` is the published artifact. `ts/package.json` is the build workspace for the TypeScript wrapper; the release process composes both. The exact split is decided in P14-002 and must not leak workspace paths into the published package.
+The root `package.json` is the published artifact and npm workspace root. `ts/package.json` is the internal TypeScript wrapper workspace; one root `package-lock.json` is authoritative. Exact Rust/JavaScript tool versions and validation commands are owned by [the toolchain baseline](../engineering/toolchain-baseline.md). The release process composes the TypeScript wrapper into the root package. The exact split is decided in P14-002 and must not leak workspace paths into the published package.
 
 ## 2. `sendust-core`
 
