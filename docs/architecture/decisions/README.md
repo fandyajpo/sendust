@@ -1,6 +1,6 @@
 # ADR Index
 
-Architectural decisions for Sendust. One decision per file. Status values: `PROPOSED`, `ACCEPTED`, `SUPERSEDED`, `REJECTED`, `BLOCKED` (requires the named validation task before acceptance).
+Architectural decisions for Sendust. One decision per file. Status values: `PROPOSED`, `ACCEPTED`, `SUPERSEDED`, `REJECTED`, `BLOCKED` (requires the named validation task before acceptance). The P02-005 approval matrix is the authoritative list of decisions frozen for the architecture baseline.
 
 | ADR | Title | Status | Owner task |
 | --- | --- | --- | --- |
@@ -25,4 +25,6 @@ Each ADR contains: context, decision, alternatives, consequences, status, eviden
 
 ## Change rule
 
-Changing an accepted ADR requires a new ADR that supersedes it, a phase-gate review, and updates to any document that linked to the old decision. Silent edits to an accepted ADR are prohibited.
+Before QG-02, `ACCEPTED (planning)` means selected for the draft baseline but not yet frozen. Those planning decisions may be reconciled during P01/P02 source review; the Git history records each amendment, and QG-02 must review the resulting decision text before approval. This is the reconciliation window used by the current architecture audit.
+
+After QG-02 approves the architecture baseline, any material change to an accepted ADR requires a new ADR that supersedes it, a phase-gate review, and updates to every linked contract, task, and test. Silent post-approval edits to accepted ADRs are prohibited.
