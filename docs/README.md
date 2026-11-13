@@ -106,7 +106,11 @@ P00–P02 are COMPLETED with approved evidence. P03–P18 remain NOT STARTED. A 
 - Gate IDs: QG-00–QG-17.
 - Milestones: M0–M7.
 
-## 6. Change rule
+## 6. Current architecture amendment
+
+Architecture Amendment A01 and ADR-0015 approve Node.js, Bun, and Deno as required MVP runtime targets while preserving exactly two Rust crates and one Node-API native implementation as the default. No runtime or additional platform compatibility is claimed until Sendust-owned blocking CI passes. Deno requires local node_modules and --allow-ffi. See the [research report](research/multi-runtime-compatibility.md), [ADR-0015](architecture/decisions/0015-multi-runtime-support.md), and [A01 gate](gates/architecture-amendment-a01.md).
+
+## 7. Change rule
 
 - Requirement changes update requirements.md and the feature matrix.
 - Architecture changes require a new or superseding ADR.
