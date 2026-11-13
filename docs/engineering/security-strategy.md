@@ -114,7 +114,7 @@ Redaction is verified by serializing errors and scanning for marker values.
 - 100 recipients.
 - 10 MiB per attachment; 20 MiB aggregate raw; 30 MiB wire.
 - Connect 10 s, operation 30 s, total 120 s, close 125 s.
-- One active send per transport; no queue.
+- One active send per transport; no internal queue, worker, scheduler, persistence, or queue adapter. Queue/job orchestration is caller-owned.
 - No unbounded buffering or collection growth.
 - Close is bounded and cannot hang indefinitely.
 
