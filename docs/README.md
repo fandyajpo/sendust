@@ -52,7 +52,8 @@ This documentation set is the source of truth for product scope, requirements, a
     │   ├── constraint-ledger.md
     │   └── threat-model.md
     ├── research/
-    │   ├── lettre-0.11.23-validation.md\n│   └── node-runtime-validation-plan.md
+    │   ├── lettre-0.11.23-validation.md
+    │   └── node-runtime-validation-plan.md
     ├── gates/
     │   ├── phase-00-discovery.md
     │   ├── phase-01-research.md
