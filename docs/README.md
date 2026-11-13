@@ -18,7 +18,6 @@ This documentation set is the source of truth for product scope, requirements, a
 | 7 | [lettre source validation](research/lettre-0.11.23-validation.md) | Pinned API and feature research |
 | 8 | [Node runtime validation plan](research/node-runtime-validation-plan.md) | Node-API 8 candidate matrix and lifecycle probes |
 | 8a | [Multi-runtime compatibility research](research/multi-runtime-compatibility.md) | Node.js, Bun, Deno and native platform evidence |
-| 9 | [Multi-runtime compatibility research](research/multi-runtime-compatibility.md) | Node.js, Bun, Deno and native platform evidence |
 | 9 | [Architecture overview](architecture/overview.md) | Approved architecture shape and boundaries |
 | 10 | [System design](architecture/system-design.md) | Modules, types, state machine, test seams |
 | 11 | [Public API contract](architecture/public-api.md) | Approved design contract; implementation gate P09 |
@@ -28,7 +27,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 15 | [ADR index](architecture/decisions/README.md) | Architecture decision records |
 | 16 | [Master roadmap](planning/master-roadmap.md) | All 19 phases and outcomes |
 | 17 | [Phase index](planning/phase-index.md) | Entry point to every phase plan |
-| 18 | [Task registry](planning/task-registry.md) | 95 phase tasks plus 4 architecture-amendment tasks and prerequisites |
+| 18 | [Task registry](planning/task-registry.md) | 95 phase tasks plus 7 architecture-amendment tasks and prerequisites |
 | 19 | [Dependency graph](planning/dependency-graph.md) | Phase DAG and critical path |
 | 20 | [Milestones](planning/milestones.md) | M0–M7 exit criteria |
 | 21 | [Quality gates](planning/quality-gates.md) | QG-00–QG-17 |
@@ -98,14 +97,14 @@ P00–P02 are COMPLETED with approved evidence. P03–P18 remain NOT STARTED. A 
 
 ## 5. Conventions
 
-- Constraint IDs: C-01–C-30.
+- Constraint IDs: C-01–C-40.
 - Functional requirements: FR-001–FR-068.
 - Non-functional requirements: NFR-001–NFR-014.
 - Open questions: OQ-01–OQ-07.
 - Phase IDs: P00–P18.
 - Task IDs: Pxx-00y.
 - Decision IDs: ADR-0001–ADR-0016.
-- Risk IDs: R-001–R-045.
+- Risk IDs: R-001–R-047.
 - Gate IDs: QG-00–QG-17.
 - Milestones: M0–M7.
 
