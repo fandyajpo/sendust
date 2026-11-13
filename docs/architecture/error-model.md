@@ -1,6 +1,6 @@
 # Sendust — Error Model
 
-**Status:** proposed; frozen at `PHASE-02`.  
+**Status:** proposed; not frozen. P02-005 is the architecture approval gate.  
 **Related:** [system design](system-design.md), [ADR-0005 recipient semantics](decisions/0005-recipient-partial-failure.md), [security strategy](../engineering/security-strategy.md).
 
 ## 1. Two distinct channels
