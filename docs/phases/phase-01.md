@@ -27,8 +27,8 @@ In scope: pinned-source and documentation inspection, minimal reproducible probe
 - **Size:** S
 - **Status:** COMPLETED
 - **Prerequisites:** P01-001
-- **Description:** Determine the exact lettre 0.11.23 feature combination for rustls with the `ring` provider and `webpki-roots`, including transitive feature conflicts and platform implications. Verify the configuration path cannot disable certificate or hostname verification. Record failure modes for expired, self-signed, wrong-host, incomplete-chain, and malformed certificates.
-- **Evidence criteria:** Feature matrix names the precise Cargo features and the source that proves them. A verification-posture statement confirms there is no public option to disable verification. Five certificate fixtures are mapped to expected errors. If features do not compose, an ADR proposes the smallest viable alternative without weakening verification.
+- **Description:** Determine the exact lettre 0.11.23 feature combination for rustls with the `ring` provider and `webpki-roots`, including transitive feature conflicts and platform implications. Verify Sendust's public configuration cannot disable certificate or hostname verification. Record any dangerous lettre builder methods and explicitly prohibit calling them. Record failure modes for expired, self-signed, wrong-host, incomplete-chain, and malformed certificates.
+- **Evidence criteria:** Feature matrix names the precise Cargo features and the source that proves them. A verification-posture statement confirms Sendust exposes no bypass option, environment variable, or N-API export; lettre's dangerous builder bypass methods are explicitly prohibited and covered by source audit. Five certificate fixtures are mapped to expected errors. If features do not compose, an ADR proposes the smallest viable alternative without weakening verification.
 
 ### P01-003 — Determine recipient partial-failure and timeout-stage observability
 
