@@ -93,7 +93,7 @@ Sendust MVP is a production-usable npm package that sends one transactional emai
 
 The MVP is complete only when:
 
-1. All 18 delivery phases (P00–P17) have approved gates.
+1. All 18 delivery phases (P00–P17) complete their respective acceptance gates with linked evidence.
 2. The [feature matrix](../planning/feature-matrix.md) shows every REQUIRED row with completed implementation and test tasks.
 3. All [quality gates](../planning/quality-gates.md) pass with linked evidence.
 4. A clean install on every supported target sends through a fake relay and closes.
