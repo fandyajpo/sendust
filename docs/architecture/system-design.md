@@ -6,7 +6,7 @@
 
 All paths below describe the approved design baseline; application source has not yet been implemented.
 
-## 1. Workspace layout (proposed)
+## 1. Workspace layout (approved design)
 
 ```text
 sendust/
@@ -122,11 +122,11 @@ pub enum SendOutcome {
 
 pub struct RecipientOutcome {
     pub address: String,
-    pub status: RecipientStatus,   // Accepted | Rejected | Attempted | Unknown
+    pub status: RecipientStatus,   // Accepted | Rejected | Unknown
 }
 ```
 
-The exact shape is proposed and must not be described as frozen until P02-005 is approved. The important property is that `SendOutcome` cannot represent mailbox delivery.
+The exact Rust names are implementation details, but the approved semantics are fixed by P02-005. `SendOutcome` cannot represent mailbox delivery.
 
 ### 2.2 Validation order (deterministic)
 
@@ -255,7 +255,7 @@ Names and casing follow napi-rs conventions; the TypeScript wrapper re-exports t
 
 ## 4. `ts/src`
 
-### 4.1 Public API (proposed; approval gate P09-005)
+### 4.1 Public API design (approved at P02-005; implementation gate P09-005)
 
 ```ts
 export interface TransportOptions {
@@ -288,7 +288,7 @@ export type Attachment =
 
 export interface SendResult {
   status: "accepted" | "rejected" | "unknown";
-  recipients: Array<{ address: string; status: "accepted" | "rejected" | "attempted" | "unknown" }>;
+  recipients: Array<{ address: string; status: "accepted" | "rejected" | "unknown" }>;
   response?: { code: number; message: string };
 }
 
@@ -343,7 +343,7 @@ Codes are stable strings; classes are stable for `instanceof`. The full catalog 
 - **Filesystem fixtures**: regular file, symlink, directory, FIFO, device where available, missing path, unreadable file.
 - **JS boundary fixtures**: buffer mutation, detachment, forced GC, process exit.
 
-## 6. Dependency choices (proposed)
+## 6. Dependency choices (approved design baseline; packaging details remain phase-gated)
 
 | Dependency | Purpose | MVP | Alternative | Notes |
 | --- | --- | --- | --- | --- |
