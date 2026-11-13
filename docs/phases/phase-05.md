@@ -43,7 +43,7 @@ In scope: `crates/sendust-napi/src`, copied Buffer inputs, napi-managed Tokio 1 
 - **Size:** M
 - **Status:** NOT STARTED
 - **Prerequisites:** P05-002, P05-003
-- **Description:** Convert core statuses and machine-readable errors into stable JS objects/errors without leaking credentials, message content, or internal stack data. Preserve `accepted`, `rejected`, `unknown`, `attempted`, `BUSY`, timeout, and closed semantics.
+- **Description:** Convert core statuses and machine-readable errors into stable JS objects/errors without leaking credentials, message content, or internal stack data. Preserve overall `accepted`, `rejected`, `unknown`; recipient `accepted`, `rejected`, `unknown`; `BUSY`, timeout, and closed semantics.
 - **Evidence criteria:** Golden mapping tests cover every core error and result. Redaction tests prove credentials and body bytes are absent from errors.
 
 ### P05-005 — Binding phase gate
