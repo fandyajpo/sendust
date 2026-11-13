@@ -56,7 +56,7 @@ In scope: `crates/sendust-napi/src`, copied Buffer inputs, napi-managed Tokio 1 
 
 ## Technical implementation details
 
-The binding is only an adapter: TypeScript later calls napi, napi calls core, and core calls lettre. Use Node-API 8 and napi-managed Tokio 1. Copy every Buffer before async execution. One active send returns `BUSY`; no queue, pool, retry, or AbortSignal requirement. Explicit close transitions `open -> closing -> closed` and drains to 125s; GC is never a shutdown mechanism. Defaults remain connect 10s, operation 30s, total 120s. Preserve relay-accepted success and post-DATA `unknown`; never promise delivery or per-recipient independent sends.
+The binding is only an adapter: TypeScript later calls napi, napi calls core, and core calls lettre. Use Node-API 8 and napi-managed Tokio 1. Copy every Buffer before async execution. One active send returns `BUSY`; no queue, pool, retry, or AbortSignal requirement. Explicit close transitions `open -> closing -> closed` and drains to 125s; GC is never a shutdown mechanism. Defaults remain connect 10s, operation 30s, total 120s. Preserve relay-accepted success, explicit final SMTP rejection, and genuinely unknown post-DATA disposition; never promise delivery or per-recipient independent sends.
 
 ## Dependencies
 
@@ -68,7 +68,7 @@ Borrowed memory, runtime ownership mistakes, finalizer races, Node-version diffe
 
 ## Testing requirements
 
-Use local fake SMTP/TLS fixtures for success, mixed RCPT, post-DATA `451`, TLS failures, resets, and delays. Add Buffer mutation/detachment, concurrent `BUSY`, explicit close, close deadline, double close, send-after-close, redaction, and Node 22/24/26 lifecycle tests. No external network or production credentials.
+Use local fake SMTP/TLS fixtures for success, mixed RCPT, explicit final DATA `451` rejection, missing-final-reply-after-DATA unknown, TLS failures, resets, and delays. Add Buffer mutation/detachment, concurrent `BUSY`, explicit close, close deadline, double close, send-after-close, redaction, and Node 22/24/26 lifecycle tests. No external network or production credentials.
 
 ## Acceptance criteria
 
