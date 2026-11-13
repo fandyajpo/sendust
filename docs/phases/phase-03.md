@@ -44,7 +44,7 @@ In scope: workspace layout, crate manifests, `ts/src` package skeleton, test dir
 - **Status:** NOT STARTED
 - **Prerequisites:** P03-001
 - **Description:** Define harness interfaces and fixture directories under `tests/` for scripted SMTP dialogues, controllable delays, mixed RCPT responses, post-DATA failures, TLS certificate variants, connection resets, and abrupt server closes. Harness must bind to loopback only, use ephemeral ports, require no external network, and expose deterministic synchronization so tests do not sleep arbitrarily. Include fixture naming for fault injection and a policy that production code has no test-only branches.
-- **Evidence criteria:** Harness contract specifies start/stop, dialogue script, delay injection, response injection, and observed commands. Fixture catalog includes mixed RCPT, `451` after DATA, connect stall, command stall, close stall, self-signed, expired, wrong-host, incomplete-chain, malformed cert, reset, and abrupt close. Loopback/ephemeral/no-network rules are explicit.
+- **Evidence criteria:** Harness contract specifies start/stop, dialogue script, delay injection, response injection, and observed commands. Fixture catalog includes mixed RCPT, an explicit final DATA `451` rejection, a dropped connection after the DATA terminator with no final reply (`unknown`), connect stall, command stall, close stall, self-signed, expired, wrong-host, incomplete-chain, malformed cert, reset, and abrupt close. Loopback/ephemeral/no-network rules are explicit.
 
 ### P03-005 — Repository gate and baseline verification
 
@@ -78,7 +78,7 @@ Repository validation includes structural tests and harness self-tests, all usin
 - Workspace membership test asserts exactly `sendust-core` and `sendust-napi`.
 - Dependency-direction test asserts core has no napi/Node linkage.
 - Command smoke definitions are dry-run reviewed; implementation later proves them.
-- Harness self-test scripts a mixed RCPT fixture (`250`, `550`), post-DATA `451`, 11s connect stall, 31s command stall, and 126s close stall with fake time or bounded local delays.
+- Harness self-test scripts a mixed RCPT fixture (`250`, `550`), explicit final DATA `451`, missing final reply after DATA terminator, 11s connect stall, 31s command stall, and 126s close stall with fake time or bounded local delays.
 - TLS harness serves self-signed, expired, wrong-host, incomplete-chain, and malformed certificates.
 - Secret scan fixture contains a fake credential and must be detected.
 - No smoke test contacts a non-loopback address.
