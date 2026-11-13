@@ -1,6 +1,6 @@
 # Sendust — Architecture Overview
 
-**Status:** proposed; not frozen. Architecture approval requires P02-005 and its evidence.  
+**Status:** approved design baseline at P02-005; implementation validation remains gated by downstream phases.  
 **Authoritative constraints:** [requirements](../product/requirements.md).  
 **Detailed design:** [system design](system-design.md).  
 **Decisions:** [ADR index](decisions/README.md).
@@ -51,10 +51,10 @@ A separate `sendust-mime` or `sendust-smtp` crate is not justified yet: MIME and
 ## 4. Data and control flow
 
 1. The caller constructs a transport with relay, TLS, auth, timeout, attachment, and cap options.
-2. `send(message)` validates public shape, then calls the native binding.
-3. The binding copies every JS-owned buffer/string, constructs owned core types, and starts one async task.
-4. Core validates in deterministic order, composes the MIME message, enforces caps, and opens one SMTP session through lettre.
-5. lettre performs connect, TLS/STARTTLS, AUTH, MAIL, RCPT, DATA.
+2. `send(message)` synchronously prepares an owned native operation, snapshots JS-owned buffers/strings, and reserves the single-send slot; synchronous preparation failures become Promise rejections.
+3. The binding schedules the owned operation on napi-managed Tokio 1.
+4. Core validates in deterministic order, composes the MIME message, enforces caps, and opens one AsyncSmtpConnection through lettre.
+5. lettre performs connect, TLS/required STARTTLS, AUTH, MAIL, one RCPT command per recipient, and one DATA transaction for the accepted-recipient subset.
 6. Core maps the final observable state to `accepted`, `rejected`, or `unknown` and closes the session.
 7. The binding converts the result or error into a stable JS object; the wrapper returns it unchanged.
 
