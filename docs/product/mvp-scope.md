@@ -76,7 +76,7 @@ Sendust MVP is a production-usable npm package that sends one transactional emai
 | DKIM signing | POST-MVP | Key management and canonicalization scope |
 | Additional transports (SES, SendGrid, Mailgun, sendmail) | POST-MVP | MVP is SMTP-first |
 | Templates | OUT OF SCOPE | Application concern |
-| Queues / job integration | OUT OF SCOPE | Infrastructure concern |
+| Queue/job integration or adapters | HELD | Not part of the current product roadmap; no queue API, worker, persistence, or adapter contract will be designed in this phase |
 | Open/click tracking | OUT OF SCOPE | SaaS concern |
 | Analytics dashboard | OUT OF SCOPE | SaaS concern |
 | Contact/campaign management | OUT OF SCOPE | SaaS concern |
@@ -93,7 +93,7 @@ Sendust MVP is a production-usable npm package that sends one transactional emai
 
 The MVP is complete only when:
 
-1. All 19 phases through Phase 17 have approved gates.
+1. All 18 delivery phases (P00–P17) have approved gates.
 2. The [feature matrix](../planning/feature-matrix.md) shows every REQUIRED row with completed implementation and test tasks.
 3. All [quality gates](../planning/quality-gates.md) pass with linked evidence.
 4. A clean install on every supported target sends through a fake relay and closes.
@@ -113,7 +113,7 @@ Features cannot enter the MVP through implementation first and documentation lat
 
 ## 6. Known limitations to document at release
 
-- One active send per transport; no queue.
+- One active send per transport; no internal queue, worker, scheduler, or queue adapter. Queueing and scheduling remain caller-owned.
 - No automatic retry; `unknown` requires caller judgment.
 - No delivery confirmation.
 - No SMTPUTF8; ASCII local parts only.

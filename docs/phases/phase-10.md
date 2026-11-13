@@ -44,7 +44,7 @@ In scope: lifecycle races, timeout-budget interaction, close/drain guarantees, r
 - **Status:** NOT STARTED
 - **Prerequisites:** P10-001, P10-002, P10-003
 - **Description:** Create deterministic fault fixtures for connection refused, DNS failure, greeting stall, TLS handshake stall, auth stall, RCPT stall, DATA stall, final-response stall, reset at each stage, abrupt close, malformed responses, slow close, and ambiguous post-DATA outcomes. Tests must assert result classification, timing bounds, command traces, and cleanup.
-- **Evidence criteria:** Each fault fixture has an expected result, deadline, command trace, and resource-cleanup assertion. Mixed RCPT `250`/`550` and post-DATA `451` are included. No test depends on external network or unbounded sleeps. Suite passes repeatably.
+- **Evidence criteria:** Each fault fixture has an expected result, deadline, command trace, and resource-cleanup assertion. Mixed RCPT `250`/`550`, explicit final DATA `451` rejection, and missing-final-reply-after-DATA ambiguity are included. No test depends on external network or unbounded sleeps. Suite passes repeatably.
 
 ### P10-005 — Reliability phase gate and failure-mode review
 
@@ -56,7 +56,7 @@ In scope: lifecycle races, timeout-budget interaction, close/drain guarantees, r
 
 ## Technical implementation details
 
-Reliability is built on the frozen architecture: one active send per transport, fail-fast `BUSY`, explicit `open -> closing -> closed`, and close drained to 125s without GC. Timeouts are finite and tunable: connect 10s, operation 30s, total 120s, close 125s, with shared deadlines. No pooling and no automatic retries; after DATA an unknown result is not resent. Success means relay acceptance only. TLS remains verified; no fallback. JS buffers are already copied, attachments are bounded regular files, and caps are hard at 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, and 30 MiB wire. Reliability work must not introduce a queue or per-recipient fan-out. Where P01-003 could not prove exact stages, timeouts are reported at the honest aggregate level.
+Reliability work follows the proposed architecture baseline, pending P02-005 approval: one active send per transport, fail-fast `BUSY`, explicit `open -> closing -> closed`, and close drained to 125s without GC. Timeouts are finite and tunable: connect 10s, operation 30s, total 120s, close 125s, with shared deadlines. No pooling and no automatic retries; an explicit final negative DATA reply is `rejected`; a missing final reply after the terminator may have reached the relay is `unknown`. Neither is resent. Success means relay acceptance only. TLS remains verified; no fallback. JS buffers are already copied, attachments are bounded regular files, and caps are hard at 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, and 30 MiB wire. Reliability work must not introduce a queue or per-recipient fan-out. Where P01-003 could not prove exact stages, timeouts are reported at the honest aggregate level.
 
 ## Dependencies
 
@@ -68,7 +68,7 @@ Race windows between close and completion, timer leaks, socket half-close, DNS h
 
 ## Testing requirements
 
-All tests use loopback fake SMTP/TLS with scripted faults. Required: send/send, send/close, close/send, double close; stalls at connect 10s, operation 30s, total 120s, close 125s; connection refused; DNS failure; TLS handshake stall; auth stall; RCPT stall; DATA stall; final-response stall; reset at greeting/EHLO/AUTH/MAIL/RCPT/DATA/final; abrupt close; malformed reply; slow drain; mixed RCPT; post-DATA `451`; repeated failure loops for leaks; process-exit during send. Assert no retry by counting transactions and no hang beyond deadlines.
+All tests use loopback fake SMTP/TLS with scripted faults. Required: send/send, send/close, close/send, double close; stalls at connect 10s, operation 30s, total 120s, close 125s; connection refused; DNS failure; TLS handshake stall; auth stall; RCPT stall; DATA stall; final-response stall; reset at greeting/EHLO/AUTH/MAIL/RCPT/DATA/final; abrupt close; malformed reply; slow drain; mixed RCPT; explicit final DATA `451`; missing final reply after DATA terminator; repeated failure loops for leaks; process-exit during send. Assert no retry by counting transactions and no hang beyond deadlines.
 
 ## Acceptance criteria
 

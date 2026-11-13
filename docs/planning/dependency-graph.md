@@ -42,7 +42,7 @@ graph TD
 | --- | --- |
 | P00 → P01 | Research questions must be explicit and owned |
 | P01 → P02 | Architecture cannot freeze unvalidated dependencies |
-| P02 → P03 | Workspace layout follows frozen boundaries and policies |
+| P02 → P03 | Workspace layout follows the boundaries and policies approved at P02-005 |
 | P03 → P04 | Core implementation needs toolchain, lints, and test seams |
 | P04 → P05 | Binding adapts core types that must exist first |
 | P04 → P06 | SMTP orchestration consumes core state, errors, and limits |
@@ -59,7 +59,7 @@ graph TD
 | P12 → P13 | Performance measurement needs a stable, tested build |
 | P03 → P14 | Early packaging smoke needs the workspace |
 | P05 → P14 | Early packaging smoke needs a working binding |
-| P09 → P15 | Documentation describes the frozen public API |
+| P09 → P15 | Documentation describes the public API approved at P09-005 |
 | P12 → P14 (final gate) | Final distribution gate consumes QA evidence |
 | P13 → P14 (final gate) | Final distribution gate consumes performance evidence |
 | P14 → P16 | Release engineering needs a validated distribution matrix |

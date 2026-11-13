@@ -68,7 +68,7 @@ Native binary resolution can silently pick the wrong architecture. Engine ranges
 
 ## Testing requirements
 
-Run early clean-consumer smoke with a local artifact and fake SMTP: accepted send, BUSY, close, and missing-binary negative. Final matrix covers every supported OS/arch and candidate Node 22/24/26: install, import, binary selection, accepted send, mixed RCPT ADR behavior, post-DATA `451` unknown, BUSY, double close, and wrong-architecture/missing-binary errors. No external network, no real credentials, no publication.
+Run early clean-consumer smoke with a local artifact and fake SMTP: accepted send, BUSY, close, and missing-binary negative. Final matrix covers every supported OS/arch and candidate Node 22/24/26: install, import, binary selection, accepted send, mixed RCPT ADR behavior, explicit final DATA `451` rejection and missing-final-reply-after-DATA unknown, BUSY, double close, and wrong-architecture/missing-binary errors. No external network, no real credentials, no publication.
 
 ## Acceptance criteria
 

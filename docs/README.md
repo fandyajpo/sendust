@@ -1,9 +1,9 @@
 # Documentation Index
 
-**Sendust** — native email delivery engine.  
-Planning baseline: **2026-11-13**. Repository at planning time: empty Git repository, no commits, no application code.
+**Sendust** — Standalone Native Email Delivery Engine for Node.js.  
+Planning baseline: **2026-11-13**. The repository contains planning and architecture documentation; implementation and release status are tracked separately.
 
-This documentation set is the single source of truth for the product, architecture, and execution plan. No implementation, dependency installation, or publication has occurred.
+This documentation set is the source of truth for product scope, requirements, proposed architecture, decisions, and execution planning. Documentation approval does not imply that implementation, dependency validation, or publication has occurred.
 
 ## 1. Start here
 
@@ -13,7 +13,7 @@ This documentation set is the single source of truth for the product, architectu
 | 2 | [Requirements](product/requirements.md) | Constraints, functional requirements, non-functional requirements |
 | 3 | [MVP scope](product/mvp-scope.md) | Included, excluded, success conditions |
 | 4 | [Feature matrix](planning/feature-matrix.md) | REQUIRED / OPTIONAL / POST-MVP / OUT OF SCOPE with task mapping |
-| 5 | [Master roadmap](planning/master-roadmap.md) | All 19 phases and their outcomes |
+| 5 | [Master roadmap](planning/master-roadmap.md) | All 19 phases (P00–P18), their outcomes, and gates |
 | 6 | [Architecture overview](architecture/overview.md) | Shape and boundaries |
 | 7 | [System design](architecture/system-design.md) | Modules, types, state machine, test seams |
 | 8 | [Public API contract](architecture/public-api.md) | Behavior of the TypeScript surface |
@@ -99,12 +99,12 @@ All phases and tasks begin at `NOT STARTED`. Allowed states: `NOT STARTED`, `IN 
 
 | Item | State |
 | --- | --- |
-| Repository | Empty Git repository, no commits |
-| Application code | None |
+| Repository | Documentation repository with committed planning artifacts |
+| Application implementation | Not present in the audited repository snapshot |
 | Dependencies installed | None |
 | Phase 00 | NOT STARTED |
 | Phase 18 | NOT STARTED |
-| Recommended next task | **P00-001** |
+| Recommended next task | **P00-001**, subject to the current phase gates |
 
 ## 5. Conventions
 

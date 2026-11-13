@@ -16,12 +16,13 @@ A transport library must define concurrency and shutdown precisely. Connection p
 - Lifecycle is `open -> closing -> closed`.
 - `close()` is explicit, idempotent, and bounded by the close budget (default 125 s).
 - Close does not depend on garbage collection, finalizers, or process exit.
-- No connection pool, keep-alive reuse, or background queue exists.
+- No connection pool, keep-alive reuse, internal queue, worker, scheduler, persistence, or queue adapter exists in the current scope.
+- The transport is a direct send API, not a job submission API. Consumers may independently place calls behind their own infrastructure; Sendust does not define or depend on that infrastructure.
 - Callers who need concurrency create multiple transports.
 
 ## Alternatives
 
-1. **Internal queue.** Convenient but hides latency and memory growth, complicates close, and obscures BUSY semantics.
+1. **Internal queue.** Convenient but hides latency and memory growth, complicates close, and obscures BUSY semantics. Rejected for the current product direction; no queue abstraction is designed.
 2. **Connection pool.** Better throughput, but adds health checks, reuse races, and idle timeouts; post-MVP.
 3. **Unrestricted concurrent sends on one transport.** Requires multiplexing or multiple connections with shared auth state; high complexity and unclear lifecycle.
 

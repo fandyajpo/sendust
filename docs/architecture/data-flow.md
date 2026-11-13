@@ -67,16 +67,18 @@ All deterministic failures (validation, limits, configuration, MIME composition,
 
 | Stage | If it fails | Result certainty |
 | --- | --- | --- |
-| TCP connect | No connection | `rejected` at connection level; retryable by caller |
-| TLS handshake | No trust | `TLS` error; never accepted |
-| AUTH | Not authorized | `AUTH` error; no message sent |
-| MAIL FROM | Envelope rejected | `rejected` |
-| RCPT TO | Recipient rejected | Policy per ADR-0005 |
-| DATA command | Body not accepted | `rejected` if server refused before body |
-| During body | Partial transmission | `unknown` |
-| Final response | Ambiguous or absent | `unknown` |
+| TCP connect | No SMTP session established | Connection/transport error; no delivery outcome exists |
+| TLS handshake | Trust or negotiation failed | `TLS` error; no message was submitted |
+| AUTH | Authentication failed | `AUTH` error; no message was submitted |
+| MAIL FROM | Definitive SMTP refusal | `rejected` outcome |
+| RCPT TO | Recipient refusal | Policy per ADR-0005; envelope is not sent if policy requires abort |
+| DATA command | Server refuses DATA before message body | `rejected` outcome |
+| DATA body transmission | Connection lost or write result leaves acceptance uncertain | `unknown` only when acceptance cannot be ruled out |
+| Final response | Explicit final 4xx/5xx | `rejected` outcome |
+| Final response | Positive 2xx | `accepted` outcome |
+| Final response | No final reply after terminator may have reached relay | `unknown` outcome |
 
-A result is `accepted` only after a positive final response to DATA. It means the relay accepted responsibility, not that a mailbox received the message.
+A result is `accepted` only after a positive final response to DATA. An explicit negative final response (4xx/5xx) is a known `rejected` outcome, including when it arrives after the message body. `unknown` is reserved for cases where the final disposition cannot be established, such as losing the connection after the DATA terminator may have reached the relay but before its final reply arrives. Connection, TLS, and AUTH failures are operational errors, not delivery outcomes. Acceptance means relay responsibility, not mailbox delivery.
 
 ## 2. Close flow
 

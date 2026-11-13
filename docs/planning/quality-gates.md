@@ -50,7 +50,7 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 | Check | Requirement | Evidence |
 | --- | --- | --- |
 | Crate boundary | Exactly two crates; core has no Node linkage | P02-001 diagram and check plan |
-| Status contract | `accepted` = relay acceptance; `unknown` after DATA; no delivery claim | P02-002 table |
+| Status contract | `accepted` = positive final DATA reply; explicit negative final reply = `rejected`; missing/ambiguous final reply after DATA = `unknown`; no delivery claim | P02-002 table |
 | Error taxonomy | Stable codes/categories; no message parsing required | P02-002 / error model |
 | Lifecycle | `open -> closing -> closed`; BUSY; bounded close; no GC | P02-003 |
 | Ownership | Copy-before-async; no borrowed JS memory | P02-004 |
@@ -104,7 +104,7 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 | Success | Positive final DATA → `accepted` | Command trace |
 | Pre-DATA rejection | MAIL/RCPT refusal → `rejected` | Trace |
 | Mixed RCPT | ADR-0005 behavior; no DATA after pre-DATA rejection | Trace |
-| Post-DATA ambiguity | `451` or reset → `unknown`; no retry | Trace + transaction count |
+| Final DATA response | Explicit 4xx/5xx (including `451`) → `rejected`; missing final reply after terminator may have reached relay → `unknown` | SMTP trace + transaction count |
 | Auth failure | `535` → `AUTH_FAILED`; no message sent | Trace |
 | TLS failures | Self-signed, expired, wrong host, incomplete chain, malformed | Negative tests |
 | Timeouts | Connect 10 s, operation 30 s, total 120 s, close 125 s | Injected-clock tests |

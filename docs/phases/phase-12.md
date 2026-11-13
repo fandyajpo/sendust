@@ -27,7 +27,7 @@ In scope: test plan and traceability, core unit/integration coverage, binding an
 - **Size:** L
 - **Status:** NOT STARTED
 - **Prerequisites:** P12-001
-- **Description:** Run Rust core unit/integration tests and napi binding tests across the full fake SMTP/TLS matrix. Assert exact command traces, results, deadlines, and cleanup. Include mixed RCPT, post-DATA `451`, TLS certificate failures, auth failure, resets, stalls, and limit boundaries.
+- **Description:** Run Rust core unit/integration tests and napi binding tests across the full fake SMTP/TLS matrix. Assert exact command traces, results, deadlines, and cleanup. Include mixed RCPT, explicit final DATA `451` rejection, missing-final-reply-after-DATA unknown, TLS certificate failures, auth failure, resets, stalls, and limit boundaries.
 - **Evidence criteria:** Coverage report identifies tested modules and untested critical branches. All fault fixtures pass. Core tests run without Node. Binding tests show no semantic drift. Any skipped test has a named reason and owner.
 
 ### P12-003 — Execute TypeScript contract, lifecycle, and error tests
@@ -56,7 +56,7 @@ In scope: test plan and traceability, core unit/integration coverage, binding an
 
 ## Technical implementation details
 
-QA validates the frozen architecture without changing it: two crates, core without Node, `TS -> napi -> core -> lettre`, `lettre 0.11.23`, rustls `ring`/`webpki-roots` with verification always on. Success is relay acceptance; post-DATA ambiguity is `unknown` with no retry. One active send returns `BUSY`; no queue or pooling. Close is explicit, bounded by 125s, and not GC-dependent. Timeouts are connect 10s, operation 30s, total 120s. Caps are 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. Filesystem attachments are opt-in and regular-file only; no URLs. Buffers are copied before async. Tests use loopback fake SMTP/TLS only. Candidate Node 22/24/26 are validated, not assumed.
+QA validates the frozen architecture without changing it: two crates, core without Node, `TS -> napi -> core -> lettre`, `lettre 0.11.23`, rustls `ring`/`webpki-roots` with verification always on. Success is relay acceptance; explicit negative final DATA replies are `rejected`; genuinely missing/indeterminate final replies after DATA are `unknown`, with no retry. One active send returns `BUSY`; no queue or pooling. Close is explicit, bounded by 125s, and not GC-dependent. Timeouts are connect 10s, operation 30s, total 120s. Caps are 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. Filesystem attachments are opt-in and regular-file only; no URLs. Buffers are copied before async. Tests use loopback fake SMTP/TLS only. Candidate Node 22/24/26 are validated, not assumed.
 
 ## Dependencies
 
@@ -68,7 +68,7 @@ Coverage can be high while critical branches remain untested; traceability must 
 
 ## Testing requirements
 
-Run Rust core tests, napi binding tests, and TypeScript contract/runtime tests. Required fixtures: all-recipient success; all RCPT `550`; mixed `250`/`550`; final DATA `451`; auth `535`; self-signed, expired, wrong-host, incomplete-chain, malformed TLS; connection refused; greeting/EHLO/AUTH/MAIL/RCPT/DATA/final resets; stalls at 10s/30s/120s/125s; abrupt close; malformed reply; 100/101 recipients; 10 MiB, 20 MiB, 30 MiB boundaries; attachment special files; filesystem-disabled default; CRLF/NUL injection; buffer mutation/detachment; forced GC; concurrent BUSY; double close; send-after-close. Assert exact command traces and cleanup. Execute twice for stability.
+Run Rust core tests, napi binding tests, and TypeScript contract/runtime tests. Required fixtures: all-recipient success; all RCPT `550`; mixed `250`/`550`; explicit final DATA `451`; missing final reply after DATA terminator; auth `535`; self-signed, expired, wrong-host, incomplete-chain, malformed TLS; connection refused; greeting/EHLO/AUTH/MAIL/RCPT/DATA/final resets; stalls at 10s/30s/120s/125s; abrupt close; malformed reply; 100/101 recipients; 10 MiB, 20 MiB, 30 MiB boundaries; attachment special files; filesystem-disabled default; CRLF/NUL injection; buffer mutation/detachment; forced GC; concurrent BUSY; double close; send-after-close. Assert exact command traces and cleanup. Execute twice for stability.
 
 ## Acceptance criteria
 

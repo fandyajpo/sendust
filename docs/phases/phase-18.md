@@ -10,7 +10,7 @@ Establish a controlled post-MVP backlog and first hardening cycle without weaken
 
 ## Scope
 
-In scope: post-MVP intake, feedback triage, candidate feature evaluation (SMTPUTF8, AbortSignal, pooling/retry research, platform expansion), compatibility policy, and the next-cycle gate. Out of scope: implementing post-MVP features in this phase, changing the published MVP, and reopening frozen constraints without an explicit ADR.
+In scope: post-MVP intake, feedback triage, candidate feature evaluation (SMTPUTF8, AbortSignal, connection pooling research, platform expansion), compatibility policy, and the next-cycle gate. Out of scope: implementing post-MVP features in this phase, changing the published MVP, and reopening frozen constraints without an explicit ADR.
 
 ## Tasks
 
@@ -19,7 +19,7 @@ In scope: post-MVP intake, feedback triage, candidate feature evaluation (SMTPUT
 - **Size:** M
 - **Status:** NOT STARTED
 - **Prerequisites:** P17-005
-- **Description:** Define channels and templates for consumer feedback, bug reports, security reports, and feature requests. Triage against the approved MVP contract: relay-accepted semantics, unknown-after-DATA, BUSY, no queue/retry, caps, attachment policy, TLS verification, and support matrix. Separate defects from feature requests and unsupported-use reports.
+- **Description:** Define channels and templates for consumer feedback, bug reports, security reports, and feature requests. Triage against the proposed MVP contract: relay-accepted semantics, explicit SMTP refusal versus unknown-after-DATA, BUSY, no internal queue/worker/adapter, no automatic retry, caps, attachment policy, TLS verification, and support matrix. Separate defects from feature requests and unsupported-use reports.
 - **Evidence criteria:** Intake template captures version, platform, Node version, relay behavior, result status, and redacted diagnostics. Every item is classified as defect, documentation gap, feature request, or unsupported use. Security reports have a private path. No item is accepted by changing MVP semantics silently.
 
 ### P18-002 — Evaluate SMTPUTF8, AbortSignal, and platform expansion candidates
@@ -30,13 +30,13 @@ In scope: post-MVP intake, feedback triage, candidate feature evaluation (SMTPUT
 - **Description:** Research post-MVP candidates without committing implementation: SMTPUTF8 support, AbortSignal integration, additional Node versions/platforms, and richer recipient reporting if lettre exposes it. Assess compatibility, security, API impact, and test burden. Preserve ASCII local parts and IDNA domains for MVP compatibility.
 - **Evidence criteria:** Candidate matrix lists benefit, risk, compatibility, required ADR, and evidence needed. SMTPUTF8 remains explicitly post-MVP until an ADR proves relay support and encoding behavior. AbortSignal must map to bounded close semantics, not required shutdown. Platform expansion requires lifecycle and distribution evidence.
 
-### P18-003 — Evaluate pooling and retry only as explicit opt-in research
+### P18-003 — Evaluate connection pooling only as separate future research
 
 - **Size:** L
 - **Status:** NOT STARTED
 - **Prerequisites:** P18-001
-- **Description:** Investigate whether connection pooling or retry could be offered later as explicit opt-in behavior without violating MVP defaults. Analyze duplicate-send risk, unknown-after-DATA, relay idempotency, queue semantics, BUSY, and close/drain interaction. Do not implement or enable either in the MVP line.
-- **Evidence criteria:** Research record states MVP remains no-pooling/no-retry. Any proposal includes duplicate-send analysis, idempotency requirements, opt-in API shape, and failure semantics. Automatic retry after DATA remains rejected unless a future ADR proves safe and explicit. No code change occurs in this phase.
+- **Description:** Investigate whether connection pooling could be offered in a future release without violating MVP lifecycle and BUSY semantics. Analyze session health, concurrency, relay behavior, resource limits, and close/drain interaction. Retry policy may be researched only as a separate caller-owned policy; no automatic retry implementation is included. Queueing, workers, persistence, scheduling, and queue adapters are not part of this phase or the current roadmap.
+- **Evidence criteria:** Research record states MVP remains one-connection-per-send with no pooling and no automatic retry. Any pooling proposal includes lifecycle, concurrency, resource, and compatibility analysis. No queue architecture or adapter contract is produced. No code change occurs in this phase.
 
 ### P18-004 — Define the next compatibility and deprecation policy
 
@@ -56,7 +56,7 @@ In scope: post-MVP intake, feedback triage, candidate feature evaluation (SMTPUT
 
 ## Technical implementation details
 
-The approved baseline is immutable for this phase: two crates with core free of Node, `TS -> napi -> core -> lettre`, `lettre 0.11.23`, rustls `ring`/`webpki-roots` with mandatory verification, no custom SMTP unless previously justified, no pooling, no automatic retries, relay-accepted success, unknown-after-DATA without retry, one active send with fail-fast `BUSY`, no queue, explicit close bounded by 125s without GC dependence, finite timeouts (connect 10s, operation 30s, total 120s, close 125s), copied buffers, opt-in regular-file attachments with no URLs, caps of 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, and 30 MiB wire, ASCII local parts with IDNA domains and Unicode display/body, SMTPUTF8 post-MVP, and optional AbortSignal. Post-MVP proposals must preserve these defaults or require an explicit, separately approved breaking-change ADR.
+The planning baseline for this phase, subject to completion of its approval gates, is: two crates with core free of Node, `TS -> napi -> core -> lettre`, `lettre 0.11.23`, rustls `ring`/`webpki-roots` with mandatory verification, no custom SMTP unless previously justified, one connection per send, no automatic retries, relay-accepted success, explicit SMTP refusal as `rejected`, genuinely indeterminate final disposition as `unknown`, one active send with fail-fast `BUSY`, no internal queue/worker/scheduler/persistence/adapter, explicit close bounded by 125s without GC dependence, finite timeouts (connect 10s, operation 30s, total 120s, close 125s), copied buffers, opt-in regular-file attachments with no URLs, caps of 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, and 30 MiB wire, ASCII local parts with IDNA domains and Unicode display/body, SMTPUTF8 post-MVP, and optional AbortSignal. Post-MVP proposals must preserve these defaults or require an explicit, separately approved breaking-change ADR.
 
 ## Dependencies
 
@@ -64,7 +64,7 @@ Phase 18 requires Phase 17 approval. P18-001 depends on P17-005; P18-002 and P18
 
 ## Risks and edge cases
 
-Post-MVP enthusiasm can erode MVP honesty, especially around retry, pooling, delivery confirmation, and SMTPUTF8. Feedback may conflate relay acceptance with delivery. A “small” AbortSignal change can introduce unsafe cancellation. Pooling can break one-active-send and close semantics. Retry can duplicate mail after unknown. Platform expansion can outpace lifecycle testing. Deprecation policy can be ignored under release pressure.
+Post-MVP enthusiasm can erode MVP honesty, especially around retry, pooling, delivery confirmation, and SMTPUTF8. Feedback may conflate relay acceptance with delivery. A “small” AbortSignal change can introduce unsafe cancellation. Pooling can break one-active-send and close semantics. Retry can duplicate mail after unknown; automatic retry is not in the current roadmap. Platform expansion can outpace lifecycle testing. Deprecation policy can be ignored under release pressure.
 
 ## Testing requirements
 
@@ -74,13 +74,14 @@ Post-MVP work is research and intake only; no product tests are added in this ph
 
 - Feedback and defects are triaged against the approved contract.
 - Candidate features have evidence, risks, and required ADRs; none are implemented.
-- Pooling and retry remain disabled by default and require explicit future approval.
+- Pooling remains disabled by default and requires explicit future approval.
+- No queue/worker/adapter design or implementation is introduced.
 - Compatibility/deprecation policy protects MVP semantics.
 - Next-cycle backlog is prioritized and the published MVP remains unchanged.
 
 ## Deliverables
 
-Feedback intake templates, triage log, post-MVP candidate matrix, pooling/retry research record, compatibility/deprecation policy, and prioritized next-cycle backlog with handoff criteria.
+Feedback intake templates, triage log, post-MVP candidate matrix, connection pooling research record, compatibility/deprecation policy, and prioritized next-cycle backlog with handoff criteria.
 
 ## Completion gate
 

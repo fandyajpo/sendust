@@ -44,7 +44,7 @@ In scope: relay session configuration, TLS and authentication, MAIL/RCPT/DATA tr
 - **Status:** NOT STARTED
 - **Prerequisites:** P06-001, P06-002
 - **Description:** Map SMTP reply classes to core results: relay acceptance for a successful final DATA response, definite rejection before acceptance where certainty exists, and `unknown` after DATA when the final outcome cannot be known. Implement zero automatic retries, including after timeouts, resets, or ambiguous replies. Preserve attempt counts without creating duplicate sends. Define how protocol violations and abrupt closes map without pretending certainty.
-- **Evidence criteria:** Final DATA `451` yields `unknown` and exactly one SMTP transaction. `550` before DATA yields `rejected`; `250` final response yields `accepted` meaning relay accepted, not delivered. A reset during DATA yields `unknown`. No retry loop exists in code or test.
+- **Evidence criteria:** An explicit final DATA `451` yields `rejected`; a dropped connection after the terminator may have reached the relay and before a final reply yields `unknown`. Both use exactly one SMTP transaction. `550` before DATA yields `rejected`; `250` final response yields `accepted` meaning relay accepted, not delivered. A reset during DATA yields `unknown`. No retry loop exists in code or test.
 
 ### P06-005 — SMTP fault-matrix phase gate
 
@@ -52,7 +52,7 @@ In scope: relay session configuration, TLS and authentication, MAIL/RCPT/DATA tr
 - **Status:** NOT STARTED
 - **Prerequisites:** P06-001, P06-002, P06-003, P06-004
 - **Description:** Run the complete SMTP fault matrix against the deterministic loopback harness and review the recipient ADR implementation. Confirm every result is honest, TLS cannot be weakened, no retry/pooling exists, and timeout stages are reported only where observable.
-- **Evidence criteria:** Gate covers success, all RCPT rejected, mixed RCPT, post-DATA `451`, auth `535`, five TLS certificate failures, connection refused, greeting reset, DATA reset, abrupt pre-final close, connect 11s, command 31s, total 121s, and close 126s. Phase 07 and Phase 09 may consume SMTP only after approval.
+- **Evidence criteria:** Gate covers success, all RCPT rejected, mixed RCPT, explicit final `451` and missing-final-reply-after-DATA, auth `535`, five TLS certificate failures, connection refused, greeting reset, DATA reset, abrupt pre-final close, connect 11s, command 31s, total 121s, and close 126s. Phase 07 and Phase 09 may consume SMTP only after approval.
 
 ## Technical implementation details
 
@@ -65,7 +65,7 @@ Phase 06 requires Phase 04 and Phase 01 gates. P06-001 needs P04-005 and P01-001
 ## Risks and edge cases
 
 - The high-level lettre transport may not expose RCPT outcomes; promising partial success is forbidden.
-- A server may accept RCPT then fail after DATA; result must be `unknown`.
+- A server may accept RCPT and then explicitly reject the final DATA with 4xx/5xx; result is `rejected`. If the final response is missing after the terminator may have reached the relay, result is `unknown`.
 - Greeting, EHLO, STARTTLS, AUTH, MAIL, RCPT, DATA, and final response may fail at different points; certainty depends on observable stage.
 - Retrying an unknown result can duplicate mail and is prohibited.
 - TLS feature drift or permissive roots would violate security posture.

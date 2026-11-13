@@ -118,11 +118,11 @@ A successful result means the relay accepted the message. It NEVER means mailbox
 
 Enforced by P02-002, P06-004, P09-002.
 
-### C-16 — No pooling, no automatic retry
+### C-16 — No pooling, no automatic retry, no queue orchestration
 
-MVP MUST open one connection per send and close it deterministically. It MUST NOT include a connection pool, retry policy, backoff, or dead-letter queue. Callers may retry explicitly.
+MVP MUST open one connection per send and close it deterministically. Sendust MUST NOT include a connection pool, automatic retry policy, backoff scheduler, internal queue, worker, persistence layer, dead-letter queue, or queue adapter. Each `send()` call is a direct request/response operation. Queueing, scheduling, and any retry decision remain caller-owned and may be implemented by the consuming application independently of Sendust. No queue abstraction or adapter contract is to be designed in the current roadmap.
 
-Enforced by P02-003, P09-004, P18-003.
+Enforced by P02-003, P09-004, and the product-scope review.
 
 ### C-17 — Cancellation
 
@@ -204,11 +204,11 @@ CRLF and control characters MUST be rejected in addresses, header names, header 
 
 Enforced by P04-002, P07-001, P11-003.
 
-### C-30 — SMTP-first product boundary
+### C-30 — Standalone delivery-engine boundary
 
-The MVP is SMTP-first. Marketing, campaigns, contacts, analytics, tracking, hosting, web administration, distributed queues, templates, and provider REST APIs are out of scope.
+Sendust is a standalone native email delivery engine, not a hosted email platform or job-processing system. Marketing, campaigns, contacts, analytics, tracking, hosting, web administration, built-in templates, provider REST APIs, and inbound mail protocols are outside the product. Queue/job orchestration is held outside the current roadmap: no internal queue, worker, persistence, scheduling, or adapter API is defined. Reconsideration requires a separate product decision and updated requirements; it is not implied by the post-MVP phase.
 
-Enforced by P00-001, P15-005.
+Enforced by P00-001 and P15-005.
 
 ## 3. Functional requirements
 

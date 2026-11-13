@@ -62,7 +62,7 @@ Never:
 - Introduce zero-copy borrowed JS memory across async.
 - Relax caps to improve throughput.
 - Remove validation or verification.
-- Add pooling or retry to improve benchmark numbers.
+- Add pooling, retry, queues, or workers to improve benchmark numbers.
 - Trade correctness for speed.
 
 ## 7. Memory model

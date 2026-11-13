@@ -1,6 +1,6 @@
 # Sendust — System Design
 
-**Status:** proposed; frozen at `PHASE-02`.  
+**Status:** proposed; not frozen. P02-005 is the architecture approval gate.  
 **Requirements:** [requirements.md](../product/requirements.md).  
 **Call path:** `ts/src -> sendust-napi -> sendust-core -> lettre 0.11.23`.
 
@@ -98,7 +98,7 @@ pub struct Limits {
 
 pub struct OutgoingMessage {
     pub from: Mailbox,
-    pub to: Vec<Mailbox>,
+    pub to: Vec<Mailbox>, // may be empty when cc or bcc supplies recipients
     pub cc: Vec<Mailbox>,
     pub bcc: Vec<Mailbox>,
     pub reply_to: Vec<Mailbox>,
@@ -126,7 +126,7 @@ pub struct RecipientOutcome {
 }
 ```
 
-The exact shape is frozen in P02-002. The important property is that `SendOutcome` cannot represent mailbox delivery.
+The exact shape is proposed and must not be described as frozen until P02-005 is approved. The important property is that `SendOutcome` cannot represent mailbox delivery.
 
 ### 2.2 Validation order (deterministic)
 
@@ -176,6 +176,7 @@ Rules:
 - One `send` in flight. A second `send` returns `BUSY` immediately without dialing.
 - `close()` is idempotent. Concurrent `close()` calls share the same drain.
 - `close()` during connect/auth/DATA requests cancellation of the in-flight operation and waits up to the close budget.
+- Cancellation before DATA acceptance is possible may end as an operational cancellation/timeout error. If the DATA terminator may have reached the relay and no final reply is observed, the send outcome is `Unknown`; close cannot turn this into a definite rejection.
 - The close budget (125 s) is greater than the total send budget (120 s) so a close during a maximal send can still drain.
 - After `closed`, every `send` returns `CLOSED`.
 - No finalizer, GC hook, or process-exit handler is required for correctness.
@@ -203,7 +204,10 @@ deadline = start + min(total, remaining close budget)
   - If per-recipient RCPT status is observable through the chosen API, report it honestly.
   - Otherwise reject the whole envelope before DATA when any recipient is rejected, and report `unknown`/`attempted` where certainty is unavailable.
   - Never send one message per recipient.
-- After DATA, any ambiguity → `unknown`; no retry.
+- A positive final DATA reply (2xx) → `Accepted`.
+- An explicit negative final DATA reply (4xx/5xx) → `Rejected`; this is a known refusal, not an ambiguous result.
+- Missing final reply after the DATA terminator may have reached the relay → `Unknown`; no retry.
+- Connection, TLS, and AUTH failures before message submission are operational errors, not `Rejected` delivery outcomes.
 
 ### 2.7 Attachment policy
 
@@ -238,7 +242,7 @@ Names and casing follow napi-rs conventions; the TypeScript wrapper re-exports t
 - `Buffer`/`ArrayBuffer`/typed arrays → `Vec<u8>` copy before async.
 - Strings → `String` with UTF-8 validation; invalid UTF-16 is rejected, not lossily replaced.
 - Numbers → bounded integer conversion with range checks; no silent truncation.
-- Options objects → core structs with unknown fields rejected or ignored per the frozen contract (decided in P02-002; default: reject unknown keys to prevent typos).
+- Options objects → core structs with unknown fields rejected or ignored per the proposed contract (P02-002 approval pending; proposed default: reject unknown keys to prevent typos).
 - Errors → JS `Error` subclass with `code`, `category`, `message`, optional `details`; credentials and content removed.
 - Panics → caught at the exported boundary where unwind is enabled; converted to an internal error. `panic = "abort"` is not used for the addon.
 
@@ -252,7 +256,7 @@ Names and casing follow napi-rs conventions; the TypeScript wrapper re-exports t
 
 ## 4. `ts/src`
 
-### 4.1 Public API (frozen in P09-001)
+### 4.1 Public API (proposed; approval gate P09-005)
 
 ```ts
 export interface TransportOptions {
@@ -268,7 +272,7 @@ export interface TransportOptions {
 
 export interface Message {
   from: string | { name?: string; address: string };
-  to: Array<string | { name?: string; address: string }>;
+  to?: Array<string | { name?: string; address: string }>;
   cc?: Array<string | { name?: string; address: string }>;
   bcc?: Array<string | { name?: string; address: string }>;
   replyTo?: Array<string | { name?: string; address: string }>;

@@ -1,6 +1,6 @@
 # Sendust — Architecture Overview
 
-**Status:** proposed; frozen only at `PHASE-02` gate.  
+**Status:** proposed; not frozen. Architecture approval requires P02-005 and its evidence.  
 **Authoritative constraints:** [requirements](../product/requirements.md).  
 **Detailed design:** [system design](system-design.md).  
 **Decisions:** [ADR index](decisions/README.md).
@@ -58,7 +58,7 @@ A separate `sendust-mime` or `sendust-smtp` crate is not justified yet: MIME and
 6. Core maps the final observable state to `accepted`, `rejected`, or `unknown` and closes the session.
 7. The binding converts the result or error into a stable JS object; the wrapper returns it unchanged.
 
-No queue exists at any layer. No retry exists at any layer. No per-recipient message fan-out exists.
+No queue, worker, scheduler, queue adapter, or persistence layer exists or is planned in the current scope. No automatic retry exists at any layer. No per-recipient message fan-out exists. Queueing and scheduling remain caller-owned.
 
 ## 5. Ownership model
 
@@ -80,12 +80,13 @@ Failures are categorized before they reach JavaScript:
 | Limit | Attachment > 10 MiB, wire > 30 MiB | Rejection before DATA |
 | TLS | Self-signed, expired, wrong host | Closed, non-retryable error |
 | Authentication | `535` | Closed, non-retryable error |
-| Protocol | Unexpected reply, abrupt close | Categorized; `unknown` after DATA |
+| Protocol | Explicit SMTP refusal | `rejected` when the relay definitively refuses |
+| Protocol | Abrupt close / missing final reply after DATA | `unknown` only when final disposition cannot be established |
 | Timeout | Connect/operation/total budget exceeded | Timeout category with elapsed budget |
 | Lifecycle | Send after close, concurrent send | `CLOSED` / `BUSY`, no network attempt |
 | Internal | Panic or invariant violation | Converted to generic internal error; never unwinds across FFI |
 
-Success means **relay acceptance**. After DATA, ambiguity is `unknown` and is never retried automatically. See [error model](error-model.md).
+Success means **relay acceptance**. An explicit negative final DATA reply is `rejected`; `unknown` is reserved for a missing/indeterminate final disposition after DATA may have reached the relay. Neither is automatically retried. See [error model](error-model.md).
 
 ## 7. Security posture
 
@@ -111,4 +112,4 @@ The npm package is a root package plus platform packages selected by OS/CPU/libc
 - Additional transports (SES, SendGrid, etc.).
 - Templates, queues, tracking, or analytics.
 
-These are recorded as post-MVP or out of scope in the [feature matrix](../planning/feature-matrix.md).
+Their classifications are recorded individually in the [feature matrix](../planning/feature-matrix.md). Queue/job orchestration and queue adapters are `HELD`, not post-MVP commitments; reconsideration requires a separate product decision.

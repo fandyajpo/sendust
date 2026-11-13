@@ -19,7 +19,7 @@ In scope: API reference for `ts/src`, quick start, relay-accepted semantics, lif
 - **Size:** M
 - **Status:** NOT STARTED
 - **Prerequisites:** P09-005
-- **Description:** Document installation assumptions, transport configuration, one successful send, and explicit close. Define “success” as relay acceptance, not delivery. Explain `accepted`, `rejected`, `unknown`, `attempted`, and `BUSY`, and state that post-DATA unknown is never retried. Include a minimal fake-relay example and a production-relay example without real credentials.
+- **Description:** Document installation assumptions, transport configuration, one successful send, and explicit close. Define “success” as relay acceptance, not delivery. Explain `accepted`, `rejected`, `unknown`, `attempted`, and `BUSY`, and state that explicit final negative DATA replies are `rejected`, missing/ambiguous final replies after DATA may have reached the relay are `unknown`, and neither is retried. Include a minimal fake-relay example and a production-relay example without real credentials.
 - **Evidence criteria:** Every code sample compiles against the public types and runs locally with the fake relay. Semantics section contains no delivery guarantee. BUSY and unknown are explained with transaction-level behavior. Close appears in every lifecycle example.
 
 ### P15-002 — Document lifecycle, timeouts, concurrency, and limits
@@ -56,7 +56,7 @@ In scope: API reference for `ts/src`, quick start, relay-accepted semantics, lif
 
 ## Technical implementation details
 
-Documentation describes the frozen contract: `TS wrapper -> napi -> core -> lettre`, `lettre 0.11.23`, rustls `ring`/`webpki-roots`, Tokio 1 managed by napi, and two crates with core free of Node linkage. Success means relay acceptance, never delivery. One active send returns `BUSY`; there is no queue, pooling, or automatic retry. Close is explicit, idempotent, and bounded by 125s, not GC-dependent. Timeouts are connect 10s, operation 30s, total 120s, close 125s, finite and tunable. Caps are 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. Envelope local parts are ASCII, domains IDNA, display/body Unicode; SMTPUTF8 is post-MVP. Attachments require opt-in, allow bounded regular files only, and never URLs. JS buffers are copied before async. AbortSignal is optional and not required.
+Documentation describes the approved contract only after the relevant gates pass; until then it describes the proposed contract: `TS wrapper -> napi -> core -> lettre`, `lettre 0.11.23`, rustls `ring`/`webpki-roots`, Tokio 1 managed by napi, and two crates with core free of Node linkage. Success means relay acceptance, never delivery. One active send returns `BUSY`; there is no queue, pooling, or automatic retry. Close is explicit, idempotent, and bounded by 125s, not GC-dependent. Timeouts are connect 10s, operation 30s, total 120s, close 125s, finite and tunable. Caps are 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. Envelope local parts are ASCII, domains IDNA, display/body Unicode; SMTPUTF8 is post-MVP. Attachments require opt-in, allow bounded regular files only, and never URLs. JS buffers are copied before async. AbortSignal is optional and not required.
 
 ## Dependencies
 

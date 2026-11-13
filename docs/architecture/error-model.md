@@ -1,6 +1,6 @@
 # Sendust — Error Model
 
-**Status:** proposed; frozen at `PHASE-02`.  
+**Status:** proposed; not frozen. P02-005 is the architecture approval gate.  
 **Related:** [system design](system-design.md), [ADR-0005 recipient semantics](decisions/0005-recipient-partial-failure.md), [security strategy](../engineering/security-strategy.md).
 
 ## 1. Two distinct channels
@@ -30,8 +30,8 @@ export interface SendResult {
 | Status | Meaning | When |
 | --- | --- | --- |
 | `accepted` | The relay returned a positive final response to DATA and accepted responsibility. **Not** mailbox delivery. | Final DATA response is 2xx. |
-| `rejected` | The relay definitively refused the envelope or message before accepting responsibility. | Connect/auth/TLS failure is an error, not this status; MAIL/RCPT/DATA refusal before body acceptance is `rejected`. |
-| `unknown` | The message may or may not have been accepted. Certainty is impossible. | Connection lost after DATA began, final response missing or ambiguous, or timeout after body transmission. |
+| `rejected` | The relay definitively refused the envelope or message. | A definitive negative SMTP response to MAIL, RCPT (under the selected recipient policy), DATA, or the final DATA response (4xx/5xx). |
+| `unknown` | The message may or may not have been accepted; the final disposition cannot be established. | The DATA terminator may have reached the relay but the final response was not received, or a write/connection failure leaves acceptance genuinely uncertain. |
 
 ### 2.2 Recipient status rules
 
@@ -50,7 +50,7 @@ No field, name, or documentation may imply mailbox delivery. `accepted` is defin
 
 ### 2.4 No retry
 
-`unknown` is terminal for the call. Sendust does not retry, requeue, or resend. The caller decides whether a new send is safe.
+`unknown` is terminal for the call. Sendust does not retry or resend. Sendust does not enqueue or schedule work. The caller decides whether a new send is safe.
 
 ## 3. Error taxonomy
 
@@ -101,12 +101,12 @@ export type ErrorCategory =
 | `TLS_PROTOCOL` | tls | async | Unsupported TLS version/cipher | No |
 | `AUTH_FAILED` | authentication | async | Relay rejected credentials | No, fix credentials |
 | `AUTH_UNSUPPORTED` | authentication | async | Relay offered no supported mechanism | No |
-| `PROTOCOL_REJECTED` | protocol | async | Definitive SMTP refusal not represented as an outcome | No |
+| `PROTOCOL_REJECTED` | protocol | async | Malformed or unexpected protocol failure that prevents a trustworthy outcome; definitive SMTP refusals are `rejected` outcomes | No |
 | `PROTOCOL_UNEXPECTED_RESPONSE` | protocol | async | Malformed/unexpected reply | Maybe |
-| `PROTOCOL_CONNECTION_RESET` | protocol | async | Peer closed unexpectedly | Maybe, with duplicate risk after DATA |
+| `PROTOCOL_CONNECTION_RESET` | protocol | async | Peer closed unexpectedly | Only when known to be pre-DATA; if final disposition is uncertain after DATA, return `unknown` and do not automatically retry |
 | `TIMEOUT_CONNECT` | timeout | async | Connect budget exceeded | Yes |
-| `TIMEOUT_OPERATION` | timeout | async | Operation budget exceeded | Yes, with duplicate risk if after DATA |
-| `TIMEOUT_TOTAL` | timeout | async | Total send budget exceeded | Yes, with duplicate risk if after DATA |
+| `TIMEOUT_OPERATION` | timeout | async | Operation budget exceeded | Only when known to be pre-DATA; after DATA uncertainty, return `unknown` and do not automatically retry |
+| `TIMEOUT_TOTAL` | timeout | async | Total send budget exceeded | Only when known to be pre-DATA; after DATA uncertainty, return `unknown` and do not automatically retry |
 | `TIMEOUT_CLOSE` | timeout | async | Close drain exceeded budget | Process-level concern |
 | `TRANSPORT_CLOSED` | closed | async | Send after close or during close | No |
 | `TRANSPORT_BUSY` | busy | async | A send is already active | No, wait for completion |
@@ -137,9 +137,12 @@ Codes are append-only within a major version. Removing or renaming a code is a b
 | rustls certificate error | tls | `TLS_CERTIFICATE` |
 | rustls handshake/protocol error | tls | `TLS_HANDSHAKE` / `TLS_PROTOCOL` |
 | lettre auth error | authentication | `AUTH_FAILED` |
-| lettre transport error before DATA | protocol | `PROTOCOL_*` or `rejected` outcome |
-| lettre transport error after DATA | protocol | `unknown` outcome (not an error) |
-| Elapsed deadline | timeout | `TIMEOUT_*` |
+| TCP/connect/TLS/AUTH failure before an SMTP message transaction | operational error | `PROTOCOL_*`, `TLS_*`, or `AUTH_*`; never `rejected` delivery status |
+| Explicit negative SMTP response at MAIL/RCPT/DATA or final DATA response | delivery outcome | `rejected` |
+| Positive final DATA response | delivery outcome | `accepted` |
+| Lost/missing final response after DATA terminator may have reached relay | delivery outcome | `unknown` |
+| Timeout before any message acceptance is possible | timeout error | `TIMEOUT_*` |
+| Timeout after DATA with uncertain final disposition | delivery outcome | `unknown`, with timeout metadata where available |
 | State machine rejection | closed/busy | `TRANSPORT_CLOSED` / `TRANSPORT_BUSY` |
 | Panic caught at boundary | internal | `INTERNAL` |
 
@@ -158,7 +161,7 @@ When multiple validation failures exist, the first failure in the deterministic 
 7. Attachment byte caps.
 8. Wire cap.
 
-This prevents nondeterministic messages and makes tests stable. The order is frozen in P02-002 and tested in P04-001.
+This prevents nondeterministic messages and makes tests stable. The proposed order is to be approved in P02-002 and implemented/tested in P04-001.
 
 ## 6. Redaction rules
 
@@ -188,5 +191,5 @@ Redaction is tested by serializing the error and scanning for marker values (P09
 
 - Branch on `result.status`, not on exception messages.
 - Treat `unknown` as “do not automatically retry”; decide idempotency at the application layer.
-- Treat `BUSY` as a programming error or a signal to serialize sends; there is no internal queue.
+- Treat `BUSY` as a programming error or a signal to serialize sends. Sendust has no internal queue, worker, scheduler, or queue adapter; any job orchestration belongs to the consuming application.
 - Treat `accepted` as relay acceptance; delivery confirmation requires a separate mechanism not provided by Sendust.

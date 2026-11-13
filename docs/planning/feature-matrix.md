@@ -9,6 +9,7 @@ Every `REQUIRED FOR MVP` row must map to at least one implementation task and at
 - **REQUIRED FOR MVP** — must ship in the first public release.
 - **OPTIONAL FOR MVP** — may ship only if it adds no risk and no scope creep; absence is acceptable.
 - **POST-MVP** — explicitly deferred; not in the first release.
+- **HELD** — deliberately excluded from the current roadmap; not an MVP feature or an active post-MVP candidate. Reconsideration requires a separate product decision.
 - **OUT OF SCOPE** — permanently excluded from the product direction.
 
 ## SMTP
@@ -28,7 +29,7 @@ Every `REQUIRED FOR MVP` row must map to at least one implementation task and at
 | F-SMTP-11 | Certificate and hostname verification | REQUIRED | P06-002 | P06-005, P11-002 | Never disableable |
 | F-SMTP-12 | Plaintext SMTP mode | OUT OF SCOPE | — | P11-002 negative test | Security posture |
 | F-SMTP-13 | Connection pooling | POST-MVP | P18-003 research only | — | See ADR-0006 |
-| F-SMTP-14 | Automatic retry/backoff | POST-MVP | P18-003 research only | — | Duplicate-mail risk |
+| F-SMTP-14 | Automatic retry/backoff | POST-MVP | Future ADR/research decision | — | No automatic retry in MVP; unknown outcomes require caller judgment |
 | F-SMTP-15 | SMTPUTF8 | POST-MVP | P18-002 research only | — | ASCII local parts in MVP |
 | F-SMTP-16 | DKIM signing | POST-MVP | — | — | Post-MVP candidate |
 | F-SMTP-17 | `verify()` connection probe | POST-MVP | — | — | Not required to send |
@@ -82,7 +83,7 @@ Every `REQUIRED FOR MVP` row must map to at least one implementation task and at
 | F-DEL-05 | Graceful close | REQUIRED | P09-004, P10-001 | P10-004, P12-003 | Idempotent |
 | F-DEL-06 | BUSY on concurrent send | REQUIRED | P04-004, P09-004 | P10-004, P12-003 | No queue |
 | F-DEL-07 | Per-recipient independent messages | OUT OF SCOPE | — | P06-005 negative trace | Forbidden |
-| F-DEL-08 | Automatic retry | POST-MVP | P18-003 | — | See ADR-0006 |
+| F-DEL-08 | Automatic retry | POST-MVP | Future ADR/research decision | — | Not in current implementation scope |
 | F-DEL-09 | AbortSignal cancellation | POST-MVP | P18-002 | — | Optional, not required |
 | F-DEL-10 | Delivery confirmation / DSN | OUT OF SCOPE | — | — | Requires receiving path |
 
@@ -137,20 +138,20 @@ Every `REQUIRED FOR MVP` row must map to at least one implementation task and at
 | F-OPS-02 | Bounded close drain | REQUIRED | P10-002 | P10-004 | 125 s |
 | F-OPS-03 | No GC-dependent shutdown | REQUIRED | P10-001 | P10-004 | Forced-GC tests |
 | F-OPS-04 | Structured logs/observability | POST-MVP | — | — | No logging in MVP |
-| F-OPS-05 | Queue integration | OUT OF SCOPE | — | — | Infrastructure concern |
+| F-OPS-05 | Queue integration or adapter | HELD | — | — | Not in current roadmap; queue orchestration is caller-owned |
 
 ## Post-MVP candidates (not in MVP)
 
 | ID | Candidate | Trigger | Research task |
 | --- | --- | --- | --- |
 | PM-01 | Connection pooling | Throughput demand | P18-003 |
-| PM-02 | Opt-in retry policy | Caller demand with idempotency story | P18-003 |
+| PM-02 | Opt-in retry policy | Caller demand with idempotency story | Future planning decision |
 | PM-03 | SMTPUTF8 | Internationalized local parts | P18-002 |
 | PM-04 | AbortSignal cancellation | Caller demand; must reuse bounded close | P18-002 |
 | PM-05 | Streaming attachments | Large-message demand | P18-002 |
 | PM-06 | Additional transports (SES, SendGrid, Mailgun) | Provider demand | P18-002 |
 | PM-07 | Templates | Application demand | P18-001 |
-| PM-08 | Queue integrations | Infrastructure demand | P18-001 |
+
 | PM-09 | Observability hooks | Operational demand | P18-002 |
 | PM-10 | `verify()` probe | Diagnostics demand | P18-002 |
 | PM-11 | DKIM signing | Deliverability demand | P18-002 |
@@ -158,7 +159,7 @@ Every `REQUIRED FOR MVP` row must map to at least one implementation task and at
 
 ## Out-of-scope product areas (permanent)
 
-Email marketing, campaigns, contacts, analytics dashboards, open tracking, click tracking, email hosting, web administration, distributed queue infrastructure, built-in template management, provider-specific REST API integrations, IMAP/POP3 receiving, plaintext SMTP, certificate verification bypass.
+Email marketing, campaigns, contacts, analytics dashboards, open tracking, click tracking, email hosting, web administration, built-in template management, provider-specific REST API integrations, IMAP/POP3 receiving, plaintext SMTP, certificate verification bypass. Internal queue infrastructure and queue adapters are held outside the current roadmap, not designed as post-MVP candidates.
 
 ## Requirement coverage map
 
@@ -251,7 +252,7 @@ Each functional and non-functional requirement maps to at least one feature row 
 | C-13 | F-ATT-05, F-ATT-06, F-DEL-02, F-DEL-06 |
 | C-14 | F-MSG-13, F-MSG-14, F-MSG-15, F-MSG-16 |
 | C-15 | F-DEL-03, F-DEL-04, F-DEL-08 |
-| C-16 | F-SMTP-13, F-SMTP-14 |
+| C-16 | F-SMTP-13, F-SMTP-14, F-OPS-05 |
 | C-17 | F-DEL-09 |
 | C-18 | F-DEL-04, F-DEL-07 |
 | C-19 | F-SEC-03 |

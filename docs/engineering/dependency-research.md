@@ -6,7 +6,7 @@
 
 ## 1. Method
 
-- Repository inspected first: empty Git repository, no commits, no existing toolchain or conventions.
+- Repository inspected first: documentation and planning repository; no application source or existing implementation toolchain was present in the audited snapshot.
 - Sources consulted on 2026-11-13:
   - napi-rs official documentation: getting started, support and compatibility, async `fn`, errors and panics, release deep dive.
   - docs.rs: `lettre` 0.11.23 crate page and `AsyncSmtpTransport`; `mail-parser` 1.0.1 crate page.

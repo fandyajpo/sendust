@@ -104,7 +104,7 @@
 | [P17](../phases/phase-17.md) | RC and MVP approval/publication | [P17-005](../phases/phase-17.md) | MVP approval record, publication closure, and rollback readiness | M | P17-001, P17-002, P17-003, P17-004 | NOT STARTED |
 | [P18](../phases/phase-18.md) | Post-MVP | [P18-001](../phases/phase-18.md) | Collect post-MVP feedback and defect intake | M | P17-005 | NOT STARTED |
 | [P18](../phases/phase-18.md) | Post-MVP | [P18-002](../phases/phase-18.md) | Evaluate SMTPUTF8, AbortSignal, and platform expansion candidates | L | P18-001 | NOT STARTED |
-| [P18](../phases/phase-18.md) | Post-MVP | [P18-003](../phases/phase-18.md) | Evaluate pooling and retry only as explicit opt-in research | L | P18-001 | NOT STARTED |
+| [P18](../phases/phase-18.md) | Post-MVP | [P18-003](../phases/phase-18.md) | Evaluate connection pooling as separate future research; queue/job orchestration is held outside the roadmap | L | P18-001 | NOT STARTED |
 | [P18](../phases/phase-18.md) | Post-MVP | [P18-004](../phases/phase-18.md) | Define the next compatibility and deprecation policy | M | P18-002, P18-003 | NOT STARTED |
 | [P18](../phases/phase-18.md) | Post-MVP | [P18-005](../phases/phase-18.md) | Post-MVP intake gate and next-cycle handoff | S | P18-001, P18-002, P18-003, P18-004 | NOT STARTED |
 

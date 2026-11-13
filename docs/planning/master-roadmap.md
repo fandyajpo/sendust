@@ -1,7 +1,7 @@
 # Master Roadmap
 
 **Planning date:** 2026-11-13.  
-**Repository state at planning time:** empty Git repository, no commits, no application code.  
+**Repository state at planning time:** planning and architecture documentation; application implementation was not present in the audited snapshot.  
 **Execution rule:** no phase starts before its predecessor’s completion gate is approved. All phases and tasks are `NOT STARTED`.
 
 This roadmap summarizes the 19 phase plans. Detailed tasks, tests, acceptance criteria, and deliverables live in [docs/phases](../phases/). Requirements live in [requirements.md](../product/requirements.md).
@@ -12,14 +12,14 @@ This roadmap summarizes the 19 phase plans. Detailed tasks, tests, acceptance cr
 | --- | --- | --- |
 | P00 Discovery | Problem, constraints, semantics, threat boundary, and open questions fixed | PHASE-00 |
 | P01 Research | lettre, rustls, recipient observability, and Node lifecycle resolved with evidence | PHASE-01 |
-| P02 Architecture | Two-crate design, status/error contract, lifecycle, ownership, and limits frozen | PHASE-02 |
+| P02 Architecture | Approve two-crate design, status/error contract, lifecycle, ownership, and limits | PHASE-02 |
 | P03 Repository | Workspace, toolchain, policies, and deterministic test seams exist | PHASE-03 |
 | P04 Rust core | Validation, message model, state machine, and lettre orchestration compile and pass core tests | PHASE-04 |
 | P05 Binding | Node-API 8 adapter exposes core with owned memory and stable mapping | PHASE-05 |
 | P06 SMTP | Relay sessions, TLS/auth, recipient policy, and response normalization pass the fault matrix | PHASE-06 |
 | P07 MIME | Headers, alternative bodies, filenames, and deterministic serialization conform to MIME | PHASE-07 |
 | P08 Attachments | Opt-in files, safe reads, caps, and MIME integration pass the attachment matrix | PHASE-08 |
-| P09 Public API | TypeScript transport, send, close, results, and errors match the frozen contract | PHASE-09 |
+| P09 Public API | Approve TypeScript transport, send, close, results, and errors against the architecture contract | PHASE-09 |
 | P10 Reliability | Races, timeout interaction, cleanup, and fault injection are hardened | PHASE-10 |
 | P11 Security | Threat model, TLS/auth, injection, attachments, ownership, and redaction are signed off | PHASE-11 |
 | P12 QA | Requirements-to-test traceability and full integration coverage pass | PHASE-12 |
@@ -147,7 +147,7 @@ Verifies RC identity and evidence, runs final MVP acceptance against the constra
 
 ### P18 — Post-MVP
 
-Collects feedback, researches SMTPUTF8, AbortSignal, platform expansion, pooling, retry, streaming, and additional transports, and defines the next compatibility/deprecation policy. No post-MVP feature enters the codebase without a new requirement, task, and test.
+Collects feedback, researches SMTPUTF8, AbortSignal, platform expansion, connection pooling, streaming, and additional transports, and defines the next compatibility/deprecation policy. Queue/job orchestration and queue adapters are held outside this roadmap. No post-MVP feature enters the codebase without a new requirement, task, and test.
 
 ## 3. Effort profile
 
@@ -183,4 +183,4 @@ A phase is done only when its completion gate is approved with linked evidence. 
 
 ## 5. Explicit non-goals for the roadmap
 
-No deadlines, no story points, no velocity, no team-size assumptions, no enterprise architecture, no features outside [mvp-scope.md](../product/mvp-scope.md). Post-MVP work is planned only as research, not as committed scope.
+No deadlines, no story points, no velocity, no team-size assumptions, no enterprise architecture, no features outside [mvp-scope.md](../product/mvp-scope.md). Post-MVP work is planned only as research, not as committed scope. Queueing, workers, persistence, scheduling, retry orchestration, and queue adapters are not planned deliverables.
