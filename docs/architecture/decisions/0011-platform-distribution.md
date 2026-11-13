@@ -39,3 +39,8 @@ Native addons must be distributed so consumers install a matching binary without
 - Clean-install tests on every declared target.
 - Missing-binary and wrong-architecture negative tests.
 - Post-publication verification record.
+
+
+## Amendment note — ADR-0015
+
+ADR-0015 extends the support declaration from a Node/platform matrix to an exact runtime × OS × CPU × ABI/libc matrix. Node.js, Bun, and Deno are required MVP runtime targets, but only combinations with Sendust-owned clean-install, native-load, and behavioral CI evidence may be published as supported. Deno's local node_modules and --allow-ffi requirements must be documented and tested. The platform list in ADR-0015 is the current MVP candidate baseline.
