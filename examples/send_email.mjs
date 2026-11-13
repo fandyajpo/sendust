@@ -6,10 +6,30 @@
 // SENDUST_USER and SENDUST_PASS are optional. Credentials are read from the
 // environment and never written anywhere by this script.
 
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
 const native = require("../ts/sendust.node");
+
+// Load the committed example config; real environment variables win.
+try {
+  const file = readFileSync(new URL("../.env", import.meta.url), "utf8");
+  for (const line of file.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const index = trimmed.indexOf("=");
+    if (index === -1) continue;
+    const key = trimmed.slice(0, index).trim();
+    const value = trimmed
+      .slice(index + 1)
+      .trim()
+      .replace(/^["']|["']$/g, "");
+    if (process.env[key] === undefined) process.env[key] = value;
+  }
+} catch {
+  // No .env file is fine; the variables can come from the environment.
+}
 
 const env = process.env;
 if (!env.SENDUST_HOST || !env.SENDUST_FROM || !env.SENDUST_TO) {
