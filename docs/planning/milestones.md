@@ -17,7 +17,7 @@ Milestones are evidence checkpoints, not calendar dates. A milestone is reached 
 
 ## M0 — Architecture Approved
 
-<badge color="success">REACHED — 2026-11-13</badge>
+**REACHED — 2026-11-13**
 
 **Evidence:** [QG-00](../gates/phase-00-discovery.md), [QG-01](../gates/phase-01-research.md), [QG-02](../gates/phase-02-architecture-approval.md), [approval matrix](../architecture/approval-matrix.md).
 
