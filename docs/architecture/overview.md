@@ -106,7 +106,11 @@ The npm package is a root package plus platform packages selected by OS/CPU/libc
 
 The public TypeScript API is runtime-neutral. Native loading is isolated in the loader. Node-API 8 remains the shared native boundary; no separate runtime adapter or WASM fallback is added without a failing compatibility test and superseding ADR. Node.js, Bun, and Deno are required MVP runtime targets under [ADR-0015](decisions/0015-multi-runtime-support.md), but none is claimed supported until Sendust blocking CI passes. Deno requires local node_modules and --allow-ffi. See [runtime research](../research/multi-runtime-compatibility.md).
 
-## 10. What the architecture deliberately excludes
+## 10. Modular architecture (ADR-0016)
+
+Sendust is a modular monolith, not a microservice system or a crate-per-feature workspace. The installable product remains one package, the native addon remains shared, and the Rust workspace remains exactly two crates. Inside sendust-core, configuration, address, message, validation, attachments, MIME, delivery orchestration, SMTP adapter, lifecycle, and errors/results have explicit ownership. Domain modules remain independent of SMTP/lettre and runtime bindings. SMTP is isolated behind a narrow internal delivery port; it is the only MVP adapter. No public plugin registry, speculative extension points, or alternate transport is added. See [ADR-0016](decisions/0016-modular-monolith.md).
+
+## 11. What the architecture deliberately excludes
 
 - Connection pooling and keep-alive.
 - Automatic retry, backoff, or dead-letter handling.

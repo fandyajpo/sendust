@@ -45,6 +45,10 @@ This ledger maps every authoritative constraint C-01 through C-36 to its archite
 | C-34 | Deno local node_modules and explicit --allow-ffi; no install scripts | ADR-0015 | P03, P14, P15; clean install | Design approved; tests pending |
 | C-35 | Support claims require exact runtime × platform evidence | ADR-0011/0015 | P14, P15, P17; blocking CI matrix | Design approved; tests pending |
 | C-36 | Explicit MVP OS/CPU/ABI candidate baseline | ADR-0011/0015 | P03, P14; build/load matrix | Design approved; tests pending |
+| C-37 | Modular monolith within existing two-crate workspace | ADR-0016 | P03/P04; structure audit | Design approved; tests pending |
+| C-38 | Explicit core module ownership and acyclic dependencies | ADR-0016 | P03/P04; architecture tests | Design approved; tests pending |
+| C-39 | SMTP-only adapter and narrow internal delivery port | ADR-0002/0016 | P04/P06; contract and adapter tests | Design approved; tests pending |
+| C-40 | Module boundary enforcement and test ownership | ADR-0016 | P03/P04/P12; CI checks | Design approved; tests pending |
 
 ## Open validation register
 

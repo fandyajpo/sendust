@@ -86,6 +86,10 @@ Traceability matrix, core/binding/TypeScript test reports, coverage report, cand
 
 `PHASE-12` is approved only when P12-005 proves traceable coverage, deterministic passing suites, honest candidate-runtime results, and no unresolved high-severity defect. Phase 13 and Phase 16 may begin after approval.
 
+## Modular architecture audit
+
+P12 must verify the ADR-0016 module ownership table, allowed dependency graph, domain isolation from lettre/SMTP/napi/runtime APIs, SMTP adapter containment, absence of public plugin registries or duplicate policy, and focused unit/integration test ownership. Any boundary violation is a release-blocking architecture defect, not a style preference.
+
 ## Status
 
 NOT STARTED.

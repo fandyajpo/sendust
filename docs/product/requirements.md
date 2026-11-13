@@ -355,3 +355,15 @@ Support is the intersection of an exact tested JavaScript runtime version, OS, C
 
 ### C-36 — Explicit MVP server platform baseline
 Initial platform candidates are Linux x64 glibc, Linux ARM64 glibc, Linux x64 musl, macOS x64, macOS ARM64, and Windows x64 MSVC. Linux ARM64 musl is an extended candidate. Additional OS/CPU targets and serverless/edge/browser/WASI environments are not implied.
+
+### C-37 — Modular monolith structure
+The MVP MUST use a modular-monolith structure inside the existing two-crate Rust workspace and TypeScript package. Module boundaries are logical source boundaries, not independently published crates, services, or runtime processes. The architecture MUST preserve one installable product and one shared native addon.
+
+### C-38 — Core module ownership and dependency direction
+The core MUST separate configuration, address, message, validation, attachments, MIME, delivery orchestration, SMTP transport adapter, lifecycle, and error/result responsibilities. Domain modules MUST NOT depend on lettre, SMTP protocol details, napi, Node, or JavaScript runtime APIs. Dependencies MUST be acyclic and flow through narrow internal contracts.
+
+### C-39 — SMTP adapter isolation and transport extension policy
+SMTP is the only MVP transport and SMTP protocol behavior MUST live only in the SMTP adapter using lettre. A narrow internal delivery port MAY be introduced when justified by orchestration. No public custom-transport API, dynamic plugin registry, speculative provider abstraction, or alternate transport implementation is permitted in MVP. Additional transports require a separate ADR and scope review.
+
+### C-40 — Module boundary enforcement
+Module responsibilities, allowed dependencies, and public/private interfaces MUST be documented and checked through architecture tests or static dependency checks. TypeScript and napi MUST NOT duplicate core validation, MIME, or SMTP policy. Each module MUST have focused unit tests and cross-module behavior MUST be verified through core contracts and fake-SMTP integration tests.

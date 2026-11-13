@@ -12,6 +12,14 @@ Every `REQUIRED FOR MVP` row must map to at least one implementation task and at
 - **HELD** — deliberately excluded from the current roadmap; not an MVP feature or an active post-MVP candidate. Reconsideration requires a separate product decision.
 - **OUT OF SCOPE** — permanently excluded from the product direction.
 
+## Architecture and modularity
+
+| ID | Feature | Class | Implementation | Tests | Notes |
+| --- | --- | --- | --- | --- | --- |
+| F-ARC-01 | Modular core module boundaries and ownership | REQUIRED | P03-001, P04-001 | P03-005, P04-005, P12-001 | Logical Rust modules; no additional crate |
+| F-ARC-02 | Acyclic dependency and domain isolation checks | REQUIRED | P03-003 | P03-005, P04-005 | Domain modules do not depend on lettre/SMTP/napi/runtime |
+| F-ARC-03 | SMTP adapter behind narrow internal delivery port | REQUIRED | P04-004, P06-001 | P06-005, P12-001 | SMTP is sole MVP implementation; no public plugin API |
+
 ## SMTP
 
 | ID | Feature | Class | Implementation | Tests | Notes |
@@ -228,7 +236,7 @@ Each functional and non-functional requirement maps to at least one feature row 
 | NFR-003 | F-SEC-03 |
 | NFR-004 | F-SEC-08, F-ATT-05 |
 | NFR-005 | (P13 budgets; applies to all rows) |
-| NFR-006 | F-DIS-01 through F-DIS-18 |
+| NFR-006 | F-DIS-01 through F-DIS-18, F-ARC-01 through F-ARC-03 |
 | NFR-007 | (P12 fixture gate) |
 | NFR-008 | F-SEC-03 |
 | NFR-009 | F-SEC-06 |
@@ -278,3 +286,7 @@ Each functional and non-functional requirement maps to at least one feature row 
 | C-34 | F-DIS-16 |
 | C-35 | F-DIS-18 |
 | C-36 | F-DIS-01 through F-DIS-07, F-DIS-18 |
+| C-37 | F-ARC-01 |
+| C-38 | F-ARC-01, F-ARC-02 |
+| C-39 | F-ARC-03, F-SMTP-01 |
+| C-40 | F-ARC-01, F-ARC-02, F-ARC-03 |

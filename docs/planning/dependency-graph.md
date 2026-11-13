@@ -150,3 +150,8 @@ When a task dependency changes:
 ## Architecture Amendment A01 dependency
 
 A01-001–A01-004 are a documentation/research amendment chain completed before P03. P03-001 now depends on both P02-005 and A01-004. P05 and P14 retain their phase positions but their acceptance criteria now include blocking Node.js, Bun, and Deno tests and runtime × platform evidence. A01 does not add a new implementation phase or change the P00–P18 phase numbering.
+
+
+## Architecture Amendment A02 dependency
+
+A02-001–A02-003 define and review modular module ownership, dependency rules, and the implementation handoff. P03-001 depends on A02-003 in addition to P02-005 and A01-004. P03/P04 establish and validate the modular core structure; P06 validates the SMTP adapter boundary; P12 audits module ownership and test coverage. A02 adds no implementation phase and does not alter the P00–P18 phase ordering.

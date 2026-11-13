@@ -86,6 +86,8 @@ Repository validation includes structural tests and harness self-tests, all usin
 ## Acceptance criteria
 
 - Exactly two crates exist with acyclic dependency direction and no Node linkage in core.
+- `sendust-core` has the approved modular-monolith skeleton and a narrow public facade.
+- Domain module dependency rules and SMTP adapter containment are statically checkable.
 - Dependency and feature policy is pinned, reviewable, and forbids insecure TLS toggles.
 - Canonical quality commands are defined and separated by Node dependence.
 - Fake SMTP/TLS harness seams cover all required fault fixtures without external network.
@@ -110,8 +112,11 @@ NOT STARTED. Planning only; no repository files beyond phase plans exist.
 
 ## Multi-runtime amendment requirements
 
-P03-001 through P03-005 must account for ADR-0015. The repository baseline must define:
+P03-001 through P03-005 must account for ADR-0015 and ADR-0016. The repository baseline must define:
 - exact pinned runtime versions for Node.js, Bun, and Deno in CI;
+- modular-monolith directory structure within exactly two crates;
+- documented module ownership and allowed dependency directions;
+- static checks for domain isolation and SMTP adapter containment;
 - blocking native-addon smoke jobs for all three runtimes;
 - runtime-neutral TypeScript checks and isolated native loader;
 - Deno local node_modules plus --allow-ffi test configuration;
