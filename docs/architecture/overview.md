@@ -80,12 +80,13 @@ Failures are categorized before they reach JavaScript:
 | Limit | Attachment > 10 MiB, wire > 30 MiB | Rejection before DATA |
 | TLS | Self-signed, expired, wrong host | Closed, non-retryable error |
 | Authentication | `535` | Closed, non-retryable error |
-| Protocol | Unexpected reply, abrupt close | Categorized; `unknown` after DATA |
+| Protocol | Explicit SMTP refusal | `rejected` when the relay definitively refuses |
+| Protocol | Abrupt close / missing final reply after DATA | `unknown` only when final disposition cannot be established |
 | Timeout | Connect/operation/total budget exceeded | Timeout category with elapsed budget |
 | Lifecycle | Send after close, concurrent send | `CLOSED` / `BUSY`, no network attempt |
 | Internal | Panic or invariant violation | Converted to generic internal error; never unwinds across FFI |
 
-Success means **relay acceptance**. After DATA, ambiguity is `unknown` and is never retried automatically. See [error model](error-model.md).
+Success means **relay acceptance**. An explicit negative final DATA reply is `rejected`; `unknown` is reserved for a missing/indeterminate final disposition after DATA may have reached the relay. Neither is automatically retried. See [error model](error-model.md).
 
 ## 7. Security posture
 
