@@ -8,7 +8,7 @@ Likelihood: Low / Medium / High. Impact: Low / Medium / High / Critical.
 
 | ID | Risk | Likelihood | Impact | Mitigation | Owner phase | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| R-001 | lettre high-level transport does not expose per-recipient RCPT status | High | High | Inspect lower-level async connection API in P01-003; default to whole-envelope rejection before DATA; never claim partial success | P01, P06 | OPEN |
+| R-001 | lettre lower-level RCPT API behavior differs from inspected source during mixed-recipient transaction | Medium | High | P01 source audit selected AsyncSmtpConnection; P06-003 must verify one 250/one 550 produces exactly one DATA transaction for the accepted subset | P06 | OPEN |
 | R-002 | Exact SMTP stage attribution is not observable, producing misleading timeout errors | Medium | Medium | Report only observed category and elapsed budget; document limits; do not infer stages | P01, P10 | OPEN |
 | R-003 | rustls `ring` + `webpki-roots` feature set does not compose with lettre 0.11.23 | Medium | High | Validate exact features in P01-002; pin versions; fall back to a smaller verified set without weakening TLS | P01, P03 | OPEN |
 | R-004 | napi-managed Tokio runtime conflicts with lettre executor expectations | Medium | High | Validate in P01-004; use `Tokio1Executor`; no custom runtime | P01, P05 | OPEN |
