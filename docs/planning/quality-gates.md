@@ -72,7 +72,7 @@ A02 approves module design only. It does not prove that the source tree, depende
 | lettre API | Chosen async API documented with pinned-source citations and per-recipient visibility | [P01 source report](../research/lettre-0.11.23-validation.md) |
 | TLS features | Exact feature graph source-reviewed; compile and certificate fixtures remain implementation gates | [P01 source report](../research/lettre-0.11.23-validation.md) |
 | Recipient/timeouts | Source-observed RCPT API; coarse-stage table; explicit ADR decisions | [P01 source report](../research/lettre-0.11.23-validation.md) |
-| Node lifecycle | Node 22/24/26 candidate-only matrix; explicit close/GC/exit probe plan | [Node runtime plan](../research/node-runtime-validation-plan.md) |
+| Runtime lifecycle | Exact Node.js/Bun/Deno candidate matrix from the toolchain baseline; explicit close/GC/exit probe plan | [Node runtime plan](../research/node-runtime-validation-plan.md) |
 | Decision record | Every mandatory design question selected; implementation proofs have named gates | [QG-01 gate record](../gates/phase-01-research.md) |
 
 ## QG-02 — Architecture approval (design baseline)
