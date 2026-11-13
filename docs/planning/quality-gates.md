@@ -23,14 +23,28 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 | QG-14 | Distribution | P14 | P16 |
 | QG-15 | Documentation | P15 | P16 |
 | QG-16 | Release engineering | P16 | P17 |
-| QG-17 | Release approval | P17 | MVP release |\n| QG-A01 | Multi-runtime architecture amendment | A01 | P03 |
+| QG-17 | Release approval | P17 | MVP release |
+| QG-A01 | Multi-runtime architecture amendment | A01 | P03 |
 
-## QG-A01 — Multi-runtime architecture amendment\n\n| Check | Requirement | Evidence |\n| --- | --- | --- |\n| Research | Official Node.js, Bun, Deno, and NAPI-RS compatibility facts recorded | [Multi-runtime research](../research/multi-runtime-compatibility.md) |\n| Architecture | Two-crate core and shared Node-API adapter retained; no speculative adapters/WASM | ADR-0015 |\n| Runtime policy | Node.js, Bun, and Deno are required MVP targets with blocking Sendust CI | Requirements C-31, feature matrix F-DIS-14..F-DIS-16 |\n| Deno setup | Local node_modules and --allow-ffi requirements documented | Research + P03/P14 tasks |\n| Platform policy | Explicit runtime × OS × CPU × ABI matrix and evidence rule | ADR-0015, distribution strategy |\n| Traceability | Requirements, phases, feature matrix, risks, and gates reconciled | A01 gate record |\n\nA01 approves the design target only. It does not approve runtime or platform compatibility; those remain P05/P14 release blockers.\n\n## QG-00 — Discovery integrity
+## QG-A01 — Multi-runtime architecture amendment
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| Research | Official Node.js, Bun, Deno, and NAPI-RS compatibility facts recorded | [Multi-runtime research](../research/multi-runtime-compatibility.md) |
+| Architecture | Two-crate core and shared Node-API adapter retained; no speculative adapters/WASM | ADR-0015 |
+| Runtime policy | Node.js, Bun, and Deno are required MVP targets with blocking Sendust CI | Requirements C-31, feature matrix F-DIS-14..F-DIS-16 |
+| Deno setup | Local node_modules and --allow-ffi requirements documented | Research + P03/P14 tasks |
+| Platform policy | Explicit runtime × OS × CPU × ABI matrix and evidence rule | ADR-0015, distribution strategy |
+| Traceability | Requirements, phases, feature matrix, risks, and gates reconciled | A01 gate record |
+
+A01 approves the design target only. It does not approve runtime or platform compatibility; those remain P05/P14 release blockers.
+
+## QG-00 — Discovery integrity
 
 | Check | Requirement | Evidence |
 | --- | --- | --- |
 | Problem statement | One falsifiable MVP problem statement with personas and non-goals | P00-001 brief |
-| Constraint ledger | Every constraint C-01..C-30 has an owner task and validation path | P00-002 ledger |
+| Constraint ledger | Every constraint C-01..C-36 has an owner task and validation path | P00-002 ledger |
 | Provenance | Version claims labeled observed or candidate, with sources | P00-003 table |
 | Threat boundary | Assets, trust boundaries, abuse cases, test-environment policy | P00-004 record |
 | Handoff | ADR decisions and named downstream validation gates | [QG-00 gate record](../gates/phase-00-discovery.md) |
@@ -57,7 +71,7 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 | Ownership | Synchronous owned snapshot before async scheduling; no borrowed JS memory | [Approval matrix](../architecture/approval-matrix.md) |
 | Limits | 100 recipients, 10/20/30 MiB caps; deterministic precedence | P02-004 |
 | ADRs | All P02-scoped ADRs accepted; future-phase ADRs retain explicit downstream gate | [ADR index](../architecture/decisions/README.md) |
-| Traceability | C-01..C-30 map to ADRs, implementation tasks, and test gates | [Architecture approval matrix](../architecture/approval-matrix.md) |
+| Traceability | C-01..C-36 map to ADRs, implementation tasks, and test gates | [Architecture approval matrix](../architecture/approval-matrix.md) |
 
 ## QG-03 — Repository baseline
 
@@ -95,8 +109,12 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 | GC | Forced GC does not close or corrupt a transport | Forced-GC test |
 | Process exit | No hang without close; no GC-dependent shutdown | Exit tests |
 | Runtime | No custom Tokio runtime created | Code review |
-| Candidate Node | 22/24/26 results recorded as pass/fail/unsupported | CI matrix |
+| Runtime matrix | Exact Node.js, Bun, and Deno versions each pass blocking addon, async, lifecycle, and SMTP tests | CI matrix |
 | Types | Generated declarations compile in strict mode | Type test |
+
+## QG-05 runtime support rule
+
+Node.js, Bun, and Deno are required MVP targets. A pass on Node.js does not satisfy Bun or Deno. Each runtime must pass the same binding/lifecycle contract on exact pinned versions. Deno tests must use local node_modules and --allow-ffi.
 
 ## QG-06 — SMTP correctness
 
