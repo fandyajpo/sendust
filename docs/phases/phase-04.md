@@ -25,7 +25,7 @@ In scope: `crates/sendust-core/src` modules for validation, addresses, limits, M
 ### P04-002 — Implement address, header, and Unicode/IDNA policy
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P03-005, P02-004
 - **Description:** Implement envelope validation: ASCII local parts only, IDNA processing for domains, Unicode allowed in display names and message bodies, and SMTPUTF8 explicitly rejected as post-MVP. Encode display names and headers safely to prevent CRLF/header injection. Define required versus optional address forms and reject malformed, empty, overlong, or ambiguous inputs. Ensure header values cannot introduce new headers or recipients.
 - **Evidence criteria:** Unit tests cover valid ASCII local/IDNA domain, Unicode display/body, and rejection of non-ASCII local parts. Injection fixtures include CRLF, bare LF, NUL, encoded-newline, and header-like display names. IDNA fixtures include punycode, uppercase, trailing dot policy, and invalid labels. Error precedence matches P04-001.
@@ -118,7 +118,7 @@ Implement the approved ADR-0016 module responsibilities without creating additio
 
 ## Status
 
-IN PROGRESS. P04-001 is IN REVIEW and P04-002 to P04-005 remain NOT STARTED.
+IN PROGRESS. P04-001 and P04-002 are IN REVIEW; P04-003 to P04-005 remain NOT STARTED.
 
 ## Evidence log
 
@@ -126,4 +126,5 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 
 | Task | Evidence | State |
 | --- | --- | --- |
+| P04-002 | `crates/sendust-core/src/address/mod.rs` (ASCII local parts, IDNA/UTS #46 strict domain conversion, trailing-dot rejection, Unicode display names with injection-safe quoting) and `crates/sendust-core/src/message/mod.rs` (validated `HeaderName`/`HeaderValue`/`Header` newtypes); 35 core unit tests including IDNA, punycode, uppercase, overlong, malformed, CRLF/NUL/tab injection, and header-name/value fixtures | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
 | P04-001 | `crates/sendust-core/src/errors/mod.rs` (32 stable codes with categories, whitelisted details, stage enum, redaction-by-construction) and `crates/sendust-core/src/validation/mod.rs` (eight-stage precedence, `Failures`, `validate_in_order`); 13 core unit tests including a documentation parity table, adjacent-stage precedence pairs, same-stage determinism, and a redaction scan | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |

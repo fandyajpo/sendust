@@ -14,3 +14,4 @@ workspace = true
 
 [dependencies]
 lettre.workspace = true
+idna.workspace = true
