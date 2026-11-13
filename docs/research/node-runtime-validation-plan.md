@@ -2,22 +2,24 @@
 
 **Status:** research/design complete; no native runtime probe executed  
 **Research date:** 2026-11-13  
-**Decision:** Node-API 8 and napi-rs v3 managed Tokio 1 are the approved design baseline. Node 22/24/26 remain candidates, not support claims.
+**Decision:** Pin napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0. Explicitly enable napi8 and async on the napi crate; Node-API 8 and napi-rs managed Tokio 1 are the approved design baseline. Node 22/24/26 remain candidates, not support claims.
 
 ## 1. Source facts
 
-- napi-rs v3 exposes async Rust functions as JavaScript Promises and uses its managed Tokio runtime when the Tokio async feature is enabled.
+- napi 3.16.2 defaults to napi4 + dyn-symbols. The napi8 feature explicitly raises the target ABI to Node-API 8. The async feature enables tokio_rt and the managed Tokio runtime.
+- napi 3.16.2 source declares Rust MSRV 1.88. The exact addon toolchain and platform builds still require CI proof.
 - Node-API ABI compatibility applies to later Node versions that implement the targeted Node-API level. It does not prove that a specific addon, dependency, OS, CPU, libc, or deployment target works.
 - napi-rs v3's BufferSlice is documented as non-async/lifetime-bound; the owned Buffer/Vec path or an explicit synchronous copy must be used for data retained by async work.
 - Async N-API argument references are rooted by napi-rs while work is pending, but that is not a substitute for Sendust's stronger ownership rule: all message data is copied into Rust-owned memory before async scheduling.
 - The public TypeScript API must return Promise rejections for send-time validation/preparation errors, even though the internal native preparation step is synchronous.
 
 Sources:
+- [napi 3.16.2 Cargo features](https://github.com/napi-rs/napi-rs/blob/napi-v3.16.2/crates/napi/Cargo.toml)
+- [napi-derive 3.7.0 Cargo manifest](https://github.com/napi-rs/napi-rs/blob/napi-derive-v3.7.0/crates/macro/Cargo.toml)
+- [napi 3.16.2 Buffer implementation](https://github.com/napi-rs/napi-rs/blob/napi-v3.16.2/crates/napi/src/bindgen_runtime/js_values/buffer.rs)
 - [napi-rs async functions](https://napi.rs/docs/concepts/async)
 - [napi-rs support and compatibility](https://napi.rs/docs/introduction/compatibility)
-- [napi-rs Buffer implementation](https://github.com/napi-rs/napi-rs/blob/main/crates/napi/src/bindgen_runtime/js_values/buffer.rs)
-- [napi-rs AsyncTask implementation](https://github.com/napi-rs/napi-rs/blob/main/crates/napi/src/bindgen_runtime/js_values/task.rs)
-- [napi-rs async examples](https://github.com/napi-rs/napi-rs/blob/main/examples/napi/src/async.rs)
+- [napi 3.16.2 release metadata](https://docs.rs/crate/napi/3.16.2)
 
 ## 2. Candidate matrix
 
@@ -30,7 +32,17 @@ Sources:
 
 Node-API 8 is the chosen ABI target. It must be confirmed against the exact napi-rs features at P05-001 and compiled/tested at P05-003/P14-004.
 
-## 3. Required binding shape
+## 3. Exact native dependency configuration
+
+```toml
+napi = { version = "=3.16.2", features = ["napi8", "async"] }
+napi-derive = "=3.7.0"
+napi-build = "=2.6.0"
+```
+
+The default napi features include napi4 and dyn-symbols; enabling napi8 explicitly activates the Node-API 8 feature chain. The async feature enables tokio_rt. Do not use the full feature set because it enables newer Node-API levels beyond the approved floor.
+
+## 4. Required binding shape
 
 The public TypeScript wrapper exposes only createTransport, send, close, state, types, and stable errors. Internal native methods implement:
 
@@ -43,7 +55,7 @@ The TypeScript send() wrapper composes beginSend and executeSend. If beginSend f
 
 No second Tokio runtime may be constructed. The Rust core has no Node/N-API dependency.
 
-## 4. Runtime probe matrix for P05-003/P14-004
+## 5. Runtime probe matrix for P05-003/P14-004
 
 | Probe | Setup | Expected result |
 | --- | --- | --- |
@@ -59,6 +71,6 @@ No second Tokio runtime may be constructed. The Rust core has no Node/N-API depe
 | Process exit | Terminate child process while send is active | No unbounded shutdown; socket/task cleanup is bounded |
 | Candidate matrix | Run all tests on Node 22, 24, 26 where available | Only passing, blocking-CI targets may be claimed supported |
 
-## 5. Acceptance rule
+## 6. Acceptance rule
 
 A runtime is supported only after the native addon builds and all blocking tests pass on that exact Node version and platform. Node-API compatibility alone is insufficient. Until then, Node 22/24/26 are candidates only.
