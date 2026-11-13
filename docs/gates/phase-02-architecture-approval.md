@@ -14,7 +14,7 @@
 | SMTP dependency | PASS | lettre 0.11.23 selected; lower-level public async API selected for RCPT visibility; no custom SMTP |
 | TLS feature decision | PASS (source-reviewed) | Defaults disabled; smtp-transport, tokio1-rustls, ring, webpki-roots; no pool/native-tls; compile gate P03-002 |
 | TLS security policy | PASS (design) | TLS 1.2 minimum; WebPKI roots; hostname+chain verification; implicit TLS or required STARTTLS; no bypass/fallback |
-| Runtime ownership | PASS (design) | napi 3.16.2 + napi-derive 3.7.0 + napi-build 2.6.0; explicit napi8 + async; managed Tokio 1; no second runtime |
+| Runtime ownership | PASS (design) | napi 3.16.2 + napi-derive 3.7.0 + napi-build 2.6.0; explicit napi8 + async; managed Tokio 1; no second runtime; Rust MSRV ≥1.88 |
 | Delivery status | PASS | Final DATA 2xx accepted; explicit final 4xx/5xx rejected; indeterminate final disposition unknown; no mailbox-delivery claim |
 | Recipient semantics | PASS (source/API) | Each RCPT reply observable; ordinary refusals are recipient-level; 421 stops session; one DATA to accepted subset; recipient accepted only after final DATA 2xx |
 | Error taxonomy | PASS | Operational failures use stable typed errors; delivery outcomes use result values |
