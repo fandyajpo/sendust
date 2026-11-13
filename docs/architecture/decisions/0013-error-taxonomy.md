@@ -12,7 +12,7 @@ Callers need to branch on failure without parsing messages. The same failure can
 - Delivery outcomes are **return values**: `accepted`, `rejected`, `unknown`, with recipient statuses.
 - Operational failures are **errors** with a stable `code`, `category`, and optional redacted `details`.
 - Error classes are stable and catchable; codes are append-only within a major version.
-- A relay rejection before DATA is an outcome (`rejected`), not an exception, when it is a definitive SMTP refusal. Configuration, TLS, authentication, timeout, lifecycle, and internal failures are errors.
+- A definitive MAIL/DATA/final-DATA refusal, or an envelope where all RCPT commands are refused, is an outcome (`rejected`), not an exception. A single RCPT refusal in a mixed envelope is a recipient-level `rejected` result while accepted recipients continue through one DATA transaction. Configuration, TLS, authentication, timeout, lifecycle, and internal failures are errors.
 - Post-DATA ambiguity is an outcome (`unknown`), not an error, because it is a delivery-semantics result. A timeout after DATA is represented as `unknown` with timeout metadata where possible. An explicit negative final SMTP reply is a known `rejected` outcome.
 - Panics never cross FFI; they map to `INTERNAL`.
 
