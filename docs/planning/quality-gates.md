@@ -44,7 +44,7 @@ A01 approves the design target only. It does not approve runtime or platform com
 | Check | Requirement | Evidence |
 | --- | --- | --- |
 | Problem statement | One falsifiable MVP problem statement with personas and non-goals | P00-001 brief |
-| Constraint ledger | Every constraint C-01..C-30 has an owner task and validation path | P00-002 ledger |
+| Constraint ledger | Every constraint C-01..C-36 has an owner task and validation path | P00-002 ledger |
 | Provenance | Version claims labeled observed or candidate, with sources | P00-003 table |
 | Threat boundary | Assets, trust boundaries, abuse cases, test-environment policy | P00-004 record |
 | Handoff | ADR decisions and named downstream validation gates | [QG-00 gate record](../gates/phase-00-discovery.md) |
