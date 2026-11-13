@@ -189,7 +189,7 @@ Node.js, Bun, and Deno are required MVP targets. A pass on Node.js does not sati
 
 | Check | Requirement | Evidence |
 | --- | --- | --- |
-| Surface | Only MVP exports; no pooling/retry/SMTPUTF8/URL/AbortSignal requirement | API audit |
+| Surface | Only MVP exports; no pooling/retry/SMTPUTF8/URL/AbortSignal option | API audit |
 | Results | `accepted`/`rejected`/`unknown`; no delivery claim | Golden tests |
 | Errors | Stable classes and codes; `instanceof` works | Golden tests |
 | Redaction | No password/body/attachment/path in serialized errors | Marker scans |
