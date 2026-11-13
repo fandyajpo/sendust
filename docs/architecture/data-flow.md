@@ -17,8 +17,8 @@ sequenceDiagram
     App->>TS: transport.send(message)
     TS->>TS: public shape validation
     TS->>N: beginSend(nativeMessage) synchronously
+    N->>N: copy Buffers/strings to Rust-owned values and reserve send slot
     TS->>N: executeSend(ownedOperation) asynchronously
-    N->>N: synchronously copy Buffers/strings to owned Rust values and reserve send slot
     N->>C: core::send(owned message, reserved transport slot)
     C->>C: deterministic validation
     C->>C: resolve file attachments (if opted in)
@@ -34,7 +34,9 @@ sequenceDiagram
         L->>R: RCPT TO
         R-->>L: exact recipient reply
     end
-    L->>R: DATA + serialized message for accepted RCPT subset
+    L->>R: DATA command
+    R-->>L: 354 start mail input
+    L->>R: serialized message + terminator
     R-->>L: final response
     L-->>C: transport result or error
     C->>C: map to accepted/rejected/unknown
@@ -75,8 +77,8 @@ All deterministic failures (validation, limits, configuration, MIME composition,
 | AUTH | Authentication failed | `AUTH` error; no message was submitted |
 | MAIL FROM | Definitive SMTP refusal | `rejected` outcome |
 | RCPT TO | Individual recipient refusal | Record explicit rejected; continue with other recipients; if none accepted, do not issue DATA |
-| DATA command | Server refuses DATA before message body | `rejected` outcome |
 | DATA command | Explicit 4xx/5xx before message body | `rejected` outcome |
+| DATA command | Any response other than required 354 (and not a definitive 4xx/5xx) | Protocol error; no message body sent |
 | DATA body + terminator + final reply (lettre `message()`) | Explicit final 4xx/5xx | `rejected` outcome |
 | DATA body + terminator + final reply (lettre `message()`) | Positive final 2xx | `accepted` outcome for RCPT-accepted recipients |
 | DATA body + terminator + final reply (lettre `message()`) | Write/read/reset/timeout or non-final 3xx without final disposition | `unknown` conservatively because lettre exposes no public terminator-write checkpoint |
@@ -95,14 +97,14 @@ sequenceDiagram
     participant L as lettre
 
     App->>TS: transport.close()
-    TS->>N: NativeTransport.close()
-    N->>C: beginClose (sync)
-    C->>C: state = closing
+    TS->>N: beginClose() synchronously
+    N->>C: state = closing; signal cancellation
+    TS->>N: waitClosed() asynchronously
     alt send in flight
-        C->>L: cancel / await bounded drain
-        L-->>C: session closed or deadline
+        C->>C: cancel at coarse boundary; drop per-send socket
+        C-->>N: active send settled
     else idle
-        C->>L: close session (if any)
+        C->>C: no retained SMTP connection; close immediately
     end
     C->>C: state = closed
     C-->>N: close complete or timeout
