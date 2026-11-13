@@ -36,15 +36,15 @@ Do not silently fall back to guessed results. Block the upgrade and require a su
 
 ## Consequences
 
-- The public result type distinguishes `accepted`, `rejected`, `attempted`, and `unknown`. `accepted` means RCPT accepted and final DATA positive; RCPT acceptance alone is not message acceptance.
-- Tests must assert exactly one SMTP transaction and no DATA after a pre-DATA rejection.
+- The public result type distinguishes `accepted`, `rejected`, and `unknown` for recipients. `accepted` means RCPT accepted and final DATA positive; RCPT acceptance alone is not message acceptance.
+- Tests must assert exactly one DATA transaction for the RCPT-accepted subset, and no DATA when all RCPT commands are rejected.
 - Documentation must state the selected behavior and never imply per-recipient delivery.
 - A future lettre upgrade that hides RCPT replies is blocked until an ADR explicitly revises this contract.
 
 ## Evidence required
 
 - Stage/recipient observability table citing lettre v0.11.23 source/API documentation.
-- Mixed fixture (`250` then `550`) command trace.
+- Mixed fixture (`250` then `550`) command trace showing one DATA transaction addressed only to the accepted recipient.
 - Explicit final `451` after DATA fixture showing a definitive `rejected` outcome.
 - Separate dropped-connection/no-final-reply fixture after DATA terminator showing `unknown` and no retry.
 - A gate record naming the inspected API or documenting its absence.
