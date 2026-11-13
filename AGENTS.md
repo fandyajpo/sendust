@@ -8,13 +8,14 @@ Before implementation, read in this order:
 
 1. `README.md`
 2. `docs/README.md`
-3. `docs/product/vision.md`, `docs/product/requirements.md`, and `docs/product/mvp-scope.md`
-4. `docs/discovery/constraint-ledger.md`
-5. `docs/architecture/overview.md`, `docs/architecture/system-design.md`, `docs/architecture/public-api.md`, `docs/architecture/data-flow.md`, and `docs/architecture/error-model.md`
-6. Relevant accepted ADRs listed in `docs/architecture/decisions/README.md`
-7. The relevant phase plan in `docs/phases/`
-8. The matching task row in `docs/planning/task-registry.md`, dependencies in `docs/planning/dependency-graph.md`, and gate checks in `docs/planning/quality-gates.md`
-9. Relevant engineering strategy and gate records.
+3. `docs/engineering/toolchain-baseline.md`
+4. `docs/product/vision.md`, `docs/product/requirements.md`, and `docs/product/mvp-scope.md`
+5. `docs/discovery/constraint-ledger.md`
+6. `docs/architecture/overview.md`, `docs/architecture/system-design.md`, `docs/architecture/public-api.md`, `docs/architecture/data-flow.md`, and `docs/architecture/error-model.md`
+7. Relevant accepted ADRs listed in `docs/architecture/decisions/README.md`
+8. The relevant phase plan in `docs/phases/`
+9. The matching task row in `docs/planning/task-registry.md`, dependencies in `docs/planning/dependency-graph.md`, and gate checks in `docs/planning/quality-gates.md`
+10. Relevant engineering strategy and gate records.
 
 The phase plan owns task-level implementation detail. Requirements own product behavior. Accepted ADRs own architecture decisions. The task registry and dependency graph index work; they must not silently redefine it. If two authoritative documents conflict, stop the affected change, report the exact conflict and paths, and do not choose whichever text is more convenient.
 
