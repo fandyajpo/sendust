@@ -175,8 +175,7 @@ Rules:
 
 - One `send` in flight. A second `send` returns `BUSY` immediately without dialing.
 - `close()` is idempotent. Concurrent `close()` calls share the same drain.
-- `close()` atomically transitions to `closing`, signals cancellation, and waits up to the close budget. The active send checks cancellation at every coarse SMTP boundary. If message transmission has begun and its final disposition cannot be established, the send resolves as `Unknown`; before message transmission it returns a cancellation/closed error or a definitive rejection.
-- Cancellation before DATA body transmission may end as an operational cancellation/closed error. Once `message()` begins, cancellation or transport failure is conservatively `Unknown` unless an explicit final negative SMTP reply is received. The connection is dropped without issuing QUIT while DATA state is uncertain.
+- `close()` atomically transitions to `closing`, signals cancellation, and waits up to the close budget. Before message transmission begins, cancellation returns a closed/cancelled error or a definitive SMTP rejection. Once `message()` begins, cancellation or transport failure is conservatively `Unknown` unless an explicit final negative SMTP reply is received. Drop the connection without issuing QUIT while DATA state is uncertain.
 - The close budget (125 s) is greater than the total send budget (120 s) so a close during a maximal send can still drain.
 - After `closed`, every `send` returns `CLOSED`.
 - No finalizer, GC hook, or process-exit handler is required for correctness.
