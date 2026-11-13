@@ -1,7 +1,7 @@
 # Phase 03 — Repository
 
 **Phase status:** NOT STARTED  
-**Phase dependency:** Phase 02  
+**Phase dependency:** Phase 02 and Architecture Amendment A01  
 **Companion references:** [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [release strategy](../engineering/release-strategy.md)
 
 ## Objective
@@ -18,7 +18,7 @@ In scope: workspace layout, crate manifests, `ts/src` package skeleton, test dir
 
 - **Size:** M
 - **Status:** NOT STARTED
-- **Prerequisites:** P02-005
+- **Prerequisites:** P02-005, A01-004
 - **Description:** Specify the workspace layout with exactly two crates at `crates/sendust-core/src` and `crates/sendust-napi/src`, plus `ts/src` and `tests/`. Define root workspace membership, a stable Rust toolchain at or above 1.88 (required by napi 3.16.2), shared lint/format configuration, and crate responsibilities. Core must compile without Node headers or napi dependencies; napi depends on core and the binding toolkit. Include placeholder module trees that reflect architecture boundaries without implementing product logic.
 - **Evidence criteria:** Layout tree matches the proposed paths exactly and contains no third Rust crate. Core manifest has no napi/Node dependency; napi manifest depends on core. A documented check fails if a reverse dependency or extra crate appears. `cargo metadata` and package discovery are part of the acceptance evidence.
 
@@ -56,11 +56,11 @@ In scope: workspace layout, crate manifests, `ts/src` package skeleton, test dir
 
 ## Technical implementation details
 
-The repository is a Rust workspace plus a TypeScript package. Proposed paths are fixed: `crates/sendust-core/src`, `crates/sendust-napi/src`, `ts/src`, `tests/`. Exactly two crates are allowed. `sendust-core` must not link Node or depend on napi; `sendust-napi` adapts core to Node-API 8 and Tokio 1 is managed by napi. The call path remains `TS wrapper -> napi -> core -> lettre`. Pin `lettre 0.11.23` as observed. TLS features must come from P01-002 and must not permit disabling verification. Test harnesses run locally against loopback fake SMTP/TLS only; no live relay, no committed secrets. No pooling, retries, custom SMTP, URL attachment fetching, or GC-dependent close may be introduced by scaffolding. CI guardrails must fail on a third crate, reverse dependency, or core Node linkage.
+The repository is a Rust workspace plus a TypeScript package. Proposed paths are fixed: `crates/sendust-core/src`, `crates/sendust-napi/src`, `ts/src`, `tests/`. Exactly two crates are allowed. `sendust-core` must not link Node or depend on napi; `sendust-napi` adapts core to Node-API 8 and Tokio 1 is managed by napi. The call path remains `TS wrapper -> napi -> core -> lettre`. Pin `lettre 0.11.23` as observed. TLS features must come from P01-002 and must not permit disabling verification. Test harnesses run locally against loopback fake SMTP/TLS only; no live relay, no committed secrets. No pooling, retries, custom SMTP, URL attachment fetching, or GC-dependent close may be introduced by scaffolding. CI guardrails must fail on a third crate, reverse dependency, or core Node linkage. Shared TypeScript wrapper code must be audited for Node-only globals; native loading stays isolated. Add pinned Bun and Deno smoke jobs and Deno local-node_modules/FFI-permission setup.
 
 ## Dependencies
 
-Phase 03 requires Phase 02 approval. P03-001 depends on P02-005; P03-002 depends on P03-001 and P01-002; P03-003 and P03-004 depend on P03-001; P03-005 depends on all repository tasks. Phase 04 requires P03-005.
+Phase 03 requires Phase 02 approval and A01-004. P03-001 depends on P02-005 and A01-004; P03-002 depends on P03-001 and P01-002; P03-003 and P03-004 depend on P03-001; P03-005 depends on all repository tasks. Phase 04 requires P03-005.
 
 ## Risks and edge cases
 
@@ -106,3 +106,16 @@ Gate `PHASE-03` is `APPROVED` when P03-005 proves the structure, dependency dire
 ## Status
 
 NOT STARTED. Planning only; no repository files beyond phase plans exist.
+
+
+## Multi-runtime amendment requirements
+
+P03-001 through P03-005 must account for ADR-0015. The repository baseline must define:
+- exact pinned runtime versions for Node.js, Bun, and Deno in CI;
+- blocking native-addon smoke jobs for all three runtimes;
+- runtime-neutral TypeScript checks and isolated native loader;
+- Deno local node_modules plus --allow-ffi test configuration;
+- OS/CPU/libc artifact metadata and a runtime × platform result schema;
+- no postinstall compilation or network binary download.
+
+The P03 gate may approve scaffolding and CI design only. It must not mark any runtime/platform combination supported before P05/P14 executable evidence exists.
