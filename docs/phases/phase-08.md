@@ -19,7 +19,7 @@ In scope: attachment configuration, opt-in filesystem gate, regular-file validat
 - **Size:** M
 - **Status:** NOT STARTED
 - **Prerequisites:** P07-005, P05-005
-- **Description:** Specify an explicit configuration that enables filesystem access; default is disabled. Define attachment descriptors with path, filename, and optional content type. Without opt-in, every path attachment fails before any filesystem operation. Make the setting transport-scoped or send-scoped as frozen by architecture, not ambient global state.
+- **Description:** Specify an explicit configuration that enables filesystem access; default is disabled. Define attachment descriptors with path, filename, and optional content type. Without opt-in, every path attachment fails before any filesystem operation. Propose a transport-scoped or send-scoped setting for approval in P02-004; do not assume it is frozen before the architecture gate. Never use ambient global state.
 - **Evidence criteria:** Tests prove disabled-by-default rejects path attachments with no file open. Enabling access permits regular files only. Descriptor validation rejects missing fields, relative-path ambiguity, and unsupported content type forms with stable errors.
 
 ### P08-002 — Implement safe regular-file validation and bounded reads
