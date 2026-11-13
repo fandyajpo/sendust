@@ -1,7 +1,7 @@
 # Sendust — Product Vision
 
-**Native email delivery engine.**  
-Rust core. Node.js native addon. SMTP-first.
+**Standalone Native Email Delivery Engine.**  
+Rust core. Node.js native addon. TypeScript API. SMTP-first.
 
 ## 1. Problem
 
@@ -31,9 +31,9 @@ Non-personas for MVP: marketing operators, campaign managers, mailbox hosting ad
 ## 3. Product principles
 
 1. **Relay acceptance is not delivery.** A successful send means the configured SMTP relay accepted responsibility for the message. Sendust never claims mailbox delivery.
-2. **One obvious path.** One transport, one active send, one explicit close. No hidden queues, background retries, or connection pools in MVP.
+2. **One obvious path.** One transport, one active send, one explicit close. No internal queue, worker, background delivery, automatic retry, or connection pool in the current scope.
 3. **Correct over convenient.** RFC-compliant headers, correct MIME boundaries, deterministic encoding, and strict input validation beat permissive guessing.
-4. **Bounded by construction.** Every queue, buffer, timeout, recipient list, attachment, and close drain has a finite, documented limit.
+4. **Bounded by construction.** Every buffer, timeout, recipient list, attachment, and close drain has a finite, documented limit.
 5. **Secure defaults, no escape hatch.** Certificate verification cannot be disabled. Filesystem attachment access is opt-in. Credentials are redacted from errors.
 6. **Native without pain.** npm installation selects a prebuilt binary. No postinstall download, no compiler requirement for consumers.
 7. **Evidence over assertion.** A phase is complete only with executable tests, artifacts, or reviewed records.
@@ -51,13 +51,13 @@ Non-personas for MVP: marketing operators, campaign managers, mailbox hosting ad
 - TypeScript declarations, ESM and CommonJS loading.
 - Prebuilt native packages for a validated platform matrix.
 
-### Post-MVP
+### Post-MVP candidates
 
-Connection pooling, retry policy, SMTPUTF8, AbortSignal-based cancellation, streaming attachments, additional transports, template engines, queue integrations, provider REST APIs, and observability hooks. See [MVP scope](mvp-scope.md) and the [feature matrix](../planning/feature-matrix.md).
+Connection pooling, carefully scoped retry research, SMTPUTF8, AbortSignal-based cancellation, streaming attachments, additional transports, DKIM, and observability hooks may be evaluated separately. Queue/job orchestration and queue adapters are **held outside the current product roadmap**: no API, adapter contract, persistence model, worker, or implementation is being designed. See [MVP scope](mvp-scope.md) and the [feature matrix](../planning/feature-matrix.md).
 
 ### Explicit non-goals
 
-Sendust will not become an email service platform. No campaign management, contact management, analytics, open/click tracking, email hosting, web administration, distributed queues, built-in template management, or provider-specific REST integrations. These are out of scope, not deferred.
+Sendust is a standalone delivery engine, not an email service platform. Campaign management, contact management, analytics, open/click tracking, email hosting, web administration, built-in template management, and provider-specific REST integrations are outside the product. Queueing, scheduling, and retry orchestration are caller-owned; queue adapters and internal queue infrastructure are not part of the current roadmap.
 
 ## 5. Success criteria for the MVP
 
