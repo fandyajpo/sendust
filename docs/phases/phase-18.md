@@ -19,7 +19,7 @@ In scope: post-MVP intake, feedback triage, candidate feature evaluation (SMTPUT
 - **Size:** M
 - **Status:** NOT STARTED
 - **Prerequisites:** P17-005
-- **Description:** Define channels and templates for consumer feedback, bug reports, security reports, and feature requests. Triage against the approved MVP contract: relay-accepted semantics, unknown-after-DATA, BUSY, no queue/retry, caps, attachment policy, TLS verification, and support matrix. Separate defects from feature requests and unsupported-use reports.
+- **Description:** Define channels and templates for consumer feedback, bug reports, security reports, and feature requests. Triage against the proposed MVP contract: relay-accepted semantics, explicit SMTP refusal versus unknown-after-DATA, BUSY, no internal queue/worker/adapter, no automatic retry, caps, attachment policy, TLS verification, and support matrix. Separate defects from feature requests and unsupported-use reports.
 - **Evidence criteria:** Intake template captures version, platform, Node version, relay behavior, result status, and redacted diagnostics. Every item is classified as defect, documentation gap, feature request, or unsupported use. Security reports have a private path. No item is accepted by changing MVP semantics silently.
 
 ### P18-002 — Evaluate SMTPUTF8, AbortSignal, and platform expansion candidates
@@ -35,7 +35,7 @@ In scope: post-MVP intake, feedback triage, candidate feature evaluation (SMTPUT
 - **Size:** L
 - **Status:** NOT STARTED
 - **Prerequisites:** P18-001
-- **Description:** Investigate whether connection pooling could be offered in a future release without violating MVP lifecycle and BUSY semantics. Analyze session health, concurrency, relay behavior, resource limits, and close/drain interaction. Retry policy is not part of this task. Queueing, workers, persistence, scheduling, and queue adapters are not part of this phase or the current roadmap.
+- **Description:** Investigate whether connection pooling could be offered in a future release without violating MVP lifecycle and BUSY semantics. Analyze session health, concurrency, relay behavior, resource limits, and close/drain interaction. Retry policy may be researched only as a separate caller-owned policy; no automatic retry implementation is included. Queueing, workers, persistence, scheduling, and queue adapters are not part of this phase or the current roadmap.
 - **Evidence criteria:** Research record states MVP remains one-connection-per-send with no pooling and no automatic retry. Any pooling proposal includes lifecycle, concurrency, resource, and compatibility analysis. No queue architecture or adapter contract is produced. No code change occurs in this phase.
 
 ### P18-004 — Define the next compatibility and deprecation policy
@@ -56,7 +56,7 @@ In scope: post-MVP intake, feedback triage, candidate feature evaluation (SMTPUT
 
 ## Technical implementation details
 
-The proposed baseline for this phase, subject to completion of its approval gates, is: two crates with core free of Node, `TS -> napi -> core -> lettre`, `lettre 0.11.23`, rustls `ring`/`webpki-roots` with mandatory verification, no custom SMTP unless previously justified, one connection per send, no automatic retries, relay-accepted success, explicit SMTP refusal as `rejected`, genuinely indeterminate final disposition as `unknown`, one active send with fail-fast `BUSY`, no internal queue/worker/scheduler/persistence/adapter, explicit close bounded by 125s without GC dependence, finite timeouts (connect 10s, operation 30s, total 120s, close 125s), copied buffers, opt-in regular-file attachments with no URLs, caps of 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, and 30 MiB wire, ASCII local parts with IDNA domains and Unicode display/body, SMTPUTF8 post-MVP, and optional AbortSignal. Post-MVP proposals must preserve these defaults or require an explicit, separately approved breaking-change ADR.
+The planning baseline for this phase, subject to completion of its approval gates, is: two crates with core free of Node, `TS -> napi -> core -> lettre`, `lettre 0.11.23`, rustls `ring`/`webpki-roots` with mandatory verification, no custom SMTP unless previously justified, one connection per send, no automatic retries, relay-accepted success, explicit SMTP refusal as `rejected`, genuinely indeterminate final disposition as `unknown`, one active send with fail-fast `BUSY`, no internal queue/worker/scheduler/persistence/adapter, explicit close bounded by 125s without GC dependence, finite timeouts (connect 10s, operation 30s, total 120s, close 125s), copied buffers, opt-in regular-file attachments with no URLs, caps of 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, and 30 MiB wire, ASCII local parts with IDNA domains and Unicode display/body, SMTPUTF8 post-MVP, and optional AbortSignal. Post-MVP proposals must preserve these defaults or require an explicit, separately approved breaking-change ADR.
 
 ## Dependencies
 
