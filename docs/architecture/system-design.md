@@ -220,6 +220,34 @@ deadline = start + min(total, remaining close budget)
 - Buffer attachments are copied before async work.
 - Aggregate raw attachment bytes are checked before MIME composition; wire size is checked after composition.
 
+## 2.8 Modular module boundaries (ADR-0016)
+
+The Rust core is implemented as a modular monolith inside the existing `sendust-core` crate. These are logical modules, not separate crates:
+
+```text
+sendust-core/src/
+├── lib.rs                 # narrow public facade
+├── config/                # relay, TLS/auth, timeout and limit config
+├── address/               # mailbox parsing and normalization
+├── message/               # message and header model
+├── validation/            # deterministic cross-field and injection checks
+├── attachments/           # bounded buffer/file attachment policy
+├── mime/                  # MIME tree, encoding and wire-size accounting
+├── delivery/              # send use-case orchestration and delivery certainty
+├── ports/                 # narrow internal outbound delivery contract
+├── transports/
+│   └── smtp/              # lettre session, TLS, AUTH, envelope, RCPT/DATA
+├── lifecycle/             # open/closing/closed, BUSY and bounded close
+├── errors/                # internal error taxonomy
+└── results/               # accepted/rejected/unknown and recipient outcomes
+```
+
+The folder names may be adjusted during implementation to fit idiomatic Rust module/file structure, but responsibility ownership must remain stable. Domain modules (address, message, config value types, results and core validation rules) must not import lettre, SMTP session types, napi, Node, or JavaScript runtime APIs. The delivery module owns the use case and depends on a narrow internal port; `transports::smtp` implements that port and is the only MVP adapter. The core public facade re-exports only types/functions needed by `sendust-napi` and tests; internal modules are private by default.
+
+`sendust-napi` remains a thin inbound adapter: convert and snapshot JS inputs, reserve lifecycle, call the core facade, schedule work, and map outcomes/errors. It contains no MIME or SMTP policy. `ts/src` remains the public JS API and runtime loader only; it must not duplicate core validation, MIME, or delivery decisions.
+
+This is a modular monolith in one process and one package, not a microservice architecture. Do not create a crate per module, a public plugin system, runtime-specific business engines, empty feature hooks, or extra transport implementations. The only MVP transport is SMTP via lettre. Module dependency rules must be checked by static architecture tests at P03/P04 and re-audited at P12.
+
 ## 3. `sendust-napi`
 
 ### 3.1 Exports
