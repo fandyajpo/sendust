@@ -98,7 +98,7 @@ P00–P04 are COMPLETED with approved evidence. P05 is IN PROGRESS and P06–P18
 | Item | State |
 | --- | --- |
 | Repository | Documentation, architecture planning, and the P03 workspace skeleton |
-| Application implementation | Core complete (errors, addresses, message model, MIME, SMTP orchestration, fault matrix); binding in progress; public API pending |
+| Application implementation | Core complete (errors, addresses, message model, MIME, SMTP orchestration, fault matrix); Node-API binding and TypeScript facade implemented; public API contract (P09) and runtime matrix pending |
 | Toolchain validation | Rust 1.100.0 and the Node.js 22.23.5/24.22.3/26.13.1 jobs pass in Sendust CI on branch `feat/p03-repository-skeleton` |
 | QG-00 Discovery | APPROVED |
 | QG-01 Research | APPROVED with implementation validation gates |

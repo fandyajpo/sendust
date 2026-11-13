@@ -74,7 +74,7 @@ All commands below run from the repository root. JavaScript lint/format/typechec
 | Bun runtime smoke (P05 deliverable) | `bun run tests/runtime/smoke.mjs` | Same observable contract |
 | Deno runtime smoke (P05 deliverable) | `deno run --allow-ffi --allow-read tests/runtime/smoke.mjs` | Same observable contract using local `node_modules` |
 
-The three runtime smoke entry points above do not exist until P05 delivers the native binding. They are named here so the matrix is complete, are marked as P05 deliverables, and are deliberately absent from the P03 CI jobs. QG-03 does not require them; P05 and P14 do.
+P05-001 to P05-004 deliver the native binding and the TypeScript facade; `npm run build:native` stages the addon and the binding tests run in their own CI job. The three runtime smoke entry points under `tests/runtime/` remain P05-005 and P14 deliverables and are deliberately absent from CI until then. QG-03 does not require them; P05 and P14 do.
 
 P03-003 must create the npm workspace scripts, `scripts/check-architecture.mjs`, and `scripts/check-docs.mjs` that make these commands real. The documentation checker must validate Markdown links, duplicate/missing requirement/task/ADR/gate IDs, phase/task counts, registry-to-phase task title/prerequisite parity, gate-index coverage, and runtime/toolchain claims against this file. If a command cannot be implemented as written, P03-003 must propose a precise replacement and update this file, phase plan, and CI contract in the same change. Never silently substitute commands.
 
