@@ -26,6 +26,10 @@ base64 = { version = "=0.23.1" }
 # transitively via lettre/url; pinned directly so core cannot drift from it.
 idna = { version = "=1.1.0", default-features = false, features = ["std", "compiled_data"] }
 
+# Test-only async runtime for core send tests. lettre already pulls this exact
+# Tokio version; the dev dependency only makes the features explicit.
+tokio = { version = "=1.54.1", default-features = false, features = ["rt", "macros"] }
+
 # Node-API 8 binding surface, used by sendust-napi only.
 napi = { version = "=3.16.2", features = ["napi8", "async"] }
 napi-derive = "=3.7.0"

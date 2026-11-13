@@ -104,8 +104,9 @@ P00–P03 are COMPLETED with approved evidence. P04 is IN PROGRESS: P04-001–P0
 | QG-02 Architecture | APPROVED at design level |
 | P03-001–P03-005 | COMPLETED |
 | P04-001–P04-004 | IN REVIEW |
-| P04-005–P18 | NOT STARTED |
-| Next task | P04-005 — lettre-backed SMTP orchestration and core phase gate |
+| P04-005 | IN PROGRESS |
+| P05–P18 | NOT STARTED |
+| Next task | P04-005 (remaining) — lettre SMTP adapter and core fault matrix |
 
 ## 5. Conventions
 

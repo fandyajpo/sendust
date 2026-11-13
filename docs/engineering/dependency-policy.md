@@ -18,6 +18,7 @@ A direct dependency may be added only through the review in section 6. Transitiv
 | `napi-build` | `=2.6.0` | build | — | on | `sendust-napi` | Binding build setup |
 | `idna` | `=1.1.0` | normal | `std`, `compiled_data` | off | `sendust-core` | IDNA/UTS #46 domain conversion for envelope addresses |
 | `base64` | `=0.23.1` | normal | default | on | `sendust-core` | MIME transfer encoding (ADR-0010) |
+| `tokio` | `=1.54.1` | dev | `rt`, `macros` | off | `sendust-core` | Async test runtime for core send tests |
 
 `sendust-core` declares no build script and no binding, runtime, or Node.js dependency. `sendust-napi` depends on `sendust-core` and never the reverse. `lettre` is declared once, at workspace level, and must not appear in `sendust-napi`.
 
@@ -82,6 +83,7 @@ Every direct dependency must have one row. The inventory is completed before rel
 | `napi-build` | `2.6.0` | MIT | https://crates.io/crates/napi-build | P03-002 |
 | `idna` | `1.1.0` | MIT OR Apache-2.0 | https://crates.io/crates/idna | P04-002 |
 | `base64` | `0.23.1` | MIT OR Apache-2.0 | https://crates.io/crates/base64 | P04-003 |
+| `tokio` | `1.54.1` | MIT | https://crates.io/crates/tokio | P04-005 |
 
 ## 9. npm development tool pins
 

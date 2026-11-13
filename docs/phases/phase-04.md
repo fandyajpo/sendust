@@ -49,7 +49,7 @@ In scope: `crates/sendust-core/src` modules for validation, addresses, limits, M
 ### P04-005 — Implement lettre-backed SMTP orchestration and core phase test gate
 
 - **Size:** XL
-- **Status:** NOT STARTED
+- **Status:** IN PROGRESS
 - **Prerequisites:** P04-001, P04-002, P04-003, P04-004, P01-001, P01-003
 - **Description:** Wire the core to `lettre 0.11.23` using the research-selected API and rustls `ring`/`webpki-roots` features. Implement connect, TLS, auth, MAIL FROM, RCPT TO, DATA, and final-response orchestration with relay-accepted semantics. Do not retry, do not pool, and do not implement a custom SMTP client. Implement ADR-0005 recipient policy using lettre's public AsyncSmtpConnection: observe every RCPT response, then send one DATA transaction only to the accepted-recipient subset. A recipient is accepted only after final DATA 2xx. Never fan out independent messages. Add core integration tests against the local fake SMTP/TLS harness.
 - **Evidence criteria:** Tests cover successful acceptance, all-recipient rejection with no DATA, mixed `250`/`550` with one DATA transaction to the accepted subset, explicit final DATA `451` as `rejected`, plus missing final reply after DATA terminator as `unknown`, both with zero retries, auth failure, TLS verification failure, connect refusal, and abrupt server close. Success asserts relay acceptance only. No credentials appear in logs. Rust tests run without Node. The core phase gate passes only when all required fault fixtures execute locally.
@@ -118,7 +118,7 @@ Implement the approved ADR-0016 module responsibilities without creating additio
 
 ## Status
 
-IN PROGRESS. P04-001 to P04-004 are IN REVIEW; P04-005 remains NOT STARTED.
+IN PROGRESS. P04-001 to P04-004 are IN REVIEW; P04-005 is IN PROGRESS (result model, delivery port, and orchestration landed; the lettre adapter and fault matrix are next).
 
 ## Evidence log
 
@@ -126,6 +126,7 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 
 | Task | Evidence | State |
 | --- | --- | --- |
+| P04-005 (partial) | `crates/sendust-core/src/results/mod.rs` (`DeliveryStatus`, `RecipientStatus`, `RecipientOutcome`, `SmtpResponse`, `SendOutcome::{Accepted,Rejected,Unknown}`, `AmbiguityStage`), `crates/sendust-core/src/ports/mod.rs` (`DeliveryPort` + `DeliveryRequest` with exact wire bytes), and `crates/sendust-core/src/delivery/mod.rs` (validate -> serialize -> submit exactly once); 92 core unit tests including a fake port proving one submission, unchanged rejected/unknown outcomes, and zero port calls on validation or limit failure. Remaining: the lettre adapter and the core fault matrix. | IMPLEMENTED (partial); CI evidence pending |
 | P04-004 | `crates/sendust-core/src/lifecycle/mod.rs` (`open -> closing -> closed`, one-send reservation, immediate BUSY, idempotent close, condvar drain with `TIMEOUT_CLOSE`) and `crates/sendust-core/src/config/mod.rs` (`Timeouts` 10/30/120/125 s, lower-only, connect/operation <= total <= close); 84 core unit tests covering every state transition, double close, send during close, drain and drain timeout, and deadline boundaries. Deferred: the no-dial proof is structural (the permit gates the dial) and becomes executable in P04-005. | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
 | P04-003 | `crates/sendust-core/src/config/mod.rs` (approved hard caps, lower-only), `crates/sendust-core/src/attachments/mod.rs` (descriptor policy, inclusive caps, filesystem opt-in), `crates/sendust-core/src/message/mod.rs` (`OutgoingMessage`, recipient counting, reserved-header rejection), and `crates/sendust-core/src/mime/mod.rs` (deterministic serializer: text/HTML/alternative/mixed, `base64` crate per ADR-0010, RFC 2047 headers, hard folding, BCC exclusion, exact wire-size cap); 69 core unit tests | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending. Deferred: file attachments need the P08 reader; the 30 MiB + 1 boundary is asserted through an exact lowered limit plus a 21/23 MiB straddle of the real cap; the no-connect-on-limit-failure assertion belongs to P04-005. |
 | P04-002 | `crates/sendust-core/src/address/mod.rs` (ASCII local parts, IDNA/UTS #46 strict domain conversion, trailing-dot rejection, Unicode display names with injection-safe quoting) and `crates/sendust-core/src/message/mod.rs` (validated `HeaderName`/`HeaderValue`/`Header` newtypes); 35 core unit tests including IDNA, punycode, uppercase, overlong, malformed, CRLF/NUL/tab injection, and header-name/value fixtures | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
