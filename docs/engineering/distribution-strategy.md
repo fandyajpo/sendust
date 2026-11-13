@@ -44,7 +44,7 @@ A target is **claimed** only when P14-004 builds it, installs it in a clean cons
 - Runtime candidates: Node.js 22, 24, 26.
 - Only versions with a blocking CI runtime test are claimed.
 - Node 26 is optional for MVP because of pre-release risk.
-- Alternate runtimes (Bun, Deno) are not claimed; they are untested unless P14 records otherwise.
+- Node.js, Bun, and Deno are required MVP runtime targets under ADR-0015. Each exact runtime/platform combination is unclaimed until Sendust blocking CI proves clean installation, addon loading, and behavior. Deno requires local node_modules and explicit --allow-ffi.
 
 ## 4. Build requirements
 
@@ -138,7 +138,13 @@ Publication is not atomic. If a platform package fails after others are publishe
 | Emulated tests | Do not claim a target tested only under emulation unless explicitly labeled |
 | Node version drift | Test oldest and newest claimed versions |
 
-## 10. Support declaration
+## 10. Runtime × platform support policy
+
+The support matrix is the intersection of exact runtime versions and native platform targets, not two independent lists. Required MVP runtimes: Node.js, Bun, Deno. Initial platform candidates: Linux x64 glibc, Linux ARM64 glibc, Linux x64 musl, macOS x64, macOS ARM64, Windows x64 MSVC. Linux ARM64 musl is extended candidate only.
+
+Every claimed combination requires clean consumer install, correct binary selection, addon load, accepted fake-SMTP send, SMTP failure semantics, Buffer ownership, BUSY, close/lifecycle, TLS verification, and stable error mapping. Record runtime version, OS, CPU, libc/minimum OS, artifact checksum, and CI run. Compile-only targets are not supported. Do not imply Windows ARM64, FreeBSD, Linux ARMv7, Android, serverless, edge, browser, or WASI support. Deno usage must document local node_modules and --allow-ffi. No postinstall compilation or binary downloads.
+
+## 11. Support declaration
 
 The published support table must state:
 
