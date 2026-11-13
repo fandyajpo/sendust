@@ -47,7 +47,7 @@ There is no option to disable TLS verification, no plaintext SMTP mode, no pool 
 | Field | Type | Required | Rules |
 | --- | --- | --- | --- |
 | `from` | string or `{ name?, address }` | yes | ASCII local part; IDNA domain; optional Unicode display name |
-| `to` | array | yes (unless cc/bcc present) | same address rules |
+| `to` | array | no; at least one recipient across `to`, `cc`, and `bcc` is required | same address rules |
 | `cc` | array | no | same |
 | `bcc` | array | no | same; never written to headers |
 | `replyTo` | array | no | same |
@@ -108,7 +108,7 @@ await transport.close();
 - Idempotent; repeated calls resolve once the transport is closed.
 - Bounded by `closeMs` (125 s default).
 - Transitions `open -> closing -> closed`.
-- In-flight send is cancelled/awaited within the budget.
+- Close requests cancellation of an in-flight operation and awaits bounded cleanup. If cancellation occurs after message data may have reached the relay but before a final SMTP reply is observed, the send outcome is `unknown`; close must not rewrite that uncertainty as a definitive cancellation or rejection.
 - After close, `send` rejects with `TRANSPORT_CLOSED`.
 - No GC/finalizer dependency.
 
@@ -142,6 +142,7 @@ The following are intentionally absent and must not appear in the MVP type surfa
 
 - `pool`, `maxConnections`, `maxMessages`
 - `retry`, `retries`, `backoff`
+- `queue`, `worker`, `scheduler`, `job`, `queueAdapter`
 - `abortSignal` as a required option
 - `stream`, `streamTransport`
 - `url` attachments
