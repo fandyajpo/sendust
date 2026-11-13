@@ -8,7 +8,7 @@ Entry point to all 19 Sendust phases. Each phase plan is the authoritative sourc
 | --- | --- | --- | --- | --- | --- | --- |
 | [P00](../phases/phase-00.md) | Discovery | Fix the MVP problem, constraints, semantics, threat boundary, and open questions | — | 5 | P00-005 | NOT STARTED |
 | [P01](../phases/phase-01.md) | Research | Resolve lettre API, TLS features, recipient observability, and Node lifecycle with evidence | P00 | 5 | P01-005 | NOT STARTED |
-| [P02](../phases/phase-02.md) | Architecture | Freeze crate boundaries, status/error contract, lifecycle, ownership, and limits | P01 | 5 | P02-005 | NOT STARTED |
+| [P02](../phases/phase-02.md) | Architecture | Approve crate boundaries, status/error contract, lifecycle, ownership, and limits | P01 | 5 | P02-005 | NOT STARTED |
 | [P03](../phases/phase-03.md) | Repository | Create workspace, toolchain, policies, and deterministic test seams | P02 | 5 | P03-005 | NOT STARTED |
 | [P04](../phases/phase-04.md) | Rust core | Implement errors, validation, message model, state machine, and SMTP orchestration | P03 | 5 | P04-005 | NOT STARTED |
 | [P05](../phases/phase-05.md) | Binding | Expose core through Node-API 8 with owned memory and stable mapping | P04 | 5 | P05-005 | NOT STARTED |
