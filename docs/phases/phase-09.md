@@ -28,7 +28,7 @@ In scope: TypeScript types, transport factory/options, send method, close method
 - **Status:** NOT STARTED
 - **Prerequisites:** P09-001, P06-005
 - **Description:** Implement `send` by validating public input, calling napi, and mapping results without reinterpreting core statuses. Compose message body, recipients, and attachments through the binding. Enforce no retry and no per-recipient fan-out. Surface `accepted`, `rejected`, `unknown`, `attempted`, and `BUSY` exactly as defined.
-- **Evidence criteria:** Tests cover successful relay acceptance, pre-DATA rejection, mixed RCPT ADR behavior, post-DATA `unknown`, and concurrent `BUSY`. Assert only one SMTP transaction for unknown results. Result objects contain no delivery claim.
+- **Evidence criteria:** Tests cover successful relay acceptance, pre-DATA rejection, mixed RCPT ADR behavior, explicit final DATA rejection and genuinely unknown post-DATA disposition, and concurrent `BUSY`. Assert only one SMTP transaction for unknown results. Result objects contain no delivery claim.
 
 ### P09-003 — Implement public error classes and redaction
 
@@ -56,7 +56,7 @@ In scope: TypeScript types, transport factory/options, send method, close method
 
 ## Technical implementation details
 
-The public API is in `ts/src` and calls the napi binding; it contains no SMTP logic. The call path remains `TS wrapper -> napi -> core -> lettre`. `send` means the relay accepted the message, never delivery. After DATA ambiguity, return `unknown` and do not retry. One active send per transport; overlap returns `BUSY` immediately with no queue. Close is explicit, idempotent, bounded by 125s, and never GC-dependent. Timeouts default to connect 10s, operation 30s, total 120s, close 125s and are finite/tunable. Attachments require explicit filesystem opt-in; no URL support. Caps are 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. Envelope local parts are ASCII, domains IDNA, display/body Unicode; SMTPUTF8 is post-MVP. AbortSignal is optional, not required.
+The public API is in `ts/src` and calls the napi binding; it contains no SMTP logic. The call path remains `TS wrapper -> napi -> core -> lettre`. `send` means the relay accepted the message, never delivery. An explicit negative final DATA reply returns `rejected`; return `unknown` only when the final disposition cannot be established after DATA may have reached the relay. Neither is automatically retried. One active send per transport; overlap returns `BUSY` immediately with no queue. Close is explicit, idempotent, bounded by 125s, and never GC-dependent. Timeouts default to connect 10s, operation 30s, total 120s, close 125s and are finite/tunable. Attachments require explicit filesystem opt-in; no URL support. Caps are 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. Envelope local parts are ASCII, domains IDNA, display/body Unicode; SMTPUTF8 is post-MVP. AbortSignal is optional, not required.
 
 ## Dependencies
 
@@ -68,7 +68,7 @@ TypeScript types may accidentally imply delivery or per-recipient success. Reint
 
 ## Testing requirements
 
-Use fake SMTP/TLS fixtures for success, pre-DATA rejection, mixed RCPT, post-DATA `451`, auth failure, TLS failures, connect/command/total timeouts, and close stalls. Add compile-time type tests, error golden tests, redaction scans, concurrent BUSY, double close, send-after-close, and attachment opt-in tests. Verify no external network calls and no retries by counting SMTP transactions. Run examples on candidate Node versions where available.
+Use fake SMTP/TLS fixtures for success, pre-DATA rejection, mixed RCPT, explicit final `451` rejection and missing-final-reply ambiguity, auth failure, TLS failures, connect/command/total timeouts, and close stalls. Add compile-time type tests, error golden tests, redaction scans, concurrent BUSY, double close, send-after-close, and attachment opt-in tests. Verify no external network calls and no retries by counting SMTP transactions. Run examples on candidate Node versions where available.
 
 ## Acceptance criteria
 
