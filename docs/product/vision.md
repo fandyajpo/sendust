@@ -21,8 +21,8 @@ Sendust is inspired by Nodemailer’s developer experience. It is **not** a clon
 
 | Persona | Context | What they need |
 | --- | --- | --- |
-| Backend application developer | Node.js service sending password resets, receipts, notifications through a configured relay | A small API, TypeScript types, reliable behavior, no native build step |
-| Platform engineer | Operates the relay and the Node fleet | Predictable TLS/auth behavior, bounded memory, explicit shutdown, no hidden retries |
+| Backend application developer | Node.js, Bun, or Deno service sending password resets, receipts, notifications through a configured relay | A small API, TypeScript types, reliable behavior, no native build step |
+| Platform engineer | Operates the relay and the Node.js/Bun/Deno server fleet | Predictable TLS/auth behavior, bounded memory, explicit shutdown, no hidden retries |
 | Library maintainer | Publishes the npm package | A testable Rust core, deterministic packaging, a support matrix that matches CI |
 | Security reviewer | Reviews dependencies and data flow | No credential leakage, no verification bypass, bounded input handling |
 
