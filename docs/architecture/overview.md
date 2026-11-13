@@ -10,7 +10,7 @@
 Sendust is a two-crate Rust workspace plus a thin TypeScript package.
 
 ```text
-Consumer application (Node.js / TypeScript)
+Consumer application (Node.js / Bun / Deno)
         │  import { createTransport } from "sendust"
         ▼
 ts/src  ── public API, option shape, result/error classes, ESM+CJS entry points
@@ -102,7 +102,11 @@ Success means **relay acceptance**. An explicit negative final DATA reply is `re
 
 The npm package is a root package plus platform packages selected by OS/CPU/libc. Consumers install no Rust toolchain. Native artifacts are built in CI, tested on the declared matrix, and published with provenance. See [distribution strategy](../engineering/distribution-strategy.md).
 
-## 9. What the architecture deliberately excludes
+## 9. Runtime compatibility boundary
+
+The public TypeScript API is runtime-neutral. Native loading is isolated in the loader. Node-API 8 remains the shared native boundary; no separate runtime adapter or WASM fallback is added without a failing compatibility test and superseding ADR. Node.js, Bun, and Deno are required MVP runtime targets under [ADR-0015](decisions/0015-multi-runtime-support.md), but none is claimed supported until Sendust blocking CI passes. Deno requires local node_modules and --allow-ffi. See [runtime research](../research/multi-runtime-compatibility.md).
+
+## 10. What the architecture deliberately excludes
 
 - Connection pooling and keep-alive.
 - Automatic retry, backoff, or dead-letter handling.
