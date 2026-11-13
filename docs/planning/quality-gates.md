@@ -23,9 +23,9 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 | QG-14 | Distribution | P14 | P16 |
 | QG-15 | Documentation | P15 | P16 |
 | QG-16 | Release engineering | P16 | P17 |
-| QG-17 | Release approval | P17 | MVP release |
+| QG-17 | Release approval | P17 | MVP release |\n| QG-A01 | Multi-runtime architecture amendment | A01 | P03 |
 
-## QG-00 — Discovery integrity
+## QG-A01 — Multi-runtime architecture amendment\n\n| Check | Requirement | Evidence |\n| --- | --- | --- |\n| Research | Official Node.js, Bun, Deno, and NAPI-RS compatibility facts recorded | [Multi-runtime research](../research/multi-runtime-compatibility.md) |\n| Architecture | Two-crate core and shared Node-API adapter retained; no speculative adapters/WASM | ADR-0015 |\n| Runtime policy | Node.js, Bun, and Deno are required MVP targets with blocking Sendust CI | Requirements C-31, feature matrix F-DIS-14..F-DIS-16 |\n| Deno setup | Local node_modules and --allow-ffi requirements documented | Research + P03/P14 tasks |\n| Platform policy | Explicit runtime × OS × CPU × ABI matrix and evidence rule | ADR-0015, distribution strategy |\n| Traceability | Requirements, phases, feature matrix, risks, and gates reconciled | A01 gate record |\n\nA01 approves the design target only. It does not approve runtime or platform compatibility; those remain P05/P14 release blockers.\n\n## QG-00 — Discovery integrity
 
 | Check | Requirement | Evidence |
 | --- | --- | --- |
