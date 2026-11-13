@@ -16,7 +16,7 @@ lettre’s observed documentation requires selecting a rustls crypto provider an
 
 ## Decision
 
-Use rustls 0.23 with the `ring` provider and `webpki-roots` trust anchors. Certificate and hostname verification are always enabled. No public option, environment variable, or undocumented flag may disable verification.
+Use rustls 0.23 with the `ring` provider and `webpki-roots` trust anchors. Certificate and hostname verification are always enabled. Sendust exposes no public option, environment variable, or undocumented flag to disable verification. lettre's builder contains dangerous certificate/hostname bypass methods; Sendust MUST NOT call them.
 
 Rationale for `webpki-roots`: deterministic trust across all shipped binaries, no dependence on the consumer OS trust store, no platform certificate loading behavior to validate. Rationale for `ring`: broad platform support and simpler cross-compilation than `aws-lc-rs`.
 
@@ -43,4 +43,4 @@ The pinned v0.11.23 Cargo.toml exposes a composable feature graph: `default-feat
 - A feature matrix naming exact features and the source proving each (recorded in [lettre validation](../../research/lettre-0.11.23-validation.md)).
 - A compiled dependency graph with no duplicate/conflicting rustls providers.
 - Negative certificate tests failing closed.
-- A source audit showing no verification bypass path.
+- A source audit showing no call to `dangerous_accept_invalid_certs(true)` or `dangerous_accept_invalid_hostnames(true)`, and no bypass in the Sendust public API.
