@@ -1,6 +1,6 @@
 # QG-02 — Architecture Approval Audit
 
-**Decision:** APPROVED — DESIGN BASELINE  
+**Decision:** APPROVED — DESIGN BASELINE; FINAL ADR REVIEW COMPLETE  
 **Phase:** P02 — Architecture  
 **Reviewed:** 2026-11-13  
 **Reviewer:** Independent architecture audit (GPT-6)  
@@ -59,7 +59,9 @@ The following are deliberately not represented as passed:
 
 The audit environment has Node.js 22.16.0 but does not have rustc or cargo. No Rust compilation or native runtime test was executed. The architecture is approved as a design baseline; downstream gates remain release blockers until their evidence exists.
 
-## 4. Final decision
+## 4. Final decision and change control
+
+The reviewer rechecked the final ADR text/status set, the public result contract, exact lettre and napi dependency selections, timeout limits, SMTP 421 handling, and the queue boundary after the last documentation reconciliation. This record is the final QG-02 approval snapshot. The pre-QG-02 ADR reconciliation window is closed; any later material change requires a superseding ADR.
 
 **QG-02 APPROVED.** The architecture has a coherent, source-backed design with no unresolved decision that prevents repository scaffolding or Rust-core implementation. Implementation must follow the approval matrix. Any failed compile, fake-relay test, TLS fixture, or runtime probe may block the relevant phase and require an ADR amendment; this approval does not waive those tests.
 
