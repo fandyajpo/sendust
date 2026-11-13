@@ -8,7 +8,7 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 | --- | --- | --- | --- |
 | QG-00 | Discovery integrity | P00 | P01 |
 | QG-01 | Research evidence | P01 | P02 |
-| QG-02 | Architecture freeze | P02 | P03 |
+| QG-02 | Architecture approval (design baseline) | P02 | P03 |
 | QG-03 | Repository baseline | P03 | P04 |
 | QG-04 | Rust safety and core tests | P04 | P05 |
 | QG-05 | Node interoperability | P05 | P06, P09 |
@@ -42,20 +42,20 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 | lettre API | Chosen async API documented with pinned-source citations and per-recipient visibility | [P01 source report](../research/lettre-0.11.23-validation.md) |
 | TLS features | Exact feature graph source-reviewed; compile and certificate fixtures remain implementation gates | [P01 source report](../research/lettre-0.11.23-validation.md) |
 | Recipient/timeouts | Source-observed RCPT API; coarse-stage table; explicit ADR decisions | [P01 source report](../research/lettre-0.11.23-validation.md) |
-| Node lifecycle | Node 22/24/26 labeled candidate/probed/supported; GC and close probe plan | P01-004 matrix |
+| Node lifecycle | Node 22/24/26 candidate-only matrix; explicit close/GC/exit probe plan | [Node runtime plan](../research/node-runtime-validation-plan.md) |
 | Decision record | Every mandatory design question selected; implementation proofs have named gates | [QG-01 gate record](../gates/phase-01-research.md) |
 
 ## QG-02 — Architecture approval (design baseline)
 
 | Check | Requirement | Evidence |
 | --- | --- | --- |
-| Crate boundary | Exactly two crates; core has no Node linkage | P02-001 diagram and check plan |
-| Status contract | `accepted` = positive final DATA reply; explicit negative final reply = `rejected`; missing/ambiguous final reply after DATA = `unknown`; no delivery claim | P02-002 table |
+| Crate boundary | Exactly two crates; core has no Node linkage | [Approval matrix](../architecture/approval-matrix.md) |
+| Status contract | Positive final DATA=accepted; explicit negative final reply=rejected; indeterminate disposition=unknown; recipient RCPT outcomes preserved | [Approval matrix](../architecture/approval-matrix.md) |
 | Error taxonomy | Stable codes/categories; no message parsing required | P02-002 / error model |
-| Lifecycle | `open -> closing -> closed`; BUSY; bounded close; no GC | P02-003 |
-| Ownership | Copy-before-async; no borrowed JS memory | P02-004 |
+| Lifecycle | `open -> closing -> closed`; BUSY; bounded close; no GC | [Approval matrix](../architecture/approval-matrix.md) |
+| Ownership | Synchronous owned snapshot before async scheduling; no borrowed JS memory | [Approval matrix](../architecture/approval-matrix.md) |
 | Limits | 100 recipients, 10/20/30 MiB caps; deterministic precedence | P02-004 |
-| ADRs | All mandatory ADRs accepted or explicitly blocked | ADR index |
+| ADRs | All P02-scoped ADRs accepted; future-phase ADRs retain explicit downstream gate | [ADR index](../architecture/decisions/README.md) |
 | Traceability | C-01..C-30 map to ADRs, implementation tasks, and test gates | [Architecture approval matrix](../architecture/approval-matrix.md) |
 
 ## QG-03 — Repository baseline
@@ -103,7 +103,7 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 | --- | --- | --- |
 | Success | Positive final DATA → `accepted` | Command trace |
 | Pre-DATA rejection | MAIL/RCPT refusal → `rejected` | Trace |
-| Mixed RCPT | ADR-0005 behavior; no DATA after pre-DATA rejection | Trace |
+| Mixed RCPT | One DATA transaction to accepted subset; no DATA when all RCPT replies reject | Trace + transaction count |
 | Final DATA response | Explicit 4xx/5xx (including `451`) → `rejected`; missing final reply after terminator may have reached relay → `unknown` | SMTP trace + transaction count |
 | Auth failure | `535` → `AUTH_FAILED`; no message sent | Trace |
 | TLS failures | Self-signed, expired, wrong host, incomplete chain, malformed | Negative tests |
