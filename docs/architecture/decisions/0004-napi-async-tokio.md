@@ -7,18 +7,18 @@
 
 ## Context
 
-Sendust must expose asynchronous send and close operations to JavaScript without blocking the Node.js event loop. napi-rs v3 provides `async fn` exports that run on a Tokio runtime it manages, converting the result to a JavaScript Promise. lettre supports `Tokio1Executor`, but using the wrong runtime causes a panic.
+Sendust must expose asynchronous send and close operations to JavaScript without blocking the Node.js event loop. napi-rs v3 provides async exports that run on its managed Tokio runtime, converting the result to a JavaScript Promise. Source inspection of napi 3.16.2 shows its default features enable Node-API 4, not 8; the `napi8` feature must be enabled explicitly. lettre supports `Tokio1Executor`, but using the wrong runtime causes a panic.
 
-The scaffold defaults to Node-API 4; Sendust proposes Node-API 8 for a wider feature floor while retaining broad ABI compatibility. Node-API 8 is the selected ABI floor for the architecture. P01-004 source review records the version candidates; compilation and runtime compatibility remain hard tests at P05-003/P14-004.
+Pin napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0 for the initial implementation baseline. Enable napi's `napi8` and `async` features explicitly; napi 3.16.2 defaults to napi4 + dyn-symbols, while `napi8` raises the ABI floor and `async` enables the managed Tokio runtime. The selected Rust MSRV is at least 1.88 per the pinned napi source. Node-API 8 is the approved ABI floor; compilation and runtime compatibility remain hard tests at P05-003/P14-004.
 
 ## Decision
 
-- Use napi-rs v3 with generated TypeScript declarations.
-- Expose async `send` and `close` via `#[napi] async fn`, running on the napi-managed Tokio 1 runtime.
+- Pin napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0; enable napi8 and async explicitly; generate TypeScript declarations.
+- Expose synchronous internal beginSend/beginClose preparation methods and async executeSend/waitClosed methods. Async work runs on the napi-managed Tokio 1 runtime. The TypeScript wrapper composes them into the public Promise-based send/close methods.
 - Do not create, own, or shut down a separate Tokio runtime in the addon.
 - Target Node-API 8 initially; raise only if P01-004 proves a required feature needs more.
 - Use `catch_unwind` at exported boundaries where the panic strategy permits; never build the addon with `panic = "abort"`.
-- Keep all Node-API code inside `sendust-napi`; core stays runtime-agnostic.
+- Keep all Node-API code inside `sendust-napi`; core stays Node-API-free but uses Tokio 1 for lettre networking and deadlines.
 
 ## Alternatives
 
