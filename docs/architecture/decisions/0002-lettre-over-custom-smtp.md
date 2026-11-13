@@ -35,7 +35,7 @@ Do not implement a custom SMTP client in the MVP.
 
 Source/build validation demonstrates that:
 
-- A required MVP behavior (mandatory TLS verification with the chosen backend, STARTTLS, PLAIN/LOGIN auth, whole-envelope submission, bounded close) cannot be implemented through public lettre APIs; or
+- A required MVP behavior (mandatory TLS verification with the chosen backend, STARTTLS, PLAIN/LOGIN auth, single DATA transaction for the accepted-recipient subset, bounded close) cannot be implemented through public lettre APIs; or
 - The selected API is unmaintained or has an unresolved security advisory.
 
 Reversal requires a superseding ADR and an updated Phase 06 plan before implementation.
