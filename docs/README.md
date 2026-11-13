@@ -48,6 +48,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 35 | [Architecture Amendment A02](gates/architecture-amendment-a02.md) | Modular monolith and internal module boundaries |
 | 36 | [AI implementation contract](engineering/ai-implementation-contract.md) | Normative workflow, documentation synchronization, static-review and evidence rules |
 | 37 | [Toolchain baseline](engineering/toolchain-baseline.md) | Exact Rust, Node.js, Bun, Deno, npm, TypeScript, Biome, Vitest versions and canonical commands |
+| 38 | [Documentation audit](audits/2026-11-13-documentation-audit.md) | Static consistency, traceability, task graph, links, toolchain, and remaining validation owners |
 
 ## 2. Directory map
 
@@ -71,6 +72,7 @@ This documentation set is the source of truth for product scope, requirements, a
     ├── planning/
     ├── phases/
     ├── engineering/
+    ├── audits/
     │   ├── ai-implementation-contract.md
     │   └── toolchain-baseline.md
     └── decisions/  (pointer to architecture/decisions)
