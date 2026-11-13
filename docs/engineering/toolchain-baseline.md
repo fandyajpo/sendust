@@ -54,7 +54,7 @@ Official version sources:
 
 ## 4. Canonical command matrix
 
-All commands below run from the repository root unless the row states otherwise. They are command contracts; they are **NOT RUN** until an execution-capable environment runs them against the implemented workspace.
+All commands below run from the repository root. JavaScript lint/format/typecheck/test scripts run in the `./ts` npm workspace. They are command contracts; they are **NOT RUN** until an execution-capable environment runs them against the implemented workspace.
 
 | Concern | Canonical command | Expected result |
 | --- | --- | --- |
@@ -65,7 +65,7 @@ All commands below run from the repository root unless the row states otherwise.
 | Workspace Rust tests | `cargo test --workspace --all-targets` | Exit 0 |
 | Crate/dependency audit | `cargo metadata --format-version 1 --no-deps` then `node scripts/check-architecture.mjs` | Exactly two Rust packages; dependency direction and forbidden dependencies are valid |
 | Documentation structure audit | `node scripts/check-docs.mjs` | Relative links, IDs, phase/task counts, and index references are valid |
-| JavaScript install | `npm ci` | Reproducible install from the committed root lockfile |
+| JavaScript install | `npm ci` | Reproducible install from the committed root lockfile; installs the root package and `ts` workspace |
 | TypeScript lint | `npm --workspace ./ts run lint` | Biome exits 0 |
 | TypeScript formatting | `npm --workspace ./ts run format:check` | Biome exits 0 with no diff |
 | TypeScript typecheck | `npm --workspace ./ts run typecheck` | TypeScript exits 0 with strict settings |
