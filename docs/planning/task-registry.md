@@ -4,12 +4,20 @@
 
 - Total phases: 19
 - Phase tasks: 95
-- Architecture amendment tasks: 4 (A01-001–A01-004)
+- Architecture amendment tasks: 7 (A01-001–A01-004, A02-001–A02-003)
 - Completed tasks: 15 (P00–P02)
 - Not-started tasks: 80 (P03–P18)
-- P00–P02 tasks are `COMPLETED` with approved gate evidence; P03–P18 remain `NOT STARTED`. A01-001–A01-004 are completed as documentation/design work; runtime implementation validation remains pending.
+- P00–P02 tasks are `COMPLETED` with approved gate evidence; P03–P18 remain `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
 - Effort is relative: S, M, L, XL. No delivery dates.
 - Gate tasks are the final task in each phase and must not be marked complete before their phase evidence exists.
+
+## Architecture Amendment A02 tasks
+
+| Task | Title | Prerequisites | Status |
+| --- | --- | --- | --- |
+| A02-001 | Define modular-monolith boundaries and module ownership | A01-004, P02-005 | COMPLETED |
+| A02-002 | Define SMTP delivery port and adapter isolation policy | A02-001 | COMPLETED |
+| A02-003 | Review modular architecture, constraints, and implementation handoff | A02-001, A02-002 | COMPLETED |
 
 ## Registry
 
@@ -30,7 +38,7 @@
 | [P02](../phases/phase-02.md) | Architecture | [P02-003](../phases/phase-02.md) | Design transport lifecycle, concurrency, and timeout budgets | L | P02-001 | COMPLETED |
 | [P02](../phases/phase-02.md) | Architecture | [P02-004](../phases/phase-02.md) | Specify memory ownership, limits, and attachment policy | M | P02-001 | COMPLETED |
 | [P02](../phases/phase-02.md) | Architecture | [P02-005](../phases/phase-02.md) | Architecture review, ADR freeze, and implementation handoff | S | P02-001, P02-002, P02-003, P02-004 | COMPLETED |
-| [P03](../phases/phase-03.md) | Repository | [P03-001](../phases/phase-03.md) | Create the workspace and two-crate skeleton | M | P02-005, A01-004 | NOT STARTED |
+| [P03](../phases/phase-03.md) | Repository | [P03-001](../phases/phase-03.md) | Create the workspace and two-crate skeleton | M | P02-005, A01-004, A02-003 | NOT STARTED |
 | [P03](../phases/phase-03.md) | Repository | [P03-002](../phases/phase-03.md) | Define dependency pinning, feature, and license policy | S | P03-001, P01-002 | NOT STARTED |
 | [P03](../phases/phase-03.md) | Repository | [P03-003](../phases/phase-03.md) | Establish formatting, linting, type-check, and unit-test commands | M | P03-001 | NOT STARTED |
 | [P03](../phases/phase-03.md) | Repository | [P03-004](../phases/phase-03.md) | Scaffold deterministic fake SMTP and TLS test harness seams | L | P03-001 | NOT STARTED |
