@@ -153,7 +153,7 @@ Verifies RC identity and evidence, runs final MVP acceptance against the constra
 
 ### P18 — Post-MVP
 
-Collects feedback, researches SMTPUTF8, AbortSignal, platform expansion, connection pooling, streaming, and additional transports, and defines the next compatibility/deprecation policy. Queue/job orchestration and queue adapters are held outside this roadmap. No post-MVP feature enters the codebase without a new requirement, task, and test.
+Collects feedback, researches SMTPUTF8, public AbortSignal cancellation, platform expansion, connection pooling, streaming, and additional transports, and defines the next compatibility/deprecation policy. Queue/job orchestration and queue adapters are held outside this roadmap. No post-MVP feature enters the codebase without a new requirement, task, and test.
 
 ## 3. Effort profile
 
