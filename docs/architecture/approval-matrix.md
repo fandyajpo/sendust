@@ -34,7 +34,7 @@ The TypeScript wrapper is the only public package surface. It exposes createTran
 | Delivery outcomes | Positive final DATA=accepted; explicit negative final reply=rejected; indeterminate result after message transmission=unknown | ADR-0005, ADR-0013 | P06-004, P09-002, P12-002 |
 | Error channel | Operational failures are stable typed errors; SMTP delivery outcomes are result values | ADR-0013 | P04-001, P05-004, P09-003 |
 | Lifecycle | One active send; immediate BUSY; explicit open→closing→closed; bounded idempotent close; no GC close | ADR-0006 | P04-004, P05-003, P09-004, P10-001 |
-| Timeouts | Connect 10s, operation 30s, total 120s, close 125s; outer connect deadline covers DNS/greeting/EHLO/TLS | ADR-0007 | P04-004, P10-002 |
+| Timeouts | Connect ≤10s, operation ≤30s, total ≤120s, close ≤125s; values lowerable only; connect/operation ≤ total ≤ close; outer connect deadline covers DNS/greeting/EHLO/TLS | ADR-0007 | P04-004, P10-002 |
 | Memory ownership | Synchronous N-API snapshot into Rust-owned buffers before async scheduling; no borrowed JS memory across await | ADR-0008 | P05-002, P11-004 |
 | Resource caps | 100 recipients; 10 MiB per attachment; 20 MiB raw aggregate; 30 MiB wire | ADR-0009 | P04-003, P08-003, P13-003 |
 | MIME | Core owns structure/policy/serialization; vetted primitives may encode individual values | ADR-0010 | P07-001–P07-005 |
