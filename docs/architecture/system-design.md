@@ -134,7 +134,7 @@ The exact Rust names are implementation details, but the approved semantics are 
 
 Validation runs in this order and stops at the first failure, so error precedence is stable:
 
-1. Transport options: relay host/port, security mode, auth mode, timeout finiteness.
+1. Transport options: relay host/port, security mode, auth mode, timeout ranges and relationships (connect/operation ≤ total ≤ close).
 2. Message identity: From present, at least one To/CC/BCC.
 3. Recipient count and address parsing (ASCII local part, IDNA domain).
 4. Header names/values and CRLF/control-character rejection.
