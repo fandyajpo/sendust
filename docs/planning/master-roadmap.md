@@ -1,7 +1,7 @@
 # Master Roadmap
 
 **Planning date:** 2026-11-13.  
-**Repository state at planning time:** empty Git repository, no commits, no application code.  
+**Repository state at planning time:** planning and architecture documentation; application implementation was not present in the audited snapshot.  
 **Execution rule:** no phase starts before its predecessor’s completion gate is approved. All phases and tasks are `NOT STARTED`.
 
 This roadmap summarizes the 19 phase plans. Detailed tasks, tests, acceptance criteria, and deliverables live in [docs/phases](../phases/). Requirements live in [requirements.md](../product/requirements.md).
@@ -147,7 +147,7 @@ Verifies RC identity and evidence, runs final MVP acceptance against the constra
 
 ### P18 — Post-MVP
 
-Collects feedback, researches SMTPUTF8, AbortSignal, platform expansion, pooling, retry, streaming, and additional transports, and defines the next compatibility/deprecation policy. No post-MVP feature enters the codebase without a new requirement, task, and test.
+Collects feedback, researches SMTPUTF8, AbortSignal, platform expansion, connection pooling, streaming, and additional transports, and defines the next compatibility/deprecation policy. Queue/job orchestration and queue adapters are held outside this roadmap. No post-MVP feature enters the codebase without a new requirement, task, and test.
 
 ## 3. Effort profile
 
@@ -183,4 +183,4 @@ A phase is done only when its completion gate is approved with linked evidence. 
 
 ## 5. Explicit non-goals for the roadmap
 
-No deadlines, no story points, no velocity, no team-size assumptions, no enterprise architecture, no features outside [mvp-scope.md](../product/mvp-scope.md). Post-MVP work is planned only as research, not as committed scope.
+No deadlines, no story points, no velocity, no team-size assumptions, no enterprise architecture, no features outside [mvp-scope.md](../product/mvp-scope.md). Post-MVP work is planned only as research, not as committed scope. Queueing, workers, persistence, scheduling, retry orchestration, and queue adapters are not planned deliverables.
