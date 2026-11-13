@@ -16,9 +16,10 @@ sequenceDiagram
 
     App->>TS: transport.send(message)
     TS->>TS: public shape validation
-    TS->>N: NativeTransport.send(nativeMessage)
+    TS->>N: beginSend(nativeMessage) synchronously
+    TS->>N: executeSend(ownedOperation) asynchronously
     N->>N: synchronously copy Buffers/strings to owned Rust values and reserve send slot
-    N->>C: core::send(owned message, transport)
+    N->>C: core::send(owned message, reserved transport slot)
     C->>C: deterministic validation
     C->>C: resolve file attachments (if opted in)
     C->>C: enforce raw caps
@@ -37,7 +38,7 @@ sequenceDiagram
     R-->>L: final response
     L-->>C: transport result or error
     C->>C: map to accepted/rejected/unknown
-    C->>L: close session
+    C->>L: QUIT best-effort after known final result; drop socket on uncertain DATA
     C-->>N: SendOutcome
     N-->>TS: converted result object
     TS-->>App: SendResult
@@ -71,16 +72,14 @@ All deterministic failures (validation, limits, configuration, MIME composition,
 | Stage | If it fails | Result certainty |
 | --- | --- | --- |
 | DNS/connect/greeting/EHLO/TLS | No message transaction | Connection/TLS error; outer connect deadline required because lettre's inner timeout does not cover DNS/greeting/EHLO/TLS |
-| TLS handshake | Trust or negotiation failed | `TLS` error; no message was submitted |
 | AUTH | Authentication failed | `AUTH` error; no message was submitted |
 | MAIL FROM | Definitive SMTP refusal | `rejected` outcome |
 | RCPT TO | Individual recipient refusal | Record explicit rejected; continue with other recipients; if none accepted, do not issue DATA |
 | DATA command | Server refuses DATA before message body | `rejected` outcome |
-| DATA body + terminator + final reply (lettre `message()`) | Explicit final 4xx/5xx | `rejected` |
-| DATA body + terminator + final reply (lettre `message()`) | Write/read/reset/timeout without final reply | `unknown` conservatively because lettre exposes no public terminator-write checkpoint |
-| Final response | Explicit final 4xx/5xx | `rejected` outcome |
-| Final response | Positive 2xx | `accepted` outcome |
-| Final response | No final reply after terminator may have reached relay | `unknown` outcome |
+| DATA command | Explicit 4xx/5xx before message body | `rejected` outcome |
+| DATA body + terminator + final reply (lettre `message()`) | Explicit final 4xx/5xx | `rejected` outcome |
+| DATA body + terminator + final reply (lettre `message()`) | Positive final 2xx | `accepted` outcome for RCPT-accepted recipients |
+| DATA body + terminator + final reply (lettre `message()`) | Write/read/reset/timeout or non-final 3xx without final disposition | `unknown` conservatively because lettre exposes no public terminator-write checkpoint |
 
 A result is `accepted` only after a positive final response to DATA. An explicit negative final response (4xx/5xx) is a known `rejected` outcome, including when it arrives after the message body. `unknown` is reserved for cases where the final disposition cannot be established, such as losing the connection after the DATA terminator may have reached the relay but before its final reply arrives. Connection, TLS, and AUTH failures are operational errors, not delivery outcomes. Acceptance means relay responsibility, not mailbox delivery.
 
@@ -97,7 +96,7 @@ sequenceDiagram
 
     App->>TS: transport.close()
     TS->>N: NativeTransport.close()
-    N->>C: begin close
+    N->>C: beginClose (sync)
     C->>C: state = closing
     alt send in flight
         C->>L: cancel / await bounded drain
@@ -107,7 +106,7 @@ sequenceDiagram
     end
     C->>C: state = closed
     C-->>N: close complete or timeout
-    N-->>TS: void or error
+    N-->>TS: waitClosed Promise resolves or rejects
     TS-->>App: resolved or rejected
 ```
 
@@ -123,9 +122,8 @@ Rules:
 
 ```text
 core error
-  ├── ValidationError        -> sync throw at wrapper
-  ├── ConfigurationError     -> sync throw at wrapper
-  ├── LimitError             -> sync throw at wrapper
+  ├── createTransport configuration errors -> synchronous throw
+  ├── send validation/limit errors -> Promise rejection
   ├── TlsError               -> async rejection
   ├── AuthenticationError    -> async rejection
   ├── ProtocolError          -> async rejection or Unknown outcome
