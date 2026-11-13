@@ -33,7 +33,7 @@ SMTP sessions can hang at connect, TLS, greeting, AUTH, MAIL, RCPT, DATA, or the
 - A close during a maximal send has headroom.
 - Tests can use fake time to assert boundaries without real waits.
 - Documentation must not claim stage precision that research did not prove.
-- Timeout after DATA carries duplicate-send risk for the caller; documented in the error catalog.
+- Timeout after DATA carries duplicate-send risk for the caller. If the final SMTP disposition cannot be established, return `unknown` and do not automatically retry; see the error catalog.
 
 ## Evidence required
 
