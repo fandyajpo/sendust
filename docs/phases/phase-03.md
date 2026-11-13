@@ -120,14 +120,12 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 | --- | --- | --- |
 | P03-001 | Two-crate workspace, manifests, module tree, `ts/src` skeleton, `rust-toolchain.toml`; `cargo metadata --format-version 1 --no-deps` reports exactly `sendust-core` and `sendust-napi` | IMPLEMENTED, STATICALLY REVIEWED |
 | P03-002 | [Dependency policy](../engineering/dependency-policy.md) plus workspace pins; `cargo tree -e features` resolves `lettre` 0.11.23 with only `smtp-transport`, `tokio1-rustls`, `ring`, and `webpki-roots`, with no `pool` or `native-tls`; a core unit test constructs the pinned `SmtpTransport` builder, so a dropped transport feature fails the build | IMPLEMENTED, STATICALLY REVIEWED |
+| P03-003 | `scripts/check-architecture.mjs`, `scripts/check-docs.mjs`, npm workspace scripts, `.github/workflows/ci.yml`; `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test -p sendust-core --all-targets`, `cargo test --workspace --all-targets`, and the four `npm --workspace ./ts run` commands exited 0; CI now runs every Rust command with `--locked` | EXECUTED PASS in a development container (Rust 1.100.0, Node.js 24.22.x) and in Sendust CI on branch `feat/p03-repository-skeleton`: the Rust workspace, Architecture and documentation checks, TypeScript (Node.js 22.23.5, 24.22.3, 26.13.1), Bun 1.4.4, and Deno 2.9.8 jobs all passed |
 | P03-004 | `crates/sendust-core/tests/support/mod.rs` (loopback-only fake SMTP: scripted per-stage replies, per-recipient RCPT, injected delays, command trace), `crates/sendust-core/tests/harness_self_test.rs` (7 passing tests), `scripts/generate-tls-fixtures.sh`, and committed `tests/fixtures/tls/*`; contract in [the harness contract](../engineering/test-harness-contract.md) | IMPLEMENTED, EXECUTED PASS locally and in CI |
-| P03-003 | `scripts/check-architecture.mjs`, `scripts/check-docs.mjs`, npm workspace scripts, `.github/workflows/ci.yml`; `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test -p sendust-core --all-targets`, `cargo test --workspace --all-targets`, and the four `npm --workspace ./ts run` commands exited 0 | EXECUTED PASS in a development container (Rust 1.100.0, Node.js 24.22.x) and in Sendust CI on branch `feat/p03-repository-skeleton`: the Rust workspace, Architecture and documentation checks, TypeScript (Node.js 22.23.5, 24.22.3, 26.13.1), Bun 1.4.4, and Deno 2.9.8 jobs all passed |
 
 Executed evidence now exists in a local toolchain and in Sendust CI on branch
 `feat/p03-repository-skeleton`. Gate PHASE-03 remains unapproved and still
-requires the P03-005 gate record. The lockfile-gated `npm ci` and `--locked`
-paths are also still unexercised; CI falls back to `npm install` and emits a
-warning until the lockfile is committed.
+requires the P03-005 gate record.
 
 `Cargo.lock` is committed and every Rust CI command runs with `--locked`.
 `package-lock.json` is not committed yet: CI installs with `npm install` and
