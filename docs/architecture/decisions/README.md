@@ -1,6 +1,6 @@
 # ADR Index
 
-Architectural decisions for Sendust. One decision per file. Status values: `PROPOSED`, `ACCEPTED`, `SUPERSEDED`, `REJECTED`, `BLOCKED` (requires the named validation task before acceptance). The P02-005 approval matrix is the authoritative list of decisions frozen for the architecture baseline.
+Architectural decisions for Sendust. One decision per file. ADR-0016 defines the modular-monolith structure without adding crates. Status values: `PROPOSED`, `ACCEPTED`, `SUPERSEDED`, `REJECTED`, `BLOCKED` (requires the named validation task before acceptance). The P02-005 approval matrix is the authoritative list of decisions frozen for the architecture baseline.
 
 | ADR | Title | Status | Owner task |
 | --- | --- | --- | --- |
