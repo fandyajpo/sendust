@@ -102,7 +102,7 @@ Milestones are evidence checkpoints, not calendar dates. A milestone is reached 
 - `send` returns structured outcomes and never claims delivery.
 - `BUSY`, `CLOSED`, timeout, TLS, auth, validation, limit, and internal errors are stable and catchable.
 - Close is idempotent and bounded.
-- No pooling, retry, SMTPUTF8, URL attachments, or required AbortSignal.
+- No pooling, retry, SMTPUTF8, URL attachments, or public AbortSignal option.
 
 **Risks:** semantic drift in the wrapper, accidental convenience features.  
 **Mitigation:** contract gate, type tests, API surface audit.
