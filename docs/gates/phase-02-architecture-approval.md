@@ -66,3 +66,7 @@ The reviewer rechecked the final ADR text/status set, the public result contract
 **QG-02 APPROVED.** The architecture has a coherent, source-backed design with no unresolved decision that prevents repository scaffolding or Rust-core implementation. Implementation must follow the approval matrix. Any failed compile, fake-relay test, TLS fixture, or runtime probe may block the relevant phase and require an ADR amendment; this approval does not waive those tests.
 
 Queue/job orchestration remains HELD outside the current roadmap and must not be introduced through implementation or adapter abstractions.
+
+## Subsequent architecture amendment
+
+The original QG-02 approval remains the baseline for SMTP, core boundaries, and delivery semantics. Architecture Amendment A01 and ADR-0015 subsequently extend the runtime and platform scope to Node.js, Bun, and Deno. A01 is approved at design level only; no runtime/platform implementation evidence is claimed. The amendment's downstream validation is mandatory at P03, P05, and P14. See [A01 gate](architecture-amendment-a01.md).
