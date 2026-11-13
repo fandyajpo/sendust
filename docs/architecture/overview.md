@@ -80,7 +80,8 @@ Failures are categorized before they reach JavaScript:
 | Limit | Attachment > 10 MiB, wire > 30 MiB | Rejection before DATA |
 | TLS | Self-signed, expired, wrong host | Closed, non-retryable error |
 | Authentication | `535` | Closed, non-retryable error |
-| Protocol | Explicit SMTP refusal | `rejected` when the relay definitively refuses |
+| Protocol | MAIL/DATA/final DATA refusal or all RCPT replies negative | Overall `rejected` |
+| Protocol | One RCPT refusal in a mixed envelope | That recipient is `rejected`; accepted subset proceeds to one DATA transaction |
 | Protocol | Abrupt close / missing final reply after DATA | `unknown` only when final disposition cannot be established |
 | Timeout | Connect/operation/total budget exceeded | Timeout category with elapsed budget |
 | Lifecycle | Send after close, concurrent send | `CLOSED` / `BUSY`, no network attempt |
