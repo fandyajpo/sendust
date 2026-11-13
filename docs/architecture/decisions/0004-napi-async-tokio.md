@@ -17,7 +17,7 @@ Pin napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0 for the initial impleme
 - Pin napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0; enable napi8 and async explicitly; generate TypeScript declarations.
 - Expose synchronous internal beginSend/beginClose preparation methods and async executeSend/waitClosed methods. Async work runs on the napi-managed Tokio 1 runtime. The TypeScript wrapper composes them into the public Promise-based send/close methods.
 - Do not create, own, or shut down a separate Tokio runtime in the addon.
-- Target Node-API 8 initially; raise only if P01-004 proves a required feature needs more.
+- Target Node-API 8; raise only through a superseding ADR if a future required feature cannot be implemented at this ABI level.
 - Use `catch_unwind` at exported boundaries where the panic strategy permits; never build the addon with `panic = "abort"`.
 - Keep all Node-API code inside `sendust-napi`; core stays Node-API-free but uses Tokio 1 for lettre networking and deadlines.
 
@@ -26,7 +26,7 @@ Pin napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0 for the initial impleme
 1. **`AsyncTask` / `ThreadsafeFunction`.** More manual control, more boilerplate, and easier to make ownership mistakes; not needed for a simple request/response send.
 2. **Synchronous export with an internal runtime.** Blocks the event loop; unacceptable.
 3. **Custom runtime registration.** Adds complexity and a second lifecycle to validate; unnecessary unless WASI or non-Node targets are added.
-4. **Node-API 4.** Broader floor, but may lack features needed for safe async/error handling. Validate before choosing.
+4. **Node-API 4.** Broader ABI floor, but not selected for this design. Reconsider only through an ADR if runtime coverage requirements change.
 
 ## Consequences
 
