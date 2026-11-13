@@ -9,7 +9,9 @@ Sendust is an embeddable library, not an SMTP server, hosted email service, mail
 ## Product boundaries
 
 - SMTP-first: implicit TLS and STARTTLS, with certificate and hostname verification.
-- Native Rust core; thin Node-API adapter; TypeScript public API.
+- Native Rust core; thin Node-API adapter; runtime-neutral TypeScript public API.
+- Node.js, Bun, and Deno are required MVP runtime targets, subject to Sendust-owned blocking CI.
+- Server platform support is limited to explicitly tested OS/CPU/ABI combinations.
 - One message per `send()` call and one active send per transport.
 - Explicit, bounded lifecycle and resource limits.
 - A successful result means the SMTP relay accepted responsibility, not that a mailbox received the message.
@@ -22,4 +24,4 @@ The product definition, requirements, architecture, ADRs, engineering policies, 
 
 ## Project status
 
-The repository currently contains planning and architecture documentation; no application implementation or published package is claimed. Discovery (P00), source/API research (P01), and architecture design approval (P02) are complete. QG-02 approves the design baseline, while Cargo compilation, fake SMTP/TLS behavior, native binding, and runtime support remain mandatory downstream gates. The next phase is P03 Repository. See the [architecture approval matrix](docs/architecture/approval-matrix.md) and [QG-02 record](docs/gates/phase-02-architecture-approval.md). Phase/task completion must be backed by evidence under [the definition of done](docs/planning/definition-of-done.md).
+The repository currently contains planning and architecture documentation; no application implementation or published package is claimed. Architecture Amendment A01 extends the approved design to Node.js, Bun, and Deno, with runtime and platform validation still pending. Discovery (P00), source/API research (P01), and architecture design approval (P02) are complete. QG-02 approves the design baseline, while Cargo compilation, fake SMTP/TLS behavior, native binding, and runtime support remain mandatory downstream gates. The next phase is P03 Repository. See the [architecture approval matrix](docs/architecture/approval-matrix.md) and [QG-02 record](docs/gates/phase-02-architecture-approval.md). Phase/task completion must be backed by evidence under [the definition of done](docs/planning/definition-of-done.md).
