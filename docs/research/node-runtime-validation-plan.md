@@ -74,3 +74,11 @@ No second Tokio runtime may be constructed. The Rust core has no Node/N-API depe
 ## 6. Acceptance rule
 
 A runtime is supported only after the native addon builds and all blocking tests pass on that exact Node version and platform. Node-API compatibility alone is insufficient. Until then, Node 22/24/26 are candidates only.
+
+## 7. Multi-runtime amendment
+
+The original Node-only scope is extended by [multi-runtime compatibility research](multi-runtime-compatibility.md) and ADR-0015. Node.js, Bun, and Deno are required MVP targets. Node-specific probes remain necessary but are no longer sufficient.
+
+P05/P14 MUST run the full Sendust behavioral suite on exact pinned Node.js, Bun, and Deno versions. Deno additionally requires a clean consumer using local node_modules and --allow-ffi. Bun and Deno support MUST NOT be inferred from Node-API ABI compatibility or NAPI-RS upstream CI.
+
+No Sendust native addon was executed on Bun or Deno during research. Runtime support claims remain unvalidated until blocking Sendust CI passes.
