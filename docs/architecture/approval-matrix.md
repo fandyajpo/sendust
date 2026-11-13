@@ -108,3 +108,8 @@ A01 extends this design baseline without replacing the two-crate core architectu
 | Claims | Runtime × OS × CPU × ABI/libc intersection only | P14 support matrix and blocking CI evidence |
 
 ADR-0015 is accepted as a design amendment. It does not claim Bun, Deno, or any new platform has passed Sendust runtime tests. See [A01 gate](../gates/architecture-amendment-a01.md).
+
+
+## 9. Architecture Amendment A02 — modular monolith
+
+ADR-0016 is accepted as a design amendment. Sendust uses a modular monolith inside the existing two-crate Rust workspace and one TypeScript package. Core module responsibilities are explicit; domain modules are isolated from lettre/SMTP and runtime bindings; SMTP is the sole MVP adapter behind a narrow internal delivery contract; no public plugin registry or additional crate is introduced. P03/P04/P06/P12 must provide executable dependency, ownership, adapter, and test evidence. This approval is design-level only.
