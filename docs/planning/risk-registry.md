@@ -29,6 +29,9 @@ Likelihood: Low / Medium / High. Impact: Low / Medium / High / Critical.
 | R-019 | Support matrix overpromises Node or platform compatibility | Medium | High | Declare only CI-tested targets and versions; explicit unsupported list; docs accuracy gate | P14, P15 | PLANNED |
 | R-020 | Enterprise users need OS private CAs, but `webpki-roots` ignores them | Medium | Medium | Document limitation; evaluate platform verifier post-MVP | P01, P18 | OPEN |
 
+| R-046 | Module boundaries erode and domain code imports SMTP/runtime implementation details | Medium | High | Explicit module ownership, narrow facade/ports, static dependency checks at P03/P04 and audit at P12 | P03, P04, P12 | PLANNED |
+| R-047 | Premature generic transport/plugin abstraction adds complexity without a second MVP adapter | Medium | Medium | Keep one internal delivery port only where justified; SMTP sole MVP adapter; prohibit public registry | P04, P06 | PLANNED |
+
 ## Security risks
 
 | ID | Risk | Likelihood | Impact | Mitigation | Owner phase | Status |
