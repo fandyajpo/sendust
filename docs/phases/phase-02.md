@@ -1,6 +1,6 @@
 # Phase 02 — Architecture
 
-**Phase status:** NOT STARTED  
+**Phase status:** COMPLETED  
 **Phase dependency:** Phase 01  
 **Companion references:** [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [reliability strategy](../engineering/reliability-strategy.md), [performance strategy](../engineering/performance-strategy.md)
 
@@ -17,7 +17,7 @@ In scope: component boundaries, public TypeScript-facing contract shape, Rust co
 ### P02-001 — Define crate boundaries and dependency direction
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** COMPLETED
 - **Prerequisites:** P01-005
 - **Description:** Specify exactly two crates: `crates/sendust-core/src` containing SMTP/MIME/attachment/validation/state logic and Rust unit tests without Node linkage, and `crates/sendust-napi/src` containing only Node-API adaptation. Define allowed dependency edges: `sendust-napi -> sendust-core`; no reverse edge; core must not depend on napi, Node headers, or JS runtime types. The TypeScript wrapper in `ts/src` depends on the napi package and exposes the public API. Justify isolation as compile-time prevention of Node coupling in core.
 - **Evidence criteria:** Component diagram shows every edge and no cycles. Cargo boundary table names permitted crates per layer. A static check plan proves core does not link Node; a negative dependency test is specified. The path `TS -> napi -> core -> lettre` appears in the decision record.
@@ -25,23 +25,23 @@ In scope: component boundaries, public TypeScript-facing contract shape, Rust co
 ### P02-002 — Specify the public status, result, and error contract
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** COMPLETED
 - **Prerequisites:** P02-001, P01-003
-- **Description:** Define the TypeScript-visible send result as relay acceptance, not delivery. Enumerate statuses including `accepted`, `rejected`, `unknown` after DATA, `attempted` recipients, `busy`, `timeout` by finite budget, `closed`, and validation failures. Define when the whole envelope is rejected before DATA versus unknown. Incorporate the P01-003 ADR: if per-recipient partial status is inaccessible, do not promise it; reject the entire envelope before DATA and retain honest aggregate `unknown`/`attempted`. Explicitly forbid per-recipient independent messages. Define error taxonomy for connect, TLS, authentication, validation, limit, busy, timeout, remote protocol, and closed transport.
-- **Evidence criteria:** Status transition table covers accepted all, rejected all, mixed RCPT with pre-DATA rejection, post-DATA indeterminate disposition, busy, each timeout, and closed. Every error has a stable code and machine-readable category. Contract explicitly states no mailbox-delivery guarantee, no retry after unknown, and no per-recipient message splitting.
+- **Description:** Define the TypeScript-visible send result as relay acceptance, not delivery. Enumerate overall statuses `accepted`, `rejected`, `unknown` and recipient statuses `accepted`, `rejected`, `unknown`. Define recipient-level RCPT responses, the accepted-recipient subset, one DATA transaction, and final DATA ambiguity. Explicitly forbid per-recipient independent messages. Define error taxonomy for connect, TLS, authentication, validation, limit, busy, timeout, remote protocol, and closed transport.
+- **Evidence criteria:** Status transition table covers accepted all, rejected all, mixed RCPT with one DATA to accepted subset, explicit final DATA rejection, post-DATA indeterminate disposition, busy, each timeout, and closed. Every error has a stable code and machine-readable category. Contract explicitly states no mailbox-delivery guarantee, no retry after unknown, and no per-recipient message splitting.
 
 ### P02-003 — Design transport lifecycle, concurrency, and timeout budgets
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** COMPLETED
 - **Prerequisites:** P02-001
-- **Description:** Specify the transport state machine `open -> closing -> closed`, with close idempotence and deadline-bounded drain. Allow at most one active send per transport; a second send fails fast with `BUSY` and is never queued. Define finite tunable defaults: connect 10s, operation 30s, total 120s, close/drain 125s. Define how budgets interact so total cannot exceed 120s and close cannot exceed 125s. State that close is explicit and must not depend on GC; AbortSignal is optional and not required for MVP. Validate exact stage attribution only where P01-003 proved it.
+- **Description:** Specify the transport state machine `open -> closing -> closed`, with close idempotence and deadline-bounded drain. Allow at most one active send per transport; a second send fails fast with `BUSY` and is never queued. Define finite tunable defaults: connect 10s, operation 30s, total 120s, close/drain 125s. Define how budgets interact so total cannot exceed 120s and close cannot exceed 125s. State that close is explicit and must not depend on GC; AbortSignal is optional and not required for MVP. Use coarse public-operation timeouts only; connect's outer deadline includes DNS, TCP, greeting, EHLO, and TLS.
 - **Evidence criteria:** State and timeout diagrams are consistent with P02-002. Matrix covers send while open, send while closing, send after closed, double close, close during connect/auth/DATA, and second-send BUSY. Retention/ownership of in-flight tasks is explicit. A test seam for deterministic time advancement is specified.
 
 ### P02-004 — Specify memory ownership, limits, and attachment policy
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** COMPLETED
 - **Prerequisites:** P02-001
 - **Description:** Define that all JS-owned Buffer data is copied into Rust-owned memory before any async yield; no borrowed JS memory crosses an await. File attachments are opt-in, filesystem access is disabled by default, only bounded regular files are read, symlinks/FIFOs/devices/directories are rejected, and URLs are unsupported. Define hard caps: 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw attachment bytes, 30 MiB wire message. Define ASCII local parts, IDNA domains, Unicode display names/bodies, and SMTPUTF8 as post-MVP. Define deterministic limit-check ordering and error precedence.
 - **Evidence criteria:** Ownership table shows copy points for each input. Limit table includes inclusive boundary and over-limit behavior for every cap. Attachment policy lists allowed and rejected file types plus the no-URL rule. Address policy states exact encoding expectations. Error precedence prevents nondeterministic validation messages.
@@ -49,14 +49,14 @@ In scope: component boundaries, public TypeScript-facing contract shape, Rust co
 ### P02-005 — Architecture review, ADR freeze, and implementation handoff
 
 - **Size:** S
-- **Status:** NOT STARTED
+- **Status:** COMPLETED
 - **Prerequisites:** P02-001, P02-002, P02-003, P02-004
 - **Description:** Run the architecture gate against every Phase 00/01 constraint. Freeze ADRs for crate isolation, transport API, recipient semantics, TLS, lifecycle, memory ownership, limits, and test seams. Produce a traceability matrix mapping each architecture decision to future implementation and test tasks. Confirm no custom SMTP unless P01 explicitly justified it; confirm no pooling, no automatic retries, and no GC-dependent close.
 - **Evidence criteria:** Review record has no open contradiction. Traceability matrix maps all mandatory constraints to P03–P13 tasks. The gate is `APPROVED` only when repository scaffolding can proceed without design decisions. Any unresolved item is an explicit ADR rejection, not an implementation guess.
 
 ## Technical implementation details
 
-The proposed design baseline, pending P02-005 approval, is as follows. Two crates only: `crates/sendust-core/src` and `crates/sendust-napi/src`. Core contains all protocol-independent orchestration and Rust unit tests; it does not link Node. The napi crate is a thin adapter that validates JS inputs, copies buffers, maps errors/statuses, and manages async tasks under napi’s Tokio 1 runtime. The TypeScript wrapper in `ts/src` presents the public API and owns no SMTP logic. `lettre 0.11.23` is the SMTP dependency; no custom SMTP unless research proved necessity. TLS uses rustls with `ring` and `webpki-roots` per P01-002; verification cannot be disabled. MVP disables pooling and automatic retries. One active send per transport; overlapping sends return `BUSY` immediately. Lifecycle is explicit `open -> closing -> closed`; close drains to a 125s deadline and never relies on GC. Timeouts: connect 10s, operation 30s, total 120s, close 125s, finite and tunable. JS buffers are copied before async. Attachments require opt-in filesystem access and bounded regular-file reads; no URL fetch. Caps: 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. Success means relay accepted; after DATA unknown is not retried. Recipient handling follows P01-003: if partial status is unavailable, reject the entire envelope before DATA and report honest aggregate statuses; never send independent per-recipient messages.
+The architecture baseline approved by P02-005 is as follows. Two crates only: `crates/sendust-core/src` and `crates/sendust-napi/src`. Core contains all protocol-independent orchestration and Rust unit tests; it does not link Node. The napi crate is a thin adapter that validates JS inputs, copies buffers, maps errors/statuses, and manages async tasks under napi’s Tokio 1 runtime. The TypeScript wrapper in `ts/src` presents the public API and owns no SMTP logic. `lettre 0.11.23` is the SMTP dependency; no custom SMTP unless research proved necessity. TLS uses rustls with `ring` and `webpki-roots` per P01-002; verification cannot be disabled. MVP disables pooling and automatic retries. One active send per transport; overlapping sends return `BUSY` immediately. Lifecycle is explicit `open -> closing -> closed`; close drains to a 125s deadline and never relies on GC. Timeouts: connect 10s, operation 30s, total 120s, close 125s, finite and tunable. JS buffers are copied before async. Attachments require opt-in filesystem access and bounded regular-file reads; no URL fetch. Caps: 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. Success means relay accepted; after DATA unknown is not retried. Recipient handling follows ADR-0005: observe each RCPT response through AsyncSmtpConnection; submit one DATA transaction to the accepted-recipient subset; recipient accepted requires final DATA 2xx; never send independent per-recipient messages.
 
 ## Dependencies
 
@@ -108,8 +108,8 @@ The architecture must name the fake SMTP/TLS fixture seams needed for each test.
 
 ## Completion gate
 
-Gate `PHASE-02` is `APPROVED` when P02-005 confirms the frozen architecture, no contradictory status semantics, no unproven partial-recipient promise, and a complete handoff for repository and Rust core work. The gate does not authorize application implementation beyond what later phases explicitly start.
+Gate `PHASE-02` is `APPROVED` when P02-005 confirms the approved architecture baseline, no contradictory status semantics, source-backed recipient observability, and a complete handoff for repository and Rust core work. Implementation validation remains explicitly gated downstream. The gate does not authorize application implementation beyond what later phases explicitly start.
 
 ## Status
 
-NOT STARTED. No architecture artifacts have been created.
+COMPLETED. Architecture design, ADR freeze, traceability, and QG-02 approval are recorded. No application implementation or executable integration validation is claimed.
