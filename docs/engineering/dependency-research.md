@@ -8,7 +8,7 @@
 
 - Repository inspected first: documentation and planning repository; no application source or existing implementation toolchain was present in the audited snapshot.
 - Sources consulted on 2026-11-13:
-  - napi-rs v3 official documentation and source for async functions, compatibility, Buffer, and AsyncTask.
+  - napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0 pinned source plus napi-rs official documentation for async functions, compatibility, Buffer, and AsyncTask.
   - lettre v0.11.23 pinned source: Cargo.toml, AsyncSmtpConnection, commands, response, error, authentication, and TLS builder.
 - No dependencies were installed, no network probes were run against SMTP servers, and no application code was generated. The audit container has Node.js 22.16.0 but no rustc/cargo.
 - Version claims below are **observed on those pages**, not independently verified against lockfiles. P01-001 through P01-004 must verify pinned source and features.
@@ -17,10 +17,10 @@
 
 | Fact | Observation | Source | Status |
 | --- | --- | --- | --- |
-| napi-rs major version | v3 documentation; `napi new` scaffolds v3 | napi.rs getting started | Observed |
+| napi-rs package versions | napi 3.16.2, napi-derive 3.7.0, napi-build 2.6.0 | Pinned source manifests and release docs | Observed 2026-11-13 |
 | napi-rs CLI Node requirement | `>=23.5.0 || ^22.13.0 || ^20.17.0`; Node 22.13+ or 24+ recommended | napi.rs support and compatibility | Observed |
 | napi-rs Rust requirement | Rust 1.88 or newer | napi.rs getting started | Observed |
-| Node-API levels offered by scaffold | 1 through 9; default 4 | napi.rs support and compatibility | Observed |
+| Node-API levels offered by napi 3.16.2 | napi1 through napi10 features; default is napi4 | napi 3.16.2 Cargo.toml | Observed |
 | Async support | `async fn` runs on napi-managed Tokio runtime; `async` or `tokio_rt` feature required | napi.rs async fn | Observed |
 | Panic behavior | Uncaught panic in sync callback can terminate process; `catch_unwind` available only with unwind strategy | napi.rs errors and panics | Observed |
 | Distribution model | Root package plus platform optional packages; loader selects by OS/CPU/libc | napi.rs release deep dive | Observed |
@@ -59,7 +59,7 @@
   - `node-bindgen` — less active and less complete packaging story.
   - Raw Node-API via `node-sys` — maximum control, high unsafe burden.
 - **Maintenance:** v3 is the current documented line; release workflow is documented.
-- **Compatibility:** CLI needs a modern Node version at build time; runtime compatibility is governed by Node-API level. The scaffold defaults to Node-API 4; Sendust selects Node-API 8 as the design floor. Exact feature-floor compilation and runtime tests remain P05/P14 gates.
+- **Compatibility:** CLI needs a modern Node version at build time; runtime compatibility is governed by Node-API level. napi 3.16.2 defaults to Node-API 4; Sendust explicitly enables napi8 and async to select Node-API 8 and the managed Tokio runtime. Exact feature-floor compilation and runtime tests remain P05/P14 gates.
 - **Security:** Native code; panic safety and memory ownership are critical. `catch_unwind` limits must be understood.
 - **MVP:** Required.
 
