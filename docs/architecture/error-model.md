@@ -30,7 +30,7 @@ export interface SendResult {
 | Status | Meaning | When |
 | --- | --- | --- |
 | `accepted` | The relay returned a positive final response to DATA and accepted responsibility. **Not** mailbox delivery. | Final DATA response is 2xx. |
-| `rejected` | The relay definitively refused the envelope or message. | A definitive negative SMTP response to MAIL, RCPT (under the selected recipient policy), DATA, or the final DATA response (4xx/5xx). |
+| `rejected` | The relay definitively refused the envelope or message for every recipient in the transaction. | MAIL refusal; all RCPT commands refused; DATA command refusal; or explicit final DATA 4xx/5xx. A single RCPT refusal is a recipient-level rejection and does not prevent DATA for other accepted recipients. |
 | `unknown` | The message may or may not have been accepted; the final disposition cannot be established. | The DATA terminator may have reached the relay but the final response was not received, or a write/connection failure leaves acceptance genuinely uncertain. |
 
 ### 2.2 Recipient status rules
@@ -137,7 +137,8 @@ Codes are append-only within a major version. Removing or renaming a code is a b
 | rustls handshake/protocol error | tls | `TLS_HANDSHAKE` / `TLS_PROTOCOL` |
 | lettre auth error | authentication | `AUTH_FAILED` |
 | TCP/connect/TLS/AUTH failure before an SMTP message transaction | operational error | `PROTOCOL_*`, `TLS_*`, or `AUTH_*`; never `rejected` delivery status |
-| Explicit negative SMTP response at MAIL/RCPT/DATA or final DATA response | delivery outcome | `rejected` |
+| MAIL/DATA/final DATA explicit negative response, or all RCPT replies negative | delivery outcome | `rejected` |
+| Individual RCPT explicit negative response in a mixed envelope | recipient outcome | That recipient `rejected`; continue with accepted subset |
 | Positive final DATA response | delivery outcome | `accepted` |
 | Lost/missing final response after DATA terminator may have reached relay | delivery outcome | `unknown` |
 | Timeout before any message acceptance is possible | timeout error | `TIMEOUT_*` |
