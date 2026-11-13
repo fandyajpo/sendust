@@ -3,7 +3,7 @@
 **Sendust — Standalone Native Email Delivery Engine for Node.js, Bun, and Deno**  
 Planning baseline: 2026-11-13.
 
-This documentation set is the source of truth for product scope, requirements, approved architecture design, decisions, and execution planning. QG-00, QG-01, and QG-02 are approved. Application implementation, compilation, runtime validation, and publication have not occurred.
+This documentation set is the source of truth for product scope, requirements, approved architecture design, decisions, and execution planning. Repository-wide AI/contributor behavior is governed by [AGENTS.md](../AGENTS.md) and the [AI implementation contract](engineering/ai-implementation-contract.md). QG-00, QG-01, and QG-02 are approved. Application implementation, compilation, runtime validation, and publication have not occurred.
 
 ## 1. Start here
 
@@ -45,6 +45,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 33 | [QG-02 architecture gate](gates/phase-02-architecture-approval.md) | Original architecture approval evidence |
 | 34 | [Architecture Amendment A01](gates/architecture-amendment-a01.md) | Multi-runtime and cross-platform design amendment |
 | 35 | [Architecture Amendment A02](gates/architecture-amendment-a02.md) | Modular monolith and internal module boundaries |
+| 36 | [AI implementation contract](engineering/ai-implementation-contract.md) | Normative workflow, documentation synchronization, static-review and evidence rules |
 
 ## 2. Directory map
 
