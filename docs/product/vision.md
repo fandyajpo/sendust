@@ -82,6 +82,10 @@ The MVP is successful when all of the following are true and evidenced:
 
 Sendust competes on correctness, predictability, and a small supported surface — not on feature count.
 
+### Runtime support
+
+Node.js, Bun, and Deno are required MVP runtime targets under [ADR-0015](../architecture/decisions/0015-multi-runtime-support.md). This is a product target, not a current compatibility claim. Every runtime/platform combination must pass Sendust-owned blocking CI before it is listed as supported. Deno requires local node_modules and explicit FFI permission.
+
 
 ### Runtime support
 
