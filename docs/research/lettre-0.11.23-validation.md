@@ -42,19 +42,21 @@ For STARTTLS, connect without TLS, then require `can_starttls()` and call `start
 
 Therefore Sendust can issue one RCPT command per recipient, record explicit positive/negative responses, and then issue one DATA transaction for the accepted recipients. This resolves the prior ADR-0005 uncertainty at the source/API level. It does not yet prove behavior against a live local fake relay; P06-003 must do that.
 
-Do not treat any generic `Ok(Response)` as success. lettre's `Response::is_positive()` accepts both 2xx and 3xx. Sendust must check the exact expected SMTP code class and command-specific response:
-- greeting/EHLO/AUTH/MAIL: expected positive completion as appropriate;
-- RCPT: accept only a 2xx completion; record 4xx/5xx as rejected for that recipient;
-- DATA command: require 354 before transmitting message bytes;
-- final DATA: accept only 2xx; explicit 4xx/5xx is a definitive rejection.
+Do not treat any generic `Ok(Response)` as success. `read_response()` returns `Err(Error)` for negative 4xx/5xx replies, while 2xx and 3xx are both returned as `Ok(Response)` because `Response::is_positive()` includes both positive completion and positive intermediate. Sendust must check the exact expected SMTP code class and command-specific response:
+- greeting/EHLO: validate the expected 2xx completion;
+- AUTH: require final 235 (334 is handled internally as a challenge by lettre's auth method);
+- MAIL: require 2xx completion;
+- RCPT: accept only a 2xx completion; map explicit 4xx/5xx errors to recipient rejection; an unexpected 3xx is a protocol error, not acceptance;
+- DATA command: require exactly 354 before transmitting message bytes; explicit 4xx/5xx is a known rejection;
+- final DATA: accept only 2xx; explicit 4xx/5xx is a definitive rejection; an unexpected 3xx is not a final acceptance and must be treated as unknown after message transmission.
 
 If no recipient receives a positive RCPT reply, do not issue DATA. If at least one recipient is accepted, submit exactly one DATA message to that accepted-recipient envelope. Recipients refused at RCPT remain rejected even if the accepted subset later succeeds.
 
 ### 2.3 Final DATA ambiguity
 
-`message()` calls `message_iter()`, which dot-stuffs the content, writes the DATA terminator, and reads the final response. A definitive negative final response is represented as a lettre response error with a status code and maps to Sendust `rejected`.
+`message()` does **not** issue the SMTP DATA command. Sendust must first call `command(Data)` and require exactly 354. Only then call `message()`, which calls `message_iter()`, dot-stuffs the content, writes the DATA terminator, and reads the final response. A definitive negative final response is represented as a lettre response error with a status code and maps to Sendust `rejected`.
 
-A network/write/read error from `message()` does not always reveal whether the DATA terminator reached the relay. Because the API does not expose a public “terminator definitely not written” checkpoint, Sendust must conservatively map any indeterminate error once message transmission has begun to `unknown`. Do not retry. This is intentionally conservative and avoids duplicate mail.
+A network/write/read error from `message()` does not always reveal whether the DATA terminator reached the relay. Because the API does not expose a public “terminator definitely not written” checkpoint, Sendust must conservatively map any indeterminate error once message transmission has begun to `unknown`. A response error carrying an explicit 4xx/5xx final code remains a known `rejected` outcome. Do not retry. This is intentionally conservative and avoids duplicate mail.
 
 If a positive final DATA response is received, the message is accepted. A subsequent QUIT/cleanup failure must not rewrite an already confirmed accepted result.
 
