@@ -76,7 +76,7 @@ Phase 02 requires Phase 01 approval. P02-001 depends on P01-005; P02-002 additio
 
 Architecture tests are contract and model tests specified for later implementation, with concrete fixtures:
 
-- Mixed RCPT `250`/`550` must produce the ADR-selected whole-envelope outcome, never per-recipient success.
+- Mixed RCPT `250`/`550` must produce one DATA transaction for the accepted-recipient subset; the explicitly refused recipient remains rejected.
 - Explicit final DATA `451` yields `rejected`; a missing final reply after the DATA terminator may have reached the relay yields `unknown`. Neither is retried.
 - Second concurrent send yields `BUSY` without dialing the relay.
 - Close during each stage completes within 125s; double close is idempotent.
