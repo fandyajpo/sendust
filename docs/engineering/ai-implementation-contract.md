@@ -89,6 +89,7 @@ Static review is not compilation and cannot prove runtime behavior.
 When a source-of-truth changes, update all affected dependents in the same change:
 - Requirement change → constraint ledger, feature matrix, architecture/ADR as needed, phase tasks, test traceability, gates, README summaries.
 - ADR change → ADR index, architecture contracts, constraint ledger, phase tasks, dependency graph, quality gates, risk register, and relevant gate record.
+- Runtime/toolchain pin change → canonical toolchain baseline, P00/P01 research provenance, P03 command matrix, CI workflows, P05/P14 runtime matrices, P15 docs, and P16 release claims.
 - Task/dependency change → phase plan, task registry, phase index/roadmap if summarized, dependency graph, quality gates, and milestone references.
 - API change → public API contract, error model, data flow, TypeScript examples, tests, feature matrix, and documentation.
 - Module change → ADR-0016, system design, P03/P04/P06 task details, architecture checks, and P12 audit.
