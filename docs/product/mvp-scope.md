@@ -56,6 +56,13 @@ Sendust MVP is a production-usable npm package that sends one transactional emai
 - Quick start, API, limits, errors, troubleshooting docs.
 - Runnable examples using a local fake relay.
 
+### Architecture and modularity
+
+- Modular monolith inside exactly two Rust crates.
+- Explicit core modules for config, address, message, validation, attachments, MIME, delivery, SMTP transport, lifecycle, errors/results.
+- SMTP is isolated as the only MVP transport adapter behind a narrow internal delivery contract.
+- Acyclic module dependencies and focused module tests enforced by CI.
+
 ### Packaging and quality
 
 - Root package plus platform optional packages.
