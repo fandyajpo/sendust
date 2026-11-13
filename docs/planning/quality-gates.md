@@ -53,6 +53,7 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 | Status contract | Positive final DATA=accepted; explicit negative final reply=rejected; indeterminate disposition=unknown; recipient RCPT outcomes preserved | [Approval matrix](../architecture/approval-matrix.md) |
 | Error taxonomy | Stable codes/categories; no message parsing required | P02-002 / error model |
 | Lifecycle | `open -> closing -> closed`; BUSY; bounded close; no GC | [Approval matrix](../architecture/approval-matrix.md) |
+| Timeouts | Connect ≤10s, operation ≤30s, total ≤120s, close ≤125s; lower-only; connect/operation ≤ total ≤ close | [Approval matrix](../architecture/approval-matrix.md) |
 | Ownership | Synchronous owned snapshot before async scheduling; no borrowed JS memory | [Approval matrix](../architecture/approval-matrix.md) |
 | Limits | 100 recipients, 10/20/30 MiB caps; deterministic precedence | P02-004 |
 | ADRs | All P02-scoped ADRs accepted; future-phase ADRs retain explicit downstream gate | [ADR index](../architecture/decisions/README.md) |
