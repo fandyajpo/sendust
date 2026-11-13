@@ -315,17 +315,17 @@ Enforced by P00-001 and P15-005.
 - **Module systems:** ESM and CommonJS.
 - **Package managers:** npm consumer contract; pnpm workspace proposed.
 
-## 6. Open questions
+## 6. Research decisions and downstream validation questions
 
-| ID | Question | Owner | Blocks |
-| --- | --- | --- | --- |
-| OQ-01 | Does lettre expose per-recipient RCPT status through a lower-level async API? | P01-003 | P06-003, P09-002 |
-| OQ-02 | Which timeout stages are directly observable? | P01-003 | P02-003, P10-002 |
-| OQ-03 | Which rustls feature set composes with lettre 0.11.23? | P01-002 | P03-002, P06-002 |
-| OQ-04 | Does the napi-managed Tokio runtime satisfy lettre on Node 22/24/26? | P01-004 | P05-003 |
-| OQ-05 | Which Node-API level do the selected napi features require? | P01-004 | P05-001 |
-| OQ-06 | Which targets can be built and runtime-tested in CI? | P14-003 | P14-004, P15-001 |
-| OQ-07 | What performance budget is defensible? | P13-001 | P13-005 |
+| ID | Question / proof | Research/design status | Remaining owner | Blocks |
+| --- | --- | --- | --- | --- |
+| OQ-01 | Can lettre expose individual RCPT outcomes? | RESOLVED by P01 source review; selected lower-level async API | P06-003, P09-002 executable proof | P06-003, P09-002 |
+| OQ-02 | Which timeout stages are observable? | RESOLVED at coarse public-operation boundaries; no socket read/write attribution | P10-002 executable proof | P10-002 |
+| OQ-03 | Which rustls feature set composes with lettre 0.11.23? | SOURCE-REVIEWED; exact feature graph selected | P03-002 compile/tree proof; P06-002 TLS proof | P03-002, P06-002 |
+| OQ-04 | Does napi-managed Tokio satisfy lettre? | DESIGN SELECTED; runtime behavior not yet executed | P05-003 and P14-004 on Node.js, Bun, Deno | P05-003, P14-004 |
+| OQ-05 | Which Node-API level is required by selected napi features? | RESOLVED by pinned napi source review: Node-API 8 explicitly enabled | P05-001 compile/ABI proof | P05-001 |
+| OQ-06 | Which exact runtime × OS × CPU × ABI/libc targets pass CI? | OPEN; candidates only | P03-001 pinning; P14-003/P14-004 validation | P14-004, P15-001 |
+| OQ-07 | What performance budget is defensible? | OPEN | P13-001 | P13-005 |
 
 ## 7. Traceability
 
