@@ -7,7 +7,7 @@ Architectural decisions for Sendust. One decision per file. Status values: `PROP
 | [0001](0001-two-crates.md) | Two crates: Node-free core plus napi adapter | ACCEPTED (planning) | P02-001 |
 | [0002](0002-lettre-over-custom-smtp.md) | Use lettre 0.11.23 instead of a custom SMTP client; low-level API selected | ACCEPTED (planning) | P01-001, P01-005 |
 | [0003](0003-tls-rustls-ring-webpki.md) | rustls with ring and webpki-roots, verification mandatory | ACCEPTED (source-reviewed; build gate P03-002) | P01-002 |
-| [0004](0004-napi-async-tokio.md) | napi-rs async exports on the napi-managed Tokio 1 runtime | ACCEPTED, Node-API level pending P01-004 | P01-004, P05-003 |
+| [0004](0004-napi-async-tokio.md) | napi-rs async exports on the napi-managed Tokio 1 runtime | ACCEPTED (design); Node-API 8 selected, runtime tests pending P05/P14 | P01-004, P05-003 |
 | [0005](0005-recipient-partial-failure.md) | Recipient partial-failure policy | ACCEPTED (source/API verified; behavior gate P06-003) | P01-003, P06-003 |
 | [0006](0006-lifecycle-single-send.md) | One active send, explicit bounded close, no pool | ACCEPTED (planning) | P02-003 |
 | [0007](0007-timeout-budgets.md) | Finite timeout budgets and coarse stage attribution | ACCEPTED (design; runtime gate P10-002) | P02-003, P01-003 |
