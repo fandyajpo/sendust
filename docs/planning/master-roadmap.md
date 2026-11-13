@@ -2,7 +2,7 @@
 
 **Planning date:** 2026-11-13.  
 **Repository state at planning time:** planning and architecture documentation; application implementation was not present in the audited snapshot.  
-**Execution rule:** no phase starts before its predecessor’s completion gate is approved. All phases and tasks are `NOT STARTED`.
+**Execution rule:** no phase starts before its predecessor’s completion gate is approved. P00–P02 are completed with reviewed gate evidence; P03–P18 remain `NOT STARTED`.
 
 This roadmap summarizes the 19 phase plans. Detailed tasks, tests, acceptance criteria, and deliverables live in [docs/phases](../phases/). Requirements live in [requirements.md](../product/requirements.md).
 
@@ -34,24 +34,30 @@ This roadmap summarizes the 19 phase plans. Detailed tasks, tests, acceptance cr
 
 ### P00 — Discovery
 
-Establishes the non-negotiable semantics: relay acceptance is not delivery, one send per transport, explicit bounded close, no pooling/retry, ASCII local parts with IDNA domains, opt-in filesystem attachments, and hard caps. Produces the constraint ledger, provenance table, threat boundary, and gate handoff. No code.
+<badge>COMPLETED — QG-00 approved</badge>
+
+Established the non-negotiable semantics: relay acceptance is not delivery, one send per transport, explicit bounded close, no pooling/retry, ASCII local parts with IDNA domains, opt-in filesystem attachments, and hard caps. Produces the constraint ledger, provenance table, threat boundary, and gate handoff. No code.
 
 **Key risk:** ambiguous semantics discovered late. **Mitigation:** every constraint gets an owner and validation task before research starts.
 
 ### P01 — Research
 
-Resolves the four facts that can invalidate the architecture:
+<badge>COMPLETED — QG-01 approved with downstream implementation gates</badge>
+
+Resolved the source/API questions that can invalidate the architecture:
 
 1. Which lettre 0.11.23 async API to use.
 2. Whether rustls `ring` + `webpki-roots` composes and keeps verification mandatory.
 3. Whether per-recipient RCPT status and exact timeout stages are observable.
 4. Whether the napi-managed Tokio runtime and Node-API 8 behave on Node 22/24/26.
 
-**Key risk:** assuming a high-level transport exposes partial status. **Mitigation:** inspect lower-level API; default to whole-envelope rejection before DATA.
+**Key risk:** relying on high-level transport semantics. **Mitigation:** selected lettre's public lower-level API and explicit RCPT response checks; P06-003 still validates with a fake relay.
 
 ### P02 — Architecture
 
-Freezes the two-crate boundary, dependency direction, public result/error contract, state machine, timeout model, ownership rules, attachment policy, and caps. Produces ADRs and a constraint-to-task traceability matrix. No implementation.
+<badge>COMPLETED — QG-02 approved at design level</badge>
+
+Approved the two-crate boundary, dependency direction, public result/error contract, state machine, timeout model, ownership rules, attachment policy, and caps. Produced ADR decisions and a constraint-to-task traceability matrix. No application implementation.
 
 **Key risk:** a “thin” binding absorbing policy. **Mitigation:** core-only tests and a negative dependency check.
 
@@ -175,7 +181,7 @@ Relative effort only; no dates.
 | P17 | M | Verification and publication |
 | P18 | S | Intake and research planning |
 
-The critical path is P00 → P01 → P02 → P03 → P04 → P06 → P09 → P10 → P11 → P12 → P13 → P16 → P17. See [dependency-graph.md](dependency-graph.md).
+The critical path is P00 (completed) → P01 (completed) → P02 (completed) → P03 → P04 → P06 → P09 → P10 → P11 → P12 → P13 → P16 → P17. See [dependency-graph.md](dependency-graph.md).
 
 ## 4. What “done” means
 
