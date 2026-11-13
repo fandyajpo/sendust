@@ -1,6 +1,6 @@
 # Phase 03 — Repository
 
-**Phase status:** IN REVIEW  
+**Phase status:** COMPLETED  
 **Phase dependency:** Phase 02, Architecture Amendment A01, and Architecture Amendment A02  
 **Companion references:** [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [release strategy](../engineering/release-strategy.md)
 
@@ -17,7 +17,7 @@ In scope: workspace layout, crate manifests, `ts/src` package skeleton, test dir
 ### P03-001 — Create the workspace and two-crate skeleton
 
 - **Size:** M
-- **Status:** IN REVIEW
+- **Status:** COMPLETED
 - **Prerequisites:** P02-005, A01-004, A02-003
 - **Description:** Specify the workspace layout with exactly two crates at `crates/sendust-core/src` and `crates/sendust-napi/src`, plus `ts/src` and `tests/`. Define root workspace membership, the exact Rust toolchain `1.100.0` and MSRV `1.88.0` from the [toolchain baseline](../engineering/toolchain-baseline.md), shared lint/format configuration, and crate responsibilities. Core must compile without Node headers or napi dependencies; napi depends on core and the binding toolkit. Include placeholder module trees that reflect architecture boundaries without implementing product logic.
 - **Evidence criteria:** Layout tree matches the proposed paths exactly and contains no third Rust crate. Core manifest has no napi/Node dependency; napi manifest depends on core. A documented check fails if a reverse dependency or extra crate appears. `cargo metadata` and package discovery are part of the acceptance evidence.
@@ -25,7 +25,7 @@ In scope: workspace layout, crate manifests, `ts/src` package skeleton, test dir
 ### P03-002 — Define dependency pinning, feature, and license policy
 
 - **Size:** S
-- **Status:** IN REVIEW
+- **Status:** COMPLETED
 - **Prerequisites:** P03-001, P01-002
 - **Description:** Record pinned versions and allowed feature sets for `lettre = 0.11.23` (defaults off; `smtp-transport`, `tokio1-rustls`, `ring`, `webpki-roots`), `napi = 3.16.2` (`napi8`, `async`), `napi-derive = 3.7.0`, `napi-build = 2.6.0`, Tokio 1, rustls, and test-only tooling. Require `cargo tree` to prove lettre pool/native-tls are absent. Define a policy for adding dependencies, lockfile updates, license review, duplicate-version checks, and prohibited crates (custom SMTP stacks, insecure TLS toggles, URL fetchers). No dependency is installed in this planning phase; the manifest intent and review process are documented.
 - **Evidence criteria:** Dependency table lists direct versus transitive intent, feature flags, and pin strategy. Policy names approval and review steps and lists prohibited capabilities. TLS policy confirms no verification-disable feature. License inventory template exists and is required for every direct dependency.
@@ -33,7 +33,7 @@ In scope: workspace layout, crate manifests, `ts/src` package skeleton, test dir
 ### P03-003 — Establish formatting, linting, type-check, and unit-test commands
 
 - **Size:** M
-- **Status:** IN REVIEW
+- **Status:** COMPLETED
 - **Prerequisites:** P03-001
 - **Description:** Implement the exact command matrix in the [toolchain baseline](../engineering/toolchain-baseline.md): Rust fmt/clippy/core-only tests/binding checks; npm install; Biome lint; TypeScript strict typecheck; Vitest; and direct Node.js/Bun/Deno smoke entry points. Use the pinned exact tool versions and one root npm lockfile. Specify fail-fast ordering and CI expectations, including a guard that core commands never require a Node runtime.
 - **Evidence criteria:** Every command in the toolchain baseline exists as a script or executable entry point, has a defined working directory and expected exit code, and runs in CI with exact pinned tool versions. The architecture checker rejects extra Rust crates, reverse dependencies, and runtime-specific policy in core. The documentation checker validates links, IDs, phase/task counts, registry-to-phase task parity, gate indexes, and toolchain pin references. A core-only job proves no Node linkage. TypeScript and napi checks are separate. The matrix is referenced by every later task’s evidence requirements.
@@ -41,7 +41,7 @@ In scope: workspace layout, crate manifests, `ts/src` package skeleton, test dir
 ### P03-004 — Scaffold deterministic fake SMTP and TLS test harness seams
 
 - **Size:** L
-- **Status:** IN REVIEW
+- **Status:** COMPLETED
 - **Prerequisites:** P03-001
 - **Description:** Define harness interfaces and fixture directories under `tests/` for scripted SMTP dialogues, controllable delays, mixed RCPT responses, post-DATA failures, TLS certificate variants, connection resets, and abrupt server closes. Harness must bind to loopback only, use ephemeral ports, require no external network, and expose deterministic synchronization so tests do not sleep arbitrarily. Include fixture naming for fault injection and a policy that production code has no test-only branches.
 - **Evidence criteria:** Harness contract specifies start/stop, dialogue script, delay injection, response injection, and observed commands. Fixture catalog includes mixed RCPT, an explicit final DATA `451` rejection, a dropped connection after the DATA terminator with no final reply (`unknown`), connect stall, command stall, close stall, self-signed, expired, wrong-host, incomplete-chain, malformed cert, reset, and abrupt close. Loopback/ephemeral/no-network rules are explicit.
@@ -49,7 +49,7 @@ In scope: workspace layout, crate manifests, `ts/src` package skeleton, test dir
 ### P03-005 — Repository gate and baseline verification
 
 - **Size:** S
-- **Status:** IN REVIEW
+- **Status:** COMPLETED
 - **Prerequisites:** P03-001, P03-002, P03-003, P03-004
 - **Description:** Validate the skeleton against the architecture handoff: exactly two crates, correct dependency direction, no product logic, no secrets, reproducible formatting/lint/type-check/test command definitions, and a complete fake-service seam plan. Record any deferred setup as a named task input rather than hidden debt.
 - **Evidence criteria:** Gate record includes layout verification, dependency-direction check, secret scan, command matrix review, and fixture catalog completeness. No application code exists beyond placeholders. The repository phase is marked `APPROVED` only when Phase 04 can add core modules without structural changes.
@@ -107,9 +107,9 @@ Gate `PHASE-03` is `APPROVED` when P03-005 proves the structure, dependency dire
 
 ## Status
 
-IN REVIEW. Every P03 task has its deliverable and evidence, and the QG-03
-record is prepared for independent review. The two-crate workspace, dependency
-and feature policy, quality-command scripts, and fake SMTP/TLS test seams are
+COMPLETED. Every P03 task has its deliverable and evidence, and the QG-03 record
+is approved by the project owner. The two-crate workspace, dependency and
+feature policy, quality-command scripts, and fake SMTP/TLS test seams are
 implemented and verified in CI.
 
 ## Evidence log
@@ -120,14 +120,13 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 | --- | --- | --- |
 | P03-001 | Two-crate workspace, manifests, module tree, `ts/src` skeleton, `rust-toolchain.toml`; `cargo metadata --format-version 1 --no-deps` reports exactly `sendust-core` and `sendust-napi` | IMPLEMENTED, STATICALLY REVIEWED |
 | P03-002 | [Dependency policy](../engineering/dependency-policy.md) plus workspace pins; `cargo tree -e features` resolves `lettre` 0.11.23 with only `smtp-transport`, `tokio1-rustls`, `ring`, and `webpki-roots`, with no `pool` or `native-tls`; a core unit test constructs the pinned `SmtpTransport` builder, so a dropped transport feature fails the build | IMPLEMENTED, STATICALLY REVIEWED |
-| P03-005 | [QG-03 repository baseline record](../gates/phase-03-repository-baseline.md) covering layout, dependency direction, command matrix, fixture catalog, secret scan, and a full CI run | IN REVIEW — awaiting independent review |
+| P03-005 | [QG-03 repository baseline record](../gates/phase-03-repository-baseline.md) covering layout, dependency direction, command matrix, fixture catalog, secret scan, and a full CI run | COMPLETED — approved by the project owner |
 | P03-003 | `scripts/check-architecture.mjs`, `scripts/check-docs.mjs`, npm workspace scripts, `.github/workflows/ci.yml`; `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test -p sendust-core --all-targets`, `cargo test --workspace --all-targets`, and the four `npm --workspace ./ts run` commands exited 0; CI now runs every Rust command with `--locked` | EXECUTED PASS in a development container (Rust 1.100.0, Node.js 24.22.x) and in Sendust CI on branch `feat/p03-repository-skeleton`: the Rust workspace, Architecture and documentation checks, TypeScript (Node.js 22.23.5, 24.22.3, 26.13.1), Bun 1.4.4, and Deno 2.9.8 jobs all passed |
 | P03-004 | `crates/sendust-core/tests/support/mod.rs` (loopback-only fake SMTP: scripted per-stage replies, per-recipient RCPT, injected delays, command trace), `crates/sendust-core/tests/harness_self_test.rs` (7 passing tests), `scripts/generate-tls-fixtures.sh` (authority keys discarded, leaf keys only), committed `tests/fixtures/tls/*`, and `scripts/check-secrets.mjs` with a self-test that proves detection; contract in [the harness contract](../engineering/test-harness-contract.md) | IMPLEMENTED, EXECUTED PASS locally and in CI |
 
 Executed evidence exists in a local toolchain and in Sendust CI on branch
-`feat/p03-repository-skeleton`. Gate PHASE-03 is **IN REVIEW**, not approved:
-the record at [phase-03-repository-baseline](../gates/phase-03-repository-baseline.md)
-needs an independent reviewer.
+`feat/p03-repository-skeleton`. Gate PHASE-03 is **APPROVED** by the project
+owner on the record at [phase-03-repository-baseline](../gates/phase-03-repository-baseline.md).
 
 `Cargo.lock` is committed and every Rust CI command runs with `--locked`.
 `package-lock.json` is committed and CI installs with `npm ci`.

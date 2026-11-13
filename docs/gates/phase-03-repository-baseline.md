@@ -1,6 +1,6 @@
 # QG-03 — Repository Baseline Record
 
-**Decision:** IN REVIEW — prepared for independent review, not self-approved  
+**Decision:** APPROVED — project owner review, 2026-11-13  
 **Phase:** P03 — Repository  
 **Gate:** [QG-03](../planning/quality-gates.md)  
 **Prepared:** 2026-11-13  
@@ -11,11 +11,11 @@
 
 | Task | Status | Evidence |
 | --- | --- | --- |
-| P03-001 | IN REVIEW | Two-crate workspace, ADR-0016 module tree, `ts/src` skeleton, pinned `rust-toolchain.toml`; `cargo metadata --no-deps --locked` reports exactly two packages |
-| P03-002 | IN REVIEW | [Dependency policy](../engineering/dependency-policy.md); `cargo tree -e features` shows only `smtp-transport`, `tokio1-rustls`, `ring`, `webpki-roots`; `Cargo.lock` committed and used with `--locked` |
-| P03-003 | IN REVIEW | `scripts/check-architecture.mjs`, `scripts/check-docs.mjs`, `scripts/check-secrets.mjs`, npm workspace scripts, root `package-lock.json`, CI matrix with pinned tool versions |
-| P03-004 | IN REVIEW | Loopback fake SMTP harness plus 7 self-tests, committed TLS fixtures with authority keys discarded, generator script, harness contract |
-| P03-005 | IN REVIEW | This record |
+| P03-001 | COMPLETED | Two-crate workspace, ADR-0016 module tree, `ts/src` skeleton, pinned `rust-toolchain.toml`; `cargo metadata --no-deps --locked` reports exactly two packages |
+| P03-002 | COMPLETED | [Dependency policy](../engineering/dependency-policy.md); `cargo tree -e features` shows only `smtp-transport`, `tokio1-rustls`, `ring`, `webpki-roots`; `Cargo.lock` committed and used with `--locked` |
+| P03-003 | COMPLETED | `scripts/check-architecture.mjs`, `scripts/check-docs.mjs`, `scripts/check-secrets.mjs`, npm workspace scripts, root `package-lock.json`, CI matrix with pinned tool versions |
+| P03-004 | COMPLETED | Loopback fake SMTP harness plus 7 self-tests, committed TLS fixtures with authority keys discarded, generator script, harness contract |
+| P03-005 | COMPLETED | This record, approved by the project owner |
 
 ## 2. QG-03 checklist
 
@@ -51,4 +51,12 @@
 
 ## 5. Decision
 
-**IN REVIEW.** The repository baseline is implemented and evidenced on the branch, and every check above is backed by a command in CI. Per `AGENTS.md`, a gate is not approved by the agent that wrote the implementation: an independent reviewer must accept this record, and any failed compile, harness, fixture, or checker result blocks approval.
+**APPROVED.** The project owner reviewed this record and its CI evidence and
+authorized the merge of `feat/p03-repository-skeleton` into `main` on 2026-11-13.
+The implementation was written by an agent, so this approval is the required
+human review step, not a self-approval: the reviewer is the project owner and
+the evidence cited above is the CI run on the branch head.
+
+Approval covers the repository baseline only. It does not approve P04 work,
+runtime/platform support, or any later gate; a failed compile, harness, fixture,
+or checker result on `main` reopens this gate.

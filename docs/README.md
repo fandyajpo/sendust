@@ -51,7 +51,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 38 | [Documentation audit](audits/2026-11-13-documentation-audit.md) | Static consistency, traceability, task graph, links, toolchain, and remaining validation owners |
 | 39 | [Dependency and license policy](engineering/dependency-policy.md) | Pinned dependencies, feature admission, feature prohibitions, lockfile rules, and license review |
 | 40 | [Test harness contract](engineering/test-harness-contract.md) | Fake SMTP/TLS seams, safety rules, and the fixture catalog |
-| 41 | [QG-03 repository baseline record](gates/phase-03-repository-baseline.md) | P03 gate checklist, evidence, and IN REVIEW decision |
+| 41 | [QG-03 repository baseline record](gates/phase-03-repository-baseline.md) | P03 gate checklist, evidence, and approved decision |
 
 ## 2. Directory map
 
@@ -82,7 +82,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P02 are COMPLETED with approved evidence. P03 is IN REVIEW: every P03 task is IN REVIEW and the QG-03 record awaits independent review; P04–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P03 are COMPLETED with approved evidence. P04–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -102,9 +102,9 @@ P00–P02 are COMPLETED with approved evidence. P03 is IN REVIEW: every P03 task
 | QG-00 Discovery | APPROVED |
 | QG-01 Research | APPROVED with implementation validation gates |
 | QG-02 Architecture | APPROVED at design level |
-| P03-001–P03-005 | IN REVIEW |
-| P03-004–P18 | NOT STARTED |
-| Next task | P03-004 — scaffold deterministic fake SMTP and TLS harness seams |
+| P03-001–P03-005 | COMPLETED |
+| P04–P18 | NOT STARTED |
+| Next task | P04-001 — implement core error taxonomy and deterministic validation order |
 
 ## 5. Conventions
 
