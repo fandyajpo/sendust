@@ -1,14 +1,14 @@
 # Phase Index
 
-Entry point to all 19 Sendust phases. Each phase plan is the authoritative source for task detail, acceptance criteria, and gate conditions. This index routes and summarizes only.
+Entry point to all 19 Sendust phases. P00–P02 are completed with reviewed gate evidence; P03–P18 remain not started. Each phase plan is the authoritative source for task detail, acceptance criteria, and gate conditions. This index routes and summarizes only.
 
 ## Phase list
 
 | Phase | Name | Objective | Depends on | Tasks | Gate | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| [P00](../phases/phase-00.md) | Discovery | Fix the MVP problem, constraints, semantics, threat boundary, and open questions | — | 5 | P00-005 | NOT STARTED |
-| [P01](../phases/phase-01.md) | Research | Resolve lettre API, TLS features, recipient observability, and Node lifecycle with evidence | P00 | 5 | P01-005 | NOT STARTED |
-| [P02](../phases/phase-02.md) | Architecture | Approve crate boundaries, status/error contract, lifecycle, ownership, and limits | P01 | 5 | P02-005 | NOT STARTED |
+| [P00](../phases/phase-00.md) | Discovery | Fix the MVP problem, constraints, semantics, threat boundary, and open questions | — | 5 | P00-005 | COMPLETED |
+| [P01](../phases/phase-01.md) | Research | Resolve lettre API, TLS features, recipient observability, and Node lifecycle with evidence | P00 | 5 | P01-005 | COMPLETED |
+| [P02](../phases/phase-02.md) | Architecture | Approve crate boundaries, status/error contract, lifecycle, ownership, and limits | P01 | 5 | P02-005 | COMPLETED |
 | [P03](../phases/phase-03.md) | Repository | Create workspace, toolchain, policies, and deterministic test seams | P02 | 5 | P03-005 | NOT STARTED |
 | [P04](../phases/phase-04.md) | Rust core | Implement errors, validation, message model, state machine, and SMTP orchestration | P03 | 5 | P04-005 | NOT STARTED |
 | [P05](../phases/phase-05.md) | Binding | Expose core through Node-API 8 with owned memory and stable mapping | P04 | 5 | P05-005 | NOT STARTED |
@@ -54,11 +54,11 @@ Entry point to all 19 Sendust phases. Each phase plan is the authoritative sourc
 
 | Status | Count |
 | --- | --- |
-| NOT STARTED | 19 |
+| NOT STARTED | 16 |
 | IN PROGRESS | 0 |
 | BLOCKED | 0 |
 | IN REVIEW | 0 |
-| COMPLETED | 0 |
+| COMPLETED | 3 |
 
 ## Parallel work
 
