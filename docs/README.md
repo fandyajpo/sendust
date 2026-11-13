@@ -82,7 +82,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P03 are COMPLETED with approved evidence. P04–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P03 are COMPLETED with approved evidence. P04 is IN PROGRESS: P04-001 is IN REVIEW and P04-002–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -103,8 +103,9 @@ P00–P03 are COMPLETED with approved evidence. P04–P18 remain NOT STARTED. A 
 | QG-01 Research | APPROVED with implementation validation gates |
 | QG-02 Architecture | APPROVED at design level |
 | P03-001–P03-005 | COMPLETED |
-| P04–P18 | NOT STARTED |
-| Next task | P04-001 — implement core error taxonomy and deterministic validation order |
+| P04-001 | IN REVIEW |
+| P04-002–P18 | NOT STARTED |
+| Next task | P04-002 — implement address, header, and Unicode/IDNA policy |
 
 ## 5. Conventions
 

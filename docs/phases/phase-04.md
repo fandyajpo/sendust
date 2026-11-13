@@ -1,6 +1,6 @@
 # Phase 04 — Rust core
 
-**Phase status:** NOT STARTED  
+**Phase status:** IN PROGRESS  
 **Phase dependency:** Phase 03  
 **Companion references:** [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [reliability strategy](../engineering/reliability-strategy.md)
 
@@ -17,7 +17,7 @@ In scope: `crates/sendust-core/src` modules for validation, addresses, limits, M
 ### P04-001 — Implement core error taxonomy and deterministic validation order
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P03-005, P02-002
 - **Description:** Create core-owned error types for validation, limits, address encoding, attachments, busy, closed, connect, TLS, authentication, protocol, and timeout. Implement a stable machine-readable code mapping and deterministic validation ordering so the same invalid input always returns the same first error. Keep errors Node-agnostic; no napi types in core.
 - **Evidence criteria:** Unit tests cover every error variant and precedence pair. Codes are stable strings with documented categories. No error carries secrets or full message content. Errors compile without Node dependencies.
@@ -118,4 +118,12 @@ Implement the approved ADR-0016 module responsibilities without creating additio
 
 ## Status
 
-NOT STARTED. No core code has been written.
+IN PROGRESS. P04-001 is IN REVIEW and P04-002 to P04-005 remain NOT STARTED.
+
+## Evidence log
+
+Evidence labels follow the [AI implementation contract](../engineering/ai-implementation-contract.md).
+
+| Task | Evidence | State |
+| --- | --- | --- |
+| P04-001 | `crates/sendust-core/src/errors/mod.rs` (32 stable codes with categories, whitelisted details, stage enum, redaction-by-construction) and `crates/sendust-core/src/validation/mod.rs` (eight-stage precedence, `Failures`, `validate_in_order`); 13 core unit tests including a documentation parity table, adjacent-stage precedence pairs, same-stage determinism, and a redaction scan | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |

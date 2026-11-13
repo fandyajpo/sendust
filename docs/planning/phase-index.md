@@ -10,7 +10,7 @@ Entry point to all 19 Sendust phases. P00–P03 are completed with reviewed gate
 | [P01](../phases/phase-01.md) | Research | Resolve lettre API, TLS feature design, recipient observability, and Node runtime probe requirements | P00 | 5 | P01-005 | COMPLETED |
 | [P02](../phases/phase-02.md) | Architecture | Approve crate boundaries, status/error contract, lifecycle, ownership, and limits | P01 | 5 | P02-005 | COMPLETED |
 | [P03](../phases/phase-03.md) | Repository | Create workspace, toolchain, multi-runtime CI policies, modular boundaries, and deterministic test seams | P02 + A01 + A02 | 5 | P03-005 | COMPLETED |
-| [P04](../phases/phase-04.md) | Rust core | Implement errors, validation, message model, state machine, and SMTP orchestration | P03 | 5 | P04-005 | NOT STARTED |
+| [P04](../phases/phase-04.md) | Rust core | Implement errors, validation, message model, state machine, and SMTP orchestration | P03 | 5 | P04-005 | IN PROGRESS |
 | [P05](../phases/phase-05.md) | Binding | Expose core through Node-API 8 with owned memory and stable mapping | P04 | 5 | P05-005 | NOT STARTED |
 | [P06](../phases/phase-06.md) | SMTP | Relay sessions, TLS/auth, recipient policy, and response normalization | P04, P01 | 5 | P06-005 | NOT STARTED |
 | [P07](../phases/phase-07.md) | MIME | Headers, alternative bodies, filenames, and deterministic serialization | P04 | 5 | P07-005 | NOT STARTED |
@@ -54,8 +54,8 @@ Entry point to all 19 Sendust phases. P00–P03 are completed with reviewed gate
 
 | Status | Count |
 | --- | --- |
-| NOT STARTED | 15 |
-| IN PROGRESS | 0 |
+| NOT STARTED | 14 |
+| IN PROGRESS | 1 |
 | IN REVIEW | 0 |
 | BLOCKED | 0 |
 | COMPLETED | 4 |
