@@ -43,7 +43,7 @@ In scope: pinned-source and documentation inspection, minimal reproducible probe
 - **Size:** M
 - **Status:** COMPLETED
 - **Prerequisites:** P00-005
-- **Description:** Research napi-rs v3 and Node-API 8 ABI/runtime behavior for candidate Node 22, 24, and 26. Record that the candidate versions are not support claims, and define a probe plan for async scheduling, owned Buffer conversion, explicit close, forced GC, process shutdown, and deadline-bounded drain. Do not claim runtime compatibility without a native CI run.
+- **Description:** Research napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0 source plus Node-API 8 ABI/runtime behavior for candidate Node 22, 24, and 26. Verify napi8 and async are explicit features because napi defaults to napi4. Record that the candidate versions are not support claims, and define a probe plan for async scheduling, owned Buffer conversion, explicit close, forced GC, process shutdown, and deadline-bounded drain. Do not claim runtime compatibility without a native CI run.
 - **Evidence criteria:** [Node runtime validation plan](../research/node-runtime-validation-plan.md) lists Node 22/24/26 as candidates only, with no runtime probe claimed. It specifies explicit close, missing close, forced GC, process exit during send, Buffer mutation/detachment, and close deadlines. Tokio 1 is recorded as napi-managed; no custom runtime ownership is introduced.
 
 ### P01-005 — Research decision gate and ADR handoff
