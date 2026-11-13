@@ -44,7 +44,7 @@ A01 approves the design target only. It does not approve runtime or platform com
 | Check | Requirement | Evidence |
 | --- | --- | --- |
 | Problem statement | One falsifiable MVP problem statement with personas and non-goals | P00-001 brief |
-| Constraint ledger | Every constraint C-01..C-36 has an owner task and validation path | P00-002 ledger |
+| Constraint ledger | Every constraint C-01..C-40 has an owner task and validation path | P00-002 ledger |
 | Provenance | Version claims labeled observed or candidate, with sources | P00-003 table |
 | Threat boundary | Assets, trust boundaries, abuse cases, test-environment policy | P00-004 record |
 | Handoff | ADR decisions and named downstream validation gates | [QG-00 gate record](../gates/phase-00-discovery.md) |
@@ -71,7 +71,7 @@ A01 approves the design target only. It does not approve runtime or platform com
 | Ownership | Synchronous owned snapshot before async scheduling; no borrowed JS memory | [Approval matrix](../architecture/approval-matrix.md) |
 | Limits | 100 recipients, 10/20/30 MiB caps; deterministic precedence | P02-004 |
 | ADRs | All P02-scoped ADRs accepted; future-phase ADRs retain explicit downstream gate | [ADR index](../architecture/decisions/README.md) |
-| Traceability | C-01..C-36 map to ADRs, implementation tasks, and test gates | [Architecture approval matrix](../architecture/approval-matrix.md) |
+| Traceability | C-01..C-40 map to ADRs, implementation tasks, and test gates | [Architecture approval matrix](../architecture/approval-matrix.md) |
 
 ## QG-03 — Repository baseline
 
@@ -115,6 +115,18 @@ A01 approves the design target only. It does not approve runtime or platform com
 ## QG-05 runtime support rule
 
 Node.js, Bun, and Deno are required MVP targets. A pass on Node.js does not satisfy Bun or Deno. Each runtime must pass the same binding/lifecycle contract on exact pinned versions. Deno tests must use local node_modules and --allow-ffi.
+
+## QG-03A — Modular architecture boundary
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| Crate count | Exactly sendust-core and sendust-napi | Cargo metadata |
+| Dependency direction | Acyclic; napi may call core; core has no Node/napi linkage | Dependency audit |
+| Domain isolation | Domain modules do not depend on lettre, SMTP, napi, or runtime APIs | Static dependency checks |
+| SMTP isolation | Protocol implementation exists only in transports::smtp | Module ownership audit |
+| Public surfaces | Core facade and TS public API are narrow; internals private by default | API review |
+| No speculative framework | No plugin registry, empty extension points, or third crate | Source audit |
+| Test ownership | Module invariants have focused tests and integration contract tests | Test inventory |
 
 ## QG-06 — SMTP correctness
 
