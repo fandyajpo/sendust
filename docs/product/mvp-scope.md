@@ -77,7 +77,7 @@ Sendust MVP is a production-usable npm package that sends one transactional emai
 | Connection pooling | POST-MVP | Adds lifecycle, health-check, and concurrency complexity; MVP is one send per transport |
 | Automatic retry/backoff | POST-MVP | Retrying after DATA can duplicate mail; caller owns retry |
 | SMTPUTF8 | POST-MVP | Requires relay capability negotiation and broader address model |
-| AbortSignal cancellation | POST-MVP | Bounded close and timeouts cover MVP shutdown; adds a second cancellation path |
+| Public AbortSignal cancellation | POST-MVP | MVP exposes explicit bounded close and timeouts only; no public AbortSignal option |
 | Streaming attachments | POST-MVP | Conflicts with wire-size accounting and bounded memory simplicity |
 | URL attachment fetch | OUT OF SCOPE | SSRF, network, and trust surface |
 | DKIM signing | POST-MVP | Key management and canonicalization scope |
