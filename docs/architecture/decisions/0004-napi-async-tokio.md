@@ -1,6 +1,6 @@
 # ADR-0004 — napi-rs async exports on the napi-managed Tokio 1 runtime
 
-**Status:** ACCEPTED (planning); Node-API level pending P01-004  
+**Status:** ACCEPTED (design); Node-API 8 selected, runtime verification pending P05-003/P14-004  
 **Date:** 2026-11-13  
 **Deciders:** Architecture review (P02-005)  
 **Validated by:** P01-004, P05-001, P05-003
@@ -9,7 +9,7 @@
 
 Sendust must expose asynchronous send and close operations to JavaScript without blocking the Node.js event loop. napi-rs v3 provides `async fn` exports that run on a Tokio runtime it manages, converting the result to a JavaScript Promise. lettre supports `Tokio1Executor`, but using the wrong runtime causes a panic.
 
-The scaffold defaults to Node-API 4; Sendust proposes Node-API 8 for a wider feature floor while retaining broad ABI compatibility. The exact floor required by the selected napi features must be verified.
+The scaffold defaults to Node-API 4; Sendust proposes Node-API 8 for a wider feature floor while retaining broad ABI compatibility. Node-API 8 is the selected ABI floor for the architecture. P01-004 source review records the version candidates; compilation and runtime compatibility remain hard tests at P05-003/P14-004.
 
 ## Decision
 
