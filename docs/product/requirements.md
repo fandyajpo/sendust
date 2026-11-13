@@ -180,7 +180,7 @@ Enforced by P15-005 and documentation review.
 
 ### C-26 — Honest support matrix
 
-Support claims MUST match what CI actually tests. The matrix MUST name Node-API level, tested Node versions, OS/CPU/libc targets, minimum OS/glibc floor, and whether alternate runtimes are untested or best-effort. “All platforms” and “all Node versions” are prohibited.
+Support claims MUST match what CI actually tests. The matrix MUST name Node-API level, exact tested Node.js/Bun/Deno versions, OS/CPU/libc targets, minimum OS/glibc floor, and the tested runtime × platform combinations. “All platforms” and “all runtime versions” are prohibited.
 
 Enforced by P14-003, P14-004, P15-001.
 
