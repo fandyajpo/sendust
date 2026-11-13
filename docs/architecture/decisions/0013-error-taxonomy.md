@@ -33,6 +33,6 @@ Callers need to branch on failure without parsing messages. The same failure can
 
 ## Evidence required
 
-- Frozen status/error tables in [error-model.md](../error-model.md).
+- Proposed status/error tables in [error-model.md](../error-model.md), pending P02-005 approval.
 - Golden tests for every code and outcome in P09-003/P09-005.
 - Redaction scans in P11-004.
