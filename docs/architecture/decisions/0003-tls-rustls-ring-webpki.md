@@ -1,6 +1,6 @@
 # ADR-0003 — rustls with ring and webpki-roots; verification mandatory
 
-**Status:** ACCEPTED (source-reviewed feature graph); compile and fixture validation required before implementation  
+**Status:** ACCEPTED (architecture baseline; source-reviewed feature graph); compile and fixture validation required before implementation  
 **Date:** 2026-11-13  
 **Deciders:** Research gate (P01-005), security review (P11-002)  
 **Validated by:** P01-002, P06-002, P11-002
