@@ -254,7 +254,7 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 
 ## Enforcement rules
 
-1. A gate is `APPROVED` only with a signed record listing each check and its evidence link.
+1. A gate is `APPROVED` only with a reviewer-attributed record listing the decision, review date, each check, and its evidence link.
 2. A failed check blocks the phase; it is not waived silently.
 3. Waivers require a written rationale, owner, deadline, and risk entry. Security gates QG-11 and the TLS checks in QG-06 cannot be waived.
 4. Evidence must refer to the exact commit or artifact under review.
