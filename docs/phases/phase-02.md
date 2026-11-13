@@ -93,7 +93,7 @@ The architecture must name the fake SMTP/TLS fixture seams needed for each test.
 ## Acceptance criteria
 
 - Two-crate isolation and acyclic dependency direction are unambiguous.
-- Status contract is relay-accepted, with honest unknown/attempted handling and no per-recipient split.
+- Status contract is relay-accepted, with honest unknown handling and no per-recipient split.
 - Lifecycle, BUSY, close, and timeout budgets are complete and non-overlapping in interpretation.
 - Memory-copy, attachment, address, and limit policies are deterministic.
 - Every mandatory constraint maps to a later task and concrete test.
