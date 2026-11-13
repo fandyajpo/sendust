@@ -19,7 +19,7 @@ In scope: release checklist, versioning policy, reproducible build inputs, artif
 - **Size:** M
 - **Status:** NOT STARTED
 - **Prerequisites:** P14-005, P15-005
-- **Description:** Specify semantic versioning, pre-release identifiers, tag format, version source of truth, and changelog categories. Define compatibility promises for Node candidate versions, platforms, and the public API. State that delivery, retry, pooling, SMTPUTF8, and URL attachments are not provided. Include how breaking changes to status semantics are handled.
+- **Description:** Specify semantic versioning, pre-release identifiers, tag format, version source of truth, and changelog categories. Define compatibility promises for Node.js/Bun/Deno runtime versions, platforms, and the public API. State that delivery, retry, pooling, SMTPUTF8, and URL attachments are not provided. Include how breaking changes to status semantics are handled.
 - **Evidence criteria:** Policy document covers major/minor/patch/pre-release rules, tag naming, and changelog format. Compatibility statement matches Phase 14 support matrix and Phase 15 docs. No promise exceeds tested behavior.
 
 ### P16-002 — Assemble reproducible build and artifact provenance
@@ -35,7 +35,7 @@ In scope: release checklist, versioning policy, reproducible build inputs, artif
 - **Size:** M
 - **Status:** NOT STARTED
 - **Prerequisites:** P16-001, P15-005
-- **Description:** Draft release notes from the changelog and documentation: supported platforms and Node candidates, installation, relay-accepted semantics, unknown-after-DATA, BUSY, close, caps, attachment opt-in, TLS requirements, and explicit non-goals. Include known limitations and any migration notes for API/status changes.
+- **Description:** Draft release notes from the changelog and documentation: supported platforms and tested Node.js/Bun/Deno versions, installation, relay-accepted semantics, unknown-after-DATA, BUSY, close, caps, attachment opt-in, TLS requirements, and explicit non-goals. Include known limitations and any migration notes for API/status changes.
 - **Evidence criteria:** Notes contain no delivery guarantee, no retry/pooling claim, and no unsupported platform. Every limitation links to documentation. Status semantics match P02/P09/P15 exactly. Draft is reviewed by QA and security owners.
 
 ### P16-004 — Create the release checklist and rollback plan
@@ -56,7 +56,7 @@ In scope: release checklist, versioning policy, reproducible build inputs, artif
 
 ## Technical implementation details
 
-Release engineering preserves the frozen contract. The build produces the napi binding for Node-API 8 from two crates: `crates/sendust-core/src` without Node linkage and `crates/sendust-napi/src` as adapter, with `ts/src` as the wrapper and `lettre 0.11.23` as the SMTP implementation. TLS uses rustls `ring` and `webpki-roots`; verification cannot be disabled. Candidate Node 22/24/26 support is declared only as validated by Phase 14. Success is relay acceptance; post-DATA ambiguity is `unknown` and not retried. One active send returns `BUSY`; no queue, pooling, or automatic retry. Close is explicit and bounded by 125s, never GC-dependent. Timeouts are connect 10s, operation 30s, total 120s, close 125s. Caps are 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. Attachments require opt-in and regular files only; no URLs. No secrets in artifacts, notes, or build logs.
+Release engineering preserves the frozen contract. The build produces the napi binding for Node-API 8 from two crates: `crates/sendust-core/src` without Node linkage and `crates/sendust-napi/src` as adapter, with `ts/src` as the wrapper and `lettre 0.11.23` as the SMTP implementation. TLS uses rustls `ring` and `webpki-roots`; verification cannot be disabled. Exact Node.js/Bun/Deno versions from the toolchain baseline are declared supported only as validated by Phase 14. Success is relay acceptance; post-DATA ambiguity is `unknown` and not retried. One active send returns `BUSY`; no queue, pooling, or automatic retry. Close is explicit and bounded by 125s, never GC-dependent. Timeouts are connect 10s, operation 30s, total 120s, close 125s. Caps are 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. Attachments require opt-in and regular files only; no URLs. No secrets in artifacts, notes, or build logs.
 
 ## Dependencies
 
