@@ -30,6 +30,7 @@ The TypeScript wrapper is the only public package surface. It exposes createTran
 | SMTP feature graph | Defaults off; smtp-transport + tokio1-rustls + ring + webpki-roots | ADR-0003; lettre Cargo.toml v0.11.23 | P03-002 Cargo check/tree |
 | TLS policy | TLS 1.2 minimum; explicit WebPKI roots; hostname+chain verification; implicit TLS or required STARTTLS only; no bypass/fallback | ADR-0003 | P06-002, P11-002 |
 | Async runtime | napi 3.16.2 + napi-derive 3.7.0 + napi-build 2.6.0; features napi8 + async; managed Tokio 1; no second runtime | ADR-0004 | P05-001, P05-003, P14-004 |
+| Rust MSRV | At least 1.88 per pinned napi 3.16.2 source; P03 pins the build toolchain | ADR-0004 | P03-001, P03-002, P05-001 |
 | Recipient policy | Observe each RCPT; ordinary refusals are recipient-level; 421 stops session; accepted subset receives one DATA transaction; recipient accepted only after final 2xx | ADR-0005 | P06-003, P06-004, P09-002 |
 | Delivery outcomes | Positive final DATA=accepted; explicit negative final reply=rejected; indeterminate result after message transmission=unknown | ADR-0005, ADR-0013 | P06-004, P09-002, P12-002 |
 | Error channel | Operational failures are stable typed errors; SMTP delivery outcomes are result values | ADR-0013 | P04-001, P05-004, P09-003 |
