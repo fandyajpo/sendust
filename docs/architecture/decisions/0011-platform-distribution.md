@@ -1,6 +1,6 @@
 # ADR-0011 — Root package plus platform optional packages via napi-rs
 
-**Status:** ACCEPTED (planning)  
+**Status:** ACCEPTED (architecture baseline; packaging validation P14)  
 **Date:** 2026-11-13  
 **Deciders:** Architecture review (P02-005), release review (P16-005)  
 **Validated by:** P14-002, P14-003, P14-004
