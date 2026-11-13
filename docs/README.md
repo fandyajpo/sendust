@@ -13,7 +13,7 @@ This documentation set is the source of truth for product scope, requirements, p
 | 2 | [Requirements](product/requirements.md) | Constraints, functional requirements, non-functional requirements |
 | 3 | [MVP scope](product/mvp-scope.md) | Included, excluded, success conditions |
 | 4 | [Feature matrix](planning/feature-matrix.md) | REQUIRED / OPTIONAL / POST-MVP / OUT OF SCOPE with task mapping |
-| 5 | [Master roadmap](planning/master-roadmap.md) | All 19 phases and their outcomes |
+| 5 | [Master roadmap](planning/master-roadmap.md) | All 19 phases (P00–P18), their outcomes, and gates |
 | 6 | [Architecture overview](architecture/overview.md) | Shape and boundaries |
 | 7 | [System design](architecture/system-design.md) | Modules, types, state machine, test seams |
 | 8 | [Public API contract](architecture/public-api.md) | Behavior of the TypeScript surface |
