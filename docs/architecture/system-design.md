@@ -371,3 +371,14 @@ The following are intentionally unresolved until their owning task:
 - Performance budgets (P13-001).
 
 Each has a validation task and cannot be assumed in implementation.
+
+
+## 4. Runtime interoperability amendment
+
+The approved native call path remains TypeScript wrapper → Node-API 8 adapter → runtime-independent core → lettre. Under ADR-0015, Node.js, Bun, and Deno are required MVP targets, but the runtime implementation and loader must be validated on each exact version. The public TypeScript API must remain behaviorally identical.
+
+Keep native loading isolated in `ts/src/loader.ts`. Shared TypeScript code must not assume Node-only globals or built-ins. Audit the generated NAPI-RS loader rather than assuming it works unchanged in all runtimes. A minimal runtime-specific loader branch is permitted if needed; separate Rust adapters or another crate are not permitted without a failing compatibility test and superseding ADR.
+
+Deno clean-consumer tests must use local `node_modules` and explicit `--allow-ffi`. Do not rely on postinstall scripts, install-time compilation, or binary downloads.
+
+The platform support unit is the exact runtime × OS × CPU × ABI/libc combination. A target is supported only after clean install, native load, and full behavioral tests pass. See [ADR-0015](decisions/0015-multi-runtime-support.md) and [multi-runtime research](../research/multi-runtime-compatibility.md).
