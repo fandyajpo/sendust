@@ -6,7 +6,7 @@
 
 ## Objective
 
-Resolve, with inspectable evidence, the dependency and platform questions that could invalidate the two-crate architecture. Research must decide whether the pinned lettre API exposes the required connection stages and recipient outcomes, whether the proposed rustls feature set exists, and whether Node 22/24/26 lifecycle behavior supports a non-GC-dependent close. It must not implement the product or install app code.
+Resolve, with inspectable evidence, the dependency and platform questions that could invalidate the two-crate architecture. Research must decide whether the pinned lettre API exposes the required connection stages and recipient outcomes, whether the proposed rustls feature set exists, and the Node-API/runtime compatibility constraints and the probe plan needed to verify a non-GC-dependent close. It must not implement the product or install app code.
 
 ## Scope
 
@@ -43,8 +43,8 @@ In scope: pinned-source and documentation inspection, minimal reproducible probe
 - **Size:** M
 - **Status:** COMPLETED
 - **Prerequisites:** P00-005
-- **Description:** Research napi-rs Node-API 8 behavior on candidate Node 22, 24, and 26: async task scheduling, buffer ownership, finalization, process shutdown, and whether a transport can be closed explicitly without relying on GC. Define a probe plan that holds an active send, forces GC, closes explicitly, and observes deadline-bounded drain. Record unsupported combinations rather than claiming compatibility.
-- **Evidence criteria:** Version matrix lists Node 22/24/26 as candidate, probed, supported, or unsupported with evidence status. Lifecycle note proves why GC-triggered close is insufficient. Probe plan includes explicit close, missing close, forced GC, process exit during send, and close after deadline. Tokio 1 is recorded as napi-managed; no custom runtime ownership is introduced.
+- **Description:** Research napi-rs v3 and Node-API 8 ABI/runtime behavior for candidate Node 22, 24, and 26. Record that the candidate versions are not support claims, and define a probe plan for async scheduling, owned Buffer conversion, explicit close, forced GC, process shutdown, and deadline-bounded drain. Do not claim runtime compatibility without a native CI run.
+- **Evidence criteria:** [Node runtime validation plan](../research/node-runtime-validation-plan.md) lists Node 22/24/26 as candidates only, with no runtime probe claimed. It specifies explicit close, missing close, forced GC, process exit during send, Buffer mutation/detachment, and close deadlines. Tokio 1 is recorded as napi-managed; no custom runtime ownership is introduced.
 
 ### P01-005 — Research decision gate and ADR handoff
 
@@ -97,7 +97,7 @@ Each probe records the exact API boundary exercised and whether stage attributio
 - Lettre capability and error-surface matrix.
 - TLS feature and certificate-failure matrix.
 - Recipient/stage observability report and ADR.
-- Node lifecycle research matrix and probe plan.
+- [Node lifecycle research matrix and probe plan](../research/node-runtime-validation-plan.md).
 - Research decision gate with ADR index.
 
 ## Completion gate
