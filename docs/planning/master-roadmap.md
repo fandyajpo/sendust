@@ -63,7 +63,7 @@ Approved the two-crate boundary, dependency direction, public result/error contr
 
 ### P03 — Repository
 
-Creates the Cargo workspace with exactly two crates, the pnpm/TypeScript workspace, pinned toolchain, formatting/linting/type-check/test commands, dependency/license policy, and deterministic fake SMTP/TLS harness seams. Baseline must pass with placeholder-free skeletons.
+Creates the Cargo workspace with exactly two crates, the TypeScript workspace, pinned toolchain, formatting/linting/type-check/test commands, dependency/license policy, and deterministic fake SMTP/TLS harness seams. Baseline must pass with placeholder-free skeletons.
 
 **Key risk:** test seams added later causing rewrites. **Mitigation:** harness seams are a Phase 03 deliverable.
 
