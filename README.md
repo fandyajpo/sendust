@@ -21,7 +21,7 @@ Sendust is an embeddable library, not an SMTP server, hosted email service, mail
 
 ## Documentation
 
-The product definition, requirements, architecture, ADRs, engineering policies, phase plans, and quality gates live in [docs/README.md](docs/README.md).
+The product definition, requirements, architecture, ADRs, engineering policies, phase plans, and quality gates live in [docs/README.md](docs/README.md). All coding agents and contributors must follow [AGENTS.md](AGENTS.md) and the [AI implementation contract](docs/engineering/ai-implementation-contract.md).
 
 ## Project status
 
