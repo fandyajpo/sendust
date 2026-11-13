@@ -194,7 +194,7 @@ deadline = start + min(total, remaining close budget)
 - `operation` bounds each SMTP command/response wait.
 - `total` bounds the entire send, including composition wait and DATA.
 - An operation timer wraps each public lettre operation. Report only coarse boundaries: connection setup; AUTH; MAIL; each RCPT; DATA command; DATA body+terminator+final response; cleanup. Do not claim internal socket-read/write attribution.
-- All durations must be finite and > 0; `0`, negative, `NaN`, and infinity are rejected.
+- Defaults are hard maximums: connect ≤10 s, operation ≤30 s, total ≤120 s, close ≤125 s. Values may be lowered but not raised. Each is an integer of at least 1 s; connect and operation ≤ total; close ≥ total. Zero, negative, sub-second, NaN, infinity, and inconsistent combinations are rejected.
 
 ### 2.6 SMTP orchestration
 
