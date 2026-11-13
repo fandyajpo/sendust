@@ -28,17 +28,17 @@ No plugin registry, no transport subclasses, no streaming API, no callback API, 
 | `secure` | `"tls" \| "starttls"` | required | one of the two; no plaintext mode |
 | `auth` | `{ user, pass, method? }` | undefined | user non-empty; `method` `"plain"` or `"login"` |
 | `ehloName` | `string` | system hostname or `localhost` | valid hostname token; no CRLF |
-| `timeouts.connectMs` | `number` | 10000 | finite, > 0, ≤ total |
-| `timeouts.operationMs` | `number` | 30000 | finite, > 0 |
-| `timeouts.totalMs` | `number` | 120000 | finite, > 0, ≥ connect |
-| `timeouts.closeMs` | `number` | 125000 | finite, > 0 |
+| `timeouts.connectMs` | `number` | 10000 | integer 1000–10000; ≤ totalMs |
+| `timeouts.operationMs` | `number` | 30000 | integer 1000–30000; ≤ totalMs |
+| `timeouts.totalMs` | `number` | 120000 | integer 1000–120000; ≥ connectMs and operationMs |
+| `timeouts.closeMs` | `number` | 125000 | integer totalMs–125000; ≥ totalMs |
 | `attachments.allowFileAccess` | `boolean` | `false` | boolean |
 | `limits.maxRecipients` | `number` | 100 | integer, 1–100 (cannot exceed hard cap) |
 | `limits.maxAttachmentBytes` | `number` | 10485760 | integer, 1–10485760 |
 | `limits.maxTotalAttachmentBytes` | `number` | 20971520 | integer, 1–20971520 |
 | `limits.maxWireBytes` | `number` | 31457280 | integer, 1–31457280 |
 
-Limits may be lowered but not raised. A caller cannot configure a value above the documented hard cap. Unknown option keys are rejected with `VALIDATION_INVALID_OPTION` to catch typos.
+Timeout values may be lowered but not raised above the documented maxima. Limits may be lowered but not raised. A caller cannot configure a value above the documented hard cap. Unknown option keys are rejected with `VALIDATION_INVALID_OPTION` to catch typos.
 
 There is no option to disable TLS verification, no plaintext SMTP mode, no pool size, no retry count, and no proxy configuration in MVP.
 
