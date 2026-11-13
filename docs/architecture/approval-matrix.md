@@ -1,6 +1,6 @@
 # Sendust — Architecture Approval Matrix
 
-**Status:** APPROVED at design level; implementation validation remains gated  
+**Status:** APPROVED at design level; final ADR reconciliation completed 2026-11-13; implementation validation remains gated  
 **Gate:** P02-005 / QG-02  
 **Date:** 2026-11-13  
 **Reviewer:** Independent architecture audit (GPT-6)
@@ -88,6 +88,8 @@ No queue, worker, scheduler, persistence, queue adapter, automatic retry, backof
 | File safety | Open-then-fstat, no-follow where supported, file-type and growth fixtures | P08-002, P11-003 |
 | MIME | Independent parser conformance and wire-size parity | P07-005 |
 
-## 7. Approval boundary
+## 7. Final review and approval boundary
+
+This matrix was re-reviewed against the final text and status of every P02-scoped ADR after source/API reconciliation. It is the canonical approved design snapshot for implementation. The pre-QG-02 reconciliation window is now closed; subsequent material changes require a superseding ADR.
 
 QG-02 approves the design contract and implementation handoff only. It does not certify compilation, runtime compatibility, SMTP correctness, TLS fixture results, MIME conformance, or package artifacts. Any downstream implementation gate may block or supersede an ADR if executable evidence contradicts this design.
