@@ -40,7 +40,7 @@ The TypeScript wrapper is the only public package surface. It exposes createTran
 | Resource caps | 100 recipients; 10 MiB per attachment; 20 MiB raw aggregate; 30 MiB wire | ADR-0009 | P04-003, P08-003, P13-003 |
 | MIME | Core owns structure/policy/serialization; vetted primitives may encode individual values | ADR-0010 | P07-001–P07-005 |
 | Distribution | Root npm package plus per-platform optional packages; no consumer Rust toolchain or postinstall download | ADR-0011 | P14-002–P14-004 |
-| Module formats | ESM and CommonJS via one shared implementation; exact layout finalized in distribution phase | ADR-0012 (proposed) | P14-002, P14-004 |
+| Module formats | ESM and CommonJS via one shared implementation; exact layout finalized in distribution phase | ADR-0012 (accepted design baseline; packaging validation P14) | P14-002, P14-004 |
 | Attachments | Filesystem access opt-in; bounded regular files only; no URL/stream attachment | ADR-0014 | P08-001–P08-005, P11-003 |
 
 ## 3. SMTP state and recipient matrix
