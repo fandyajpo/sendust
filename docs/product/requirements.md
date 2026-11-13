@@ -126,7 +126,7 @@ Enforced by P02-003, P09-004, and the product-scope review.
 
 ### C-17 — Cancellation
 
-AbortSignal support is optional and MUST NOT be required for MVP. Bounded close and timeout budgets are required. Any later AbortSignal implementation MUST map onto the same bounded-close semantics and MUST NOT introduce a second cancellation path.
+The public MVP API MUST NOT expose AbortSignal. Internal close cancellation and finite timeout budgets are required. A future public AbortSignal feature may be considered post-MVP only; it MUST map onto the same bounded-close semantics and MUST NOT introduce a second cancellation path.
 
 Enforced by P02-003, P09-004, P18-002.
 
