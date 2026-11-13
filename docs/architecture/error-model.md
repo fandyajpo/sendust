@@ -161,7 +161,7 @@ When multiple validation failures exist, the first failure in the deterministic 
 7. Attachment byte caps.
 8. Wire cap.
 
-This prevents nondeterministic messages and makes tests stable. The order is frozen in P02-002 and tested in P04-001.
+This prevents nondeterministic messages and makes tests stable. The proposed order is to be approved in P02-002 and implemented/tested in P04-001.
 
 ## 6. Redaction rules
 
