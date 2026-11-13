@@ -30,7 +30,7 @@ In scope: post-MVP intake, feedback triage, candidate feature evaluation (SMTPUT
 - **Description:** Research post-MVP candidates without committing implementation: SMTPUTF8 support, AbortSignal integration, additional Node.js, Bun, and Deno versions/platforms, and richer recipient reporting if lettre exposes it. Assess compatibility, security, API impact, and test burden. Preserve ASCII local parts and IDNA domains for MVP compatibility.
 - **Evidence criteria:** Candidate matrix lists benefit, risk, compatibility, required ADR, and evidence needed. SMTPUTF8 remains explicitly post-MVP until an ADR proves relay support and encoding behavior. AbortSignal must map to bounded close semantics, not required shutdown. Platform expansion requires lifecycle and distribution evidence.
 
-### P18-003 — Evaluate connection pooling only as separate future research
+### P18-003 — Evaluate connection pooling as separate future research; queue/job orchestration is held outside the roadmap
 
 - **Size:** L
 - **Status:** NOT STARTED
