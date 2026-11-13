@@ -30,7 +30,7 @@ export interface SendResult {
 | Status | Meaning | When |
 | --- | --- | --- |
 | `accepted` | The relay returned a positive final response to DATA and accepted responsibility. **Not** mailbox delivery. | Final DATA response is 2xx. |
-| `rejected` | The relay definitively refused the envelope or message for every recipient in the transaction. | MAIL refusal; all RCPT commands refused; DATA command refusal; or explicit final DATA 4xx/5xx. A single RCPT refusal is a recipient-level rejection and does not prevent DATA for other accepted recipients. |
+| `rejected` | The relay definitively refused the envelope or message for every recipient in the transaction. | MAIL refusal; all RCPT commands refused; DATA command refusal; or explicit final DATA 4xx/5xx. A single ordinary RCPT refusal is a recipient-level rejection and does not prevent DATA for other accepted recipients. RCPT 421 closes the session, stops recipient collection, and prevents DATA; the overall result is rejected. |
 | `unknown` | The message may or may not have been accepted; the final disposition cannot be established. | The DATA terminator may have reached the relay but the final response was not received, or a write/connection failure leaves acceptance genuinely uncertain. |
 
 ### 2.2 Recipient status rules
