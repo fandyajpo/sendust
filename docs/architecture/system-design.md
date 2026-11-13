@@ -242,7 +242,7 @@ Names and casing follow napi-rs conventions; the TypeScript wrapper re-exports t
 - `Buffer`/`ArrayBuffer`/typed arrays → `Vec<u8>` copy before async.
 - Strings → `String` with UTF-8 validation; invalid UTF-16 is rejected, not lossily replaced.
 - Numbers → bounded integer conversion with range checks; no silent truncation.
-- Options objects → core structs with unknown fields rejected or ignored per the frozen contract (decided in P02-002; default: reject unknown keys to prevent typos).
+- Options objects → core structs with unknown fields rejected or ignored per the proposed contract (P02-002 approval pending; proposed default: reject unknown keys to prevent typos).
 - Errors → JS `Error` subclass with `code`, `category`, `message`, optional `details`; credentials and content removed.
 - Panics → caught at the exported boundary where unwind is enabled; converted to an internal error. `panic = "abort"` is not used for the addon.
 
@@ -256,7 +256,7 @@ Names and casing follow napi-rs conventions; the TypeScript wrapper re-exports t
 
 ## 4. `ts/src`
 
-### 4.1 Public API (frozen in P09-001)
+### 4.1 Public API (proposed; approval gate P09-005)
 
 ```ts
 export interface TransportOptions {
