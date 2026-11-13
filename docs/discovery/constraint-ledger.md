@@ -17,7 +17,7 @@ This ledger maps every authoritative constraint C-01 through C-30 to its archite
 | C-07 | rustls + ring + webpki-roots; verification on; TLS 1.2 minimum | ADR-0003 | P01-002, P06-002, P11-002; certificate fixtures | Feature graph source-reviewed; compile/fixtures remain |
 | C-08 | One active send per transport; immediate BUSY | ADR-0006 | P02-003, P04-004, P09-004, P10-001; race tests | Architecture defined |
 | C-09 | Explicit open → closing → closed; bounded idempotent close | ADR-0006 | P02-003, P04-004, P09-004, P10-001; lifecycle tests | Architecture defined; cancellation edge clarified |
-| C-10 | Connect 10s, operation 30s, total 120s, close 125s | ADR-0007 | P01-003, P02-003, P04-004, P10-002; injected-clock tests | Coarse-stage model source-reviewed |
+| C-10 | Connect ≤10s, operation ≤30s, total ≤120s, close ≤125s; values may only be lowered | ADR-0007 | P01-003, P02-003, P04-004, P10-002; injected-clock tests | Coarse-stage model source-reviewed |
 | C-11 | JS-owned input copied before async | ADR-0008 | P02-004, P05-002, P11-004; mutation/detachment tests | Requires sync conversion + copy correction |
 | C-12 | Filesystem attachments opt-in; regular files only | ADR-0014 | P02-004, P08-001/002, P11-003; file-type matrix | Architecture defined |
 | C-13 | 100 recipients; 10/20/30 MiB attachment/wire caps | ADR-0009 | P02-004, P04-003, P08-003; boundary tests | Architecture defined |
