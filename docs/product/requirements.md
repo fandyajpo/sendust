@@ -208,6 +208,28 @@ Sendust is a standalone native email delivery engine, not a hosted email platfor
 
 Enforced by P00-001 and P15-005.
 
+## Architecture Amendment A01 — Multi-runtime and platform requirements
+
+The following constraints extend C-01..C-30 and are authoritative for the multi-runtime target. Implementation claims remain gated by P03/P05/P14 evidence.
+
+### C-31 — Required JavaScript runtimes
+The MVP MUST target Node.js, Bun, and Deno. Each is a blocking support target, not best-effort. A runtime is supported only after Sendust's native-addon, async, lifecycle, SMTP, and clean-install suite passes on exact declared versions. Node-API ABI compatibility alone is insufficient.
+
+### C-32 — Shared native implementation
+Retain exactly two Rust crates. `sendust-core` MUST remain independent of JavaScript runtime APIs and Node-API. `sendust-napi` remains the single Node-API 8 binding implementation. Separate runtime adapters, extra crates, and WASM fallback require executable evidence and a superseding ADR.
+
+### C-33 — Runtime-neutral TypeScript boundary
+The public TypeScript API MUST preserve identical semantics across supported runtimes. Runtime-specific native loading MUST be isolated in the loader. Shared wrapper code MUST NOT assume Node-only globals or built-ins unless feature-detected behind that boundary. No runtime-specific delivery policy is permitted.
+
+### C-34 — Deno permissions and package layout
+Deno usage MUST document and test local `node_modules` and explicit `--allow-ffi`. Sendust MUST NOT depend on npm postinstall scripts, install-time compilation, or network binary downloads.
+
+### C-35 — Runtime and platform support evidence
+Support is the intersection of an exact tested JavaScript runtime version, OS, CPU architecture, and native ABI/libc target. Every claimed combination MUST pass clean install, native load, and blocking behavioral tests. Compile-only or upstream-framework-only evidence MUST NOT count as support. Unsupported combinations MUST be explicitly documented.
+
+### C-36 — Explicit MVP server platform baseline
+Initial platform candidates are Linux x64 glibc, Linux ARM64 glibc, Linux x64 musl, macOS x64, macOS ARM64, and Windows x64 MSVC. Linux ARM64 musl is an extended candidate. Additional OS/CPU targets and serverless/edge/browser/WASI environments are not implied.
+
 ## 3. Functional requirements
 
 ### 3.1 SMTP
@@ -333,25 +355,3 @@ Enforced by P00-001 and P15-005.
 - Requirement-to-test traceability: produced in P12-001.
 - Constraint-to-ADR mapping: [ADR index](../architecture/decisions/README.md) and [master roadmap](../planning/master-roadmap.md).
 
-
-## Architecture Amendment A01 — Multi-runtime and platform requirements
-
-The following constraints extend C-01..C-30 and are authoritative for the multi-runtime target. Implementation claims remain gated by P03/P05/P14 evidence.
-
-### C-31 — Required JavaScript runtimes
-The MVP MUST target Node.js, Bun, and Deno. Each is a blocking support target, not best-effort. A runtime is supported only after Sendust's native-addon, async, lifecycle, SMTP, and clean-install suite passes on exact declared versions. Node-API ABI compatibility alone is insufficient.
-
-### C-32 — Shared native implementation
-Retain exactly two Rust crates. `sendust-core` MUST remain independent of JavaScript runtime APIs and Node-API. `sendust-napi` remains the single Node-API 8 binding implementation. Separate runtime adapters, extra crates, and WASM fallback require executable evidence and a superseding ADR.
-
-### C-33 — Runtime-neutral TypeScript boundary
-The public TypeScript API MUST preserve identical semantics across supported runtimes. Runtime-specific native loading MUST be isolated in the loader. Shared wrapper code MUST NOT assume Node-only globals or built-ins unless feature-detected behind that boundary. No runtime-specific delivery policy is permitted.
-
-### C-34 — Deno permissions and package layout
-Deno usage MUST document and test local `node_modules` and explicit `--allow-ffi`. Sendust MUST NOT depend on npm postinstall scripts, install-time compilation, or network binary downloads.
-
-### C-35 — Runtime and platform support evidence
-Support is the intersection of an exact tested JavaScript runtime version, OS, CPU architecture, and native ABI/libc target. Every claimed combination MUST pass clean install, native load, and blocking behavioral tests. Compile-only or upstream-framework-only evidence MUST NOT count as support. Unsupported combinations MUST be explicitly documented.
-
-### C-36 — Explicit MVP server platform baseline
-Initial platform candidates are Linux x64 glibc, Linux ARM64 glibc, Linux x64 musl, macOS x64, macOS ARM64, and Windows x64 MSVC. Linux ARM64 musl is an extended candidate. Additional OS/CPU targets and serverless/edge/browser/WASI environments are not implied.
