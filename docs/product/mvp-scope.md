@@ -59,7 +59,7 @@ Sendust MVP is a production-usable npm package that sends one transactional emai
 ### Packaging and quality
 
 - Root package plus platform optional packages.
-- Validated OS/CPU/libc and Node.js matrix.
+- Validated Node.js, Bun, and Deno runtime matrix intersected with OS/CPU/libc targets.
 - CI tests, artifact provenance, SBOM, checksums.
 - Security and performance evidence.
 
@@ -111,7 +111,7 @@ Any addition requires:
 
 Features cannot enter the MVP through implementation first and documentation later. Anything discovered mid-implementation that is not in this scope is recorded as post-MVP unless it is required for correctness or security; security fixes are always in scope.
 
-## 6. Known limitations to document at release
+## 6. Runtime and platform target policy\n\nNode.js, Bun, and Deno are required MVP runtimes. Support is not claimed until the exact runtime version and OS/CPU/ABI combination passes blocking Sendust CI. Deno requires local node_modules and --allow-ffi. Initial platform candidates are Linux x64 glibc, Linux ARM64 glibc, Linux x64 musl, macOS x64, macOS ARM64, and Windows x64 MSVC; Linux ARM64 musl remains an extended candidate. See ADR-0015.\n\n## 7. Known limitations to document at release
 
 - One active send per transport; no internal queue, worker, scheduler, or queue adapter. Queueing and scheduling remain caller-owned.
 - No automatic retry; `unknown` requires caller judgment.
