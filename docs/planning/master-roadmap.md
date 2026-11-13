@@ -11,7 +11,7 @@ This roadmap summarizes the 19 phase plans. Detailed tasks, tests, acceptance cr
 | Phase | Outcome | Gate |
 | --- | --- | --- |
 | P00 Discovery | Problem, constraints, semantics, threat boundary, and open questions fixed | PHASE-00 |
-| P01 Research | lettre, rustls, recipient observability, and Node lifecycle resolved with evidence | PHASE-01 |
+| P01 Research | lettre, rustls, recipient observability, and Node runtime probe requirements resolved | PHASE-01 |
 | P02 Architecture | Approve two-crate design, status/error contract, lifecycle, ownership, and limits | PHASE-02 |
 | P03 Repository | Workspace, toolchain, policies, and deterministic test seams exist | PHASE-03 |
 | P04 Rust core | Validation, message model, state machine, and lettre orchestration compile and pass core tests | PHASE-04 |
