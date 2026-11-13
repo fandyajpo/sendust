@@ -34,7 +34,7 @@ This roadmap summarizes the 19 phase plans. Detailed tasks, tests, acceptance cr
 
 ### P00 — Discovery
 
-<badge>COMPLETED — QG-00 approved</badge>
+**COMPLETED — QG-00 approved**
 
 Established the non-negotiable semantics: relay acceptance is not delivery, one send per transport, explicit bounded close, no pooling/retry, ASCII local parts with IDNA domains, opt-in filesystem attachments, and hard caps. Produces the constraint ledger, provenance table, threat boundary, and gate handoff. No code.
 
@@ -42,7 +42,7 @@ Established the non-negotiable semantics: relay acceptance is not delivery, one 
 
 ### P01 — Research
 
-<badge>COMPLETED — QG-01 approved with downstream implementation gates</badge>
+**COMPLETED — QG-01 approved with downstream implementation gates**
 
 Resolved the source/API questions that can invalidate the architecture:
 
@@ -55,7 +55,7 @@ Resolved the source/API questions that can invalidate the architecture:
 
 ### P02 — Architecture
 
-<badge>COMPLETED — QG-02 approved at design level</badge>
+**COMPLETED — QG-02 approved at design level**
 
 Approved the two-crate boundary, dependency direction, public result/error contract, state machine, timeout model, ownership rules, attachment policy, and caps. Produced ADR decisions and a constraint-to-task traceability matrix. No application implementation.
 
