@@ -43,8 +43,8 @@ In scope: package metadata, native artifact layout, clean-install smoke, platfor
 - **Size:** L
 - **Status:** NOT STARTED
 - **Prerequisites:** P14-003
-- **Description:** Define clean-environment tests for each supported target and candidate Node version: install from local artifacts, import, verify native binary selection, run a fake-relay accepted send, exercise BUSY, run close, and confirm no post-close work. Include missing-binary and wrong-architecture negative tests.
-- **Evidence criteria:** Matrix records pass/fail/unsupported per OS, arch, and Node candidate. Negative tests produce actionable errors. Loaded binary path and version are recorded. No test contacts a real relay or requires a compiler at consumer install time unless explicitly documented.
+- **Description:** Define clean-environment tests for each supported target and exact pinned runtime version: install from local artifacts, import, verify native binary selection, run a fake-relay accepted send, exercise BUSY, run close, and confirm no post-close work. Include missing-binary and wrong-architecture negative tests.
+- **Evidence criteria:** Matrix records pass/fail/unsupported per runtime version, OS, and arch. Negative tests produce actionable errors. Loaded binary path and version are recorded. No test contacts a real relay or requires a compiler at consumer install time unless explicitly documented.
 
 ### P14-005 — Final distribution gate using QA and performance evidence
 
@@ -52,11 +52,11 @@ In scope: package metadata, native artifact layout, clean-install smoke, platfor
 - **Status:** NOT STARTED
 - **Prerequisites:** P14-004, P12-005, P13-005
 - **Description:** Run the final distribution matrix after QA and performance gates. Confirm clean installs, native loading, accepted/unknown/BUSY/close behavior, bounded resource use, and honest support declarations. Reconcile the early smoke with the final matrix and document any target dropped.
-- **Evidence criteria:** Gate package includes per-target install/load/send evidence, candidate Node results, negative tests, performance limitations, and support matrix. No unsupported target is advertised. No install-time secret or external network dependency exists. Phase 16 may consume P14-005.
+- **Evidence criteria:** Gate package includes per-target install/load/send evidence, runtime results, negative tests, performance limitations, and support matrix. No unsupported target is advertised. No install-time secret or external network dependency exists. Phase 16 may consume P14-005.
 
 ## Technical implementation details
 
-Distribution must ship the two-crate implementation through the napi binding: `TS wrapper -> napi -> core -> lettre`. Core remains free of Node linkage. Native artifacts target Node-API 8 and are loaded by `ts/src`. Candidate Node 22/24/26 must be validated, not assumed. `lettre 0.11.23` and rustls `ring`/`webpki-roots` must be built with verification enabled. The package must not add pooling, retries, SMTPUTF8, URL attachments, or required AbortSignal. One active send returns `BUSY`; close is explicit and bounded by 125s. Timeouts remain connect 10s, operation 30s, total 120s. Caps remain 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. Consumer installs must not fetch URLs or require credentials; attachment filesystem access remains disabled by default.
+Distribution must ship the two-crate implementation through the napi binding: `TS wrapper -> napi -> core -> lettre`. Core remains free of Node linkage. Native artifacts target Node-API 8 and are loaded by `ts/src`. Exact Node.js/Bun/Deno runtime pins from the [toolchain baseline](../engineering/toolchain-baseline.md) must be validated, not assumed. `lettre 0.11.23` and rustls `ring`/`webpki-roots` must be built with verification enabled. The package must not add pooling, retries, SMTPUTF8, URL attachments, or required AbortSignal. One active send returns `BUSY`; close is explicit and bounded by 125s. Timeouts remain connect 10s, operation 30s, total 120s. Caps remain 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. Consumer installs must not fetch URLs or require credentials; attachment filesystem access remains disabled by default.
 
 ## Dependencies
 

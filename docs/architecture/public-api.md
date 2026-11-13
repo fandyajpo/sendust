@@ -159,7 +159,7 @@ The following are intentionally absent and must not appear in the MVP type surfa
 - `pool`, `maxConnections`, `maxMessages`
 - `retry`, `retries`, `backoff`
 - `queue`, `worker`, `scheduler`, `job`, `queueAdapter`
-- `abortSignal` as a required option
+- `abortSignal` option; the MVP only exposes explicit bounded `close()` and timeout-based internal cancellation
 - `stream`, `streamTransport`
 - `url` attachments
 - `dkim`
@@ -174,4 +174,4 @@ The following are intentionally absent and must not appear in the MVP type surfa
 - New error codes are minor versions.
 - Changing a status meaning, removing a code, or changing a default is a major version.
 - Tightening a limit is a major version; loosening is minor.
-- Node.js and platform support changes follow the published matrix and are documented per release.
+- Node.js, Bun, Deno, and platform support claims follow the exact tested matrix in [the toolchain baseline](../engineering/toolchain-baseline.md) and are documented per release.

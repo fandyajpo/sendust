@@ -20,17 +20,17 @@ In scope: post-MVP intake, feedback triage, candidate feature evaluation (SMTPUT
 - **Status:** NOT STARTED
 - **Prerequisites:** P17-005
 - **Description:** Define channels and templates for consumer feedback, bug reports, security reports, and feature requests. Triage against the proposed MVP contract: relay-accepted semantics, explicit SMTP refusal versus unknown-after-DATA, BUSY, no internal queue/worker/adapter, no automatic retry, caps, attachment policy, TLS verification, and support matrix. Separate defects from feature requests and unsupported-use reports.
-- **Evidence criteria:** Intake template captures version, platform, Node version, relay behavior, result status, and redacted diagnostics. Every item is classified as defect, documentation gap, feature request, or unsupported use. Security reports have a private path. No item is accepted by changing MVP semantics silently.
+- **Evidence criteria:** Intake template captures version, platform, runtime version, relay behavior, result status, and redacted diagnostics. Every item is classified as defect, documentation gap, feature request, or unsupported use. Security reports have a private path. No item is accepted by changing MVP semantics silently.
 
 ### P18-002 — Evaluate SMTPUTF8, AbortSignal, and platform expansion candidates
 
 - **Size:** L
 - **Status:** NOT STARTED
 - **Prerequisites:** P18-001
-- **Description:** Research post-MVP candidates without committing implementation: SMTPUTF8 support, AbortSignal integration, additional Node versions/platforms, and richer recipient reporting if lettre exposes it. Assess compatibility, security, API impact, and test burden. Preserve ASCII local parts and IDNA domains for MVP compatibility.
+- **Description:** Research post-MVP candidates without committing implementation: SMTPUTF8 support, AbortSignal integration, additional Node.js, Bun, and Deno versions/platforms, and richer recipient reporting if lettre exposes it. Assess compatibility, security, API impact, and test burden. Preserve ASCII local parts and IDNA domains for MVP compatibility.
 - **Evidence criteria:** Candidate matrix lists benefit, risk, compatibility, required ADR, and evidence needed. SMTPUTF8 remains explicitly post-MVP until an ADR proves relay support and encoding behavior. AbortSignal must map to bounded close semantics, not required shutdown. Platform expansion requires lifecycle and distribution evidence.
 
-### P18-003 — Evaluate connection pooling only as separate future research
+### P18-003 — Evaluate connection pooling as separate future research; queue/job orchestration is held outside the roadmap
 
 - **Size:** L
 - **Status:** NOT STARTED

@@ -10,6 +10,7 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 | QG-01 | Research evidence | P01 | P02 |
 | QG-02 | Architecture approval (design baseline) | P02 | P03 |
 | QG-03 | Repository baseline | P03 | P04 |
+| QG-03A | Modular architecture boundary | P03/P04 | P04/P05/P06/P12 |
 | QG-04 | Rust safety and core tests | P04 | P05 |
 | QG-05 | Node interoperability | P05 | P06, P09 |
 | QG-06 | SMTP correctness | P06 | P09 |
@@ -25,6 +26,7 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 | QG-16 | Release engineering | P16 | P17 |
 | QG-17 | Release approval | P17 | MVP release |
 | QG-A01 | Multi-runtime architecture amendment | A01 | P03 |
+| QG-A02 | Modular-monolith architecture amendment | A02 | P03/P04/P06/P12 |
 
 ## QG-A01 — Multi-runtime architecture amendment
 
@@ -38,6 +40,20 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 | Traceability | Requirements, phases, feature matrix, risks, and gates reconciled | A01 gate record |
 
 A01 approves the design target only. It does not approve runtime or platform compatibility; those remain P05/P14 release blockers.
+
+## QG-A02 — Modular-monolith architecture amendment
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| Crate boundary | Exactly `sendust-core` and `sendust-napi`; no third Rust crate | ADR-0016; P03-001 |
+| Module ownership | Core modules and sole responsibility match ADR-0016 | ADR-0016; system design |
+| Dependency direction | Acyclic; domain has no lettre/SMTP/napi/runtime dependency | P03/P04 architecture checks |
+| SMTP adapter | SMTP protocol implementation exists only in `transports::smtp` and uses the narrow delivery port | P04/P06 contract tests |
+| Binding boundary | napi and TypeScript contain no SMTP/MIME policy | P05/P09 source and contract tests |
+| Test ownership | Module invariants and cross-module contracts have named test owners | Testing strategy; P12 traceability |
+| Scope guard | No plugin framework, alternate transport, queue adapter, speculative extension point, or extra crate | Source audit; P12 architecture audit |
+
+A02 approves module design only. It does not prove that the source tree, dependency graph, or runtime behavior conforms. P03/P04/P06/P12 must provide implementation evidence before the corresponding checks can pass.
 
 ## QG-00 — Discovery integrity
 
@@ -56,7 +72,7 @@ A01 approves the design target only. It does not approve runtime or platform com
 | lettre API | Chosen async API documented with pinned-source citations and per-recipient visibility | [P01 source report](../research/lettre-0.11.23-validation.md) |
 | TLS features | Exact feature graph source-reviewed; compile and certificate fixtures remain implementation gates | [P01 source report](../research/lettre-0.11.23-validation.md) |
 | Recipient/timeouts | Source-observed RCPT API; coarse-stage table; explicit ADR decisions | [P01 source report](../research/lettre-0.11.23-validation.md) |
-| Node lifecycle | Node 22/24/26 candidate-only matrix; explicit close/GC/exit probe plan | [Node runtime plan](../research/node-runtime-validation-plan.md) |
+| Runtime lifecycle | Exact Node.js/Bun/Deno candidate matrix from the toolchain baseline; explicit close/GC/exit probe plan | [Node runtime plan](../research/node-runtime-validation-plan.md) |
 | Decision record | Every mandatory design question selected; implementation proofs have named gates | [QG-01 gate record](../gates/phase-01-research.md) |
 
 ## QG-02 — Architecture approval (design baseline)
@@ -173,7 +189,7 @@ Node.js, Bun, and Deno are required MVP targets. A pass on Node.js does not sati
 
 | Check | Requirement | Evidence |
 | --- | --- | --- |
-| Surface | Only MVP exports; no pooling/retry/SMTPUTF8/URL/AbortSignal requirement | API audit |
+| Surface | Only MVP exports; no pooling/retry/SMTPUTF8/URL/AbortSignal option | API audit |
 | Results | `accepted`/`rejected`/`unknown`; no delivery claim | Golden tests |
 | Errors | Stable classes and codes; `instanceof` works | Golden tests |
 | Redaction | No password/body/attachment/path in serialized errors | Marker scans |

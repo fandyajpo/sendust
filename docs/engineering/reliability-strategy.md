@@ -40,7 +40,7 @@ Rules:
 
 | Budget | Default | Bounds |
 | --- | --- | --- |
-| Connect | 10 s | TCP + TLS/STARTTLS establishment |
+| Connect | 10 s | DNS + TCP + greeting + EHLO + implicit TLS/required STARTTLS establishment |
 | Operation | 30 s | Each SMTP command/response wait |
 | Total | 120 s | Entire send |
 | Close | 125 s | Shutdown drain |

@@ -1,6 +1,6 @@
 # ADR-0012 — Dual ESM/CommonJS with a single shared implementation
 
-**Status:** PROPOSED  
+**Status:** ACCEPTED (architecture design baseline; packaging validation remains P14-002/P14-004)  
 **Date:** 2026-11-13  
 **Deciders:** Architecture review (P02-005)  
 **Validated by:** P14-002, P14-004

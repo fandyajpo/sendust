@@ -1,7 +1,7 @@
 # Phase 03 — Repository
 
 **Phase status:** NOT STARTED  
-**Phase dependency:** Phase 02 and Architecture Amendment A01  
+**Phase dependency:** Phase 02, Architecture Amendment A01, and Architecture Amendment A02  
 **Companion references:** [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [release strategy](../engineering/release-strategy.md)
 
 ## Objective
@@ -18,8 +18,8 @@ In scope: workspace layout, crate manifests, `ts/src` package skeleton, test dir
 
 - **Size:** M
 - **Status:** NOT STARTED
-- **Prerequisites:** P02-005, A01-004
-- **Description:** Specify the workspace layout with exactly two crates at `crates/sendust-core/src` and `crates/sendust-napi/src`, plus `ts/src` and `tests/`. Define root workspace membership, a stable Rust toolchain at or above 1.88 (required by napi 3.16.2), shared lint/format configuration, and crate responsibilities. Core must compile without Node headers or napi dependencies; napi depends on core and the binding toolkit. Include placeholder module trees that reflect architecture boundaries without implementing product logic.
+- **Prerequisites:** P02-005, A01-004, A02-003
+- **Description:** Specify the workspace layout with exactly two crates at `crates/sendust-core/src` and `crates/sendust-napi/src`, plus `ts/src` and `tests/`. Define root workspace membership, the exact Rust toolchain `1.100.0` and MSRV `1.88.0` from the [toolchain baseline](../engineering/toolchain-baseline.md), shared lint/format configuration, and crate responsibilities. Core must compile without Node headers or napi dependencies; napi depends on core and the binding toolkit. Include placeholder module trees that reflect architecture boundaries without implementing product logic.
 - **Evidence criteria:** Layout tree matches the proposed paths exactly and contains no third Rust crate. Core manifest has no napi/Node dependency; napi manifest depends on core. A documented check fails if a reverse dependency or extra crate appears. `cargo metadata` and package discovery are part of the acceptance evidence.
 
 ### P03-002 — Define dependency pinning, feature, and license policy
@@ -35,8 +35,8 @@ In scope: workspace layout, crate manifests, `ts/src` package skeleton, test dir
 - **Size:** M
 - **Status:** NOT STARTED
 - **Prerequisites:** P03-001
-- **Description:** Define the canonical commands for Rust formatting, clippy, core unit tests, binding compilation tests, TypeScript type-check, lint, and test. Specify that core tests run as Rust unit tests without Node linking. Define fail-fast ordering and CI expectations, including a guard that core commands never require a Node runtime. Do not invent commands outside the chosen toolchain; record them for validation when implementation begins.
-- **Evidence criteria:** Command matrix maps each concern to a command, working directory, and expected exit condition. A core-only job proves no Node linkage. TypeScript and napi checks are separate. The matrix is referenced by every later task’s evidence requirements.
+- **Description:** Implement the exact command matrix in the [toolchain baseline](../engineering/toolchain-baseline.md): Rust fmt/clippy/core-only tests/binding checks; npm install; Biome lint; TypeScript strict typecheck; Vitest; and direct Node.js/Bun/Deno smoke entry points. Use the pinned exact tool versions and one root npm lockfile. Specify fail-fast ordering and CI expectations, including a guard that core commands never require a Node runtime.
+- **Evidence criteria:** Every command in the toolchain baseline exists as a script or executable entry point, has a defined working directory and expected exit code, and runs in CI with exact pinned tool versions. The architecture checker rejects extra Rust crates, reverse dependencies, and runtime-specific policy in core. The documentation checker validates links, IDs, phase/task counts, registry-to-phase task parity, gate indexes, and toolchain pin references. A core-only job proves no Node linkage. TypeScript and napi checks are separate. The matrix is referenced by every later task’s evidence requirements.
 
 ### P03-004 — Scaffold deterministic fake SMTP and TLS test harness seams
 
@@ -60,7 +60,7 @@ The repository is a Rust workspace plus a TypeScript package. Proposed paths are
 
 ## Dependencies
 
-Phase 03 requires Phase 02 approval and A01-004. P03-001 depends on P02-005 and A01-004; P03-002 depends on P03-001 and P01-002; P03-003 and P03-004 depend on P03-001; P03-005 depends on all repository tasks. Phase 04 requires P03-005.
+Phase 03 requires Phase 02 approval, A01-004, and A02-003. P03-001 depends on P02-005, A01-004, and A02-003; P03-002 depends on P03-001 and P01-002; P03-003 and P03-004 depend on P03-001; P03-005 depends on all repository tasks. Phase 04 requires P03-005.
 
 ## Risks and edge cases
 

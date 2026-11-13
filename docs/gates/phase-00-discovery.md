@@ -8,7 +8,7 @@
 | Check | Result | Evidence |
 | --- | --- | --- |
 | Problem statement | PASS | [Discovery brief](../discovery/brief.md) |
-| Constraint ledger | PASS | [Constraint ledger](../discovery/constraint-ledger.md), C-01 through C-30 mapped |
+| Constraint ledger | PASS | [Constraint ledger](../discovery/constraint-ledger.md), C-01 through C-30 mapped at the original discovery baseline; C-31 through C-40 were added by approved amendments A01/A02 |
 | Provenance | PASS | [Dependency research](../engineering/dependency-research.md), [lettre source validation](../research/lettre-0.11.23-validation.md) |
 | Threat boundary | PASS | [Threat model](../discovery/threat-model.md), 14 abuse cases |
 | Handoff | PASS | [P01 research gate](phase-01-research.md) |

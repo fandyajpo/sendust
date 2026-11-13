@@ -4,7 +4,7 @@
 **Source of truth:** [requirements.md](../product/requirements.md)  
 **Date:** 2026-11-13
 
-This ledger maps every authoritative constraint C-01 through C-36 to its architecture decision, enforcement work, and evidence. “Source-reviewed” means API/source documentation was inspected; it does not mean the future implementation has passed tests.
+This ledger maps every authoritative constraint C-01 through C-40 to its architecture decision, enforcement work, and evidence. “Source-reviewed” means API/source documentation was inspected; it does not mean the future implementation has passed tests.
 
 | ID | Constraint summary | Decision / ADR | Enforcement and evidence | Audit status |
 | --- | --- | --- | --- | --- |
@@ -24,7 +24,7 @@ This ledger maps every authoritative constraint C-01 through C-36 to its archite
 | C-14 | ASCII local parts, IDNA domains, Unicode display/body | ADR-0010 (policy boundary) | P04-002, P07-001/004; address/MIME tests | Policy defined; implementation tests remain |
 | C-15 | Relay acceptance only; no delivery claim; unknown is not retried | ADR-0005/0013 | P02-002, P06-004, P09-002; SMTP traces | Semantics source-reviewed |
 | C-16 | No pool, retries, queue, worker, scheduler, persistence, adapter | ADR-0006 | P02-003, P09-004; API and source audits | Confirmed product boundary |
-| C-17 | AbortSignal optional; bounded close required | ADR-0006 | P02-003, P09-004, P18-002; lifecycle tests | Architecture defined |
+| C-17 | No public AbortSignal in MVP; internal bounded close cancellation is required | ADR-0006 | P02-003, P09-004, P18-002; lifecycle tests | Architecture defined |
 | C-18 | Per-recipient RCPT visibility | ADR-0005 | P01-003, P02-002, P06-003, P09-002; mixed-RCPT trace | Public API source-reviewed; fake-relay test remains |
 | C-19 | Redact credentials, body, attachment bytes, absolute paths | ADR-0013/0014 | P02-002, P09-003, P11-004; marker scans | Policy defined |
 | C-20 | Stable machine-readable errors; no panic across FFI | ADR-0013 | P02-002, P04-001, P05-004, P09-003; golden tests | Contract defined |

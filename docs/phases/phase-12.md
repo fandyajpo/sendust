@@ -10,7 +10,7 @@ Prove the integrated MVP through traceable test coverage, deterministic fault fi
 
 ## Scope
 
-In scope: test plan and traceability, core unit/integration coverage, binding and TypeScript contract tests, fault/fixture completeness, candidate Node matrix, regression triage, and QA exit evidence. Out of scope: performance benchmarking (Phase 13), packaging (Phase 14), release publication (Phase 16), and adding new product behavior.
+In scope: test plan and traceability, core unit/integration coverage, binding and TypeScript contract tests, fault/fixture completeness, required Node.js/Bun/Deno runtime matrix, regression triage, and QA exit evidence. Out of scope: performance benchmarking (Phase 13), packaging (Phase 14), release publication (Phase 16), and adding new product behavior.
 
 ## Tasks
 
@@ -35,8 +35,8 @@ In scope: test plan and traceability, core unit/integration coverage, binding an
 - **Size:** L
 - **Status:** NOT STARTED
 - **Prerequisites:** P12-001, P09-005
-- **Description:** Validate the public API with strict type tests and runtime tests: accepted/rejected/unknown recipient outcomes/BUSY, error classes and codes, redaction, close idempotence, send-after-close, concurrent send, attachment opt-in, and no-retry transaction counts. Include candidate Node 22/24/26 where available.
-- **Evidence criteria:** Type tests fail on contract-breaking changes. Runtime matrix passes for all statuses and errors. BUSY and unknown tests assert transaction counts. Redaction scans pass. Unsupported Node candidates are documented, not silently skipped.
+- **Description:** Validate the public API with strict type tests and runtime tests: accepted/rejected/unknown recipient outcomes/BUSY, error classes and codes, redaction, close idempotence, send-after-close, concurrent send, attachment opt-in, and no-retry transaction counts. Include all exact runtime pins from the [toolchain baseline](../engineering/toolchain-baseline.md).
+- **Evidence criteria:** Type tests fail on contract-breaking changes. Runtime matrix passes for all statuses and errors. BUSY and unknown tests assert transaction counts. Redaction scans pass. Unsupported runtime candidates are documented, not silently skipped.
 
 ### P12-004 — Run fixture completeness and regression triage
 
@@ -56,7 +56,7 @@ In scope: test plan and traceability, core unit/integration coverage, binding an
 
 ## Technical implementation details
 
-QA validates the frozen architecture without changing it: two crates, core without Node, `TS -> napi -> core -> lettre`, `lettre 0.11.23`, rustls `ring`/`webpki-roots` with verification always on. Success is relay acceptance; explicit negative final DATA replies are `rejected`; genuinely missing/indeterminate final replies after DATA are `unknown`, with no retry. One active send returns `BUSY`; no queue or pooling. Close is explicit, bounded by 125s, and not GC-dependent. Timeouts are connect 10s, operation 30s, total 120s. Caps are 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. Filesystem attachments are opt-in and regular-file only; no URLs. Buffers are copied before async. Tests use loopback fake SMTP/TLS only. Candidate Node 22/24/26 are validated, not assumed.
+QA validates the frozen architecture without changing it: two crates, core without Node, `TS -> napi -> core -> lettre`, `lettre 0.11.23`, rustls `ring`/`webpki-roots` with verification always on. Success is relay acceptance; explicit negative final DATA replies are `rejected`; genuinely missing/indeterminate final replies after DATA are `unknown`, with no retry. One active send returns `BUSY`; no queue or pooling. Close is explicit, bounded by 125s, and not GC-dependent. Timeouts are connect 10s, operation 30s, total 120s. Caps are 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. Filesystem attachments are opt-in and regular-file only; no URLs. Buffers are copied before async. Tests use loopback fake SMTP/TLS only. Exact Node.js/Bun/Deno runtime pins are validated, not assumed.
 
 ## Dependencies
 
@@ -64,7 +64,7 @@ Phase 12 requires Phase 11. P12-001 depends on P11-005; P12-002 depends on P12-0
 
 ## Risks and edge cases
 
-Coverage can be high while critical branches remain untested; traceability must target semantics. Flaky timing tests can hide races. Candidate Node versions may be unavailable; absence must be explicit. Fixture gaps around mixed RCPT and post-DATA ambiguity are especially dangerous. A green suite can still miss resource leaks without repeated runs.
+Coverage can be high while critical branches remain untested; traceability must target semantics. Flaky timing tests can hide races. Pinned runtime versions may be unavailable on a runner; absence must be explicit. Fixture gaps around mixed RCPT and post-DATA ambiguity are especially dangerous. A green suite can still miss resource leaks without repeated runs.
 
 ## Testing requirements
 
@@ -74,7 +74,7 @@ Run Rust core tests, napi binding tests, and TypeScript contract/runtime tests. 
 
 - Every mandatory requirement maps to a passing automated test or accepted manual evidence.
 - Core, binding, and TypeScript suites pass with exact semantic assertions.
-- Candidate Node results are recorded honestly.
+- Runtime results are recorded honestly.
 - Fixture catalog is complete and deterministic; repeated runs are stable.
 - No high-severity defect or contract deviation remains.
 

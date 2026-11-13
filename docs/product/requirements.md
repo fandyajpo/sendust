@@ -52,7 +52,7 @@ Enforced by P01-004, P05-001, P14-002.
 
 ### C-06 — Node.js support claims
 
-Node.js 22, 24, and 26 are **test candidates**, not support claims. Only versions with blocking CI runtime tests may be declared supported. Every claim MUST name exact tested versions.
+The exact Node.js, Bun, and Deno versions in the [toolchain baseline](../engineering/toolchain-baseline.md) are **test candidates**, not support claims. Only exact runtime/platform combinations with blocking CI tests may be declared supported.
 
 Enforced by P01-004, P14-004, P15-001.
 
@@ -126,7 +126,7 @@ Enforced by P02-003, P09-004, and the product-scope review.
 
 ### C-17 — Cancellation
 
-AbortSignal support is optional and MUST NOT be required for MVP. Bounded close and timeout budgets are required. Any later AbortSignal implementation MUST map onto the same bounded-close semantics and MUST NOT introduce a second cancellation path.
+The public MVP API MUST NOT expose AbortSignal. Internal close cancellation and finite timeout budgets are required. A future public AbortSignal feature may be considered post-MVP only; it MUST map onto the same bounded-close semantics and MUST NOT introduce a second cancellation path.
 
 Enforced by P02-003, P09-004, P18-002.
 
@@ -308,24 +308,24 @@ Enforced by P00-001 and P15-005.
 ## 5. Compatibility targets
 
 - **Rust:** stable toolchain; minimum recorded in `rust-toolchain.toml` at P03-001; must satisfy napi-rs CLI requirements (Rust 1.88+ observed).
-- **Node.js build tooling:** current supported CLI range (Node 22.13+ or 24+ recommended by napi-rs docs observed 2026-11-13).
-- **Runtime candidates:** Node.js 22, 24, 26. Support is declared only after P01-004 and P14-004.
+- **Build tooling:** exact Node.js/Bun/Deno and npm versions are pinned in the [toolchain baseline](../engineering/toolchain-baseline.md). The Node.js candidates satisfy the observed napi-rs CLI minimum; runtime support still requires Sendust blocking tests.
+- **Runtime candidates:** exact Node.js, Bun, and Deno pins from the [toolchain baseline](../engineering/toolchain-baseline.md). Support is declared only after P05-003 and P14-004.
 - **Node-API:** level 8 proposed.
 - **Platforms:** macOS arm64/x64, Linux x64/arm64 glibc, Linux x64/arm64 musl, Windows x64 MSVC proposed. Each target must be built and runtime-tested before being claimed.
 - **Module systems:** ESM and CommonJS.
-- **Package managers:** npm consumer contract; pnpm workspace proposed.
+- **Package managers:** npm only; one root npm workspace and one committed `package-lock.json`, as defined by the toolchain baseline. pnpm, yarn, and Bun lockfiles are not used.
 
-## 6. Open questions
+## 6. Research decisions and downstream validation questions
 
-| ID | Question | Owner | Blocks |
-| --- | --- | --- | --- |
-| OQ-01 | Does lettre expose per-recipient RCPT status through a lower-level async API? | P01-003 | P06-003, P09-002 |
-| OQ-02 | Which timeout stages are directly observable? | P01-003 | P02-003, P10-002 |
-| OQ-03 | Which rustls feature set composes with lettre 0.11.23? | P01-002 | P03-002, P06-002 |
-| OQ-04 | Does the napi-managed Tokio runtime satisfy lettre on Node 22/24/26? | P01-004 | P05-003 |
-| OQ-05 | Which Node-API level do the selected napi features require? | P01-004 | P05-001 |
-| OQ-06 | Which targets can be built and runtime-tested in CI? | P14-003 | P14-004, P15-001 |
-| OQ-07 | What performance budget is defensible? | P13-001 | P13-005 |
+| ID | Question / proof | Research/design status | Remaining owner | Blocks |
+| --- | --- | --- | --- | --- |
+| OQ-01 | Can lettre expose individual RCPT outcomes? | RESOLVED by P01 source review; selected lower-level async API | P06-003, P09-002 executable proof | P06-003, P09-002 |
+| OQ-02 | Which timeout stages are observable? | RESOLVED at coarse public-operation boundaries; no socket read/write attribution | P10-002 executable proof | P10-002 |
+| OQ-03 | Which rustls feature set composes with lettre 0.11.23? | SOURCE-REVIEWED; exact feature graph selected | P03-002 compile/tree proof; P06-002 TLS proof | P03-002, P06-002 |
+| OQ-04 | Does napi-managed Tokio satisfy lettre? | DESIGN SELECTED; runtime behavior not yet executed | P05-003 and P14-004 on Node.js, Bun, Deno | P05-003, P14-004 |
+| OQ-05 | Which Node-API level is required by selected napi features? | RESOLVED by pinned napi source review: Node-API 8 explicitly enabled | P05-001 compile/ABI proof | P05-001 |
+| OQ-06 | Which exact runtime × OS × CPU × ABI/libc targets pass CI? | OPEN; candidates only | P03-001 pinning; P14-003/P14-004 validation | P14-004, P15-001 |
+| OQ-07 | What performance budget is defensible? | OPEN | P13-001 | P13-005 |
 
 ## 7. Traceability
 

@@ -41,9 +41,9 @@ A target is **claimed** only when P14-004 builds it, installs it in a clean cons
 ## 3. Node.js support
 
 - Node-API level: 8 proposed.
-- Runtime candidates: Node.js 22, 24, 26.
-- Only versions with a blocking CI runtime test are claimed.
-- Node 26 is optional for MVP because of pre-release risk.
+- Exact Node.js, Bun, and Deno runtime candidates are listed in [the toolchain baseline](toolchain-baseline.md).
+- Only exact runtime versions with a blocking CI runtime test are claimed.
+- Node.js 26.13.1 is a required LTS candidate in the toolchain baseline; it is not a support claim until Sendust blocking CI passes.
 - Node.js, Bun, and Deno are required MVP runtime targets under ADR-0015. Each exact runtime/platform combination is unclaimed until Sendust blocking CI proves clean installation, addon loading, and behavior. Deno requires local node_modules and explicit --allow-ffi.
 
 ## 4. Build requirements
@@ -136,7 +136,7 @@ Publication is not atomic. If a platform package fails after others are publishe
 | Windows MSVC runtime | Document required runtime; test clean Windows install |
 | Wrong binary selection | Loader diagnostics and negative tests |
 | Emulated tests | Do not claim a target tested only under emulation unless explicitly labeled |
-| Node version drift | Test oldest and newest claimed versions |
+| Runtime version drift | Test every exact pinned runtime version |
 
 ## 10. Runtime × platform support policy
 
@@ -149,7 +149,7 @@ Every claimed combination requires clean consumer install, correct binary select
 The published support table must state:
 
 - Node-API level.
-- Tested Node.js versions.
+- Tested Node.js, Bun, and Deno versions.
 - OS/CPU/libc matrix.
 - Minimum OS or glibc floor.
 - Which targets are blocking in CI.

@@ -2,7 +2,7 @@
 
 **Status:** research/design complete; no native runtime probe executed  
 **Research date:** 2026-11-13  
-**Decision:** Pin napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0. Explicitly enable napi8 and async on the napi crate; Node-API 8 and napi-rs managed Tokio 1 are the approved design baseline. Node 22/24/26 remain candidates, not support claims.
+**Decision:** Pin napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0. Explicitly enable napi8 and async on the napi crate; Node-API 8 and napi-rs managed Tokio 1 are the approved design baseline. Exact Node.js, Bun, and Deno CI candidates are pinned in [the toolchain baseline](../engineering/toolchain-baseline.md); they are not support claims.
 
 ## 1. Source facts
 
@@ -25,10 +25,11 @@ Sources:
 
 | Runtime | Build candidate | Runtime tested in this audit | Support claim |
 | --- | --- | --- | --- |
-| Node 22 | Yes; Node 22.13+ is within observed CLI compatibility range | No native addon test; audit shell has Node 22.16.0 but no Rust toolchain | Not supported/claimed yet |
-| Node 24 | Yes | No | Not supported/claimed yet |
-| Node 26 | Candidate only; validate release maturity at implementation time | No | Not supported/claimed yet |
-| Bun / Deno | Not in MVP matrix | No | Unsupported / unclaimed |
+| Node.js 22.23.5 | Required candidate; meets napi-rs CLI minimum | No Sendust native-addon test | Not supported/claimed yet |
+| Node.js 24.22.3 | Required candidate | No Sendust native-addon test | Not supported/claimed yet |
+| Node.js 26.13.1 | Required candidate; Active LTS on baseline date | No Sendust native-addon test | Not supported/claimed yet |
+| Bun 1.4.4 | Required MVP target under ADR-0015 | No Sendust native-addon test | Not supported/claimed yet |
+| Deno 2.9.8 | Required MVP target under ADR-0015 | No Sendust native-addon test | Not supported/claimed yet |
 
 Node-API 8 is the chosen ABI target. It must be confirmed against the exact napi-rs features at P05-001 and compiled/tested at P05-003/P14-004.
 
@@ -69,16 +70,16 @@ No second Tokio runtime may be constructed. The Rust core has no Node/N-API depe
 | Forced GC | Drop JS references and force GC during send | In-flight operation remains valid; GC does not close transport |
 | No explicit close | Drop transport and allow process shutdown | No finalizer-dependent correctness; no permanent event-loop hang |
 | Process exit | Terminate child process while send is active | No unbounded shutdown; socket/task cleanup is bounded |
-| Candidate matrix | Run all tests on Node 22, 24, 26 where available | Only passing, blocking-CI targets may be claimed supported |
+| Candidate matrix | Run all tests on exact Node.js, Bun, and Deno versions from the toolchain baseline | Only passing, blocking-CI targets may be claimed supported |
 
 ## 6. Acceptance rule
 
-A runtime is supported only after the native addon builds and all blocking tests pass on that exact Node version and platform. Node-API compatibility alone is insufficient. Until then, Node 22/24/26 are candidates only.
+A runtime/platform combination is supported only after the native addon builds, clean installation succeeds, and all blocking Sendust tests pass for that exact runtime version and platform. Node-API compatibility alone is insufficient. Exact Node.js, Bun, and Deno versions from the toolchain baseline remain candidates until blocking CI passes.
 
 ## 7. Multi-runtime amendment
 
-The original Node-only scope is extended by [multi-runtime compatibility research](multi-runtime-compatibility.md) and ADR-0015. Node.js, Bun, and Deno are required MVP targets. Node-specific probes remain necessary but are no longer sufficient.
+The original Node-focused research scope is extended by [multi-runtime compatibility research](multi-runtime-compatibility.md) and ADR-0015. Node.js, Bun, and Deno are required MVP targets. Node-specific probes remain necessary but are no longer sufficient.
 
-P05/P14 MUST run the full Sendust behavioral suite on exact pinned Node.js, Bun, and Deno versions. Deno additionally requires a clean consumer using local node_modules and --allow-ffi. Bun and Deno support MUST NOT be inferred from Node-API ABI compatibility or NAPI-RS upstream CI.
+P03 MUST apply the exact stable versions in the toolchain baseline to CI; version changes require a baseline update. P05/P14 MUST run the full Sendust behavioral suite on those exact pinned versions. Deno additionally requires a clean consumer using local node_modules and --allow-ffi. Bun and Deno support MUST NOT be inferred from Node-API ABI compatibility or NAPI-RS upstream CI.
 
 No Sendust native addon was executed on Bun or Deno during research. Runtime support claims remain unvalidated until blocking Sendust CI passes.

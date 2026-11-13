@@ -43,8 +43,8 @@ In scope: pinned-source and documentation inspection, minimal reproducible probe
 - **Size:** M
 - **Status:** COMPLETED
 - **Prerequisites:** P00-005
-- **Description:** Research napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0 source plus Node-API 8 ABI/runtime behavior for candidate Node 22, 24, and 26. Verify napi8 and async are explicit features because napi defaults to napi4. Record that the candidate versions are not support claims, and define a probe plan for async scheduling, owned Buffer conversion, explicit close, forced GC, process shutdown, and deadline-bounded drain. Do not claim runtime compatibility without a native CI run.
-- **Evidence criteria:** [Node runtime validation plan](../research/node-runtime-validation-plan.md) lists Node 22/24/26 as candidates only, with no runtime probe claimed. It specifies explicit close, missing close, forced GC, process exit during send, Buffer mutation/detachment, and close deadlines. Tokio 1 is recorded as napi-managed; no custom runtime ownership is introduced.
+- **Description:** Research napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0 source plus Node-API 8 ABI/runtime behavior for candidate Node.js 22.23.5, 24.22.3, and 26.13.1. Verify napi8 and async are explicit features because napi defaults to napi4. Record that the candidate versions are not support claims, and define a probe plan for async scheduling, owned Buffer conversion, explicit close, forced GC, process shutdown, and deadline-bounded drain. Do not claim runtime compatibility without a native CI run.
+- **Evidence criteria:** [Node runtime validation plan](../research/node-runtime-validation-plan.md) lists exact Node.js, Bun, and Deno versions from the toolchain baseline as candidates only, with no runtime probe claimed. It specifies explicit close, missing close, forced GC, process exit during send, Buffer mutation/detachment, and close deadlines. Tokio 1 is recorded as napi-managed; no custom runtime ownership is introduced.
 
 ### P01-005 — Research decision gate and ADR handoff
 
@@ -66,7 +66,7 @@ Phase 01 requires Phase 00 approval. P01-001 and P01-004 depend on P00-005; P01-
 
 - Documentation may describe a higher-level API that hides partial RCPT status; assuming otherwise would create a false contract.
 - Cargo feature names may differ from marketing names or conflict with provider selection.
-- Node 26 may be pre-release; it remains a candidate until lifecycle evidence exists.
+- Node.js 26.13.1 is an LTS candidate on the baseline date; it remains unsupported until lifecycle evidence exists.
 - Async task completion after close can mask leaks if drain evidence only checks process exit.
 - A lower-level connection API may expose more control but increase maintenance and custom-protocol risk; choosing it requires an explicit justification, not convenience.
 - Timeout stages may be only indirectly inferable; tests must not claim exact-stage attribution without evidence.
@@ -89,7 +89,7 @@ Each probe records the exact API boundary exercised and whether stage attributio
 - Every mandatory uncertainty has an ADR decision or a named architecture deadline.
 - TLS features are proven or replaced without weakening verification.
 - Recipient-outcome behavior is decided using lower-level API evidence.
-- Node 22/24/26 remain candidates unless lifecycle evidence supports stronger wording.
+- Exact runtime pins remain candidates unless lifecycle evidence supports stronger wording.
 - The architecture phase receives no unstated assumption about exact stage introspection, per-recipient status, or custom SMTP.
 
 ## Deliverables

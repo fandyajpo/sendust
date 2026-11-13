@@ -40,7 +40,7 @@ The TypeScript wrapper is the only public package surface. It exposes createTran
 | Resource caps | 100 recipients; 10 MiB per attachment; 20 MiB raw aggregate; 30 MiB wire | ADR-0009 | P04-003, P08-003, P13-003 |
 | MIME | Core owns structure/policy/serialization; vetted primitives may encode individual values | ADR-0010 | P07-001–P07-005 |
 | Distribution | Root npm package plus per-platform optional packages; no consumer Rust toolchain or postinstall download | ADR-0011 | P14-002–P14-004 |
-| Module formats | ESM and CommonJS via one shared implementation; exact layout finalized in distribution phase | ADR-0012 (proposed) | P14-002, P14-004 |
+| Module formats | ESM and CommonJS via one shared implementation; exact layout finalized in distribution phase | ADR-0012 (accepted design baseline; packaging validation P14) | P14-002, P14-004 |
 | Attachments | Filesystem access opt-in; bounded regular files only; no URL/stream attachment | ADR-0014 | P08-001–P08-005, P11-003 |
 
 ## 3. SMTP state and recipient matrix
@@ -83,7 +83,7 @@ No queue, worker, scheduler, persistence, queue adapter, automatic retry, backof
 | SMTP protocol behavior | Scripted loopback relay for RCPT mix, DATA 354, final 250/451, dropped final reply | P03-004, P06-003, P06-004 |
 | TLS | Five negative certificate fixtures; mandatory hostname/chain verification | P06-002, P11-002 |
 | Native memory | Buffer mutation/detachment test; owned-copy audit | P05-002, P11-004 |
-| Node lifecycle | Node 22/24/26 candidate matrix; forced GC, explicit close, process exit | P05-003, P14-004 |
+| Runtime lifecycle | Exact Node.js/Bun/Deno versions from the toolchain baseline; forced GC where supported, explicit close, process exit | P05-003, P14-004 |
 | Timeout behavior | Injected-clock tests for all budgets and coarse boundaries | P10-002 |
 | File safety | Open-then-fstat, no-follow where supported, file-type and growth fixtures | P08-002, P11-003 |
 | MIME | Independent parser conformance and wire-size parity | P07-005 |

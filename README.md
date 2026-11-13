@@ -12,7 +12,6 @@ Sendust is an embeddable library, not an SMTP server, hosted email service, mail
 - Native Rust core; thin Node-API adapter; runtime-neutral TypeScript public API.
 - Modular monolith inside exactly two Rust crates, with strict internal module boundaries.
 - Node.js, Bun, and Deno are required MVP runtime targets, subject to Sendust-owned blocking CI.
-- Node.js, Bun, and Deno are required MVP runtime targets, subject to Sendust-owned blocking CI.
 - Server platform support is limited to explicitly tested OS/CPU/ABI combinations.
 - One message per `send()` call and one active send per transport.
 - Explicit, bounded lifecycle and resource limits.
@@ -22,7 +21,7 @@ Sendust is an embeddable library, not an SMTP server, hosted email service, mail
 
 ## Documentation
 
-The product definition, requirements, architecture, ADRs, engineering policies, phase plans, and quality gates live in [docs/README.md](docs/README.md).
+The product definition, requirements, architecture, ADRs, engineering policies, phase plans, and quality gates live in [docs/README.md](docs/README.md). All coding agents and contributors must follow [AGENTS.md](AGENTS.md) and the [AI implementation contract](docs/engineering/ai-implementation-contract.md). Exact runtime/tool versions and validation commands are defined in the [toolchain baseline](docs/engineering/toolchain-baseline.md). The repository-wide static documentation findings are recorded in the [documentation audit](docs/audits/2026-11-13-documentation-audit.md).
 
 ## Project status
 

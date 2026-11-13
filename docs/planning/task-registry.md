@@ -1,6 +1,6 @@
 # Master Task Registry
 
-**Authoritative task detail lives in the phase plans.** This registry indexes all 95 phase tasks plus 4 architecture-amendment tasks and their prerequisites so the project can be tracked centrally. It does not restate acceptance criteria or implementation detail.
+**Authoritative task detail lives in the phase plans.** This registry indexes all 95 phase tasks plus 7 architecture-amendment tasks and their prerequisites so the project can be tracked centrally. It does not restate acceptance criteria or implementation detail.
 
 - Total phases: 19
 - Phase tasks: 95
@@ -10,6 +10,15 @@
 - P00–P02 tasks are `COMPLETED` with approved gate evidence; P03–P18 remain `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
 - Effort is relative: S, M, L, XL. No delivery dates.
 - Gate tasks are the final task in each phase and must not be marked complete before their phase evidence exists.
+
+## Architecture Amendment A01 tasks
+
+| Task | Title | Prerequisites | Status |
+| --- | --- | --- | --- |
+| A01-001 | Record official runtime compatibility evidence | P01-004 | COMPLETED |
+| A01-002 | Freeze multi-runtime/platform design | A01-001 | COMPLETED |
+| A01-003 | Reconcile requirements, phases, CI, distribution and release docs | A01-001, A01-002 | COMPLETED |
+| A01-004 | Amendment gate review | A01-001, A01-002, A01-003 | COMPLETED |
 
 ## Architecture Amendment A02 tasks
 

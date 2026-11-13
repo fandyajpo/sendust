@@ -19,7 +19,7 @@ In scope: intended users and jobs, relay-accepted semantics, MVP exclusions, all
 - **Size:** S
 - **Status:** COMPLETED
 - **Prerequisites:** None
-- **Description:** Write a one-page discovery brief that names the primary consumer (a Node service sending transactional mail through a configured SMTP relay), the minimum job to be done, and explicit non-goals. Define “send success” as relay acceptance, not mailbox delivery. Record that MVP has no pooling, no automatic retries, no per-recipient independent messages, no SMTPUTF8, no URL attachment fetching, and no requirement for AbortSignal. Distinguish display names/body Unicode from ASCII local parts and IDNA domains.
+- **Description:** Write a one-page discovery brief that names the primary consumer (a server-side JavaScript application on Node.js, Bun, or Deno sending transactional mail through a configured SMTP relay), the minimum job to be done, and explicit non-goals. Define “send success” as relay acceptance, not mailbox delivery. Record that MVP has no pooling, no automatic retries, no per-recipient independent messages, no SMTPUTF8, no URL attachment fetching, and no public AbortSignal option. Distinguish display names/body Unicode from ASCII local parts and IDNA domains.
 - **Evidence criteria:** Brief contains a falsifiable success sentence, at least three user scenarios, an explicit non-goals list, and a reviewer sign-off. Every excluded capability maps to either “post-MVP” or “rejected permanently.”
 
 ### P00-002 — Build the authoritative constraint ledger and open-question register
@@ -35,8 +35,8 @@ In scope: intended users and jobs, relay-accepted semantics, MVP exclusions, all
 - **Size:** S
 - **Status:** COMPLETED
 - **Prerequisites:** P00-001
-- **Description:** Create a provenance table for `lettre 0.11.23`, Tokio 1, Node-API 8, and candidate Node 22/24/26 runtimes. Record where each version was observed, whether it is pinned or merely proposed, and which claims still require validation. Do not assume a high-level SMTP transport exposes recipient-level status or exact stage timings; the source/API report records the lower-level API evidence and coarse-stage limits.
-- **Evidence criteria:** Every version claim has a source artifact, tag, lockfile entry, or explicit “candidate” label. No “latest” assumptions. The table calls out that Node 22/24/26 are test candidates, not guaranteed support declarations.
+- **Description:** Create a provenance table for `lettre 0.11.23`, Tokio 1, Node-API 8, and exact Node.js/Bun/Deno runtime candidates from the [toolchain baseline](../engineering/toolchain-baseline.md). Record where each version was observed, whether it is pinned or merely proposed, and which claims still require validation. Do not assume a high-level SMTP transport exposes recipient-level status or exact stage timings; the source/API report records the lower-level API evidence and coarse-stage limits.
+- **Evidence criteria:** Every version claim has a source artifact, tag, lockfile entry, or explicit “candidate” label. No “latest” assumptions. The table calls out the exact pinned Node.js/Bun/Deno versions as test candidates, not guaranteed support declarations.
 
 ### P00-004 — Define the threat, operational, and test-environment boundaries
 
@@ -69,7 +69,7 @@ Discovery is document-driven. The ledger is the canonical source for later accep
 - JS-owned Buffer data is copied before async work; no borrowed JS memory crosses the async boundary. File attachments are opt-in, bounded regular files only, with filesystem access disabled by default and no URL support.
 - Default hard caps: 100 recipients; 10 MiB per attachment; 20 MiB aggregate raw attachment bytes; 30 MiB wire message. Caps are documented and hard, not advisory.
 - Envelope local parts are ASCII; domains use IDNA; display names and bodies may be Unicode. SMTPUTF8 is post-MVP.
-- AbortSignal is optional and not required for MVP; close plus deadlines are required.
+- The public MVP API does not expose AbortSignal; explicit close plus deadlines are required.
 
 ## Dependencies
 
@@ -78,7 +78,7 @@ No phase prerequisites. P00-001 has no prerequisite; P00-002 and P00-003 depend 
 ## Risks and edge cases
 
 - Misreading “accepted” as “delivered” would corrupt API contracts and tests.
-- Treating candidate Node versions as supported before lifecycle testing would create false compatibility claims.
+- Treating candidate runtime versions as supported before lifecycle testing would create false compatibility claims.
 - Hiding the recipient partial-failure uncertainty would force unsafe promises later.
 - Omitting a constraint from the ledger would let implementation or documentation omit it.
 - Assuming TLS feature names instead of validating them could produce an unbuildable dependency set.

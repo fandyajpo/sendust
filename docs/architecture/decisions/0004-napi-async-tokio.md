@@ -39,7 +39,7 @@ Pin napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0 for the initial impleme
 ## Evidence required
 
 - `napi` feature flags and Node-API level recorded in the manifest.
-- Lifecycle tests on candidate Node 22/24/26: active send, forced GC, explicit close, process exit, close deadline.
+- Lifecycle tests on the exact Node.js, Bun, and Deno versions in the [toolchain baseline](../../engineering/toolchain-baseline.md): active send, forced GC where supported, explicit close, process exit, close deadline.
 - A test proving no second runtime is created.
 - TypeScript declarations generated and type-checked.
 

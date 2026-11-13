@@ -21,8 +21,8 @@ Sendust is inspired by Nodemailerâ€™s developer experience. It is **not** a clon
 
 | Persona | Context | What they need |
 | --- | --- | --- |
-| Backend application developer | Node.js service sending password resets, receipts, notifications through a configured relay | A small API, TypeScript types, reliable behavior, no native build step |
-| Platform engineer | Operates the relay and the Node fleet | Predictable TLS/auth behavior, bounded memory, explicit shutdown, no hidden retries |
+| Backend application developer | Node.js, Bun, or Deno service sending password resets, receipts, notifications through a configured relay | A small API, TypeScript types, reliable behavior, no native build step |
+| Platform engineer | Operates the relay and the Node.js/Bun/Deno server fleet | Predictable TLS/auth behavior, bounded memory, explicit shutdown, no hidden retries |
 | Library maintainer | Publishes the npm package | A testable Rust core, deterministic packaging, a support matrix that matches CI |
 | Security reviewer | Reviews dependencies and data flow | No credential leakage, no verification bypass, bounded input handling |
 
@@ -54,7 +54,7 @@ Non-personas for MVP: marketing operators, campaign managers, mailbox hosting ad
 
 ### Post-MVP candidates
 
-Connection pooling, carefully scoped retry research, SMTPUTF8, AbortSignal-based cancellation, streaming attachments, additional transports, DKIM, and observability hooks may be evaluated separately. Queue/job orchestration and queue adapters are **held outside the current product roadmap**: no API, adapter contract, persistence model, worker, or implementation is being designed. See [MVP scope](mvp-scope.md) and the [feature matrix](../planning/feature-matrix.md).
+Connection pooling, carefully scoped retry research, SMTPUTF8, public AbortSignal cancellation, streaming attachments, additional transports, DKIM, and observability hooks may be evaluated separately. Queue/job orchestration and queue adapters are **held outside the current product roadmap**: no API, adapter contract, persistence model, worker, or implementation is being designed. See [MVP scope](mvp-scope.md) and the [feature matrix](../planning/feature-matrix.md).
 
 ### Explicit non-goals
 
@@ -88,6 +88,3 @@ Sendust competes on correctness, predictability, and a small supported surface â
 Node.js, Bun, and Deno are required MVP runtime targets under [ADR-0015](../architecture/decisions/0015-multi-runtime-support.md). This is a product target, not a current compatibility claim. Every runtime/platform combination must pass Sendust-owned blocking CI before it is listed as supported. Deno requires local node_modules and explicit FFI permission.
 
 
-### Runtime support
-
-Node.js, Bun, and Deno are required MVP runtime targets under [ADR-0015](../architecture/decisions/0015-multi-runtime-support.md). This is a product target, not a current compatibility claim. Every runtime/platform combination must pass Sendust-owned blocking CI before it is listed as supported. Deno requires local node_modules and explicit FFI permission.

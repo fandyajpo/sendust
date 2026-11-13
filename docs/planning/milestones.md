@@ -49,7 +49,7 @@ Milestones are evidence checkpoints, not calendar dates. A milestone is reached 
 - A Node test can create a transport, call an async function, receive a stable error, and close.
 - Buffer mutation/detachment does not affect sent bytes.
 - Forced GC does not close the transport.
-- Candidate Node 22/24/26 results are recorded; unsupported candidates are labeled.
+- Exact Node.js, Bun, and Deno versions from the toolchain baseline are tested and recorded; unsupported runtime/platform combinations are labeled.
 
 **Risks:** borrowed memory, runtime mismatch, panic across FFI.  
 **Mitigation:** copy-before-async rule, napi-managed Tokio only, `Result` at boundaries, forced-GC tests.
@@ -102,7 +102,7 @@ Milestones are evidence checkpoints, not calendar dates. A milestone is reached 
 - `send` returns structured outcomes and never claims delivery.
 - `BUSY`, `CLOSED`, timeout, TLS, auth, validation, limit, and internal errors are stable and catchable.
 - Close is idempotent and bounded.
-- No pooling, retry, SMTPUTF8, URL attachments, or required AbortSignal.
+- No pooling, retry, SMTPUTF8, URL attachments, or public AbortSignal option.
 
 **Risks:** semantic drift in the wrapper, accidental convenience features.  
 **Mitigation:** contract gate, type tests, API surface audit.

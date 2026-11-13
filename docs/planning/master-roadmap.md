@@ -49,7 +49,7 @@ Resolved the source/API questions that can invalidate the architecture:
 1. Which lettre 0.11.23 async API to use.
 2. Whether rustls `ring` + `webpki-roots` composes and keeps verification mandatory.
 3. Whether per-recipient RCPT status and exact timeout stages are observable.
-4. The napi-managed Tokio 1 / Node-API 8 design, with Node 22/24/26 retained as candidates until native runtime CI proves support.
+4. The napi-managed Tokio 1 / Node-API 8 design, with the exact Node.js, Bun, and Deno versions in the toolchain baseline retained as candidates until native runtime CI proves support.
 
 **Key risk:** relying on high-level transport semantics. **Mitigation:** selected lettre's public lower-level API and explicit RCPT response checks; P06-003 still validates with a fake relay.
 
@@ -63,7 +63,7 @@ Approved the two-crate boundary, dependency direction, public result/error contr
 
 ### P03 — Repository
 
-Creates the Cargo workspace with exactly two crates, the pnpm/TypeScript workspace, pinned toolchain, formatting/linting/type-check/test commands, dependency/license policy, and deterministic fake SMTP/TLS harness seams. Baseline must pass with placeholder-free skeletons.
+Creates the Cargo workspace with exactly two crates, the TypeScript workspace, pinned toolchain, formatting/linting/type-check/test commands, dependency/license policy, and deterministic fake SMTP/TLS harness seams. Baseline must pass with placeholder-free skeletons.
 
 **Key risk:** test seams added later causing rewrites. **Mitigation:** harness seams are a Phase 03 deliverable.
 
@@ -153,7 +153,7 @@ Verifies RC identity and evidence, runs final MVP acceptance against the constra
 
 ### P18 — Post-MVP
 
-Collects feedback, researches SMTPUTF8, AbortSignal, platform expansion, connection pooling, streaming, and additional transports, and defines the next compatibility/deprecation policy. Queue/job orchestration and queue adapters are held outside this roadmap. No post-MVP feature enters the codebase without a new requirement, task, and test.
+Collects feedback, researches SMTPUTF8, public AbortSignal cancellation, platform expansion, connection pooling, streaming, and additional transports, and defines the next compatibility/deprecation policy. Queue/job orchestration and queue adapters are held outside this roadmap. No post-MVP feature enters the codebase without a new requirement, task, and test.
 
 ## 3. Effort profile
 

@@ -3,7 +3,7 @@
 **Sendust — Standalone Native Email Delivery Engine for Node.js, Bun, and Deno**  
 Planning baseline: 2026-11-13.
 
-This documentation set is the source of truth for product scope, requirements, approved architecture design, decisions, and execution planning. QG-00, QG-01, and QG-02 are approved. Application implementation, compilation, runtime validation, and publication have not occurred.
+This documentation set is the source of truth for product scope, requirements, approved architecture design, decisions, and execution planning. Repository-wide AI/contributor behavior is governed by [AGENTS.md](../AGENTS.md) and the [AI implementation contract](engineering/ai-implementation-contract.md). QG-00, QG-01, and QG-02 are approved. Application implementation, compilation, runtime validation, and publication have not occurred.
 
 ## 1. Start here
 
@@ -18,6 +18,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 7 | [lettre source validation](research/lettre-0.11.23-validation.md) | Pinned API and feature research |
 | 8 | [Node runtime validation plan](research/node-runtime-validation-plan.md) | Node-API 8 candidate matrix and lifecycle probes |
 | 8a | [Multi-runtime compatibility research](research/multi-runtime-compatibility.md) | Node.js, Bun, Deno and native platform evidence |
+| 8b | [Toolchain baseline](engineering/toolchain-baseline.md) | Exact runtime/tool versions and canonical validation commands |
 | 9 | [Architecture overview](architecture/overview.md) | Approved architecture shape and boundaries |
 | 10 | [System design](architecture/system-design.md) | Modules, types, state machine, test seams |
 | 11 | [Public API contract](architecture/public-api.md) | Approved design contract; implementation gate P09 |
@@ -30,7 +31,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 18 | [Task registry](planning/task-registry.md) | 95 phase tasks plus 7 architecture-amendment tasks and prerequisites |
 | 19 | [Dependency graph](planning/dependency-graph.md) | Phase DAG and critical path |
 | 20 | [Milestones](planning/milestones.md) | M0–M7 exit criteria |
-| 21 | [Quality gates](planning/quality-gates.md) | QG-00–QG-17 |
+| 21 | [Quality gates](planning/quality-gates.md) | QG-00–QG-17 plus QG-03A, QG-A01, QG-A02 |
 | 22 | [Definition of done](planning/definition-of-done.md) | Evidence rules |
 | 23 | [Risk registry](planning/risk-registry.md) | Risk IDs, mitigations, owners |
 | 24 | [Dependency research](engineering/dependency-research.md) | Observed facts and sources |
@@ -45,6 +46,9 @@ This documentation set is the source of truth for product scope, requirements, a
 | 33 | [QG-02 architecture gate](gates/phase-02-architecture-approval.md) | Original architecture approval evidence |
 | 34 | [Architecture Amendment A01](gates/architecture-amendment-a01.md) | Multi-runtime and cross-platform design amendment |
 | 35 | [Architecture Amendment A02](gates/architecture-amendment-a02.md) | Modular monolith and internal module boundaries |
+| 36 | [AI implementation contract](engineering/ai-implementation-contract.md) | Normative workflow, documentation synchronization, static-review and evidence rules |
+| 37 | [Toolchain baseline](engineering/toolchain-baseline.md) | Exact Rust, Node.js, Bun, Deno, npm, TypeScript, Biome, Vitest versions and canonical commands |
+| 38 | [Documentation audit](audits/2026-11-13-documentation-audit.md) | Static consistency, traceability, task graph, links, toolchain, and remaining validation owners |
 
 ## 2. Directory map
 
@@ -68,6 +72,9 @@ This documentation set is the source of truth for product scope, requirements, a
     ├── planning/
     ├── phases/
     ├── engineering/
+    ├── audits/
+    │   ├── ai-implementation-contract.md
+    │   └── toolchain-baseline.md
     └── decisions/  (pointer to architecture/decisions)
 
 ## 3. Status model
@@ -105,7 +112,7 @@ P00–P02 are COMPLETED with approved evidence. P03–P18 remain NOT STARTED. A 
 - Task IDs: Pxx-00y.
 - Decision IDs: ADR-0001–ADR-0016.
 - Risk IDs: R-001–R-047.
-- Gate IDs: QG-00–QG-17.
+- Gate IDs: QG-00–QG-17, QG-03A, QG-A01, QG-A02.
 - Milestones: M0–M7.
 
 ## 6. Current architecture amendment
