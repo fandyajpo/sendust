@@ -30,7 +30,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 18 | [Task registry](planning/task-registry.md) | 95 phase tasks plus 7 architecture-amendment tasks and prerequisites |
 | 19 | [Dependency graph](planning/dependency-graph.md) | Phase DAG and critical path |
 | 20 | [Milestones](planning/milestones.md) | M0–M7 exit criteria |
-| 21 | [Quality gates](planning/quality-gates.md) | QG-00–QG-17 |
+| 21 | [Quality gates](planning/quality-gates.md) | QG-00–QG-17 plus QG-03A, QG-A01, QG-A02 |
 | 22 | [Definition of done](planning/definition-of-done.md) | Evidence rules |
 | 23 | [Risk registry](planning/risk-registry.md) | Risk IDs, mitigations, owners |
 | 24 | [Dependency research](engineering/dependency-research.md) | Observed facts and sources |
@@ -69,6 +69,7 @@ This documentation set is the source of truth for product scope, requirements, a
     ├── planning/
     ├── phases/
     ├── engineering/
+    │   └── ai-implementation-contract.md
     └── decisions/  (pointer to architecture/decisions)
 
 ## 3. Status model
@@ -106,7 +107,7 @@ P00–P02 are COMPLETED with approved evidence. P03–P18 remain NOT STARTED. A 
 - Task IDs: Pxx-00y.
 - Decision IDs: ADR-0001–ADR-0016.
 - Risk IDs: R-001–R-047.
-- Gate IDs: QG-00–QG-17.
+- Gate IDs: QG-00–QG-17, QG-03A, QG-A01, QG-A02.
 - Milestones: M0–M7.
 
 ## 6. Current architecture amendment
