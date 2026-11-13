@@ -15,7 +15,7 @@ P01-003 must inspect the lower-level lettre async connection API. Exactly one of
 
 ### Option A — per-recipient status is observable
 
-If the selected API exposes each RCPT response and the DATA transition, report recipient statuses honestly. A recipient accepted at RCPT but part of an envelope whose DATA failed is `unknown`; a recipient rejected at RCPT is `rejected`. The overall result remains `accepted` only after positive final DATA.
+If the selected API exposes each RCPT response and the DATA transition, report recipient statuses honestly. A recipient accepted at RCPT but part of an envelope whose final DATA disposition is unknown is `unknown`; a recipient rejected at RCPT is `rejected`. If the relay explicitly returns a negative final DATA response, the overall result is `rejected`. The overall result is `accepted` only after positive final DATA.
 
 ### Option B — per-recipient status is not observable (default if unproven)
 
@@ -45,5 +45,6 @@ Reject the entire envelope before DATA if any recipient is rejected. Report the 
 
 - Stage/recipient observability table citing lettre source or API documentation.
 - Mixed fixture (`250` then `550`) command trace.
-- Post-DATA `451` fixture showing `unknown` and no retry.
+- Explicit final `451` after DATA fixture showing a definitive `rejected` outcome.
+- Separate dropped-connection/no-final-reply fixture after DATA terminator showing `unknown` and no retry.
 - A gate record naming the inspected API or documenting its absence.
