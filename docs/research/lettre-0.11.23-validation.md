@@ -46,11 +46,11 @@ Do not treat any generic `Ok(Response)` as success. `read_response()` returns `E
 - greeting/EHLO: validate the expected 2xx completion;
 - AUTH: require final 235 (334 is handled internally as a challenge by lettre's auth method);
 - MAIL: require 2xx completion;
-- RCPT: accept only a 2xx completion; map explicit 4xx/5xx errors to recipient rejection; an unexpected 3xx is a protocol error, not acceptance;
+- RCPT: accept only a 2xx completion; map ordinary explicit 4xx/5xx errors to recipient rejection and continue collecting responses. Treat 421 specially because it closes the transmission channel: stop the envelope, do not issue DATA, and return an overall rejected result. An unexpected 3xx is a protocol error, not acceptance;
 - DATA command: require exactly 354 before transmitting message bytes; explicit 4xx/5xx is a known rejection;
 - final DATA: accept only 2xx; explicit 4xx/5xx is a definitive rejection; an unexpected 3xx is not a final acceptance and must be treated as unknown after message transmission.
 
-If no recipient receives a positive RCPT reply, do not issue DATA. If at least one recipient is accepted, submit exactly one DATA message to that accepted-recipient envelope. Recipients refused at RCPT remain rejected even if the accepted subset later succeeds.
+If no recipient receives a positive RCPT reply, do not issue DATA. If 421 occurs at RCPT, stop immediately and do not issue DATA even if earlier RCPT commands returned 2xx. If at least one recipient is accepted and no 421 occurs, submit exactly one DATA message to that accepted-recipient envelope. Recipients refused at RCPT remain rejected even if the accepted subset later succeeds.
 
 ### 2.3 Final DATA ambiguity
 
