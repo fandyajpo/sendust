@@ -1,11 +1,11 @@
 # Sendust — Product Vision
 
 **Standalone Native Email Delivery Engine.**  
-Rust core. Node.js native addon. TypeScript API. SMTP-first.
+Rust core. Shared Node-API native addon. Runtime-neutral TypeScript API. SMTP-first.
 
 ## 1. Problem
 
-Server-side JavaScript teams need to send transactional email from Node.js. The dominant experience, Nodemailer, is mature but entirely JavaScript: MIME composition, SMTP session handling, encoding, and connection management all run on the event loop and are maintained as a large, historically grown surface.
+Server-side JavaScript teams using Node.js, Bun, or Deno need to send transactional email through a configured SMTP relay. The dominant experience, Nodemailer, is mature but entirely JavaScript: MIME composition, SMTP session handling, encoding, and connection management all run on the event loop and are maintained as a large, historically grown surface.
 
 Sendust exists to offer a smaller, stricter alternative:
 
@@ -66,7 +66,7 @@ The MVP is successful when all of the following are true and evidenced:
 1. A clean project on every supported platform installs the published package from npm and sends a message through a local fake SMTP relay without a Rust toolchain.
 2. Every MVP feature in the [feature matrix](../planning/feature-matrix.md) maps to at least one completed task and at least one test.
 3. SMTP, MIME, error, lifecycle, security, and packaging quality gates in [quality-gates.md](../planning/quality-gates.md) pass.
-4. The support matrix states exact Node.js versions, OS/CPU/libc targets, Node-API level, and what CI actually tests.
+4. The support matrix states exact Node.js, Bun, and Deno versions plus OS/CPU/libc targets, Node-API level, and what CI actually tests.
 5. No credential, body content, attachment bytes, or absolute local path leaks into serialized errors.
 6. The package publishes with provenance, complete platform artifacts, and a verified clean-install path.
 
@@ -74,10 +74,15 @@ The MVP is successful when all of the following are true and evidenced:
 
 | Dimension | Sendust | Nodemailer | Raw SMTP crate in Node |
 | --- | --- | --- | --- |
-| Runtime | Rust core + Node addon | JavaScript | Varies |
+| Runtime | Rust core + Node-API addon for Node.js, Bun, Deno | JavaScript | Varies |
 | API surface | Narrow, typed, one transport | Broad, plugin-oriented | Low-level, untyped |
 | Delivery semantics | Explicit relay acceptance | Transport-dependent | Caller-defined |
 | Native install | Prebuilt platform packages | Pure JS | Requires toolchain or download |
 | MVP scope | Transactional SMTP | Very broad | Minimal |
 
 Sendust competes on correctness, predictability, and a small supported surface — not on feature count.
+
+
+### Runtime support
+
+Node.js, Bun, and Deno are required MVP runtime targets under [ADR-0015](../architecture/decisions/0015-multi-runtime-support.md). This is a product target, not a current compatibility claim. Every runtime/platform combination must pass Sendust-owned blocking CI before it is listed as supported. Deno requires local node_modules and explicit FFI permission.
