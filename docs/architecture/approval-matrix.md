@@ -83,7 +83,7 @@ No queue, worker, scheduler, persistence, queue adapter, automatic retry, backof
 | SMTP protocol behavior | Scripted loopback relay for RCPT mix, DATA 354, final 250/451, dropped final reply | P03-004, P06-003, P06-004 |
 | TLS | Five negative certificate fixtures; mandatory hostname/chain verification | P06-002, P11-002 |
 | Native memory | Buffer mutation/detachment test; owned-copy audit | P05-002, P11-004 |
-| Node lifecycle | Node 22/24/26 candidate matrix; forced GC, explicit close, process exit | P05-003, P14-004 |
+| Runtime lifecycle | Exact Node.js/Bun/Deno versions from the toolchain baseline; forced GC where supported, explicit close, process exit | P05-003, P14-004 |
 | Timeout behavior | Injected-clock tests for all budgets and coarse boundaries | P10-002 |
 | File safety | Open-then-fstat, no-follow where supported, file-type and growth fixtures | P08-002, P11-003 |
 | MIME | Independent parser conformance and wire-size parity | P07-005 |
