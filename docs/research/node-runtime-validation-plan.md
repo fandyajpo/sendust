@@ -28,7 +28,8 @@ Sources:
 | Node 22 | Yes; Node 22.13+ is within observed CLI compatibility range | No native addon test; audit shell has Node 22.16.0 but no Rust toolchain | Not supported/claimed yet |
 | Node 24 | Yes | No | Not supported/claimed yet |
 | Node 26 | Candidate only; validate release maturity at implementation time | No | Not supported/claimed yet |
-| Bun / Deno | Not in MVP matrix | No | Unsupported / unclaimed |
+| Bun | Required MVP target under ADR-0015; exact stable version pinned at P03 | No native addon test | Not supported/claimed yet |
+| Deno | Required MVP target under ADR-0015; exact stable version pinned at P03 | No native addon test | Not supported/claimed yet |
 
 Node-API 8 is the chosen ABI target. It must be confirmed against the exact napi-rs features at P05-001 and compiled/tested at P05-003/P14-004.
 
@@ -73,12 +74,12 @@ No second Tokio runtime may be constructed. The Rust core has no Node/N-API depe
 
 ## 6. Acceptance rule
 
-A runtime is supported only after the native addon builds and all blocking tests pass on that exact Node version and platform. Node-API compatibility alone is insufficient. Until then, Node 22/24/26 are candidates only.
+A runtime/platform combination is supported only after the native addon builds, clean installation succeeds, and all blocking Sendust tests pass for that exact runtime version and platform. Node-API compatibility alone is insufficient. Node.js 22/24/26 remain version candidates; Bun and Deno exact stable versions are pinned at P03.
 
 ## 7. Multi-runtime amendment
 
-The original Node-only scope is extended by [multi-runtime compatibility research](multi-runtime-compatibility.md) and ADR-0015. Node.js, Bun, and Deno are required MVP targets. Node-specific probes remain necessary but are no longer sufficient.
+The original Node-focused research scope is extended by [multi-runtime compatibility research](multi-runtime-compatibility.md) and ADR-0015. Node.js, Bun, and Deno are required MVP targets. Node-specific probes remain necessary but are no longer sufficient.
 
-P05/P14 MUST run the full Sendust behavioral suite on exact pinned Node.js, Bun, and Deno versions. Deno additionally requires a clean consumer using local node_modules and --allow-ffi. Bun and Deno support MUST NOT be inferred from Node-API ABI compatibility or NAPI-RS upstream CI.
+P03 MUST pin exact stable versions for Node.js, Bun, and Deno in CI. P05/P14 MUST run the full Sendust behavioral suite on those exact pinned versions. Deno additionally requires a clean consumer using local node_modules and --allow-ffi. Bun and Deno support MUST NOT be inferred from Node-API ABI compatibility or NAPI-RS upstream CI.
 
 No Sendust native addon was executed on Bun or Deno during research. Runtime support claims remain unvalidated until blocking Sendust CI passes.
