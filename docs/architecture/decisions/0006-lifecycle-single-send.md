@@ -1,6 +1,6 @@
 # ADR-0006 — One active send, explicit bounded close, no pool
 
-**Status:** ACCEPTED (planning)  
+**Status:** ACCEPTED (architecture baseline; lifecycle tests P04/P09/P10)  
 **Date:** 2026-11-13  
 **Deciders:** Architecture review (P02-005)  
 **Validated by:** P02-003, P04-004, P09-004, P10-001
