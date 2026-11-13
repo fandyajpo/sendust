@@ -1,6 +1,6 @@
 # Documentation Index
 
-**Sendust — Standalone Native Email Delivery Engine for Node.js**  
+**Sendust — Standalone Native Email Delivery Engine for Node.js, Bun, and Deno**  
 Planning baseline: 2026-11-13.
 
 This documentation set is the source of truth for product scope, requirements, approved architecture design, decisions, and execution planning. QG-00, QG-01, QG-02, and Architecture Amendment A01 are approved at design level. Application implementation, compilation, runtime validation, and publication have not occurred.
@@ -17,6 +17,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 6 | [Threat model](discovery/threat-model.md) | Assets, trust boundaries, and abuse cases |
 | 7 | [lettre source validation](research/lettre-0.11.23-validation.md) | Pinned API and feature research |
 | 8 | [Node runtime validation plan](research/node-runtime-validation-plan.md) | Node-API 8 candidate matrix and lifecycle probes |
+| 9 | [Multi-runtime compatibility research](research/multi-runtime-compatibility.md) | Node.js, Bun, Deno and native platform evidence |
 | 9 | [Architecture overview](architecture/overview.md) | Approved architecture shape and boundaries |
 | 10 | [System design](architecture/system-design.md) | Modules, types, state machine, test seams |
 | 11 | [Public API contract](architecture/public-api.md) | Approved design contract; implementation gate P09 |
