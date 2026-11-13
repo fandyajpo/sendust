@@ -107,6 +107,10 @@ Core tests are Rust unit/integration tests with no Node runtime. Required concre
 
 Gate `PHASE-04` is `APPROVED` only when P04-005 passes all Rust tests, the dependency-direction guard still proves no Node linkage, and the recipient/unknown/busy/timeout/limit semantics exactly match Phase 02. Phase 05 may begin only after this gate.
 
+## Modular core implementation requirements
+
+Implement the approved ADR-0016 module responsibilities without creating additional crates. Keep domain modules independent of lettre/SMTP/napi/runtime APIs. Put SMTP protocol behavior behind the internal delivery contract in the SMTP adapter. Add focused unit tests per module and dependency checks. The exact file layout may evolve, but ownership and dependency direction may not.
+
 ## Status
 
 NOT STARTED. No core code has been written.
