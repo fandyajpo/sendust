@@ -1,6 +1,6 @@
 # ADR-0005 — Recipient partial-failure policy
 
-**Status:** ACCEPTED (API/source verified); behavior test required at P06-003  
+**Status:** ACCEPTED (architecture baseline; API/source verified); behavior test required at P06-003  
 **Date:** 2026-11-13  
 **Deciders:** Research gate (P01-005), architecture review (P02-005)  
 **Validated by:** P01-003 source inspection; executable validation P06-003 and P09-002
