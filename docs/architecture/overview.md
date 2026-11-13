@@ -1,6 +1,6 @@
 # Sendust — Architecture Overview
 
-**Status:** proposed; frozen only at `PHASE-02` gate.  
+**Status:** proposed; not frozen. Architecture approval requires P02-005 and its evidence.  
 **Authoritative constraints:** [requirements](../product/requirements.md).  
 **Detailed design:** [system design](system-design.md).  
 **Decisions:** [ADR index](decisions/README.md).
@@ -58,7 +58,7 @@ A separate `sendust-mime` or `sendust-smtp` crate is not justified yet: MIME and
 6. Core maps the final observable state to `accepted`, `rejected`, or `unknown` and closes the session.
 7. The binding converts the result or error into a stable JS object; the wrapper returns it unchanged.
 
-No queue exists at any layer. No retry exists at any layer. No per-recipient message fan-out exists.
+No queue, worker, scheduler, queue adapter, or persistence layer exists or is planned in the current scope. No automatic retry exists at any layer. No per-recipient message fan-out exists. Queueing and scheduling remain caller-owned.
 
 ## 5. Ownership model
 
