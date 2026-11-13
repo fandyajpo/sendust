@@ -7,7 +7,7 @@ Entry point to all 19 Sendust phases. P00–P02 are completed with reviewed gate
 | Phase | Name | Objective | Depends on | Tasks | Gate | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | [P00](../phases/phase-00.md) | Discovery | Fix the MVP problem, constraints, semantics, threat boundary, and open questions | — | 5 | P00-005 | COMPLETED |
-| [P01](../phases/phase-01.md) | Research | Resolve lettre API, TLS features, recipient observability, and Node lifecycle with evidence | P00 | 5 | P01-005 | COMPLETED |
+| [P01](../phases/phase-01.md) | Research | Resolve lettre API, TLS feature design, recipient observability, and Node runtime probe requirements | P00 | 5 | P01-005 | COMPLETED |
 | [P02](../phases/phase-02.md) | Architecture | Approve crate boundaries, status/error contract, lifecycle, ownership, and limits | P01 | 5 | P02-005 | COMPLETED |
 | [P03](../phases/phase-03.md) | Repository | Create workspace, toolchain, policies, and deterministic test seams | P02 | 5 | P03-005 | NOT STARTED |
 | [P04](../phases/phase-04.md) | Rust core | Implement errors, validation, message model, state machine, and SMTP orchestration | P03 | 5 | P04-005 | NOT STARTED |
@@ -64,7 +64,7 @@ Entry point to all 19 Sendust phases. P00–P02 are completed with reviewed gate
 
 The phase DAG is mostly sequential because each phase consumes the previous phase’s frozen artifacts. Genuine parallelism exists only where a phase does not consume another’s output:
 
-- **P01-004** (Node/Node-API research) can run in parallel with P01-001–P01-003 (lettre/TLS research) after P00-005.
+- **P01-004** (Node/Node-API research and probe planning) can run in parallel with P01-001–P01-003 (lettre/TLS research) after P00-005.
 - **P07** (MIME) can run in parallel with **P06** (SMTP) after P04; both consume core types but not each other.
 - **P15** (documentation) can begin after P09 and proceed in parallel with P10–P14, but P15-004 requires P11-005 and P15-005 requires all documentation tasks.
 - **P14-001–P14-003** can begin after P05-005/P03-005 in parallel with P09–P13; only P14-005 is gated on P12-005 and P13-005.
