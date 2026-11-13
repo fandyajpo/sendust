@@ -133,7 +133,7 @@ Every `REQUIRED FOR MVP` row must map to at least one implementation task and at
 | F-DIS-10 | Node.js 26 runtime support | OPTIONAL FOR MVP | P01-004, P14-004 | P14-004 | Pre-release risk |
 | F-DIS-11 | Provenance and checksums | REQUIRED | P16-002 | P17-001 | Supply chain |
 | F-DIS-12 | No postinstall binary download | REQUIRED | P14-002 | P14-004 | Optional packages only |
-| F-DIS-13 | WASM fallback | POST-MVP | — | — | Different runtime |
+| F-DIS-13 | WASM fallback | POST-MVP | — | — | Different runtime |\n| F-DIS-14 | Node.js runtime support | REQUIRED | P05-003, P14-004 | P14-004 | Exact versions and platform combinations only |\n| F-DIS-15 | Bun runtime support | REQUIRED | P05-003, P14-004 | P14-004 | Sendust blocking CI; upstream best-effort is insufficient |\n| F-DIS-16 | Deno runtime support | REQUIRED | P05-003, P14-004 | P14-004 | Local node_modules and --allow-ffi; no install scripts |\n| F-DIS-17 | Runtime-neutral TypeScript API and isolated native loader | REQUIRED | P03-001, P05-001 | P05-005, P09-005 | Identical semantics across supported runtimes |\n| F-DIS-18 | Runtime × OS × CPU × ABI support evidence | REQUIRED | P14-003 | P14-004, P15-001 | Only clean-install and behavioral-tested combinations |
 | F-OPS-01 | Explicit lifecycle state | REQUIRED | P04-004, P09-004 | P12-003 | `open/closing/closed` |
 | F-OPS-02 | Bounded close drain | REQUIRED | P10-002 | P10-004 | 125 s |
 | F-OPS-03 | No GC-dependent shutdown | REQUIRED | P10-001 | P10-004 | Forced-GC tests |
