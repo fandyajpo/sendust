@@ -92,6 +92,10 @@ Relay configuration, TLS/auth enforcement, recipient-policy implementation, SMTP
 
 Gate `PHASE-06` is `APPROVED` only when P06-005 proves the full fault matrix, the recipient ADR is explicit and implemented, no retry/pooling/custom SMTP exists, and the result contract remains relay-accepted.
 
+## SMTP adapter boundary requirements
+
+All SMTP protocol interaction, TLS, AUTH, RCPT/DATA and SMTP response mapping must remain inside the SMTP adapter. Delivery orchestration must call the narrow internal delivery port and must not depend on lettre types. lettre is the sole MVP SMTP implementation. No public transport plugin registry or alternate provider is introduced.
+
 ## Status
 
 NOT STARTED. No SMTP code has been written.
