@@ -6,10 +6,9 @@
 - Phase tasks: 95
 - Architecture amendment tasks: 7 (A01-001–A01-004, A02-001–A02-003)
 - Completed tasks: 20 (P00–P03)
-- In-review tasks: 2 (P04-001–P04-002)
-- In-progress tasks: 1 (P04-003)
+- In-review tasks: 3 (P04-001–P04-003)
 - Not-started tasks: 72 (P04-004–P04-005, P05–P18)
-- P00–P02 tasks are `COMPLETED` with approved gate evidence. P03-001–P03-005 are `COMPLETED` with CI evidence and an approved QG-03 record; P04-001 and P04-002 are `IN REVIEW`; P04-003 is `IN PROGRESS`; P04-004–P04-005 and P05–P18 are `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
+- P00–P02 tasks are `COMPLETED` with approved gate evidence. P03-001–P03-005 are `COMPLETED` with CI evidence and an approved QG-03 record; P04-001 to P04-003 are `IN REVIEW`; P04-004–P04-005 and P05–P18 are `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
 - Effort is relative: S, M, L, XL. No delivery dates.
 - Gate tasks are the final task in each phase and must not be marked complete before their phase evidence exists.
 
@@ -56,7 +55,7 @@
 | [P03](../phases/phase-03.md) | Repository | [P03-005](../phases/phase-03.md) | Repository gate and baseline verification | S | P03-001, P03-002, P03-003, P03-004 | COMPLETED |
 | [P04](../phases/phase-04.md) | Rust core | [P04-001](../phases/phase-04.md) | Implement core error taxonomy and deterministic validation order | M | P03-005, P02-002 | IN REVIEW |
 | [P04](../phases/phase-04.md) | Rust core | [P04-002](../phases/phase-04.md) | Implement address, header, and Unicode/IDNA policy | L | P03-005, P02-004 | IN REVIEW |
-| [P04](../phases/phase-04.md) | Rust core | [P04-003](../phases/phase-04.md) | Implement the message model and hard size accounting | L | P03-005, P02-004 | IN PROGRESS |
+| [P04](../phases/phase-04.md) | Rust core | [P04-003](../phases/phase-04.md) | Implement the message model and hard size accounting | L | P03-005, P02-004 | IN REVIEW |
 | [P04](../phases/phase-04.md) | Rust core | [P04-004](../phases/phase-04.md) | Implement transport state machine, deadlines, and BUSY semantics | L | P03-005, P02-003 | NOT STARTED |
 | [P04](../phases/phase-04.md) | Rust core | [P04-005](../phases/phase-04.md) | Implement lettre-backed SMTP orchestration and core phase test gate | XL | P04-001, P04-002, P04-003, P04-004, P01-001, P01-003 | NOT STARTED |
 | [P05](../phases/phase-05.md) | Binding | [P05-001](../phases/phase-05.md) | Define Node-API 8 binding surface | M | P04-005 | NOT STARTED |
