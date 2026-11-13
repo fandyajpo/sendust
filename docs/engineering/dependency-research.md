@@ -1,16 +1,16 @@
 # Technical Research — 2026-11-13
 
 **Phase:** 01  
-**Status:** INITIAL RESEARCH RECORDED; tasks remain `NOT STARTED` because validation probes have not been executed.  
+**Status:** P01 source/API research complete; see the pinned [lettre validation report](../research/lettre-0.11.23-validation.md) and [Node runtime validation plan](../research/node-runtime-validation-plan.md). Cargo, fake-relay, and native runtime probes remain downstream implementation gates.  
 **Rule:** This document records what was observed, from where, and what remains unverified. It is not a substitute for P01-001 through P01-005.
 
 ## 1. Method
 
 - Repository inspected first: documentation and planning repository; no application source or existing implementation toolchain was present in the audited snapshot.
 - Sources consulted on 2026-11-13:
-  - napi-rs official documentation: getting started, support and compatibility, async `fn`, errors and panics, release deep dive.
-  - docs.rs: `lettre` 0.11.23 crate page and `AsyncSmtpTransport`; `mail-parser` 1.0.1 crate page.
-- No dependencies were installed, no network probes were run against SMTP servers, and no application code was generated.
+  - napi-rs v3 official documentation and source for async functions, compatibility, Buffer, and AsyncTask.
+  - lettre v0.11.23 pinned source: Cargo.toml, AsyncSmtpConnection, commands, response, error, authentication, and TLS builder.
+- No dependencies were installed, no network probes were run against SMTP servers, and no application code was generated. The audit container has Node.js 22.16.0 but no rustc/cargo.
 - Version claims below are **observed on those pages**, not independently verified against lockfiles. P01-001 through P01-004 must verify pinned source and features.
 
 ## 2. Observed platform facts
@@ -59,7 +59,7 @@
   - `node-bindgen` — less active and less complete packaging story.
   - Raw Node-API via `node-sys` — maximum control, high unsafe burden.
 - **Maintenance:** v3 is the current documented line; release workflow is documented.
-- **Compatibility:** CLI needs a modern Node version at build time; runtime compatibility is governed by Node-API level. The scaffold defaults to Node-API 4; Sendust proposes 8 and must validate that no selected feature requires more.
+- **Compatibility:** CLI needs a modern Node version at build time; runtime compatibility is governed by Node-API level. The scaffold defaults to Node-API 4; Sendust selects Node-API 8 as the design floor. Exact feature-floor compilation and runtime tests remain P05/P14 gates.
 - **Security:** Native code; panic safety and memory ownership are critical. `catch_unwind` limits must be understood.
 - **MVP:** Required.
 
@@ -139,22 +139,21 @@
 
 ## 6. Research conclusions that constrain the plan
 
-1. Use `lettre 0.11.23`; do not write a custom SMTP client unless P01-003 proves a required capability is inaccessible.
+1. Use lettre 0.11.23's public lower-level AsyncSmtpConnection API; do not write a custom SMTP client.
 2. Use napi-rs v3 with the napi-managed Tokio 1 runtime; do not create a second runtime.
-3. Propose Node-API 8 but validate the exact floor.
-4. Propose rustls `ring` + `webpki-roots` but validate features and verification posture.
-5. Treat Node 22/24/26 as candidates.
-6. Do not promise per-recipient RCPT status or exact timeout stage attribution before P01-003.
-7. Plan for non-atomic publication and explicit artifact gates.
-8. Use `mail-parser` only in tests.
+3. Node-API 8 is the approved ABI design floor; compile/runtime validation remains P05/P14 work.
+4. Use the source-reviewed lettre feature set: defaults off, smtp-transport, tokio1-rustls, ring, webpki-roots. Cargo build/tree validation remains P03-002.
+5. Treat Node 22/24/26 as candidates only; see the [runtime validation plan](../research/node-runtime-validation-plan.md).
+6. Per-recipient RCPT responses are observable via command(Rcpt::new(...)) and Error::status(); timeout reporting is limited to coarse public-call boundaries.
+7. lettre's inner connect timeout bounds TCP attempts only; an outer connect deadline must include DNS, greeting, EHLO, and TLS negotiation.
+8. Plan for non-atomic publication and explicit artifact gates. Use mail-parser only in tests.
 
 ## 7. What this research does not establish
 
-- That the high-level lettre transport exposes per-recipient RCPT outcomes.
-- That exact SMTP stage attribution is observable.
-- That the proposed rustls feature set compiles on every target.
+- That the selected Cargo feature graph compiles on every target.
 - That the napi-managed runtime satisfies lettre on every candidate Node version.
 - That all proposed platform targets can be built and runtime-tested in CI.
-- That the chosen Node-API level is sufficient for every napi feature used.
+- That fake-relay behavior matches the inspected public API for every fault path.
+- That TLS, MIME, filesystem safety, and timeout tests pass in the eventual implementation.
 
-Each is an explicit task in Phase 01 with a validation gate. No implementation may assume the favorable answer.
+These are explicit downstream implementation gates. Source inspection establishes the architecture choice, not executable correctness.
