@@ -38,7 +38,7 @@ In scope: pinned-source and documentation inspection, minimal reproducible probe
 - **Description:** Inspect the lower-level lettre async connection API for per-recipient RCPT outcomes, the point at which DATA begins, and visibility of connect, greeting, EHLO/STARTTLS, AUTH, MAIL FROM, RCPT TO, DATA, and final-response stages. Evaluate whether partial recipient acceptance can be reported honestly. Source review confirms public command(Rcpt::new(...)) and Error::status() expose each RCPT response. Select one DATA transaction for the accepted-recipient subset; do not fan out independent messages.
 - **Evidence criteria:** A stage-observability table marks each stage observable or not, with API citations. A recipient-outcome table covers all accepted, mixed, all rejected, and post-DATA ambiguity. ADR-0005 contains the selected observable per-recipient policy and the exact implementation fixture requirements. Mixed RCPT fixture is specified as one `250`, one `550`; post-DATA fixtures as an explicit final `451` (known rejection) and a dropped connection after the DATA terminator with no final reply (unknown).
 
-### P01-004 — Validate Node 22/24/26, Node-API 8, and napi-managed Tokio lifecycle
+### P01-004 — Research Node-API 8 and define Node runtime/lifecycle probe plan
 
 - **Size:** M
 - **Status:** COMPLETED
