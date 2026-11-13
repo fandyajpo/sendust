@@ -56,7 +56,7 @@ In scope: benchmark design, baseline measurements, memory and descriptor bounds,
 
 ## Technical implementation details
 
-Performance work measures the frozen path: `TS -> napi -> core -> lettre 0.11.23`. There is no pooling and no automatic retry, so benchmarks must not add them. Success remains relay acceptance. One active send returns `BUSY`; concurrency is rejected, not queued. Close is explicit and bounded by 125s; timeouts are connect 10s, operation 30s, total 120s. Caps are 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. Buffers are copied before async; attachments are opt-in bounded regular files. Serialization must be single-pass and deterministic. TLS uses rustls `ring`/`webpki-roots` with verification always on. Results are local-fixture measurements, not delivery SLAs.
+Performance work measures the architecture-approved path after P02-005: `TS -> napi -> core -> lettre 0.11.23`. There is no pooling and no automatic retry, so benchmarks must not add them. Success remains relay acceptance. One active send returns `BUSY`; concurrency is rejected, not queued. Close is explicit and bounded by 125s; timeouts are connect 10s, operation 30s, total 120s. Caps are 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. Buffers are copied before async; attachments are opt-in bounded regular files. Serialization must be single-pass and deterministic. TLS uses rustls `ring`/`webpki-roots` with verification always on. Results are local-fixture measurements, not delivery SLAs.
 
 ## Dependencies
 
