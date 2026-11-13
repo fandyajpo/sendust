@@ -112,4 +112,4 @@ The npm package is a root package plus platform packages selected by OS/CPU/libc
 - Additional transports (SES, SendGrid, etc.).
 - Templates, queues, tracking, or analytics.
 
-These are recorded as post-MVP or out of scope in the [feature matrix](../planning/feature-matrix.md).
+Their classifications are recorded individually in the [feature matrix](../planning/feature-matrix.md). Queue/job orchestration and queue adapters are `HELD`, not post-MVP commitments; reconsideration requires a separate product decision.
