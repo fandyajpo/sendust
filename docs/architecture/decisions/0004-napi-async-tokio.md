@@ -42,3 +42,8 @@ Pin napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0 for the initial impleme
 - Lifecycle tests on candidate Node 22/24/26: active send, forced GC, explicit close, process exit, close deadline.
 - A test proving no second runtime is created.
 - TypeScript declarations generated and type-checked.
+
+
+## Amendment note — ADR-0015
+
+ADR-0015 extends the runtime scope from Node.js-only to Node.js, Bun, and Deno while retaining Node-API 8 and napi-managed Tokio 1 as the shared design baseline. This ADR's Node-specific evidence remains required but is insufficient for alternate runtimes. Bun and Deno must pass Sendust-owned blocking async/lifecycle tests before support claims. No second Tokio runtime or speculative per-runtime Rust adapter is introduced.
