@@ -30,7 +30,7 @@ Milestones are evidence checkpoints, not calendar dates. A milestone is reached 
 
 **Exit criteria:**
 - Every constraint C-01 through C-30 maps to an enforcement task.
-- Every mandatory ADR is `ACCEPTED` or explicitly `BLOCKED` with an architecture-time deadline.
+- Every P02-scoped mandatory ADR is `ACCEPTED`; future-phase ADRs may remain `PROPOSED` only when they have a named decision task and do not block the approved architecture baseline.
 - No implementation is required to understand the public contract.
 
 **Residual implementation risks:** Cargo feature compilation, Node runtime compatibility, SMTP/TLS fake-relay tests. These do not block the design baseline but remain hard implementation gates before dependent behavior is claimed.
