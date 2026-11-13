@@ -1,6 +1,6 @@
 # Master Task Registry
 
-**Authoritative task detail lives in the phase plans.** This registry indexes all 95 phase tasks plus 4 architecture-amendment tasks and their prerequisites so the project can be tracked centrally. It does not restate acceptance criteria or implementation detail.
+**Authoritative task detail lives in the phase plans.** This registry indexes all 95 phase tasks plus 7 architecture-amendment tasks and their prerequisites so the project can be tracked centrally. It does not restate acceptance criteria or implementation detail.
 
 - Total phases: 19
 - Phase tasks: 95
