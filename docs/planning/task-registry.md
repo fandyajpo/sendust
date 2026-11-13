@@ -3,7 +3,8 @@
 **Authoritative task detail lives in the phase plans.** This registry indexes all 95 phase tasks plus 4 architecture-amendment tasks and their prerequisites so the project can be tracked centrally. It does not restate acceptance criteria or implementation detail.
 
 - Total phases: 19
-- Phase tasks: 95\n- Architecture amendment tasks: 4 (A01-001–A01-004)
+- Phase tasks: 95
+- Architecture amendment tasks: 4 (A01-001–A01-004)
 - Completed tasks: 15 (P00–P02)
 - Not-started tasks: 80 (P03–P18)
 - P00–P02 tasks are `COMPLETED` with approved gate evidence; P03–P18 remain `NOT STARTED`. A01-001–A01-004 are completed as documentation/design work; runtime implementation validation remains pending.
