@@ -63,7 +63,7 @@ No queue, worker, scheduler, queue adapter, or persistence layer exists or is pl
 ## 5. Ownership model
 
 - JavaScript values are valid only during the synchronous portion of the call.
-- Every `Buffer`, `ArrayBuffer`, and string is copied into Rust-owned memory before the first `await`.
+- Every `Buffer`, `ArrayBuffer`, typed array, and string is copied into Rust-owned memory synchronously before async work is scheduled.
 - Attachment files are read into bounded Rust-owned buffers after opt-in validation.
 - The native transport object owns the core transport and its lifecycle state.
 - JavaScript `close()` explicitly transitions the transport; garbage collection never closes it.
@@ -75,8 +75,8 @@ Failures are categorized before they reach JavaScript:
 
 | Category | Example | Public behavior |
 | --- | --- | --- |
-| Validation | Non-ASCII local part, 101 recipients, CRLF in header | Synchronous rejection with stable code |
-| Configuration | Missing host, unsupported auth mode | Rejection before any network attempt |
+| Validation | Non-ASCII local part, 101 recipients, CRLF in header | `send()` Promise rejection with stable code; transport-option validation in `createTransport()` is synchronous |
+| Configuration | Missing host, unsupported auth mode | Synchronous `createTransport()` error before any network attempt |
 | Limit | Attachment > 10 MiB, wire > 30 MiB | Rejection before DATA |
 | TLS | Self-signed, expired, wrong host | Closed, non-retryable error |
 | Authentication | `535` | Closed, non-retryable error |
