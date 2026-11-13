@@ -1,6 +1,6 @@
 # ADR-0001 — Two crates: Node-free core plus napi adapter
 
-**Status:** ACCEPTED (planning)  
+**Status:** ACCEPTED (architecture baseline; implementation gates P03/P04/P05)  
 **Date:** 2026-11-13  
 **Deciders:** Architecture review (P02-005)  
 **Validated by:** P02-001, P03-001, P04-005, P05-005
