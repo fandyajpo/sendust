@@ -308,12 +308,12 @@ Enforced by P00-001 and P15-005.
 ## 5. Compatibility targets
 
 - **Rust:** stable toolchain; minimum recorded in `rust-toolchain.toml` at P03-001; must satisfy napi-rs CLI requirements (Rust 1.88+ observed).
-- **Node.js build tooling:** current supported CLI range (Node 22.13+ or 24+ recommended by napi-rs docs observed 2026-11-13).
+- **Build tooling:** exact Node.js/Bun/Deno and npm versions are pinned in the [toolchain baseline](../engineering/toolchain-baseline.md). The Node.js candidates satisfy the observed napi-rs CLI minimum; runtime support still requires Sendust blocking tests.
 - **Runtime candidates:** Node.js 22, 24, 26. Support is declared only after P01-004 and P14-004.
 - **Node-API:** level 8 proposed.
 - **Platforms:** macOS arm64/x64, Linux x64/arm64 glibc, Linux x64/arm64 musl, Windows x64 MSVC proposed. Each target must be built and runtime-tested before being claimed.
 - **Module systems:** ESM and CommonJS.
-- **Package managers:** npm consumer contract; pnpm workspace proposed.
+- **Package managers:** npm only; one root npm workspace and one committed `package-lock.json`, as defined by the toolchain baseline. pnpm, yarn, and Bun lockfiles are not used.
 
 ## 6. Research decisions and downstream validation questions
 
