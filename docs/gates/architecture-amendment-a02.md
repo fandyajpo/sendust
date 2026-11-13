@@ -1,6 +1,6 @@
 # Architecture Amendment A02 — Modular Architecture
 
-**Status:** DESIGN APPROPOSED; implementation validation NOT RUN  
+**Status:** DESIGN APPROVED; implementation validation NOT RUN  
 **Date:** 2026-11-13  
 **Decision:** [ADR-0016](../architecture/decisions/0016-modular-monolith.md)
 
