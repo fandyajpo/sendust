@@ -9,6 +9,7 @@ Every `REQUIRED FOR MVP` row must map to at least one implementation task and at
 - **REQUIRED FOR MVP** — must ship in the first public release.
 - **OPTIONAL FOR MVP** — may ship only if it adds no risk and no scope creep; absence is acceptable.
 - **POST-MVP** — explicitly deferred; not in the first release.
+- **HELD** — deliberately excluded from the current roadmap; not an MVP feature or an active post-MVP candidate. Reconsideration requires a separate product decision.
 - **OUT OF SCOPE** — permanently excluded from the product direction.
 
 ## SMTP
