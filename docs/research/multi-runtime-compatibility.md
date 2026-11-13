@@ -52,11 +52,11 @@ Passing one dimension does not imply the others pass.
 
 | Runtime | MVP intent | Required evidence | Special handling |
 |---|---|---|---|
-| Node.js | Required | Blocking Sendust native-load, lifecycle, and fake-SMTP CI | Pin exact tested versions |
+| Node.js | Required | Blocking Sendust native-load, lifecycle, and fake-SMTP CI | Pin exact tested versions from the toolchain baseline |
 | Bun | Required | Same blocking suite on pinned stable Bun | Verify actual Node-API and loader behavior |
 | Deno | Required | Same blocking suite on pinned stable Deno | Local node_modules and --allow-ffi |
 
-Node 22/24/26 remain candidates until Sendust tests pass. Pin stable Bun and Deno versions at implementation freeze. Publish only exact tested versions/ranges. If any runtime fails a blocking test, it remains unsupported and blocks the MVP runtime gate unless a superseding product decision revises the target.
+Exact Node.js, Bun, and Deno CI candidates are pinned in [the toolchain baseline](../engineering/toolchain-baseline.md). They remain candidates until Sendust tests pass. Publish only exact tested versions/ranges. If any runtime fails a blocking test, it remains unsupported and blocks the MVP runtime gate unless a superseding product decision revises the target.
 
 ## Proposed MVP server platform baseline
 
