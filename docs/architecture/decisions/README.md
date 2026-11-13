@@ -18,6 +18,7 @@ Architectural decisions for Sendust. One decision per file. Status values: `PROP
 | [0012](0012-module-formats.md) | Dual ESM/CJS with a single shared implementation | PROPOSED | P14-002, P14-004 |
 | [0013](0013-error-taxonomy.md) | Stable codes, outcomes separate from errors | ACCEPTED (architecture baseline; implementation gates P04/P05/P09/P11) | P02-002, P09-003 |
 | [0014](0014-attachment-filesystem-policy.md) | Filesystem attachments opt-in, regular files only, no URLs | ACCEPTED (architecture baseline; safety gates P08/P11) | P08-001, P08-002 |
+| [0016](0016-modular-monolith.md) | Modular monolith and internal module boundaries | ACCEPTED (design amendment A02; implementation evidence P03/P04/P06/P12) | A02-001–A02-003, P03, P04, P06, P12 |
 | [0015](0015-multi-runtime-support.md) | Multi-runtime Node-API support and server platform policy | ACCEPTED (design amendment A01; runtime evidence P05/P14) | A01-001–A01-004, P05, P14 |
 
 ## ADR format
