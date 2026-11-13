@@ -110,8 +110,11 @@ NOT STARTED. Planning only; no repository files beyond phase plans exist.
 
 ## Multi-runtime amendment requirements
 
-P03-001 through P03-005 must account for ADR-0015. The repository baseline must define:
+P03-001 through P03-005 must account for ADR-0015 and ADR-0016. The repository baseline must define:
 - exact pinned runtime versions for Node.js, Bun, and Deno in CI;
+- modular-monolith directory structure within exactly two crates;
+- documented module ownership and allowed dependency directions;
+- static checks for domain isolation and SMTP adapter containment;
 - blocking native-addon smoke jobs for all three runtimes;
 - runtime-neutral TypeScript checks and isolated native loader;
 - Deno local node_modules plus --allow-ffi test configuration;
