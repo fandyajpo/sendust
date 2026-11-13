@@ -16,8 +16,8 @@ A positive SMTP reply means the relay accepted responsibility. It does not prove
 
 | Persona | Job to be done | Success |
 | --- | --- | --- |
-| Node.js backend developer | Send receipts, password resets, and transactional notifications through an existing relay | Small typed API; no Rust toolchain at install; reliable result semantics |
-| Platform engineer | Configure relay credentials, TLS, and shutdown behavior across a Node fleet | Mandatory certificate verification, bounded operations, no hidden retry or queue |
+| Server-side JavaScript developer | Use Node.js, Bun, or Deno to send receipts, password resets, and transactional notifications through an existing relay | Small typed API; no Rust toolchain at install; reliable result semantics |
+| Platform engineer | Configure relay credentials, TLS, and shutdown behavior across Node.js, Bun, and Deno services | Mandatory certificate verification, bounded operations, no hidden retry or queue |
 | Library maintainer | Publish and maintain a native npm package | Isolated Rust core, deterministic tests, reproducible platform artifacts |
 | Security reviewer | Review handling of credentials, content, filesystem access, and native memory | Redacted diagnostics, bounded inputs, explicit trust boundaries |
 
@@ -55,7 +55,7 @@ Sendust is an embeddable native delivery library for server-side JavaScript runt
 - Use the Rust core + thin Node-API adapter + TypeScript wrapper architecture.
 - Prefer lettre 0.11.23; use its lower-level async SMTP connection API where per-recipient RCPT visibility is required. Do not implement SMTP command parsing or TLS ourselves.
 - Use napi-rs v3 and its managed Tokio 1 runtime; Node-API 8 is the proposed ABI target.
-- Node.js 22, 24, and 26 remain version candidates; exact Bun and Deno versions are pinned at P03. No runtime is supported until blocking CI evidence exists.
+- Exact runtime candidates are defined in [the toolchain baseline](../engineering/toolchain-baseline.md). No runtime/platform combination is supported until blocking CI evidence exists.
 - Rustls with ring and webpki-roots is the selected TLS configuration, with certificate and hostname verification mandatory.
 - The exact recipient and timeout behavior is documented in [lettre research](../research/lettre-0.11.23-validation.md).
 - Runtime behavior, compilation, certificate fixtures, and fault injection remain implementation-phase validation; this discovery record does not claim those tests have run.
