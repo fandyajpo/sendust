@@ -86,6 +86,8 @@ Repository validation includes structural tests and harness self-tests, all usin
 ## Acceptance criteria
 
 - Exactly two crates exist with acyclic dependency direction and no Node linkage in core.
+- `sendust-core` has the approved modular-monolith skeleton and a narrow public facade.
+- Domain module dependency rules and SMTP adapter containment are statically checkable.
 - Dependency and feature policy is pinned, reviewable, and forbids insecure TLS toggles.
 - Canonical quality commands are defined and separated by Node dependence.
 - Fake SMTP/TLS harness seams cover all required fault fixtures without external network.
