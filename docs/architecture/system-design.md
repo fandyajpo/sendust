@@ -348,10 +348,10 @@ Codes are stable strings; classes are stable for `instanceof`. The full catalog 
 
 | Dependency | Purpose | MVP | Alternative | Notes |
 | --- | --- | --- | --- | --- |
-| `lettre` 0.11.23 | SMTP, TLS, auth, message builder | Required | Custom SMTP client; `mail-send` | Mature, async, Tokio support. Pin exact version. |
+| `lettre` 0.11.23 | SMTP connection, TLS, auth, command, DATA codec | Required | Custom SMTP client; `mail-send` | Mature, async, Tokio support. Pin exact version; builder feature is not enabled. |
 | `tokio` 1 | Async runtime via napi | Required | async-std | napi-rs manages the runtime; do not create another. |
 | `rustls` 0.23 | TLS | Required | native-tls | `ring` provider, `webpki-roots`; no verification bypass. |
-| `napi` / `napi-derive` 3 | Node-API binding | Required | neon, node-bindgen | Current docs target v3; verify Node-API floor. |
+| `napi` 3.16.2 + `napi-derive` 3.7.0 + `napi-build` 2.6.0 | Node-API binding | Required | neon, node-bindgen | Pin exact versions; enable `napi8` and `async` features explicitly. |
 | `serde` / `serde_json` | Optional structured details | Optional | manual | Only if error/result details need serialization. |
 | `thiserror` | Core error ergonomics | Optional | manual impls | Does not cross FFI; mapping stays explicit. |
 | `tracing` | Internal diagnostics | Optional | `log` | No message content or credentials in spans. |
@@ -366,7 +366,7 @@ The following are intentionally unresolved until their owning task:
 
 - Exact per-stage timeout attribution (P01-003).
 - Recipient partial-status observability (P01-003/P06-003, ADR-0005).
-- Node-API level if a required feature needs more than 8 (P01-004).
+- Node-API 8 is the selected floor; a higher level requires a new evidence-backed ADR and support-matrix update.
 - Final platform matrix (P14-003).
 - Performance budgets (P13-001).
 
