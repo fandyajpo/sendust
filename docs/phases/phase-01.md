@@ -36,7 +36,7 @@ In scope: pinned-source and documentation inspection, minimal reproducible probe
 - **Status:** NOT STARTED
 - **Prerequisites:** P01-001
 - **Description:** Inspect the lower-level lettre async connection API for per-recipient RCPT outcomes, the point at which DATA begins, and visibility of connect, greeting, EHLO/STARTTLS, AUTH, MAIL FROM, RCPT TO, DATA, and final-response stages. Evaluate whether partial recipient acceptance can be reported honestly. If inaccessible, draft the ADR requiring rejection of the entire envelope before DATA while retaining `unknown` and `attempted` statuses; reject every per-recipient independent-message design.
-- **Evidence criteria:** A stage-observability table marks each stage observable or not, with API citations. A recipient-outcome table covers all accepted, mixed, all rejected, and post-DATA ambiguity. The ADR contains one explicit decision: honest partial status, conservative pre-DATA rejection, or phase block. Mixed RCPT fixture is specified as one `250`, one `550`; post-DATA fixture as `451` after final DATA.
+- **Evidence criteria:** A stage-observability table marks each stage observable or not, with API citations. A recipient-outcome table covers all accepted, mixed, all rejected, and post-DATA ambiguity. The ADR contains one explicit decision: honest partial status, conservative pre-DATA rejection, or phase block. Mixed RCPT fixture is specified as one `250`, one `550`; post-DATA fixtures as an explicit final `451` (known rejection) and a dropped connection after the DATA terminator with no final reply (unknown).
 
 ### P01-004 — Validate Node 22/24/26, Node-API 8, and napi-managed Tokio lifecycle
 
@@ -76,7 +76,7 @@ Phase 01 requires Phase 00 approval. P01-001 and P01-004 depend on P00-005; P01-
 Research tests are reproducible probes and fixture specifications, not committed product tests. Required evidence includes:
 
 - Fake SMTP dialogue with mixed RCPT: `250` for the first recipient, `550` for the second, then observable behavior at DATA.
-- Final DATA response `451`: verify the planned result is `unknown`, not success and not retried.
+- Explicit final DATA response `451`: verify `rejected`, not `unknown`, and no retry. Separately verify missing final response after the terminator may have reached the relay maps to `unknown`.
 - Delay fixtures at connect 11s, command 31s, total 121s, and close drain 126s against the proposed budgets.
 - TLS fixtures: self-signed, expired, wrong hostname, incomplete chain, malformed certificate; all must fail closed with verification enabled.
 - Node lifecycle probe: active send, forced GC, explicit close, no close, and process exit before/after deadline.
