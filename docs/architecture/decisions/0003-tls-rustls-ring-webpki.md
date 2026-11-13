@@ -34,7 +34,7 @@ Rationale for `webpki-roots`: deterministic trust across all shipped binaries, n
 - `ring` and rustls feature names may drift; the exact feature set must be pinned and validated.
 - Verification failures must be tested with five fixtures: self-signed, expired, wrong host, incomplete chain, malformed certificate.
 
-## Why blocked
+## Source review and implementation gate
 
 The pinned v0.11.23 Cargo.toml exposes a composable feature graph: `default-features = false`, with `smtp-transport`, `tokio1-rustls`, `ring`, and `webpki-roots`. This avoids lettre defaults including `pool` and `native-tls`. Source inspection is complete; the exact Cargo build and target compilation remain hard gates at P03-002/P06-002. No claim of compiled validation is made here.
 
