@@ -19,7 +19,7 @@
 | Recipient semantics | PASS (source/API) | Each RCPT reply observable; one DATA to accepted subset; recipient accepted only after final DATA 2xx |
 | Error taxonomy | PASS | Operational failures use stable typed errors; delivery outcomes use result values |
 | Lifecycle | PASS (design) | One active send, immediate BUSY, open→closing→closed, explicit bounded close, no GC dependency |
-| Timeout model | PASS (design) | Connect 10s, operation 30s, total 120s, close 125s; outer connect deadline covers DNS/greeting/EHLO/TLS |
+| Timeout model | PASS (design) | Connect ≤10s, operation ≤30s, total ≤120s, close ≤125s; lower-only; connect/operation ≤ total ≤ close; outer connect deadline covers DNS/greeting/EHLO/TLS |
 | Memory ownership | PASS (design) | Synchronous N-API snapshot into Rust-owned memory before async scheduling |
 | Limits and attachment policy | PASS | 100 recipients; 10/20/30 MiB caps; filesystem opt-in; regular files only; no URL attachments |
 | Scope boundary | PASS | No queue, worker, scheduler, persistence, queue adapter, automatic retry, connection pool, or fan-out |
