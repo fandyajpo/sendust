@@ -3,7 +3,8 @@
 **Status:** ACCEPTED (design); Node-API 8 selected, runtime verification pending P05-003/P14-004  
 **Date:** 2026-11-13  
 **Deciders:** Architecture review (P02-005)  
-**Validated by:** P01-004, P05-001, P05-003
+**Source-reviewed by:** P01-004  
+**Implementation gates:** P05-001, P05-003, P14-004
 
 ## Context
 
