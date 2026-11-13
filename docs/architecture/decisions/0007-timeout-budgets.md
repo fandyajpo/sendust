@@ -12,7 +12,7 @@ SMTP sessions can hang at connect, TLS, greeting, AUTH, MAIL, RCPT, DATA, or the
 ## Decision
 
 - Defaults: connect 10 s, per-operation 30 s, total send 120 s, close/drain 125 s.
-- Every timeout is finite and tunable within documented bounds. `0`, negative, `NaN`, and infinite values are rejected.
+- Defaults are also hard maximums: connect ≤10 s, operation ≤30 s, total ≤120 s, close ≤125 s. Values may be lowered but not raised. Each value is an integer of at least 1 s; connect and operation ≤ total; close ≥ total. `0`, negative, sub-second, `NaN`, infinite, and inconsistent combinations are rejected.
 - A single absolute deadline governs the total send.
 - `connect` bounds DNS + TCP + greeting + EHLO + implicit TLS/STARTTLS negotiation through one outer deadline. lettre's inner timeout only bounds TCP connection attempts; it does not by itself bound DNS, greeting/EHLO, or TLS upgrade.
 - `operation` bounds each command/response wait.
