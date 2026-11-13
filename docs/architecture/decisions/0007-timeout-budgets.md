@@ -1,6 +1,6 @@
 # ADR-0007 — Finite timeout budgets and limited stage attribution
 
-**Status:** PROPOSED; stage attribution pending P01-003  
+**Status:** ACCEPTED (coarse-stage design); runtime timing validation required at P10-002  
 **Date:** 2026-11-13  
 **Deciders:** Architecture review (P02-005)  
 **Validated by:** P01-003, P04-004, P10-002
@@ -14,11 +14,11 @@ SMTP sessions can hang at connect, TLS, greeting, AUTH, MAIL, RCPT, DATA, or the
 - Defaults: connect 10 s, per-operation 30 s, total send 120 s, close/drain 125 s.
 - Every timeout is finite and tunable within documented bounds. `0`, negative, `NaN`, and infinite values are rejected.
 - A single absolute deadline governs the total send.
-- `connect` bounds TCP + TLS/STARTTLS establishment.
+- `connect` bounds DNS + TCP + greeting + EHLO + implicit TLS/STARTTLS negotiation through one outer deadline. lettre's inner timeout only bounds TCP connection attempts; it does not by itself bound DNS, greeting/EHLO, or TLS upgrade.
 - `operation` bounds each command/response wait.
 - `total` bounds the entire send.
 - `close` bounds shutdown and is greater than `total` so a maximal send can still drain.
-- Report a timeout category and elapsed budget. Report a specific stage only if P01-003 proves it is observable; otherwise omit stage rather than infer it.
+- Report only coarse public-call boundaries: connect+greeting+EHLO+TLS; AUTH; MAIL; each RCPT; DATA command; DATA body+terminator+final reply; cleanup. Do not promise finer internal socket read/write stage attribution.
 
 ## Alternatives
 
@@ -39,5 +39,5 @@ SMTP sessions can hang at connect, TLS, greeting, AUTH, MAIL, RCPT, DATA, or the
 
 - Boundary tests at connect 10 s, operation 30 s, total 120 s, close 125 s.
 - Interaction tests where a stage timeout and total timeout compete.
-- A stage-observability table from P01-003.
+- The coarse stage-observability table in [lettre validation](../../research/lettre-0.11.23-validation.md).
 - Validation tests rejecting non-finite and non-positive values.
