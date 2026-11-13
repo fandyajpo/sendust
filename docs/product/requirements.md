@@ -114,7 +114,7 @@ Enforced by P04-002, P07-001, P07-004.
 
 ### C-15 — Delivery semantics
 
-A successful result means the relay accepted the message. It NEVER means mailbox delivery. After DATA, an ambiguous failure MUST be reported as `unknown` and MUST NOT be retried automatically. Before DATA, a definitive refusal is `rejected`.
+A successful result means the relay accepted the message for at least one accepted recipient. It NEVER means mailbox delivery. An explicit RCPT refusal rejects only that recipient when other recipients were accepted; if all RCPT commands are refused, the overall result is `rejected`. An explicit negative final DATA reply is also `rejected`. After message transmission begins, an indeterminate final disposition MUST be reported as `unknown` and MUST NOT be retried automatically.
 
 Enforced by P02-002, P06-004, P09-002.
 
