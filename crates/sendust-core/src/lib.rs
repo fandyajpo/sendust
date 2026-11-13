@@ -20,8 +20,10 @@ mod transports;
 mod validation;
 
 pub use crate::address::Mailbox;
+pub use crate::attachments::{Attachment, FileDescriptor};
+pub use crate::config::{Limits, MIB};
 pub use crate::errors::{Error, ErrorCategory, ErrorCode, ErrorDetails, Stage};
-pub use crate::message::{Header, HeaderName, HeaderValue};
+pub use crate::message::{Header, HeaderName, HeaderValue, OutgoingMessage};
 pub use crate::validation::{Failures as ValidationFailures, ValidationStage, validate_in_order};
 
 /// Crate version, surfaced to the binding for diagnostics.

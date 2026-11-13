@@ -33,7 +33,7 @@ In scope: `crates/sendust-core/src` modules for validation, addresses, limits, M
 ### P04-003 — Implement the message model and hard size accounting
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** IN PROGRESS
 - **Prerequisites:** P03-005, P02-004
 - **Description:** Build an internal message model with headers, body, recipients, and attachment descriptors. Enforce 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw attachment bytes, and 30 MiB wire message. Compute wire size from the final serialized representation, not an estimate, and enforce limits before network connect. Record inclusive boundary behavior and deterministic limit-error precedence.
 - **Evidence criteria:** Unit tests assert 100 recipients pass and 101 fail; 10 MiB attachment passes and 10 MiB + 1 fails; 20 MiB aggregate passes and 20 MiB + 1 fails; 30 MiB wire passes and 30 MiB + 1 fails. Tests assert no SMTP connection is attempted on limit failure. Wire-size computation is covered with UTF-8, encoded headers, and attachment encodings.
@@ -118,7 +118,7 @@ Implement the approved ADR-0016 module responsibilities without creating additio
 
 ## Status
 
-IN PROGRESS. P04-001 and P04-002 are IN REVIEW; P04-003 to P04-005 remain NOT STARTED.
+IN PROGRESS. P04-001 and P04-002 are IN REVIEW, P04-003 is IN PROGRESS (limits, attachment caps, and the message model landed; the MIME serializer and wire-size enforcement are next), and P04-004 to P04-005 remain NOT STARTED.
 
 ## Evidence log
 
@@ -126,5 +126,6 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 
 | Task | Evidence | State |
 | --- | --- | --- |
+| P04-003 (partial) | `crates/sendust-core/src/config/mod.rs` (approved hard caps with lower-only `Limits`), `crates/sendust-core/src/attachments/mod.rs` (descriptor policy, inclusive per-file and aggregate caps, filesystem opt-in, path and control-character rejection), and `crates/sendust-core/src/message/mod.rs` (`OutgoingMessage` with recipient counting across To/CC/BCC, subject/header injection checks, attachment propagation); 51 core unit tests | IN PROGRESS — MIME serializer and wire-size enforcement remaining |
 | P04-002 | `crates/sendust-core/src/address/mod.rs` (ASCII local parts, IDNA/UTS #46 strict domain conversion, trailing-dot rejection, Unicode display names with injection-safe quoting) and `crates/sendust-core/src/message/mod.rs` (validated `HeaderName`/`HeaderValue`/`Header` newtypes); 35 core unit tests including IDNA, punycode, uppercase, overlong, malformed, CRLF/NUL/tab injection, and header-name/value fixtures | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
 | P04-001 | `crates/sendust-core/src/errors/mod.rs` (32 stable codes with categories, whitelisted details, stage enum, redaction-by-construction) and `crates/sendust-core/src/validation/mod.rs` (eight-stage precedence, `Failures`, `validate_in_order`); 13 core unit tests including a documentation parity table, adjacent-stage precedence pairs, same-stage determinism, and a redaction scan | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |

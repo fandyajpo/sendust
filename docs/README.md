@@ -104,8 +104,9 @@ P00–P03 are COMPLETED with approved evidence. P04 is IN PROGRESS: P04-001–P0
 | QG-02 Architecture | APPROVED at design level |
 | P03-001–P03-005 | COMPLETED |
 | P04-001–P04-002 | IN REVIEW |
-| P04-003–P18 | NOT STARTED |
-| Next task | P04-003 — implement the message model and hard size accounting |
+| P04-003 | IN PROGRESS |
+| P04-004–P18 | NOT STARTED |
+| Next task | P04-003 (remaining) — message model and wire-size enforcement |
 
 ## 5. Conventions
 

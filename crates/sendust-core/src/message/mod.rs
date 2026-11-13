@@ -122,9 +122,65 @@ fn is_field_name_character(character: char) -> bool {
         )
 }
 
+use crate::attachments::{self, Attachment};
+use crate::config::Limits;
+
+/// A complete outgoing message, validated before any network work begins.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OutgoingMessage {
+    pub from: crate::address::Mailbox,
+    pub to: Vec<crate::address::Mailbox>,
+    pub cc: Vec<crate::address::Mailbox>,
+    pub bcc: Vec<crate::address::Mailbox>,
+    pub reply_to: Vec<crate::address::Mailbox>,
+    pub subject: String,
+    pub text: Option<String>,
+    pub html: Option<String>,
+    pub headers: Vec<Header>,
+    pub attachments: Vec<Attachment>,
+}
+
+impl OutgoingMessage {
+    /// Total envelope recipients: To, CC, and BCC are all deliverable.
+    pub fn recipient_count(&self) -> usize {
+        self.to.len() + self.cc.len() + self.bcc.len()
+    }
+
+    /// Runs the deterministic stages this model owns, in approved order.
+    ///
+    /// Stages 1 (transport configuration) and 8 (wire size) are owned elsewhere:
+    /// the transport validates its options, and wire size needs the serialized
+    /// bytes produced by `mime`. Callers run all stages through
+    /// `validation::validate_in_order`, so precedence stays stable.
+    pub fn validate(&self, limits: Limits, filesystem_enabled: bool) -> Result<(), Error> {
+        // Stage 2: message identity.
+        if self.subject.is_empty() {
+            return Err(Error::new(ErrorCode::ValidationMissingFrom));
+        }
+        // Stage 3: recipient presence and count.
+        if self.recipient_count() == 0 {
+            return Err(Error::new(ErrorCode::ValidationMissingRecipient));
+        }
+        if self.recipient_count() > limits.max_recipients() {
+            return Err(Error::new(ErrorCode::LimitRecipients));
+        }
+        // Stage 4: headers and injection. Header values are validated at
+        // construction; the subject is caller-supplied text and is checked here.
+        HeaderValue::parse(&self.subject)?;
+        for header in &self.headers {
+            HeaderName::parse(header.name())?;
+            HeaderValue::parse(header.value())?;
+        }
+        // Stages 6 and 7: attachment metadata and known byte caps.
+        attachments::validate(&self.attachments, limits, filesystem_enabled)?;
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::Limits;
 
     fn name_error(input: &str) -> ErrorCode {
         HeaderName::parse(input)
@@ -177,6 +233,94 @@ mod tests {
                 "{input}"
             );
         }
+    }
+
+    fn mailbox(value: &str) -> crate::address::Mailbox {
+        crate::address::Mailbox::parse(value).expect("valid mailbox")
+    }
+
+    fn message_with(recipients: usize) -> OutgoingMessage {
+        OutgoingMessage {
+            from: mailbox("alice@example.test"),
+            to: (0..recipients)
+                .map(|index| mailbox(&format!("user{index}@example.test")))
+                .collect(),
+            cc: Vec::new(),
+            bcc: Vec::new(),
+            reply_to: Vec::new(),
+            subject: "Hello".to_string(),
+            text: Some("body".to_string()),
+            html: None,
+            headers: Vec::new(),
+            attachments: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn accepts_a_complete_message() {
+        let message = message_with(1);
+        assert!(message.validate(Limits::default(), false).is_ok());
+    }
+
+    #[test]
+    fn counts_recipients_across_to_cc_and_bcc() {
+        let mut message = message_with(1);
+        message.cc.push(mailbox("cc@example.test"));
+        message.bcc.push(mailbox("bcc@example.test"));
+        assert_eq!(message.recipient_count(), 3);
+    }
+
+    #[test]
+    fn recipient_cap_is_inclusive() {
+        assert!(message_with(100).validate(Limits::default(), false).is_ok());
+        assert_eq!(
+            message_with(101)
+                .validate(Limits::default(), false)
+                .expect_err("over cap")
+                .code(),
+            ErrorCode::LimitRecipients
+        );
+    }
+
+    #[test]
+    fn requires_at_least_one_recipient() {
+        assert_eq!(
+            message_with(0)
+                .validate(Limits::default(), false)
+                .expect_err("no recipients")
+                .code(),
+            ErrorCode::ValidationMissingRecipient
+        );
+    }
+
+    #[test]
+    fn rejects_subject_injection() {
+        let mut message = message_with(1);
+        message.subject = "Hello\r\nBcc: evil@example.test".to_string();
+        assert_eq!(
+            message
+                .validate(Limits::default(), false)
+                .expect_err("injection")
+                .code(),
+            ErrorCode::ValidationHeaderInjection
+        );
+    }
+
+    #[test]
+    fn propagates_attachment_failures() {
+        let mut message = message_with(1);
+        message.attachments.push(Attachment::Bytes {
+            filename: "ok.txt".to_string(),
+            content_type: None,
+            bytes: vec![0u8; Limits::default().max_attachment_bytes() as usize + 1],
+        });
+        assert_eq!(
+            message
+                .validate(Limits::default(), false)
+                .expect_err("over cap")
+                .code(),
+            ErrorCode::LimitAttachmentBytes
+        );
     }
 
     #[test]
