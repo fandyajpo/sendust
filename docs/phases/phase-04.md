@@ -41,7 +41,7 @@ In scope: `crates/sendust-core/src` modules for validation, addresses, limits, M
 ### P04-004 — Implement transport state machine, deadlines, and BUSY semantics
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P03-005, P02-003
 - **Description:** Implement `open -> closing -> closed` with exactly one active send, immediate `BUSY` for overlap, idempotent close, and deadline-bounded drain. Implement finite tunable budgets: connect 10s, operation 30s, total 120s, close 125s, with one shared total deadline preventing overrun. Close must be explicit and never GC-dependent. Exact stage attribution is emitted only where P01-003 proved it; otherwise timeouts are reported at the honest observable level.
 - **Evidence criteria:** Unit tests cover send while open, BUSY on second send with no dial, send during closing, send after closed, double close, close during connect, and drain beyond 125s. Fake-time tests assert the 10s/30s/120s/125s boundaries. No queue is introduced. State transitions are exhaustively tested.
@@ -118,7 +118,7 @@ Implement the approved ADR-0016 module responsibilities without creating additio
 
 ## Status
 
-IN PROGRESS. P04-001 to P04-003 are IN REVIEW; P04-004 and P04-005 remain NOT STARTED.
+IN PROGRESS. P04-001 to P04-004 are IN REVIEW; P04-005 remains NOT STARTED.
 
 ## Evidence log
 
@@ -126,6 +126,7 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 
 | Task | Evidence | State |
 | --- | --- | --- |
+| P04-004 | `crates/sendust-core/src/lifecycle/mod.rs` (`open -> closing -> closed`, one-send reservation, immediate BUSY, idempotent close, condvar drain with `TIMEOUT_CLOSE`) and `crates/sendust-core/src/config/mod.rs` (`Timeouts` 10/30/120/125 s, lower-only, connect/operation <= total <= close); 84 core unit tests covering every state transition, double close, send during close, drain and drain timeout, and deadline boundaries. Deferred: the no-dial proof is structural (the permit gates the dial) and becomes executable in P04-005. | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
 | P04-003 | `crates/sendust-core/src/config/mod.rs` (approved hard caps, lower-only), `crates/sendust-core/src/attachments/mod.rs` (descriptor policy, inclusive caps, filesystem opt-in), `crates/sendust-core/src/message/mod.rs` (`OutgoingMessage`, recipient counting, reserved-header rejection), and `crates/sendust-core/src/mime/mod.rs` (deterministic serializer: text/HTML/alternative/mixed, `base64` crate per ADR-0010, RFC 2047 headers, hard folding, BCC exclusion, exact wire-size cap); 69 core unit tests | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending. Deferred: file attachments need the P08 reader; the 30 MiB + 1 boundary is asserted through an exact lowered limit plus a 21/23 MiB straddle of the real cap; the no-connect-on-limit-failure assertion belongs to P04-005. |
 | P04-002 | `crates/sendust-core/src/address/mod.rs` (ASCII local parts, IDNA/UTS #46 strict domain conversion, trailing-dot rejection, Unicode display names with injection-safe quoting) and `crates/sendust-core/src/message/mod.rs` (validated `HeaderName`/`HeaderValue`/`Header` newtypes); 35 core unit tests including IDNA, punycode, uppercase, overlong, malformed, CRLF/NUL/tab injection, and header-name/value fixtures | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
 | P04-001 | `crates/sendust-core/src/errors/mod.rs` (32 stable codes with categories, whitelisted details, stage enum, redaction-by-construction) and `crates/sendust-core/src/validation/mod.rs` (eight-stage precedence, `Failures`, `validate_in_order`); 13 core unit tests including a documentation parity table, adjacent-stage precedence pairs, same-stage determinism, and a redaction scan | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
