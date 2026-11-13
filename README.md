@@ -2,7 +2,7 @@
 
 **Standalone Native Email Delivery Engine**
 
-Sendust is a Rust-powered native email delivery engine for Node.js applications. It exposes a narrow TypeScript API backed by a Node-API adapter and a Node-independent Rust core. Sendust submits transactional email through an SMTP relay configured by the consuming application.
+Sendust is a Rust-powered native email delivery engine for Node.js, Bun, and Deno applications. It exposes a narrow TypeScript API backed by a shared Node-API adapter and a runtime-independent Rust core. Sendust submits transactional email through an SMTP relay configured by the consuming application.
 
 Sendust is an embeddable library, not an SMTP server, hosted email service, mailbox platform, campaign manager, or job scheduler.
 
