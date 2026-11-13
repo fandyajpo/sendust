@@ -44,7 +44,7 @@
 - **Alternatives:**
   - `mail-send` — simpler SMTP, less actively shaped around async ecosystems; would require more MIME work.
   - `samotop` — server-oriented; not a client library.
-  - Custom SMTP client — maximum control over stage/recipient observability, but high correctness, TLS, and maintenance risk; rejected unless P01-003 proves a required capability is inaccessible.
+  - Custom SMTP client — maximum control over stage/recipient observability, but high correctness, TLS, and maintenance risk; rejected for MVP because the selected public lower-level lettre API provides the required RCPT visibility.
 - **Maintenance:** Active release observed (0.11.23 in October 2026). Maintenance cadence must be confirmed in P01-001.
 - **Compatibility:** Requires a matching async executor feature. Tokio 1 is available. TLS feature combinations are non-trivial and must be validated (P01-002).
 - **Security:** TLS verification must be explicitly configured. Defaults and feature flags must be audited. Pin exact version and review advisories at P11-004.
