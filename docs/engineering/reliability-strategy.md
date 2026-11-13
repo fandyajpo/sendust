@@ -65,7 +65,8 @@ Rules:
 | RCPT rejected | ADR-0005 outcome | No | Close session |
 | DATA rejected before body | `rejected` | No | Close session |
 | Body transmission interrupted | `unknown` | No | Close session |
-| Final response ambiguous | `unknown` | No | Close session |
+| Explicit final 4xx/5xx response | `rejected` | No | Close session |
+| Final response missing/ambiguous after DATA terminator may have reached relay | `unknown` | No | Close session |
 | Timeout before DATA | Timeout error | No | Cancel, close |
 | Timeout after DATA | `unknown` | No | Cancel, close |
 | Panic at boundary | `INTERNAL` | No | Release send slot |
@@ -88,7 +89,7 @@ Rules:
 | `close` vs `close` | One drain; both resolve |
 | `close` during connect | Cancel within close budget |
 | `close` during AUTH | Cancel within close budget |
-| `close` during DATA | `unknown` or cancelled; no retry |
+| `close` during DATA | `rejected` only if explicit negative final reply; otherwise `unknown` when final disposition cannot be observed; no retry |
 | Timeout vs close | Earlier deadline wins; state consistent |
 | Send completion vs close | Result delivered; transport closes |
 | GC during send | No effect on lifecycle |
