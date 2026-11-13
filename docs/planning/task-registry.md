@@ -11,6 +11,15 @@
 - Effort is relative: S, M, L, XL. No delivery dates.
 - Gate tasks are the final task in each phase and must not be marked complete before their phase evidence exists.
 
+## Architecture Amendment A01 tasks
+
+| Task | Title | Prerequisites | Status |
+| --- | --- | --- | --- |
+| A01-001 | Record official runtime compatibility evidence | P01-004 | COMPLETED |
+| A01-002 | Freeze multi-runtime/platform design | A01-001 | COMPLETED |
+| A01-003 | Reconcile requirements, phases, CI, distribution and release docs | A01-001, A01-002 | COMPLETED |
+| A01-004 | Amendment gate review | A01-001, A01-002, A01-003 | COMPLETED |
+
 ## Architecture Amendment A02 tasks
 
 | Task | Title | Prerequisites | Status |
