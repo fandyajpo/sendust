@@ -62,7 +62,7 @@ Discovery is document-driven. The ledger is the canonical source for later accep
 - Runtime call path: TypeScript wrapper in `ts/src` -> napi binding -> Rust core -> `lettre`.
 - `lettre 0.11.23` is observed, not an invitation to write a custom SMTP client.
 - TLS proposal is rustls with `ring` and `webpki-roots`; feature validation belongs to P01-002. Certificate verification must never be disableable.
-- MVP has no connection pooling and no automatic retry. A successful send means the relay accepted the message, not that a mailbox received it. After DATA, an unknown result is not retried.
+- MVP has no connection pooling, internal queue, worker, scheduler, queue adapter, or automatic retry. Queueing and scheduling are caller-owned. A successful send means the relay accepted the message, not that a mailbox received it. A genuinely unknown result is not retried.
 - Recipient partial failure is not assumed to be observable. P01-003 and P06-003 must inspect lettre’s lower-level async connection API. If status is inaccessible, the architecture gate must explicitly adopt “reject the entire envelope before DATA” while retaining honest `unknown`/`attempted` statuses; no per-recipient independent messages.
 - One active send per transport; concurrent attempts fail fast with `BUSY` and are never queued. Lifecycle is `open -> closing -> closed`; close drains bounded by a deadline and must not depend on garbage collection.
 - Timeouts are finite and tunable: connect 10s, operation 30s, total 120s, close/drain 125s. Exact stage introspection is validated in P01-003.
@@ -89,7 +89,7 @@ No phase prerequisites. P00-001 has no prerequisite; P00-002 and P00-003 depend 
 Discovery testing is evidence review and scenario coverage, not executable product tests. Required walkthroughs use these concrete fixture cards:
 
 1. Mixed RCPT responses: one recipient accepted, one `550`; expected policy must state whether the envelope is rejected before DATA or unknown, never per-recipient delivery.
-2. `451` after final DATA: expected result is `unknown`, no retry.
+2. Explicit final `451` after DATA: expected result is `rejected`. A separate dropped connection after the DATA terminator may have reached the relay, with no final reply, is `unknown`; neither case is retried.
 3. Connect delay of 11s against 10s connect timeout.
 4. Command delay of 31s against 30s operation timeout.
 5. Overall send delay of 121s against 120s total timeout.
