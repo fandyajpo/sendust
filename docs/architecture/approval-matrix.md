@@ -93,3 +93,18 @@ No queue, worker, scheduler, persistence, queue adapter, automatic retry, backof
 This matrix was re-reviewed against the final text and status of every P02-scoped ADR after source/API reconciliation. It is the canonical approved design snapshot for implementation. The pre-QG-02 reconciliation window is now closed; subsequent material changes require a superseding ADR.
 
 QG-02 approves the design contract and implementation handoff only. It does not certify compilation, runtime compatibility, SMTP correctness, TLS fixture results, MIME conformance, or package artifacts. Any downstream implementation gate may block or supersede an ADR if executable evidence contradicts this design.
+
+## 8. Architecture Amendment A01 — multi-runtime support
+
+A01 extends this design baseline without replacing the two-crate core architecture.
+
+| Area | Amended decision | Required validation |
+|---|---|---|
+| Runtime targets | Node.js, Bun, Deno are required MVP targets | Blocking Sendust CI on exact versions; P05/P14 |
+| Native binding | One Node-API 8 addon remains the default | Actual addon load/async/lifecycle tests on all runtimes |
+| TypeScript wrapper | Runtime-neutral API; isolated native loader | P03/P05/P09 |
+| Deno | Local node_modules and explicit --allow-ffi documented | Clean install and runtime test |
+| Platforms | Linux x64/ARM64 glibc, Linux x64 musl, macOS x64/ARM64, Windows x64 MSVC candidates | Build, clean install, load and fake-SMTP tests |
+| Claims | Runtime × OS × CPU × ABI/libc intersection only | P14 support matrix and blocking CI evidence |
+
+ADR-0015 is accepted as a design amendment. It does not claim Bun, Deno, or any new platform has passed Sendust runtime tests. See [A01 gate](../gates/architecture-amendment-a01.md).
