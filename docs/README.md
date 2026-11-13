@@ -96,7 +96,7 @@ P00–P02 are COMPLETED with approved evidence. P03 is IN PROGRESS: P03-001–P0
 | --- | --- |
 | Repository | Documentation, architecture planning, and the P03 workspace skeleton |
 | Application implementation | Skeleton only; no product behavior implemented |
-| Rust toolchain in audit environment | Rust 1.100.0 and Node.js 24.22.x exercised in a development container; Sendust blocking CI has not run |
+| Toolchain validation | Rust 1.100.0 and the Node.js 22.23.5/24.22.3/26.13.1 jobs pass in Sendust CI on branch `feat/p03-repository-skeleton` |
 | QG-00 Discovery | APPROVED |
 | QG-01 Research | APPROVED with implementation validation gates |
 | QG-02 Architecture | APPROVED at design level |

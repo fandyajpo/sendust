@@ -120,12 +120,13 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 | --- | --- | --- |
 | P03-001 | Two-crate workspace, manifests, module tree, `ts/src` skeleton, `rust-toolchain.toml`; `cargo metadata --format-version 1 --no-deps` reports exactly `sendust-core` and `sendust-napi` | IMPLEMENTED, STATICALLY REVIEWED |
 | P03-002 | [Dependency policy](../engineering/dependency-policy.md) plus workspace pins; `cargo tree -e features` resolves `lettre` 0.11.23 with only `smtp-transport`, `tokio1-rustls`, `ring`, and `webpki-roots`, with no `pool` or `native-tls`; a core unit test constructs the pinned `SmtpTransport` builder, so a dropped transport feature fails the build | IMPLEMENTED, STATICALLY REVIEWED |
-| P03-003 | `scripts/check-architecture.mjs`, `scripts/check-docs.mjs`, npm workspace scripts, `.github/workflows/ci.yml`; `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test -p sendust-core --all-targets`, `cargo test --workspace --all-targets`, and the four `npm --workspace ./ts run` commands exited 0 | EXECUTED PASS in a development container with Rust 1.100.0 and Node.js 24.22.x; blocking CI evidence pending |
+| P03-003 | `scripts/check-architecture.mjs`, `scripts/check-docs.mjs`, npm workspace scripts, `.github/workflows/ci.yml`; `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test -p sendust-core --all-targets`, `cargo test --workspace --all-targets`, and the four `npm --workspace ./ts run` commands exited 0 | EXECUTED PASS in a development container (Rust 1.100.0, Node.js 24.22.x) and in Sendust CI on branch `feat/p03-repository-skeleton`: the Rust workspace, Architecture and documentation checks, TypeScript (Node.js 22.23.5, 24.22.3, 26.13.1), Bun 1.4.4, and Deno 2.9.8 jobs all passed |
 
-The executed evidence above comes from a development container, not from
-Sendust blocking CI. Gate PHASE-03 remains unapproved and still requires the
-P03-004 harness seams, the P03-005 gate record, and CI evidence for every
-command.
+Executed evidence now exists both in a development container and in Sendust CI
+on branch `feat/p03-repository-skeleton`. Gate PHASE-03 remains unapproved and
+still requires the P03-004 harness seams and the P03-005 gate record. The
+lockfile-gated `npm ci` and `--locked` paths are also still unexercised; CI
+falls back to `npm install` and emits a warning until the lockfile is committed.
 
 `Cargo.lock` and `package-lock.json` are not committed yet. CI installs with
 `npm install` and emits a warning until the lockfile is committed from a
