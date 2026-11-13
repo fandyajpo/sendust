@@ -52,7 +52,7 @@ Enforced by P01-004, P05-001, P14-002.
 
 ### C-06 — Node.js support claims
 
-Node.js 22, 24, and 26 are **test candidates**, not support claims. Only versions with blocking CI runtime tests may be declared supported. Every claim MUST name exact tested versions.
+The exact Node.js, Bun, and Deno versions in the [toolchain baseline](../engineering/toolchain-baseline.md) are **test candidates**, not support claims. Only exact runtime/platform combinations with blocking CI tests may be declared supported.
 
 Enforced by P01-004, P14-004, P15-001.
 
@@ -309,7 +309,7 @@ Enforced by P00-001 and P15-005.
 
 - **Rust:** stable toolchain; minimum recorded in `rust-toolchain.toml` at P03-001; must satisfy napi-rs CLI requirements (Rust 1.88+ observed).
 - **Build tooling:** exact Node.js/Bun/Deno and npm versions are pinned in the [toolchain baseline](../engineering/toolchain-baseline.md). The Node.js candidates satisfy the observed napi-rs CLI minimum; runtime support still requires Sendust blocking tests.
-- **Runtime candidates:** Node.js 22, 24, 26. Support is declared only after P01-004 and P14-004.
+- **Runtime candidates:** exact Node.js, Bun, and Deno pins from the [toolchain baseline](../engineering/toolchain-baseline.md). Support is declared only after P05-003 and P14-004.
 - **Node-API:** level 8 proposed.
 - **Platforms:** macOS arm64/x64, Linux x64/arm64 glibc, Linux x64/arm64 musl, Windows x64 MSVC proposed. Each target must be built and runtime-tested before being claimed.
 - **Module systems:** ESM and CommonJS.
