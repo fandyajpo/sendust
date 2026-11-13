@@ -14,7 +14,7 @@
 | SMTP dependency | PASS | lettre 0.11.23 selected; lower-level public async API selected for RCPT visibility; no custom SMTP |
 | TLS feature decision | PASS (source-reviewed) | Defaults disabled; smtp-transport, tokio1-rustls, ring, webpki-roots; no pool/native-tls; compile gate P03-002 |
 | TLS security policy | PASS (design) | TLS 1.2 minimum; WebPKI roots; hostname+chain verification; implicit TLS or required STARTTLS; no bypass/fallback |
-| Runtime ownership | PASS (design) | napi-rs managed Tokio 1; no second runtime; Node-API 8 proposed |
+| Runtime ownership | PASS (design) | napi 3.16.2 + napi-derive 3.7.0 + napi-build 2.6.0; explicit napi8 + async; managed Tokio 1; no second runtime |
 | Delivery status | PASS | Final DATA 2xx accepted; explicit final 4xx/5xx rejected; indeterminate final disposition unknown; no mailbox-delivery claim |
 | Recipient semantics | PASS (source/API) | Each RCPT reply observable; ordinary refusals are recipient-level; 421 stops session; one DATA to accepted subset; recipient accepted only after final DATA 2xx |
 | Error taxonomy | PASS | Operational failures use stable typed errors; delivery outcomes use result values |
@@ -32,7 +32,7 @@ Accepted for the architecture/design baseline:
 - ADR-0001 two crates
 - ADR-0002 lettre 0.11.23; low-level async connection API
 - ADR-0003 rustls/ring/webpki-roots secure feature graph
-- ADR-0004 napi-rs v3 managed Tokio 1 / Node-API 8 proposed
+- ADR-0004 pinned napi-rs crates, napi8 feature, and managed Tokio 1
 - ADR-0005 observable per-recipient RCPT policy
 - ADR-0006 one active send and explicit lifecycle
 - ADR-0007 finite budgets and coarse stage attribution
