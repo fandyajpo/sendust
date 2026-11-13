@@ -112,7 +112,15 @@ A01 approves the design target only. It does not approve runtime or platform com
 | Runtime matrix | Exact Node.js, Bun, and Deno versions each pass blocking addon, async, lifecycle, and SMTP tests | CI matrix |
 | Types | Generated declarations compile in strict mode | Type test |
 
-## QG-05 runtime support rule\n\nNode.js, Bun, and Deno are required MVP targets. A pass on Node.js does not satisfy Bun or Deno. Each runtime must pass the same binding/lifecycle contract on exact pinned versions. Deno tests must use local node_modules and --allow-ffi.\n\n## QG-06 — SMTP correctness
+## QG-05 runtime support rule
+
+Node.js, Bun, and Deno are required MVP targets. A pass on Node.js does not satisfy Bun or Deno. Each runtime must pass the same binding/lifecycle contract on exact pinned versions. Deno tests must use local node_modules and --allow-ffi.
+
+## QG-05 runtime support rule
+
+Node.js, Bun, and Deno are required MVP targets. A pass on Node.js does not satisfy Bun or Deno. Each runtime must pass the same binding/lifecycle contract on exact pinned versions. Deno tests must use local node_modules and --allow-ffi.
+
+## QG-06 — SMTP correctness
 
 | Check | Requirement | Evidence |
 | --- | --- | --- |
