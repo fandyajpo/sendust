@@ -3,7 +3,7 @@
 **Sendust — Standalone Native Email Delivery Engine for Node.js**  
 Planning baseline: 2026-11-13.
 
-This documentation set is the source of truth for product scope, requirements, approved architecture design, decisions, and execution planning. QG-00, QG-01, and QG-02 are approved. Application implementation, compilation, runtime validation, and publication have not occurred.
+This documentation set is the source of truth for product scope, requirements, approved architecture design, decisions, and execution planning. QG-00, QG-01, QG-02, and Architecture Amendment A01 are approved at design level. Application implementation, compilation, runtime validation, and publication have not occurred.
 
 ## 1. Start here
 
@@ -13,7 +13,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 2 | [Requirements](product/requirements.md) | Constraints and functional/non-functional requirements |
 | 3 | [MVP scope](product/mvp-scope.md) | Included, excluded, and success conditions |
 | 4 | [Discovery brief](discovery/brief.md) | Falsifiable problem statement and product boundary |
-| 5 | [Constraint ledger](discovery/constraint-ledger.md) | C-01..C-30 traceability |
+| 5 | [Constraint ledger](discovery/constraint-ledger.md) | C-01..C-36 traceability |
 | 6 | [Threat model](discovery/threat-model.md) | Assets, trust boundaries, and abuse cases |
 | 7 | [lettre source validation](research/lettre-0.11.23-validation.md) | Pinned API and feature research |
 | 8 | [Node runtime validation plan](research/node-runtime-validation-plan.md) | Node-API 8 candidate matrix and lifecycle probes |
@@ -26,7 +26,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 15 | [ADR index](architecture/decisions/README.md) | Architecture decision records |
 | 16 | [Master roadmap](planning/master-roadmap.md) | All 19 phases and outcomes |
 | 17 | [Phase index](planning/phase-index.md) | Entry point to every phase plan |
-| 18 | [Task registry](planning/task-registry.md) | All 95 tasks and prerequisites |
+| 18 | [Task registry](planning/task-registry.md) | All 95 phase tasks plus 4 architecture-amendment tasks and prerequisites |
 | 19 | [Dependency graph](planning/dependency-graph.md) | Phase DAG and critical path |
 | 20 | [Milestones](planning/milestones.md) | M0–M7 exit criteria |
 | 21 | [Quality gates](planning/quality-gates.md) | QG-00–QG-17 |
@@ -100,8 +100,8 @@ P00–P02 are COMPLETED with approved evidence. P03–P18 remain NOT STARTED. A 
 - Open questions: OQ-01–OQ-07.
 - Phase IDs: P00–P18.
 - Task IDs: Pxx-00y.
-- Decision IDs: ADR-0001–ADR-0014.
-- Risk IDs: R-001–R-040.
+- Decision IDs: ADR-0001–ADR-0015.
+- Risk IDs: R-001–R-045.
 - Gate IDs: QG-00–QG-17.
 - Milestones: M0–M7.
 
