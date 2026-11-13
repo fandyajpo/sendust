@@ -3,7 +3,7 @@
 **Sendust — Standalone Native Email Delivery Engine for Node.js, Bun, and Deno**  
 Planning baseline: 2026-11-13.
 
-This documentation set is the source of truth for product scope, requirements, approved architecture design, decisions, and execution planning. Repository-wide AI/contributor behavior is governed by [AGENTS.md](../AGENTS.md) and the [AI implementation contract](engineering/ai-implementation-contract.md). QG-00, QG-01, and QG-02 are approved. Application implementation, compilation, runtime validation, and publication have not occurred.
+This documentation set is the source of truth for product scope, requirements, approved architecture design, decisions, and execution planning. Repository-wide AI/contributor behavior is governed by [AGENTS.md](../AGENTS.md) and the [AI implementation contract](engineering/ai-implementation-contract.md). QG-00, QG-01, and QG-02 are approved. The P03 repository skeleton, dependency policy, and quality-command scripts exist; application behavior, blocking CI evidence, runtime validation, and publication have not occurred.
 
 ## 1. Start here
 
@@ -49,6 +49,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 36 | [AI implementation contract](engineering/ai-implementation-contract.md) | Normative workflow, documentation synchronization, static-review and evidence rules |
 | 37 | [Toolchain baseline](engineering/toolchain-baseline.md) | Exact Rust, Node.js, Bun, Deno, npm, TypeScript, Biome, Vitest versions and canonical commands |
 | 38 | [Documentation audit](audits/2026-11-13-documentation-audit.md) | Static consistency, traceability, task graph, links, toolchain, and remaining validation owners |
+| 39 | [Dependency and license policy](engineering/dependency-policy.md) | Pinned dependencies, feature admission, feature prohibitions, lockfile rules, and license review |
 
 ## 2. Directory map
 
@@ -79,7 +80,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P02 are COMPLETED with approved evidence. P03–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P02 are COMPLETED with approved evidence. P03 is IN PROGRESS: P03-001–P03-003 are IN REVIEW, and P03-004–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -93,14 +94,15 @@ P00–P02 are COMPLETED with approved evidence. P03–P18 remain NOT STARTED. A 
 
 | Item | State |
 | --- | --- |
-| Repository | Documentation and architecture planning |
-| Application implementation | Not present in audited snapshot |
-| Rust toolchain in audit environment | Not installed; no cargo build executed |
+| Repository | Documentation, architecture planning, and the P03 workspace skeleton |
+| Application implementation | Skeleton only; no product behavior implemented |
+| Rust toolchain in audit environment | Rust 1.100.0 and Node.js 24.22.x exercised in a development container; Sendust blocking CI has not run |
 | QG-00 Discovery | APPROVED |
 | QG-01 Research | APPROVED with implementation validation gates |
 | QG-02 Architecture | APPROVED at design level |
-| P03–P18 | NOT STARTED |
-| Next task | P03-001 — create workspace and two-crate skeleton |
+| P03-001–P03-003 | IN REVIEW |
+| P03-004–P18 | NOT STARTED |
+| Next task | P03-004 — scaffold deterministic fake SMTP and TLS harness seams |
 
 ## 5. Conventions
 

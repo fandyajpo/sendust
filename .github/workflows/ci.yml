@@ -1,0 +1,126 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rust:
+    name: Rust workspace
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # rust-toolchain.toml pins the build toolchain and its components;
+      # `rustup show` installs exactly that toolchain.
+      - name: Verify pinned Rust toolchain
+        run: |
+          rustup show
+          rustc --version
+          cargo fmt --version
+          cargo clippy --version
+
+      - name: Rust formatting
+        run: cargo fmt --all -- --check
+
+      - name: Rust lint
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      # Proves the core needs neither Node headers nor the NAPI crate.
+      - name: Core-only unit tests
+        run: cargo test -p sendust-core --all-targets
+
+      - name: Native binding compiles
+        run: cargo check -p sendust-napi --all-targets
+
+      - name: Workspace Rust tests
+        run: cargo test --workspace --all-targets
+
+  checks:
+    name: Architecture and documentation checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify pinned Rust toolchain
+        run: |
+          rustup show
+          cargo metadata --format-version 1 --no-deps > /dev/null
+
+      - name: Architecture and module boundaries
+        run: node scripts/check-architecture.mjs
+
+      - name: Documentation structure
+        run: node scripts/check-docs.mjs
+
+  typescript:
+    name: TypeScript (Node.js ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ["22.23.5", "24.22.3", "26.13.1"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Pin npm
+        run: |
+          npm install --global npm@12.2.2
+          npm --version
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            echo "::warning::package-lock.json is not committed yet; using npm install until it is."
+            npm install --no-audit --no-fund
+          fi
+
+      - name: TypeScript lint
+        run: npm --workspace ./ts run lint
+
+      - name: TypeScript formatting
+        run: npm --workspace ./ts run format:check
+
+      - name: TypeScript typecheck
+        run: npm --workspace ./ts run typecheck
+
+      - name: TypeScript unit and contract tests
+        run: npm --workspace ./ts run test
+
+  bun:
+    name: Bun runtime-neutral smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      # Proves the shared TypeScript entry point stays runtime-neutral. Native
+      # addon loading and send/close behavior are gated by P05/P14.
+      - name: Run shared TypeScript entry point
+        run: bun run ts/src/index.ts
+
+  deno:
+    name: Deno runtime-neutral smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.9.8
+      - name: Type-check shared TypeScript entry point
+        run: deno check --node-modules-dir=manual ts/src/index.ts
+      - name: Run shared TypeScript entry point
+        run: deno run --allow-ffi --node-modules-dir=manual ts/src/index.ts

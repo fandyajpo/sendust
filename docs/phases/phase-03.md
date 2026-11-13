@@ -1,6 +1,6 @@
 # Phase 03 — Repository
 
-**Phase status:** NOT STARTED  
+**Phase status:** IN PROGRESS  
 **Phase dependency:** Phase 02, Architecture Amendment A01, and Architecture Amendment A02  
 **Companion references:** [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [release strategy](../engineering/release-strategy.md)
 
@@ -17,7 +17,7 @@ In scope: workspace layout, crate manifests, `ts/src` package skeleton, test dir
 ### P03-001 — Create the workspace and two-crate skeleton
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P02-005, A01-004, A02-003
 - **Description:** Specify the workspace layout with exactly two crates at `crates/sendust-core/src` and `crates/sendust-napi/src`, plus `ts/src` and `tests/`. Define root workspace membership, the exact Rust toolchain `1.100.0` and MSRV `1.88.0` from the [toolchain baseline](../engineering/toolchain-baseline.md), shared lint/format configuration, and crate responsibilities. Core must compile without Node headers or napi dependencies; napi depends on core and the binding toolkit. Include placeholder module trees that reflect architecture boundaries without implementing product logic.
 - **Evidence criteria:** Layout tree matches the proposed paths exactly and contains no third Rust crate. Core manifest has no napi/Node dependency; napi manifest depends on core. A documented check fails if a reverse dependency or extra crate appears. `cargo metadata` and package discovery are part of the acceptance evidence.
@@ -25,7 +25,7 @@ In scope: workspace layout, crate manifests, `ts/src` package skeleton, test dir
 ### P03-002 — Define dependency pinning, feature, and license policy
 
 - **Size:** S
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P03-001, P01-002
 - **Description:** Record pinned versions and allowed feature sets for `lettre = 0.11.23` (defaults off; `smtp-transport`, `tokio1-rustls`, `ring`, `webpki-roots`), `napi = 3.16.2` (`napi8`, `async`), `napi-derive = 3.7.0`, `napi-build = 2.6.0`, Tokio 1, rustls, and test-only tooling. Require `cargo tree` to prove lettre pool/native-tls are absent. Define a policy for adding dependencies, lockfile updates, license review, duplicate-version checks, and prohibited crates (custom SMTP stacks, insecure TLS toggles, URL fetchers). No dependency is installed in this planning phase; the manifest intent and review process are documented.
 - **Evidence criteria:** Dependency table lists direct versus transitive intent, feature flags, and pin strategy. Policy names approval and review steps and lists prohibited capabilities. TLS policy confirms no verification-disable feature. License inventory template exists and is required for every direct dependency.
@@ -33,7 +33,7 @@ In scope: workspace layout, crate manifests, `ts/src` package skeleton, test dir
 ### P03-003 — Establish formatting, linting, type-check, and unit-test commands
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P03-001
 - **Description:** Implement the exact command matrix in the [toolchain baseline](../engineering/toolchain-baseline.md): Rust fmt/clippy/core-only tests/binding checks; npm install; Biome lint; TypeScript strict typecheck; Vitest; and direct Node.js/Bun/Deno smoke entry points. Use the pinned exact tool versions and one root npm lockfile. Specify fail-fast ordering and CI expectations, including a guard that core commands never require a Node runtime.
 - **Evidence criteria:** Every command in the toolchain baseline exists as a script or executable entry point, has a defined working directory and expected exit code, and runs in CI with exact pinned tool versions. The architecture checker rejects extra Rust crates, reverse dependencies, and runtime-specific policy in core. The documentation checker validates links, IDs, phase/task counts, registry-to-phase task parity, gate indexes, and toolchain pin references. A core-only job proves no Node linkage. TypeScript and napi checks are separate. The matrix is referenced by every later task’s evidence requirements.
@@ -107,7 +107,29 @@ Gate `PHASE-03` is `APPROVED` when P03-005 proves the structure, dependency dire
 
 ## Status
 
-NOT STARTED. Planning only; no repository files beyond phase plans exist.
+IN PROGRESS. P03-001, P03-002, and P03-003 are IN REVIEW: the two-crate
+workspace skeleton, the dependency and feature policy, and the canonical
+quality-command scripts exist and are statically reviewed. P03-004 and P03-005
+remain NOT STARTED.
+
+## Evidence log
+
+Evidence labels follow the [AI implementation contract](../engineering/ai-implementation-contract.md).
+
+| Task | Evidence | State |
+| --- | --- | --- |
+| P03-001 | Two-crate workspace, manifests, module tree, `ts/src` skeleton, `rust-toolchain.toml`; `cargo metadata --format-version 1 --no-deps` reports exactly `sendust-core` and `sendust-napi` | IMPLEMENTED, STATICALLY REVIEWED |
+| P03-002 | [Dependency policy](../engineering/dependency-policy.md) plus workspace pins; `cargo tree -e features` resolves `lettre` 0.11.23 with only `smtp-transport`, `tokio1-rustls`, `ring`, and `webpki-roots`, with no `pool` or `native-tls`; a core unit test constructs the pinned `SmtpTransport` builder, so a dropped transport feature fails the build | IMPLEMENTED, STATICALLY REVIEWED |
+| P03-003 | `scripts/check-architecture.mjs`, `scripts/check-docs.mjs`, npm workspace scripts, `.github/workflows/ci.yml`; `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test -p sendust-core --all-targets`, `cargo test --workspace --all-targets`, and the four `npm --workspace ./ts run` commands exited 0 | EXECUTED PASS in a development container with Rust 1.100.0 and Node.js 24.22.x; blocking CI evidence pending |
+
+The executed evidence above comes from a development container, not from
+Sendust blocking CI. Gate PHASE-03 remains unapproved and still requires the
+P03-004 harness seams, the P03-005 gate record, and CI evidence for every
+command.
+
+`Cargo.lock` and `package-lock.json` are not committed yet. CI installs with
+`npm install` and emits a warning until the lockfile is committed from a
+pinned-toolchain run; that fallback is removed once the lockfile lands.
 
 
 ## Multi-runtime amendment requirements
