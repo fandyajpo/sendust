@@ -557,6 +557,7 @@ dependencies = [
  "napi-build",
  "napi-derive",
  "sendust-core",
+ "tokio",
 ]
 
 [[package]]

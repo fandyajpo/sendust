@@ -6,3 +6,7 @@
 .env
 .env.*
 !.env.example
+
+# Staged native addon from `npm run build:native`
+ts/sendust.node
+node_modules/

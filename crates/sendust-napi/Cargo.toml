@@ -18,6 +18,7 @@ workspace = true
 sendust-core = { path = "../sendust-core", version = "=0.1.0" }
 napi.workspace = true
 napi-derive.workspace = true
+tokio.workspace = true
 
 [build-dependencies]
 napi-build.workspace = true
