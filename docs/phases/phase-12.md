@@ -35,7 +35,7 @@ In scope: test plan and traceability, core unit/integration coverage, binding an
 - **Size:** L
 - **Status:** NOT STARTED
 - **Prerequisites:** P12-001, P09-005
-- **Description:** Validate the public API with strict type tests and runtime tests: accepted/rejected/unknown/attempted/BUSY, error classes and codes, redaction, close idempotence, send-after-close, concurrent send, attachment opt-in, and no-retry transaction counts. Include candidate Node 22/24/26 where available.
+- **Description:** Validate the public API with strict type tests and runtime tests: accepted/rejected/unknown recipient outcomes/BUSY, error classes and codes, redaction, close idempotence, send-after-close, concurrent send, attachment opt-in, and no-retry transaction counts. Include candidate Node 22/24/26 where available.
 - **Evidence criteria:** Type tests fail on contract-breaking changes. Runtime matrix passes for all statuses and errors. BUSY and unknown tests assert transaction counts. Redaction scans pass. Unsupported Node candidates are documented, not silently skipped.
 
 ### P12-004 — Run fixture completeness and regression triage

@@ -1,6 +1,6 @@
 # Sendust — Error Model
 
-**Status:** proposed; not frozen. P02-005 is the architecture approval gate.  
+**Status:** approved design baseline at P02-005; implementation mapping and golden tests remain P04/P05/P09 gates.  
 **Related:** [system design](system-design.md), [ADR-0005 recipient semantics](decisions/0005-recipient-partial-failure.md), [security strategy](../engineering/security-strategy.md).
 
 ## 1. Two distinct channels
@@ -16,7 +16,7 @@ A caller should branch on `result.status` for delivery semantics and on `error.c
 
 ```ts
 export type DeliveryStatus = "accepted" | "rejected" | "unknown";
-export type RecipientStatus = "accepted" | "rejected" | "attempted" | "unknown";
+export type RecipientStatus = "accepted" | "rejected" | "unknown";
 
 export interface SendResult {
   status: DeliveryStatus;
@@ -30,7 +30,7 @@ export interface SendResult {
 | Status | Meaning | When |
 | --- | --- | --- |
 | `accepted` | The relay returned a positive final response to DATA and accepted responsibility. **Not** mailbox delivery. | Final DATA response is 2xx. |
-| `rejected` | The relay definitively refused the envelope or message. | A definitive negative SMTP response to MAIL, RCPT (under the selected recipient policy), DATA, or the final DATA response (4xx/5xx). |
+| `rejected` | The relay definitively refused the envelope or message for every recipient in the transaction. | MAIL refusal; all RCPT commands refused; DATA command refusal; or explicit final DATA 4xx/5xx. A single ordinary RCPT refusal is a recipient-level rejection and does not prevent DATA for other accepted recipients. RCPT 421 closes the session, stops recipient collection, and prevents DATA; the overall result is rejected. |
 | `unknown` | The message may or may not have been accepted; the final disposition cannot be established. | The DATA terminator may have reached the relay but the final response was not received, or a write/connection failure leaves acceptance genuinely uncertain. |
 
 ### 2.2 Recipient status rules
@@ -38,11 +38,10 @@ export interface SendResult {
 | Status | Meaning |
 | --- | --- |
 | `accepted` | The relay accepted this recipient (RCPT 2xx) **and** the message was accepted. |
-| `rejected` | The relay rejected this recipient (RCPT 4xx/5xx) and the policy rejected the envelope before DATA. |
-| `attempted` | The recipient was included in the envelope, but its individual fate is not observable. Used when the whole envelope is rejected or the result is unknown. |
+| `rejected` | The relay explicitly refused this recipient at RCPT, or accepted its RCPT but explicitly refused the final DATA transaction. |
 | `unknown` | The recipient was part of an envelope whose final status is unknown. |
 
-**Critical rule (ADR-0005):** Sendust does not assume per-recipient RCPT status is observable through the high-level lettre transport. If P01-003 proves it is unavailable, mixed RCPT responses cause the entire envelope to be rejected before DATA; recipients are reported as `rejected` where the server explicitly rejected them and `attempted` otherwise. Sendust never sends one message per recipient to manufacture partial success.
+**Critical rule (ADR-0005):** Sendust uses lettre's public lower-level async connection API to observe each RCPT reply. Explicitly refused recipients remain `rejected`; accepted recipients are sent one shared DATA transaction. RCPT acceptance alone never means message acceptance. A recipient becomes `accepted` only after positive final DATA. If final disposition is unknown, accepted-RCPT recipients become `unknown`. Sendust never sends one message per recipient.
 
 ### 2.3 No delivery claim
 
@@ -77,25 +76,25 @@ export type ErrorCategory =
 
 ### 3.1 Stable codes
 
-| Code | Category | Sync/async | Meaning | Retryable by caller? |
+| Code | Category | Public surface | Meaning | Retryable by caller? |
 | --- | --- | --- | --- | --- |
-| `VALIDATION_INVALID_OPTION` | validation | sync | Unknown/malformed transport option | No, fix input |
-| `VALIDATION_INVALID_TIMEOUT` | validation | sync | Non-finite, zero, negative, or out-of-range timeout | No |
-| `VALIDATION_MISSING_FROM` | validation | sync | No From address | No |
-| `VALIDATION_MISSING_RECIPIENT` | validation | sync | No To/CC/BCC | No |
-| `VALIDATION_INVALID_ADDRESS` | validation | sync | Unparseable address | No |
-| `VALIDATION_NON_ASCII_LOCAL_PART` | validation | sync | SMTPUTF8 not supported in MVP | No |
-| `VALIDATION_INVALID_HEADER` | validation | sync | Illegal header name or value | No |
-| `VALIDATION_HEADER_INJECTION` | validation | sync | CRLF/control characters in header or address | No |
-| `VALIDATION_INVALID_ATTACHMENT` | validation | sync | Missing filename, invalid content type, unsupported shape | No |
+| `VALIDATION_INVALID_OPTION` | validation | sync at createTransport; Promise rejection from send | Unknown/malformed transport option | No, fix input |
+| `VALIDATION_INVALID_TIMEOUT` | validation | sync at createTransport | Non-finite, zero, negative, or out-of-range timeout | No |
+| `VALIDATION_MISSING_FROM` | validation | Promise rejection from send | No From address | No |
+| `VALIDATION_MISSING_RECIPIENT` | validation | Promise rejection from send | No To/CC/BCC | No |
+| `VALIDATION_INVALID_ADDRESS` | validation | Promise rejection from send | Unparseable address | No |
+| `VALIDATION_NON_ASCII_LOCAL_PART` | validation | Promise rejection from send | SMTPUTF8 not supported in MVP | No |
+| `VALIDATION_INVALID_HEADER` | validation | Promise rejection from send | Illegal header name or value | No |
+| `VALIDATION_HEADER_INJECTION` | validation | Promise rejection from send | CRLF/control characters in header or address | No |
+| `VALIDATION_INVALID_ATTACHMENT` | validation | Promise rejection from send | Missing filename, invalid content type, unsupported shape | No |
 | `CONFIG_UNSUPPORTED_SECURITY` | configuration | sync | Security mode not supported | No |
 | `CONFIG_UNSUPPORTED_AUTH` | configuration | sync | Auth mode not supported | No |
-| `CONFIG_FILE_ACCESS_DISABLED` | configuration | sync | File attachment used without opt-in | No |
+| `CONFIG_FILE_ACCESS_DISABLED` | configuration | Promise rejection from send | File attachment used without opt-in | No |
 | `CONFIG_INVALID_RELAY` | configuration | sync | Empty/invalid host or port | No |
-| `LIMIT_RECIPIENTS` | limit | sync | More than 100 recipients | No |
-| `LIMIT_ATTACHMENT_BYTES` | limit | sync | Attachment exceeds 10 MiB | No |
-| `LIMIT_ATTACHMENT_TOTAL` | limit | sync | Raw attachments exceed 20 MiB | No |
-| `LIMIT_WIRE_BYTES` | limit | sync | Serialized message exceeds 30 MiB | No |
+| `LIMIT_RECIPIENTS` | limit | Promise rejection from send | More than 100 recipients | No |
+| `LIMIT_ATTACHMENT_BYTES` | limit | Promise rejection from send | Attachment exceeds 10 MiB | No |
+| `LIMIT_ATTACHMENT_TOTAL` | limit | Promise rejection from send | Raw attachments exceed 20 MiB | No |
+| `LIMIT_WIRE_BYTES` | limit | Promise rejection from send | Serialized message exceeds 30 MiB | No |
 | `TLS_CERTIFICATE` | tls | async | Certificate/hostname verification failed | No, configuration/trust issue |
 | `TLS_HANDSHAKE` | tls | async | TLS negotiation failed | Maybe, only with corrected config |
 | `TLS_PROTOCOL` | tls | async | Unsupported TLS version/cipher | No |
@@ -121,7 +120,7 @@ Codes are append-only within a major version. Removing or renaming a code is a b
 - `smtpCode` (number) and `smtpEnhancedCode` (string) when the relay supplied them.
 - `host` and `port`.
 - `timeoutMs` and `elapsedMs`.
-- `stage` only when P01-003 proved that stage attribution is observable.
+- `stage` only for coarse public-call boundaries documented by P01-003; never infer internal socket sub-stages.
 - `recipient` for a validation error tied to one address.
 
 `details` must never include passwords, full bodies, attachment bytes, tokens, or absolute paths.
@@ -138,7 +137,8 @@ Codes are append-only within a major version. Removing or renaming a code is a b
 | rustls handshake/protocol error | tls | `TLS_HANDSHAKE` / `TLS_PROTOCOL` |
 | lettre auth error | authentication | `AUTH_FAILED` |
 | TCP/connect/TLS/AUTH failure before an SMTP message transaction | operational error | `PROTOCOL_*`, `TLS_*`, or `AUTH_*`; never `rejected` delivery status |
-| Explicit negative SMTP response at MAIL/RCPT/DATA or final DATA response | delivery outcome | `rejected` |
+| MAIL/DATA/final DATA explicit negative response, or all RCPT replies negative | delivery outcome | `rejected` |
+| Individual RCPT explicit negative response in a mixed envelope | recipient outcome | That recipient `rejected`; continue with accepted subset |
 | Positive final DATA response | delivery outcome | `accepted` |
 | Lost/missing final response after DATA terminator may have reached relay | delivery outcome | `unknown` |
 | Timeout before any message acceptance is possible | timeout error | `TIMEOUT_*` |
@@ -146,7 +146,7 @@ Codes are append-only within a major version. Removing or renaming a code is a b
 | State machine rejection | closed/busy | `TRANSPORT_CLOSED` / `TRANSPORT_BUSY` |
 | Panic caught at boundary | internal | `INTERNAL` |
 
-The mapping is implemented in `crates/sendust-napi/src/error_map.rs` and tested with golden cases in P05-004/P09-003.
+The mapping will be implemented in `crates/sendust-napi/src/error_map.rs` and tested with golden cases in P05-004/P09-003. This document does not claim those source files exist.
 
 ## 5. Error precedence
 
@@ -161,7 +161,7 @@ When multiple validation failures exist, the first failure in the deterministic 
 7. Attachment byte caps.
 8. Wire cap.
 
-This prevents nondeterministic messages and makes tests stable. The proposed order is to be approved in P02-002 and implemented/tested in P04-001.
+This prevents nondeterministic messages and makes tests stable. The deterministic order is approved at P02-002 and implemented/tested in P04-001.
 
 ## 6. Redaction rules
 

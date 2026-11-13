@@ -16,25 +16,31 @@ sequenceDiagram
 
     App->>TS: transport.send(message)
     TS->>TS: public shape validation
-    TS->>N: NativeTransport.send(nativeMessage)
-    N->>N: copy Buffers/strings to owned Rust values
-    N->>C: core::send(owned message, transport)
+    TS->>N: beginSend(nativeMessage) synchronously
+    N->>N: copy Buffers/strings to Rust-owned values and reserve send slot
+    TS->>N: executeSend(ownedOperation) asynchronously
+    N->>C: core::send(owned message, reserved transport slot)
     C->>C: deterministic validation
     C->>C: resolve file attachments (if opted in)
     C->>C: enforce raw caps
     C->>C: compose MIME
     C->>C: enforce wire cap
-    C->>L: open async SMTP transport
+    C->>L: open one AsyncSmtpConnection
     L->>R: TCP connect
     L->>R: TLS handshake or STARTTLS
     L->>R: AUTH
     L->>R: MAIL FROM
-    L->>R: RCPT TO (per recipient)
-    L->>R: DATA + serialized message
+    loop each recipient
+        L->>R: RCPT TO
+        R-->>L: exact recipient reply
+    end
+    L->>R: DATA command
+    R-->>L: 354 start mail input
+    L->>R: serialized message + terminator
     R-->>L: final response
     L-->>C: transport result or error
     C->>C: map to accepted/rejected/unknown
-    C->>L: close session
+    C->>L: QUIT best-effort after known final result; drop socket on uncertain DATA
     C-->>N: SendOutcome
     N-->>TS: converted result object
     TS-->>App: SendResult
@@ -46,7 +52,7 @@ sequenceDiagram
 | --- | --- | --- | --- |
 | JS call | JS heap | JS heap | — |
 | Wrapper validation | JS heap | JS heap | No |
-| napi conversion | JS heap | Rust heap | Yes, every buffer/string |
+| napi conversion | JS heap | Rust heap | Synchronous owned copy before async scheduling |
 | Core validation | Rust heap | Rust heap | No |
 | File attachment read | OS file | Rust heap | Yes, bounded |
 | MIME composition | Rust heap | Rust heap | Serialized bytes |
@@ -67,16 +73,15 @@ All deterministic failures (validation, limits, configuration, MIME composition,
 
 | Stage | If it fails | Result certainty |
 | --- | --- | --- |
-| TCP connect | No SMTP session established | Connection/transport error; no delivery outcome exists |
-| TLS handshake | Trust or negotiation failed | `TLS` error; no message was submitted |
+| DNS/connect/greeting/EHLO/TLS | No message transaction | Connection/TLS error; outer connect deadline required because lettre's inner timeout does not cover DNS/greeting/EHLO/TLS |
 | AUTH | Authentication failed | `AUTH` error; no message was submitted |
 | MAIL FROM | Definitive SMTP refusal | `rejected` outcome |
-| RCPT TO | Recipient refusal | Policy per ADR-0005; envelope is not sent if policy requires abort |
-| DATA command | Server refuses DATA before message body | `rejected` outcome |
-| DATA body transmission | Connection lost or write result leaves acceptance uncertain | `unknown` only when acceptance cannot be ruled out |
-| Final response | Explicit final 4xx/5xx | `rejected` outcome |
-| Final response | Positive 2xx | `accepted` outcome |
-| Final response | No final reply after terminator may have reached relay | `unknown` outcome |
+| RCPT TO | Individual recipient refusal | Record explicit rejected; continue with other recipients; if none accepted, do not issue DATA |
+| DATA command | Explicit 4xx/5xx before message body | `rejected` outcome |
+| DATA command | Any response other than required 354 (and not a definitive 4xx/5xx) | Protocol error; no message body sent |
+| DATA body + terminator + final reply (lettre `message()`) | Explicit final 4xx/5xx | `rejected` outcome |
+| DATA body + terminator + final reply (lettre `message()`) | Positive final 2xx | `accepted` outcome for RCPT-accepted recipients |
+| DATA body + terminator + final reply (lettre `message()`) | Write/read/reset/timeout or non-final 3xx without final disposition | `unknown` conservatively because lettre exposes no public terminator-write checkpoint |
 
 A result is `accepted` only after a positive final response to DATA. An explicit negative final response (4xx/5xx) is a known `rejected` outcome, including when it arrives after the message body. `unknown` is reserved for cases where the final disposition cannot be established, such as losing the connection after the DATA terminator may have reached the relay but before its final reply arrives. Connection, TLS, and AUTH failures are operational errors, not delivery outcomes. Acceptance means relay responsibility, not mailbox delivery.
 
@@ -92,18 +97,18 @@ sequenceDiagram
     participant L as lettre
 
     App->>TS: transport.close()
-    TS->>N: NativeTransport.close()
-    N->>C: begin close
-    C->>C: state = closing
+    TS->>N: beginClose() synchronously
+    N->>C: state = closing; signal cancellation
+    TS->>N: waitClosed() asynchronously
     alt send in flight
-        C->>L: cancel / await bounded drain
-        L-->>C: session closed or deadline
+        C->>C: cancel at coarse boundary; drop per-send socket
+        C-->>N: active send settled
     else idle
-        C->>L: close session (if any)
+        C->>C: no retained SMTP connection; close immediately
     end
     C->>C: state = closed
     C-->>N: close complete or timeout
-    N-->>TS: void or error
+    N-->>TS: waitClosed Promise resolves or rejects
     TS-->>App: resolved or rejected
 ```
 
@@ -119,9 +124,8 @@ Rules:
 
 ```text
 core error
-  ├── ValidationError        -> sync throw at wrapper
-  ├── ConfigurationError     -> sync throw at wrapper
-  ├── LimitError             -> sync throw at wrapper
+  ├── createTransport configuration errors -> synchronous throw
+  ├── send validation/limit errors -> Promise rejection
   ├── TlsError               -> async rejection
   ├── AuthenticationError    -> async rejection
   ├── ProtocolError          -> async rejection or Unknown outcome
@@ -131,7 +135,7 @@ core error
   └── InternalError          -> async rejection, generic message
 ```
 
-The binding maps core categories to stable JS classes and codes. It strips:
+The binding maps core categories to stable JS classes and codes. Synchronous preparation failures are wrapped by the TypeScript public method as Promise rejections; no validation error escapes as an unexpected synchronous throw from `send()`.  It strips:
 
 - passwords and auth tokens,
 - full message bodies,

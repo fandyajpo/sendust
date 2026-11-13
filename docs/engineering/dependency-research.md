@@ -1,26 +1,26 @@
 # Technical Research — 2026-11-13
 
 **Phase:** 01  
-**Status:** INITIAL RESEARCH RECORDED; tasks remain `NOT STARTED` because validation probes have not been executed.  
+**Status:** P01 source/API research complete; see the pinned [lettre validation report](../research/lettre-0.11.23-validation.md) and [Node runtime validation plan](../research/node-runtime-validation-plan.md). Cargo, fake-relay, and native runtime probes remain downstream implementation gates.  
 **Rule:** This document records what was observed, from where, and what remains unverified. It is not a substitute for P01-001 through P01-005.
 
 ## 1. Method
 
 - Repository inspected first: documentation and planning repository; no application source or existing implementation toolchain was present in the audited snapshot.
 - Sources consulted on 2026-11-13:
-  - napi-rs official documentation: getting started, support and compatibility, async `fn`, errors and panics, release deep dive.
-  - docs.rs: `lettre` 0.11.23 crate page and `AsyncSmtpTransport`; `mail-parser` 1.0.1 crate page.
-- No dependencies were installed, no network probes were run against SMTP servers, and no application code was generated.
+  - napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0 pinned source plus napi-rs official documentation for async functions, compatibility, Buffer, and AsyncTask.
+  - lettre v0.11.23 pinned source: Cargo.toml, AsyncSmtpConnection, commands, response, error, authentication, and TLS builder.
+- No dependencies were installed, no network probes were run against SMTP servers, and no application code was generated. The audit container has Node.js 22.16.0 but no rustc/cargo.
 - Version claims below are **observed on those pages**, not independently verified against lockfiles. P01-001 through P01-004 must verify pinned source and features.
 
 ## 2. Observed platform facts
 
 | Fact | Observation | Source | Status |
 | --- | --- | --- | --- |
-| napi-rs major version | v3 documentation; `napi new` scaffolds v3 | napi.rs getting started | Observed |
+| napi-rs package versions | napi 3.16.2, napi-derive 3.7.0, napi-build 2.6.0 | Pinned source manifests and release docs | Observed 2026-11-13 |
 | napi-rs CLI Node requirement | `>=23.5.0 || ^22.13.0 || ^20.17.0`; Node 22.13+ or 24+ recommended | napi.rs support and compatibility | Observed |
 | napi-rs Rust requirement | Rust 1.88 or newer | napi.rs getting started | Observed |
-| Node-API levels offered by scaffold | 1 through 9; default 4 | napi.rs support and compatibility | Observed |
+| Node-API levels offered by napi 3.16.2 | napi1 through napi10 features; default is napi4 | napi 3.16.2 Cargo.toml | Observed |
 | Async support | `async fn` runs on napi-managed Tokio runtime; `async` or `tokio_rt` feature required | napi.rs async fn | Observed |
 | Panic behavior | Uncaught panic in sync callback can terminate process; `catch_unwind` available only with unwind strategy | napi.rs errors and panics | Observed |
 | Distribution model | Root package plus platform optional packages; loader selects by OS/CPU/libc | napi.rs release deep dive | Observed |
@@ -44,7 +44,7 @@
 - **Alternatives:**
   - `mail-send` — simpler SMTP, less actively shaped around async ecosystems; would require more MIME work.
   - `samotop` — server-oriented; not a client library.
-  - Custom SMTP client — maximum control over stage/recipient observability, but high correctness, TLS, and maintenance risk; rejected unless P01-003 proves a required capability is inaccessible.
+  - Custom SMTP client — maximum control over stage/recipient observability, but high correctness, TLS, and maintenance risk; rejected for MVP because the selected public lower-level lettre API provides the required RCPT visibility.
 - **Maintenance:** Active release observed (0.11.23 in October 2026). Maintenance cadence must be confirmed in P01-001.
 - **Compatibility:** Requires a matching async executor feature. Tokio 1 is available. TLS feature combinations are non-trivial and must be validated (P01-002).
 - **Security:** TLS verification must be explicitly configured. Defaults and feature flags must be audited. Pin exact version and review advisories at P11-004.
@@ -59,7 +59,7 @@
   - `node-bindgen` — less active and less complete packaging story.
   - Raw Node-API via `node-sys` — maximum control, high unsafe burden.
 - **Maintenance:** v3 is the current documented line; release workflow is documented.
-- **Compatibility:** CLI needs a modern Node version at build time; runtime compatibility is governed by Node-API level. The scaffold defaults to Node-API 4; Sendust proposes 8 and must validate that no selected feature requires more.
+- **Compatibility:** CLI needs a modern Node version at build time; runtime compatibility is governed by Node-API level. napi 3.16.2 defaults to Node-API 4; Sendust explicitly enables napi8 and async to select Node-API 8 and the managed Tokio runtime. Exact feature-floor compilation and runtime tests remain P05/P14 gates.
 - **Security:** Native code; panic safety and memory ownership are critical. `catch_unwind` limits must be understood.
 - **MVP:** Required.
 
@@ -139,22 +139,21 @@
 
 ## 6. Research conclusions that constrain the plan
 
-1. Use `lettre 0.11.23`; do not write a custom SMTP client unless P01-003 proves a required capability is inaccessible.
-2. Use napi-rs v3 with the napi-managed Tokio 1 runtime; do not create a second runtime.
-3. Propose Node-API 8 but validate the exact floor.
-4. Propose rustls `ring` + `webpki-roots` but validate features and verification posture.
-5. Treat Node 22/24/26 as candidates.
-6. Do not promise per-recipient RCPT status or exact timeout stage attribution before P01-003.
-7. Plan for non-atomic publication and explicit artifact gates.
-8. Use `mail-parser` only in tests.
+1. Use lettre 0.11.23's public lower-level AsyncSmtpConnection API; do not write a custom SMTP client.
+2. Pin napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0; enable napi8 and async explicitly; use the napi-managed Tokio 1 runtime and do not create a second runtime.
+3. Node-API 8 is the approved ABI design floor; compile/runtime validation remains P05/P14 work.
+4. Use the source-reviewed lettre feature set: defaults off, smtp-transport, tokio1-rustls, ring, webpki-roots. Cargo build/tree validation remains P03-002.
+5. Treat Node 22/24/26 as candidates only; see the [runtime validation plan](../research/node-runtime-validation-plan.md).
+6. Per-recipient RCPT responses are observable via command(Rcpt::new(...)) and Error::status(); timeout reporting is limited to coarse public-call boundaries.
+7. lettre's inner connect timeout bounds TCP attempts only; an outer connect deadline must include DNS, greeting, EHLO, and TLS negotiation.
+8. Plan for non-atomic publication and explicit artifact gates. Use mail-parser only in tests.
 
 ## 7. What this research does not establish
 
-- That the high-level lettre transport exposes per-recipient RCPT outcomes.
-- That exact SMTP stage attribution is observable.
-- That the proposed rustls feature set compiles on every target.
+- That the selected Cargo feature graph compiles on every target.
 - That the napi-managed runtime satisfies lettre on every candidate Node version.
 - That all proposed platform targets can be built and runtime-tested in CI.
-- That the chosen Node-API level is sufficient for every napi feature used.
+- That fake-relay behavior matches the inspected public API for every fault path.
+- That TLS, MIME, filesystem safety, and timeout tests pass in the eventual implementation.
 
-Each is an explicit task in Phase 01 with a validation gate. No implementation may assume the favorable answer.
+These are explicit downstream implementation gates. Source inspection establishes the architecture choice, not executable correctness.

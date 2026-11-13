@@ -1,6 +1,6 @@
 # ADR-0003 — rustls with ring and webpki-roots; verification mandatory
 
-**Status:** BLOCKED on P01-002  
+**Status:** ACCEPTED (architecture baseline; source-reviewed feature graph); compile and fixture validation required before implementation  
 **Date:** 2026-11-13  
 **Deciders:** Research gate (P01-005), security review (P11-002)  
 **Validated by:** P01-002, P06-002, P11-002
@@ -14,9 +14,9 @@ lettre’s observed documentation requires selecting a rustls crypto provider an
 - Provider: `ring`, `aws-lc-rs`, or a custom provider via `rustls-no-provider`.
 - Verification backend: `rustls-platform-verifier`, `rustls-native-certs`, or `webpki-roots`.
 
-## Decision (proposed)
+## Decision
 
-Use rustls 0.23 with the `ring` provider and `webpki-roots` trust anchors. Certificate and hostname verification are always enabled. No public option, environment variable, or undocumented flag may disable verification.
+Use rustls 0.23 with the `ring` provider and `webpki-roots` trust anchors. Certificate and hostname verification are always enabled. Sendust exposes no public option, environment variable, or undocumented flag to disable verification. lettre's builder contains dangerous certificate/hostname bypass methods; Sendust MUST NOT call them.
 
 Rationale for `webpki-roots`: deterministic trust across all shipped binaries, no dependence on the consumer OS trust store, no platform certificate loading behavior to validate. Rationale for `ring`: broad platform support and simpler cross-compilation than `aws-lc-rs`.
 
@@ -34,13 +34,13 @@ Rationale for `webpki-roots`: deterministic trust across all shipped binaries, n
 - `ring` and rustls feature names may drift; the exact feature set must be pinned and validated.
 - Verification failures must be tested with five fixtures: self-signed, expired, wrong host, incomplete chain, malformed certificate.
 
-## Why blocked
+## Source review and implementation gate
 
-The exact Cargo feature combination for lettre 0.11.23 + rustls + ring + webpki-roots has not been compiled or validated. Feature names observed in documentation may not compose with lettre’s feature gates. P01-002 must prove the set or propose the smallest viable alternative without weakening verification.
+The pinned v0.11.23 Cargo.toml exposes a composable feature graph: `default-features = false`, with `smtp-transport`, `tokio1-rustls`, `ring`, and `webpki-roots`. This avoids lettre defaults including `pool` and `native-tls`. Source inspection is complete; the exact Cargo build and target compilation remain hard gates at P03-002/P06-002. No claim of compiled validation is made here.
 
 ## Evidence required
 
-- A feature matrix naming exact features and the source proving each.
+- A feature matrix naming exact features and the source proving each (recorded in [lettre validation](../../research/lettre-0.11.23-validation.md)).
 - A compiled dependency graph with no duplicate/conflicting rustls providers.
 - Negative certificate tests failing closed.
-- A source audit showing no verification bypass path.
+- A source audit showing no call to `dangerous_accept_invalid_certs(true)` or `dangerous_accept_invalid_hostnames(true)`, and no bypass in the Sendust public API.

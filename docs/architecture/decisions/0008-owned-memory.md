@@ -1,6 +1,6 @@
 # ADR-0008 — Copy JS buffers before async; bounded file reads
 
-**Status:** ACCEPTED (planning)  
+**Status:** ACCEPTED (architecture baseline; binding/security validation P05/P11)  
 **Date:** 2026-11-13  
 **Deciders:** Architecture review (P02-005), security review (P11-004)  
 **Validated by:** P02-004, P05-002, P08-002, P11-004

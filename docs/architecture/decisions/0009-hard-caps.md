@@ -1,6 +1,6 @@
 # ADR-0009 — Hard caps for recipients, attachments, and wire size
 
-**Status:** ACCEPTED (planning)  
+**Status:** ACCEPTED (architecture baseline; boundary tests P04/P08/P13)  
 **Date:** 2026-11-13  
 **Deciders:** Architecture review (P02-005)  
 **Validated by:** P02-004, P04-003, P08-003, P13-003

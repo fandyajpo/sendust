@@ -19,7 +19,7 @@ In scope: relay session configuration, TLS and authentication, MAIL/RCPT/DATA tr
 - **Size:** L
 - **Status:** NOT STARTED
 - **Prerequisites:** P04-005, P01-001
-- **Description:** Implement relay connection configuration from validated core options: host, port, EHLO identity, optional credentials, and required TLS mode. Submit a whole envelope using lettre’s selected async API. Do not implement SMTP commands manually. Define behavior for missing/invalid relay configuration before any network attempt.
+- **Description:** Implement relay connection configuration from validated core options: host, port, EHLO identity, optional credentials, and required TLS mode. Submit one MAIL command and one RCPT command per recipient using lettre's selected lower-level async API, then one DATA transaction for the accepted-recipient subset. Do not implement SMTP commands manually. Define behavior for missing/invalid relay configuration before any network attempt.
 - **Evidence criteria:** Tests prove valid configuration reaches the fake relay and invalid host/port/EHLO/auth options fail before send. No custom SMTP command path exists. The implementation cites the P01-001 API choice.
 
 ### P06-002 — Enforce TLS verification and authentication failure semantics
@@ -35,8 +35,8 @@ In scope: relay session configuration, TLS and authentication, MAIL/RCPT/DATA tr
 - **Size:** XL
 - **Status:** NOT STARTED
 - **Prerequisites:** P01-003, P06-001
-- **Description:** Inspect lettre 0.11.23 lower-level async connection behavior for per-recipient RCPT results and the DATA transition. Do not assume the high-level transport exposes partial status. If partial outcomes are inaccessible, the gate ADR must explicitly choose whole-envelope rejection before DATA while returning honest aggregate `unknown`/`attempted` statuses. Implement exactly one policy. Per-recipient independent messages are forbidden. If partial status is accessible, normalize accepted/rejected recipients without claiming delivery.
-- **Evidence criteria:** Implementation evidence shows either honest per-recipient RCPT results or explicit pre-DATA envelope rejection when any recipient is rejected. Mixed fixture first `250`, second `550` produces the ADR outcome and never sends separate messages. Data after a pre-DATA rejection is asserted absent. The gate record names the lower-level API inspected or documents inaccessibility.
+- **Description:** Implement the P01-003 / ADR-0005 selected behavior: use AsyncSmtpConnection.command(Rcpt::new(...)) and Error::status() to observe each recipient reply. Continue after ordinary explicit 4xx/5xx RCPT refusal; if 421 is returned, stop immediately and do not issue DATA. If no recipient is accepted, do not issue DATA. Otherwise send exactly one DATA transaction to the accepted subset. No fallback to whole-envelope rejection and no per-recipient message fan-out.
+- **Evidence criteria:** Mixed fixture first `250`, second `550` records the first recipient as accepted only after final DATA 2xx and the second as rejected. Exactly one DATA transaction is sent to the accepted subset. When every RCPT reply is negative, no DATA command is sent. A 421 RCPT response terminates the session and prevents DATA even if earlier RCPT responses were 2xx. No per-recipient independent message is ever sent.
 
 ### P06-004 — Normalize SMTP responses, unknown-after-DATA, and no-retry behavior
 
@@ -56,7 +56,7 @@ In scope: relay session configuration, TLS and authentication, MAIL/RCPT/DATA tr
 
 ## Technical implementation details
 
-SMTP is exclusively `lettre 0.11.23`; no custom protocol client is permitted unless Phase 01 explicitly justified it, and the default decision is no custom SMTP. Relay configuration is core-owned and validated before connect. TLS uses rustls with `ring` and `webpki-roots`; verification is always enabled. Authentication failures are terminal. A transport handles one active send; `BUSY` is enforced by the lifecycle layer. Success means the relay accepted the message; it never means mailbox delivery. After DATA, ambiguity maps to `unknown` with no retry. Recipient handling follows P01-003/P06-003: inspect the lower-level async connection API; if partial status is unavailable, explicitly reject the entire envelope before DATA and retain `unknown`/`attempted`; never create one send per recipient. Timeout defaults remain connect 10s, operation 30s, total 120s, close 125s. There is no pooling, no retry, and no SMTPUTF8.
+SMTP is exclusively `lettre 0.11.23`; no custom protocol client is permitted unless Phase 01 explicitly justified it, and the default decision is no custom SMTP. Relay configuration is core-owned and validated before connect. TLS uses rustls with `ring` and `webpki-roots`; verification is always enabled. Authentication failures are terminal. A transport handles one active send; `BUSY` is enforced by the lifecycle layer. Success means the relay accepted the message; it never means mailbox delivery. After DATA, ambiguity maps to `unknown` with no retry. Recipient handling follows ADR-0005: observe each RCPT response, send one DATA transaction to the accepted subset, and report recipient accepted only after final DATA 2xx. If the pinned API behavior differs from source review, block and supersede ADR-0005; do not silently change the contract. Timeout defaults remain connect 10s, operation 30s, total 120s, close 125s. There is no pooling, no retry, and no SMTPUTF8.
 
 ## Dependencies
 
@@ -74,7 +74,7 @@ Phase 06 requires Phase 04 and Phase 01 gates. P06-001 needs P04-005 and P01-001
 
 ## Testing requirements
 
-Use loopback fake SMTP/TLS only, with a scripted dialogue and no arbitrary sleeps. Required fixtures: all `250`; all RCPT `550`; mixed `250`/`550`; `451` after final DATA; `535` auth; self-signed, expired, wrong-host, incomplete-chain, and malformed TLS; connection refused; reset during greeting; reset during DATA; abrupt close before final response; connect stall 11s; command stall 31s; total stall 121s; close drain 126s. Assert exact command trace for each, including no DATA after pre-DATA rejection and no second transaction after unknown. Assert credentials never appear in error text or logs.
+Use loopback fake SMTP/TLS only, with a scripted dialogue and no arbitrary sleeps. Required fixtures: all `250`; all RCPT `550`; mixed `250`/`550`; RCPT `421` after one accepted RCPT; `451` after final DATA; `535` auth; self-signed, expired, wrong-host, incomplete-chain, and malformed TLS; connection refused; reset during greeting; reset during DATA; abrupt close before final response; connect stall 11s; command stall 31s; total stall 121s; close drain 126s. Assert exact command trace for each, including no DATA when all RCPT commands are rejected, one DATA for mixed RCPT, and no second transaction after unknown. Assert credentials never appear in error text or logs.
 
 ## Acceptance criteria
 

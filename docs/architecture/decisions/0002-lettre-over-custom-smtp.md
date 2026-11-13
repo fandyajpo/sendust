@@ -1,6 +1,6 @@
 # ADR-0002 — Use lettre 0.11.23 instead of a custom SMTP client
 
-**Status:** ACCEPTED (planning), conditional on P01-001 and P01-003  
+**Status:** ACCEPTED (architecture baseline); lower-level async API selected by P01 source review; behavior validation P06  
 **Date:** 2026-11-13  
 **Deciders:** Research gate (P01-005)  
 **Validated by:** P01-001, P01-003, P06-001
@@ -13,7 +13,7 @@ The main uncertainty is observability: a high-level transport may hide per-recip
 
 ## Decision
 
-Use `lettre 0.11.23` as the SMTP and message-primitive dependency. Pin the exact version. Prefer the public high-level async transport unless P01-003 proves a required capability is only available through a lower-level async connection API. In that case, use the lower-level API with an ADR addendum and keep the custom-protocol surface to the minimum necessary.
+Use `lettre 0.11.23` as the SMTP and message-primitive dependency. Pin the exact version. Use the public lower-level `AsyncSmtpConnection` API because `command(Rcpt::new(...))` exposes individual RCPT responses and `Error::status()` exposes numeric negative reply codes. The lower-level API still delegates SMTP parsing, command formatting, TLS, AUTH, and DATA dot-stuffing to lettre. Keep Sendust's orchestration limited to public connection/command methods.
 
 Do not implement a custom SMTP client in the MVP.
 
@@ -27,15 +27,15 @@ Do not implement a custom SMTP client in the MVP.
 
 - SMTP correctness and TLS integration benefit from an established implementation.
 - Sendust inherits lettre’s feature-flag complexity and must pin and audit it.
-- Recipient partial status may not be observable; the fallback is whole-envelope rejection before DATA (ADR-0005).
+- Per-recipient RCPT responses are observable through the selected lower-level API; the selected behavior is recorded in ADR-0005.
 - Upgrading lettre is a deliberate, tested change, not a floating range.
 - The public contract must be expressed in Sendust’s own result/error types, not lettre’s, so the dependency can be replaced if necessary.
 
 ## Conditions that would reverse this decision
 
-P01-001 or P01-003 demonstrates that:
+Source/build validation demonstrates that:
 
-- A required MVP behavior (mandatory TLS verification with the chosen backend, STARTTLS, PLAIN/LOGIN auth, whole-envelope submission, bounded close) cannot be implemented through public lettre APIs; or
+- A required MVP behavior (mandatory TLS verification with the chosen backend, STARTTLS, PLAIN/LOGIN auth, single DATA transaction for the accepted-recipient subset, bounded close) cannot be implemented through public lettre APIs; or
 - The selected API is unmaintained or has an unresolved security advisory.
 
 Reversal requires a superseding ADR and an updated Phase 06 plan before implementation.

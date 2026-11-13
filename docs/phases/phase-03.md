@@ -19,7 +19,7 @@ In scope: workspace layout, crate manifests, `ts/src` package skeleton, test dir
 - **Size:** M
 - **Status:** NOT STARTED
 - **Prerequisites:** P02-005
-- **Description:** Specify the workspace layout with exactly two crates at `crates/sendust-core/src` and `crates/sendust-napi/src`, plus `ts/src` and `tests/`. Define root workspace membership, shared lint/format configuration, and crate responsibilities. Core must compile without Node headers or napi dependencies; napi depends on core and the binding toolkit. Include placeholder module trees that reflect architecture boundaries without implementing product logic.
+- **Description:** Specify the workspace layout with exactly two crates at `crates/sendust-core/src` and `crates/sendust-napi/src`, plus `ts/src` and `tests/`. Define root workspace membership, a stable Rust toolchain at or above 1.88 (required by napi 3.16.2), shared lint/format configuration, and crate responsibilities. Core must compile without Node headers or napi dependencies; napi depends on core and the binding toolkit. Include placeholder module trees that reflect architecture boundaries without implementing product logic.
 - **Evidence criteria:** Layout tree matches the proposed paths exactly and contains no third Rust crate. Core manifest has no napi/Node dependency; napi manifest depends on core. A documented check fails if a reverse dependency or extra crate appears. `cargo metadata` and package discovery are part of the acceptance evidence.
 
 ### P03-002 — Define dependency pinning, feature, and license policy
@@ -27,7 +27,7 @@ In scope: workspace layout, crate manifests, `ts/src` package skeleton, test dir
 - **Size:** S
 - **Status:** NOT STARTED
 - **Prerequisites:** P03-001, P01-002
-- **Description:** Record pinned versions and allowed feature sets for `lettre 0.11.23`, Tokio 1, rustls with `ring` and `webpki-roots`, napi/Node-API 8, and test-only tooling. Define a policy for adding dependencies, lockfile updates, license review, duplicate-version checks, and prohibited crates (custom SMTP stacks, insecure TLS toggles, URL fetchers). No dependency is installed in this planning phase; the manifest intent and review process are documented.
+- **Description:** Record pinned versions and allowed feature sets for `lettre = 0.11.23` (defaults off; `smtp-transport`, `tokio1-rustls`, `ring`, `webpki-roots`), `napi = 3.16.2` (`napi8`, `async`), `napi-derive = 3.7.0`, `napi-build = 2.6.0`, Tokio 1, rustls, and test-only tooling. Require `cargo tree` to prove lettre pool/native-tls are absent. Define a policy for adding dependencies, lockfile updates, license review, duplicate-version checks, and prohibited crates (custom SMTP stacks, insecure TLS toggles, URL fetchers). No dependency is installed in this planning phase; the manifest intent and review process are documented.
 - **Evidence criteria:** Dependency table lists direct versus transitive intent, feature flags, and pin strategy. Policy names approval and review steps and lists prohibited capabilities. TLS policy confirms no verification-disable feature. License inventory template exists and is required for every direct dependency.
 
 ### P03-003 — Establish formatting, linting, type-check, and unit-test commands

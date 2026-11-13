@@ -8,7 +8,7 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 | --- | --- | --- | --- |
 | QG-00 | Discovery integrity | P00 | P01 |
 | QG-01 | Research evidence | P01 | P02 |
-| QG-02 | Architecture freeze | P02 | P03 |
+| QG-02 | Architecture approval (design baseline) | P02 | P03 |
 | QG-03 | Repository baseline | P03 | P04 |
 | QG-04 | Rust safety and core tests | P04 | P05 |
 | QG-05 | Node interoperability | P05 | P06, P09 |
@@ -33,30 +33,31 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 | Constraint ledger | Every constraint C-01..C-30 has an owner task and validation path | P00-002 ledger |
 | Provenance | Version claims labeled observed or candidate, with sources | P00-003 table |
 | Threat boundary | Assets, trust boundaries, abuse cases, test-environment policy | P00-004 record |
-| Handoff | ADR seeds with deadlines, no unowned mandatory question | P00-005 gate record |
+| Handoff | ADR decisions and named downstream validation gates | [QG-00 gate record](../gates/phase-00-discovery.md) |
 
 ## QG-01 — Research evidence
 
 | Check | Requirement | Evidence |
 | --- | --- | --- |
-| lettre API | Chosen async API documented with citations; no assumed partial status | P01-001 matrix |
-| TLS features | Exact feature set composes; verification cannot be disabled | P01-002 matrix |
-| Recipient/timeouts | Observability table; explicit ADR decision | P01-003 report |
-| Node lifecycle | Node 22/24/26 labeled candidate/probed/supported; GC and close probe plan | P01-004 matrix |
-| Decision record | Every mandatory uncertainty decided or given an architecture deadline | P01-005 record |
+| lettre API | Chosen async API documented with pinned-source citations and per-recipient visibility | [P01 source report](../research/lettre-0.11.23-validation.md) |
+| TLS features | Exact feature graph source-reviewed; compile and certificate fixtures remain implementation gates | [P01 source report](../research/lettre-0.11.23-validation.md) |
+| Recipient/timeouts | Source-observed RCPT API; coarse-stage table; explicit ADR decisions | [P01 source report](../research/lettre-0.11.23-validation.md) |
+| Node lifecycle | Node 22/24/26 candidate-only matrix; explicit close/GC/exit probe plan | [Node runtime plan](../research/node-runtime-validation-plan.md) |
+| Decision record | Every mandatory design question selected; implementation proofs have named gates | [QG-01 gate record](../gates/phase-01-research.md) |
 
-## QG-02 — Architecture freeze
+## QG-02 — Architecture approval (design baseline)
 
 | Check | Requirement | Evidence |
 | --- | --- | --- |
-| Crate boundary | Exactly two crates; core has no Node linkage | P02-001 diagram and check plan |
-| Status contract | `accepted` = positive final DATA reply; explicit negative final reply = `rejected`; missing/ambiguous final reply after DATA = `unknown`; no delivery claim | P02-002 table |
+| Crate boundary | Exactly two crates; core has no Node linkage | [Approval matrix](../architecture/approval-matrix.md) |
+| Status contract | Positive final DATA=accepted; explicit negative final reply=rejected; indeterminate disposition=unknown; recipient RCPT outcomes preserved | [Approval matrix](../architecture/approval-matrix.md) |
 | Error taxonomy | Stable codes/categories; no message parsing required | P02-002 / error model |
-| Lifecycle | `open -> closing -> closed`; BUSY; bounded close; no GC | P02-003 |
-| Ownership | Copy-before-async; no borrowed JS memory | P02-004 |
+| Lifecycle | `open -> closing -> closed`; BUSY; bounded close; no GC | [Approval matrix](../architecture/approval-matrix.md) |
+| Timeouts | Connect ≤10s, operation ≤30s, total ≤120s, close ≤125s; lower-only; connect/operation ≤ total ≤ close | [Approval matrix](../architecture/approval-matrix.md) |
+| Ownership | Synchronous owned snapshot before async scheduling; no borrowed JS memory | [Approval matrix](../architecture/approval-matrix.md) |
 | Limits | 100 recipients, 10/20/30 MiB caps; deterministic precedence | P02-004 |
-| ADRs | All mandatory ADRs accepted or explicitly blocked | ADR index |
-| Traceability | Every constraint maps to implementation and test tasks | P02-005 matrix |
+| ADRs | All P02-scoped ADRs accepted; future-phase ADRs retain explicit downstream gate | [ADR index](../architecture/decisions/README.md) |
+| Traceability | C-01..C-30 map to ADRs, implementation tasks, and test gates | [Architecture approval matrix](../architecture/approval-matrix.md) |
 
 ## QG-03 — Repository baseline
 
@@ -102,8 +103,9 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 | Check | Requirement | Evidence |
 | --- | --- | --- |
 | Success | Positive final DATA → `accepted` | Command trace |
-| Pre-DATA rejection | MAIL/RCPT refusal → `rejected` | Trace |
-| Mixed RCPT | ADR-0005 behavior; no DATA after pre-DATA rejection | Trace |
+| Envelope refusal | MAIL refusal or all RCPT replies negative → overall `rejected`; a single RCPT refusal is recipient-level only | Trace |
+| Mixed RCPT | One DATA transaction to accepted subset; no DATA when all RCPT replies reject | Trace + transaction count |
+| RCPT 421 | Session terminates; no DATA even if an earlier RCPT was accepted | Trace + transaction count |
 | Final DATA response | Explicit 4xx/5xx (including `451`) → `rejected`; missing final reply after terminator may have reached relay → `unknown` | SMTP trace + transaction count |
 | Auth failure | `535` → `AUTH_FAILED`; no message sent | Trace |
 | TLS failures | Self-signed, expired, wrong host, incomplete chain, malformed | Negative tests |
@@ -252,7 +254,7 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 
 ## Enforcement rules
 
-1. A gate is `APPROVED` only with a signed record listing each check and its evidence link.
+1. A gate is `APPROVED` only with a reviewer-attributed record listing the decision, review date, each check, and its evidence link.
 2. A failed check blocks the phase; it is not waived silently.
 3. Waivers require a written rationale, owner, deadline, and risk entry. Security gates QG-11 and the TLS checks in QG-06 cannot be waived.
 4. Evidence must refer to the exact commit or artifact under review.

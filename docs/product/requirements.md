@@ -46,7 +46,7 @@ Enforced by P01-004, P05-003, P08-002.
 
 ### C-05 — Node-API level
 
-The binding targets **Node-API 8**. This is proposed and MUST be validated by P01-004. A higher level requires an ADR and a support-matrix update before Phase 05.
+The binding targets **Node-API 8** as the approved design floor. The initial pins are napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0; the napi crate MUST enable the `napi8` and `async` features explicitly because its default ABI feature is napi4. P01-004 records the source research; compilation and runtime compatibility MUST pass at P05-003/P14-004. A higher level requires a superseding ADR and support-matrix update.
 
 Enforced by P01-004, P05-001, P14-002.
 
@@ -58,7 +58,7 @@ Enforced by P01-004, P14-004, P15-001.
 
 ### C-07 — TLS verification
 
-TLS MUST use rustls with the `ring` provider and `webpki-roots` trust anchors, subject to P01-002 feature validation. Certificate and hostname verification MUST be always on. No public option, environment variable, or undocumented flag may disable verification. TLS 1.2 is the minimum.
+TLS MUST use rustls with the `ring` provider and `webpki-roots` trust anchors, with the source-reviewed lettre feature graph in ADR-0003. Cargo compilation and certificate fixtures remain hard implementation gates. Certificate and hostname verification MUST be always on. No public option, environment variable, or undocumented flag may disable verification. TLS 1.2 is the minimum.
 
 Enforced by P01-002, P06-002, P11-002.
 
@@ -76,7 +76,7 @@ Enforced by P02-003, P04-004, P09-004, P10-001.
 
 ### C-10 — Timeout budgets
 
-Defaults: connect 10 s, per-operation 30 s, total send 120 s, close/drain 125 s. Every value MUST be finite and tunable within documented bounds; zero, negative, `NaN`, and infinite values MUST be rejected. Exact stage attribution MUST be reported only where P01-003 proves it observable. **UNRESOLVED:** stage observability (P01-003).
+Defaults and maximums: connect 10 s, per-operation 30 s, total send 120 s, close/drain 125 s. Values MAY be lowered but MUST NOT exceed these maxima. Each value MUST be at least 1 s and finite. Connect and operation budgets MUST NOT exceed total; close/drain MUST be at least total and no more than 125 s. Zero, negative, sub-second, `NaN`, and infinite values MUST be rejected. Stage attribution is limited to coarse public API operations; internal socket sub-stage timing is not promised.
 
 Enforced by P01-003, P02-003, P04-004, P10-002.
 
@@ -114,7 +114,7 @@ Enforced by P04-002, P07-001, P07-004.
 
 ### C-15 — Delivery semantics
 
-A successful result means the relay accepted the message. It NEVER means mailbox delivery. After DATA, an ambiguous failure MUST be reported as `unknown` and MUST NOT be retried automatically. Before DATA, a definitive refusal is `rejected`.
+A successful result means the relay accepted the message for at least one accepted recipient. It NEVER means mailbox delivery. An explicit RCPT refusal rejects only that recipient when other recipients were accepted; if all RCPT commands are refused, the overall result is `rejected`. An explicit negative final DATA reply is also `rejected`. After message transmission begins, an indeterminate final disposition MUST be reported as `unknown` and MUST NOT be retried automatically.
 
 Enforced by P02-002, P06-004, P09-002.
 
@@ -130,11 +130,9 @@ AbortSignal support is optional and MUST NOT be required for MVP. Bounded close 
 
 Enforced by P02-003, P09-004, P18-002.
 
-### C-18 — Recipient partial failure — UNRESOLVED
+### C-18 — Recipient-level SMTP outcomes
 
-Whether lettre’s async SMTP API exposes per-recipient RCPT status is **UNRESOLVED**. P01-003 MUST inspect the lower-level async connection API; P06-003 MUST implement the outcome.
-
-If per-recipient status is inaccessible, Sendust MUST reject the entire envelope before DATA and retain honest `unknown`/`attempted` statuses. Sendust MUST NOT send independent per-recipient messages to simulate partial success.
+Sendust MUST observe each RCPT reply through lettre's public lower-level async connection API. A 2xx RCPT reply is accepted at the envelope stage; an ordinary 4xx/5xx reply is a definitive rejection for that recipient. A 421 reply closes the session, so Sendust MUST stop recipient collection and MUST NOT issue DATA even if earlier RCPT replies were 2xx. Otherwise, if at least one recipient is accepted, Sendust MUST submit exactly one DATA transaction to the accepted-recipient subset. A recipient is `accepted` only after positive final DATA. If final DATA is explicitly refused, those accepted-RCPT recipients become `rejected`; if final disposition is unknown, they become `unknown`. Sendust MUST NOT send independent per-recipient messages.
 
 Enforced by P01-003, P02-002, P06-003, P09-002.
 

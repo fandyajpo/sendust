@@ -1,6 +1,6 @@
 # Sendust — Architecture Overview
 
-**Status:** proposed; not frozen. Architecture approval requires P02-005 and its evidence.  
+**Status:** approved design baseline at P02-005; implementation validation remains gated by downstream phases.  
 **Authoritative constraints:** [requirements](../product/requirements.md).  
 **Detailed design:** [system design](system-design.md).  
 **Decisions:** [ADR index](decisions/README.md).
@@ -51,10 +51,10 @@ A separate `sendust-mime` or `sendust-smtp` crate is not justified yet: MIME and
 ## 4. Data and control flow
 
 1. The caller constructs a transport with relay, TLS, auth, timeout, attachment, and cap options.
-2. `send(message)` validates public shape, then calls the native binding.
-3. The binding copies every JS-owned buffer/string, constructs owned core types, and starts one async task.
-4. Core validates in deterministic order, composes the MIME message, enforces caps, and opens one SMTP session through lettre.
-5. lettre performs connect, TLS/STARTTLS, AUTH, MAIL, RCPT, DATA.
+2. `send(message)` synchronously prepares an owned native operation, snapshots JS-owned buffers/strings, and reserves the single-send slot; synchronous preparation failures become Promise rejections.
+3. The binding schedules the owned operation on napi-managed Tokio 1.
+4. Core validates in deterministic order, composes the MIME message, enforces caps, and opens one AsyncSmtpConnection through lettre.
+5. lettre performs connect, TLS/required STARTTLS, AUTH, MAIL, one RCPT command per recipient, and one DATA transaction for the accepted-recipient subset.
 6. Core maps the final observable state to `accepted`, `rejected`, or `unknown` and closes the session.
 7. The binding converts the result or error into a stable JS object; the wrapper returns it unchanged.
 
@@ -63,7 +63,7 @@ No queue, worker, scheduler, queue adapter, or persistence layer exists or is pl
 ## 5. Ownership model
 
 - JavaScript values are valid only during the synchronous portion of the call.
-- Every `Buffer`, `ArrayBuffer`, and string is copied into Rust-owned memory before the first `await`.
+- Every `Buffer`, `ArrayBuffer`, typed array, and string is copied into Rust-owned memory synchronously before async work is scheduled.
 - Attachment files are read into bounded Rust-owned buffers after opt-in validation.
 - The native transport object owns the core transport and its lifecycle state.
 - JavaScript `close()` explicitly transitions the transport; garbage collection never closes it.
@@ -75,12 +75,13 @@ Failures are categorized before they reach JavaScript:
 
 | Category | Example | Public behavior |
 | --- | --- | --- |
-| Validation | Non-ASCII local part, 101 recipients, CRLF in header | Synchronous rejection with stable code |
-| Configuration | Missing host, unsupported auth mode | Rejection before any network attempt |
+| Validation | Non-ASCII local part, 101 recipients, CRLF in header | `send()` Promise rejection with stable code; transport-option validation in `createTransport()` is synchronous |
+| Configuration | Missing host, unsupported auth mode | Synchronous `createTransport()` error before any network attempt |
 | Limit | Attachment > 10 MiB, wire > 30 MiB | Rejection before DATA |
 | TLS | Self-signed, expired, wrong host | Closed, non-retryable error |
 | Authentication | `535` | Closed, non-retryable error |
-| Protocol | Explicit SMTP refusal | `rejected` when the relay definitively refuses |
+| Protocol | MAIL/DATA/final DATA refusal or all RCPT replies negative | Overall `rejected` |
+| Protocol | One RCPT refusal in a mixed envelope | That recipient is `rejected`; accepted subset proceeds to one DATA transaction |
 | Protocol | Abrupt close / missing final reply after DATA | `unknown` only when final disposition cannot be established |
 | Timeout | Connect/operation/total budget exceeded | Timeout category with elapsed budget |
 | Lifecycle | Send after close, concurrent send | `CLOSED` / `BUSY`, no network attempt |

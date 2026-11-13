@@ -4,7 +4,9 @@
 
 - Total phases: 19
 - Total tasks: 95
-- All tasks begin as `NOT STARTED`.
+- Completed tasks: 15 (P00–P02)
+- Not-started tasks: 80 (P03–P18)
+- P00–P02 tasks are `COMPLETED` with approved gate evidence; P03–P18 remain `NOT STARTED`.
 - Effort is relative: S, M, L, XL. No delivery dates.
 - Gate tasks are the final task in each phase and must not be marked complete before their phase evidence exists.
 
@@ -12,21 +14,21 @@
 
 | Phase | Phase name | Task | Title | Size | Prerequisites | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| [P00](../phases/phase-00.md) | Discovery | [P00-001](../phases/phase-00.md) | Capture MVP problem statement, personas, and non-goals | S | None | NOT STARTED |
-| [P00](../phases/phase-00.md) | Discovery | [P00-002](../phases/phase-00.md) | Build the authoritative constraint ledger and open-question register | M | P00-001 | NOT STARTED |
-| [P00](../phases/phase-00.md) | Discovery | [P00-003](../phases/phase-00.md) | Record platform and dependency provenance without installing or coding | S | P00-001 | NOT STARTED |
-| [P00](../phases/phase-00.md) | Discovery | [P00-004](../phases/phase-00.md) | Define the threat, operational, and test-environment boundaries | M | P00-002 | NOT STARTED |
-| [P00](../phases/phase-00.md) | Discovery | [P00-005](../phases/phase-00.md) | Run the discovery gate and hand off research questions | S | P00-001, P00-002, P00-003, P00-004 | NOT STARTED |
-| [P01](../phases/phase-01.md) | Research | [P01-001](../phases/phase-01.md) | Analyze lettre 0.11.23 async SMTP and version constraints | M | P00-005 | NOT STARTED |
-| [P01](../phases/phase-01.md) | Research | [P01-002](../phases/phase-01.md) | Validate rustls ring/webpki-roots feature and verification posture | S | P01-001 | NOT STARTED |
-| [P01](../phases/phase-01.md) | Research | [P01-003](../phases/phase-01.md) | Determine recipient partial-failure and timeout-stage observability | L | P01-001 | NOT STARTED |
-| [P01](../phases/phase-01.md) | Research | [P01-004](../phases/phase-01.md) | Validate Node 22/24/26, Node-API 8, and napi-managed Tokio lifecycle | M | P00-005 | NOT STARTED |
-| [P01](../phases/phase-01.md) | Research | [P01-005](../phases/phase-01.md) | Research decision gate and ADR handoff | S | P01-001, P01-002, P01-003, P01-004 | NOT STARTED |
-| [P02](../phases/phase-02.md) | Architecture | [P02-001](../phases/phase-02.md) | Define crate boundaries and dependency direction | M | P01-005 | NOT STARTED |
-| [P02](../phases/phase-02.md) | Architecture | [P02-002](../phases/phase-02.md) | Specify the public status, result, and error contract | L | P02-001, P01-003 | NOT STARTED |
-| [P02](../phases/phase-02.md) | Architecture | [P02-003](../phases/phase-02.md) | Design transport lifecycle, concurrency, and timeout budgets | L | P02-001 | NOT STARTED |
-| [P02](../phases/phase-02.md) | Architecture | [P02-004](../phases/phase-02.md) | Specify memory ownership, limits, and attachment policy | M | P02-001 | NOT STARTED |
-| [P02](../phases/phase-02.md) | Architecture | [P02-005](../phases/phase-02.md) | Architecture review, ADR freeze, and implementation handoff | S | P02-001, P02-002, P02-003, P02-004 | NOT STARTED |
+| [P00](../phases/phase-00.md) | Discovery | [P00-001](../phases/phase-00.md) | Capture MVP problem statement, personas, and non-goals | S | None | COMPLETED |
+| [P00](../phases/phase-00.md) | Discovery | [P00-002](../phases/phase-00.md) | Build the authoritative constraint ledger and open-question register | M | P00-001 | COMPLETED |
+| [P00](../phases/phase-00.md) | Discovery | [P00-003](../phases/phase-00.md) | Record platform and dependency provenance without installing or coding | S | P00-001 | COMPLETED |
+| [P00](../phases/phase-00.md) | Discovery | [P00-004](../phases/phase-00.md) | Define the threat, operational, and test-environment boundaries | M | P00-002 | COMPLETED |
+| [P00](../phases/phase-00.md) | Discovery | [P00-005](../phases/phase-00.md) | Run the discovery gate and hand off research questions | S | P00-001, P00-002, P00-003, P00-004 | COMPLETED |
+| [P01](../phases/phase-01.md) | Research | [P01-001](../phases/phase-01.md) | Analyze lettre 0.11.23 async SMTP and version constraints | M | P00-005 | COMPLETED |
+| [P01](../phases/phase-01.md) | Research | [P01-002](../phases/phase-01.md) | Validate rustls ring/webpki-roots feature and verification posture | S | P01-001 | COMPLETED |
+| [P01](../phases/phase-01.md) | Research | [P01-003](../phases/phase-01.md) | Determine recipient partial-failure and timeout-stage observability | L | P01-001 | COMPLETED |
+| [P01](../phases/phase-01.md) | Research | [P01-004](../phases/phase-01.md) | Research Node-API 8 and define Node runtime/lifecycle probe plan | M | P00-005 | COMPLETED |
+| [P01](../phases/phase-01.md) | Research | [P01-005](../phases/phase-01.md) | Research decision gate and ADR handoff | S | P01-001, P01-002, P01-003, P01-004 | COMPLETED |
+| [P02](../phases/phase-02.md) | Architecture | [P02-001](../phases/phase-02.md) | Define crate boundaries and dependency direction | M | P01-005 | COMPLETED |
+| [P02](../phases/phase-02.md) | Architecture | [P02-002](../phases/phase-02.md) | Specify the public status, result, and error contract | L | P02-001, P01-003 | COMPLETED |
+| [P02](../phases/phase-02.md) | Architecture | [P02-003](../phases/phase-02.md) | Design transport lifecycle, concurrency, and timeout budgets | L | P02-001 | COMPLETED |
+| [P02](../phases/phase-02.md) | Architecture | [P02-004](../phases/phase-02.md) | Specify memory ownership, limits, and attachment policy | M | P02-001 | COMPLETED |
+| [P02](../phases/phase-02.md) | Architecture | [P02-005](../phases/phase-02.md) | Architecture review, ADR freeze, and implementation handoff | S | P02-001, P02-002, P02-003, P02-004 | COMPLETED |
 | [P03](../phases/phase-03.md) | Repository | [P03-001](../phases/phase-03.md) | Create the workspace and two-crate skeleton | M | P02-005 | NOT STARTED |
 | [P03](../phases/phase-03.md) | Repository | [P03-002](../phases/phase-03.md) | Define dependency pinning, feature, and license policy | S | P03-001, P01-002 | NOT STARTED |
 | [P03](../phases/phase-03.md) | Repository | [P03-003](../phases/phase-03.md) | Establish formatting, linting, type-check, and unit-test commands | M | P03-001 | NOT STARTED |

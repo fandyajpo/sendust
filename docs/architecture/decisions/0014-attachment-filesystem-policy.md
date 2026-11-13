@@ -1,6 +1,6 @@
 # ADR-0014 — Attachment filesystem policy
 
-**Status:** ACCEPTED for planning; implementation evidence required at P08-005 and P11-003.  
+**Status:** ACCEPTED (architecture baseline); implementation evidence required at P08-005 and P11-003.  
 **Date:** 2026-11-13.
 
 ## Context

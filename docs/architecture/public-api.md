@@ -1,6 +1,6 @@
 # Sendust — Public API Contract
 
-**Status:** proposed; architecture approval is gated by P02-005 and public API approval by P09-005. Both phases remain `NOT STARTED`.  
+**Status:** architecture baseline approved at P02-005; public API implementation and contract gate remain P09-001–P09-005.  
 **Types are illustrative:** the authoritative declarations are generated/implemented in P09-001; this document defines behavior, not final syntax.
 
 ## 1. Surface
@@ -28,17 +28,17 @@ No plugin registry, no transport subclasses, no streaming API, no callback API, 
 | `secure` | `"tls" \| "starttls"` | required | one of the two; no plaintext mode |
 | `auth` | `{ user, pass, method? }` | undefined | user non-empty; `method` `"plain"` or `"login"` |
 | `ehloName` | `string` | system hostname or `localhost` | valid hostname token; no CRLF |
-| `timeouts.connectMs` | `number` | 10000 | finite, > 0, ≤ total |
-| `timeouts.operationMs` | `number` | 30000 | finite, > 0 |
-| `timeouts.totalMs` | `number` | 120000 | finite, > 0, ≥ connect |
-| `timeouts.closeMs` | `number` | 125000 | finite, > 0 |
+| `timeouts.connectMs` | `number` | 10000 | integer 1000–10000; ≤ totalMs |
+| `timeouts.operationMs` | `number` | 30000 | integer 1000–30000; ≤ totalMs |
+| `timeouts.totalMs` | `number` | 120000 | integer 1000–120000; ≥ connectMs and operationMs |
+| `timeouts.closeMs` | `number` | 125000 | integer totalMs–125000; ≥ totalMs |
 | `attachments.allowFileAccess` | `boolean` | `false` | boolean |
 | `limits.maxRecipients` | `number` | 100 | integer, 1–100 (cannot exceed hard cap) |
 | `limits.maxAttachmentBytes` | `number` | 10485760 | integer, 1–10485760 |
 | `limits.maxTotalAttachmentBytes` | `number` | 20971520 | integer, 1–20971520 |
 | `limits.maxWireBytes` | `number` | 31457280 | integer, 1–31457280 |
 
-Limits may be lowered but not raised. A caller cannot configure a value above the documented hard cap. Unknown option keys are rejected with `VALIDATION_INVALID_OPTION` to catch typos.
+Timeout values may be lowered but not raised above the documented maxima. Limits may be lowered but not raised. A caller cannot configure a value above the documented hard cap. Unknown option keys are rejected with `VALIDATION_INVALID_OPTION` to catch typos.
 
 There is no option to disable TLS verification, no plaintext SMTP mode, no pool size, no retry count, and no proxy configuration in MVP.
 
@@ -93,11 +93,27 @@ try {
 Behavior:
 
 - Resolves with `SendResult` for `accepted`, `rejected`, and `unknown`.
+- `SendResult.recipients` records each explicit RCPT outcome. A recipient is `accepted` only after final DATA 2xx; RCPT refusals remain `rejected` even when the accepted subset succeeds.
+- Mixed RCPT results produce one DATA transaction for the accepted subset, never one message per recipient.
+- A missing/indeterminate final DATA disposition after message transmission begins produces `unknown` for the RCPT-accepted subset.
 - Rejects with a `SendustError` subclass for validation, configuration, limit, TLS, auth, timeout, closed, busy, and internal failures.
 - Never resolves with a delivery claim.
 - Never retries.
 - Never queues.
 - Never sends per-recipient messages.
+
+The result shape is:
+
+```ts
+export type DeliveryStatus = "accepted" | "rejected" | "unknown";
+export type RecipientStatus = "accepted" | "rejected" | "unknown";
+
+export interface SendResult {
+  status: DeliveryStatus;
+  recipients: Array<{ address: string; status: RecipientStatus }>;
+  response?: { code: number; message: string };
+}
+```
 
 ## 6. Close
 
@@ -108,7 +124,7 @@ await transport.close();
 - Idempotent; repeated calls resolve once the transport is closed.
 - Bounded by `closeMs` (125 s default).
 - Transitions `open -> closing -> closed`.
-- Close requests cancellation of an in-flight operation and awaits bounded cleanup. If cancellation occurs after message data may have reached the relay but before a final SMTP reply is observed, the send outcome is `unknown`; close must not rewrite that uncertainty as a definitive cancellation or rejection.
+- Close requests cancellation of an in-flight operation and awaits bounded cleanup. If cancellation occurs once message transmission has begun and the final SMTP disposition is not observed, the send outcome is `unknown`; close must not rewrite that uncertainty as a definitive cancellation or rejection.
 - After close, `send` rejects with `TRANSPORT_CLOSED`.
 - No GC/finalizer dependency.
 

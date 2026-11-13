@@ -1,91 +1,75 @@
 # Documentation Index
 
-**Sendust** — Standalone Native Email Delivery Engine for Node.js.  
-Planning baseline: **2026-11-13**. The repository contains planning and architecture documentation; implementation and release status are tracked separately.
+**Sendust — Standalone Native Email Delivery Engine for Node.js**  
+Planning baseline: 2026-11-13.
 
-This documentation set is the source of truth for product scope, requirements, proposed architecture, decisions, and execution planning. Documentation approval does not imply that implementation, dependency validation, or publication has occurred.
+This documentation set is the source of truth for product scope, requirements, approved architecture design, decisions, and execution planning. QG-00, QG-01, and QG-02 are approved. Application implementation, compilation, runtime validation, and publication have not occurred.
 
 ## 1. Start here
 
 | Order | Document | Why |
 | --- | --- | --- |
 | 1 | [Product vision](product/vision.md) | Problem, users, principles, positioning |
-| 2 | [Requirements](product/requirements.md) | Constraints, functional requirements, non-functional requirements |
-| 3 | [MVP scope](product/mvp-scope.md) | Included, excluded, success conditions |
-| 4 | [Feature matrix](planning/feature-matrix.md) | REQUIRED / OPTIONAL / POST-MVP / OUT OF SCOPE with task mapping |
-| 5 | [Master roadmap](planning/master-roadmap.md) | All 19 phases (P00–P18), their outcomes, and gates |
-| 6 | [Architecture overview](architecture/overview.md) | Shape and boundaries |
-| 7 | [System design](architecture/system-design.md) | Modules, types, state machine, test seams |
-| 8 | [Public API contract](architecture/public-api.md) | Behavior of the TypeScript surface |
-| 9 | [Data flow](architecture/data-flow.md) | Send and close across layers |
-| 10 | [Error model](architecture/error-model.md) | Outcomes, error codes, redaction |
-| 11 | [Phase index](planning/phase-index.md) | Entry point to every phase plan |
-| 12 | [Task registry](planning/task-registry.md) | All 95 tasks with prerequisites |
-| 13 | [Dependency graph](planning/dependency-graph.md) | Phase DAG, critical path, parallel tracks |
-| 14 | [Milestones](planning/milestones.md) | M0–M7 with exit criteria |
-| 15 | [Quality gates](planning/quality-gates.md) | QG-00–QG-17 |
-| 16 | [Definition of done](planning/definition-of-done.md) | Evidence rules |
-| 17 | [Risk registry](planning/risk-registry.md) | Risk IDs, mitigations, owners |
-| 18 | [Dependency research](engineering/dependency-research.md) | Observed facts and sources, dated 2026-11-13 |
-| 19 | [Testing strategy](engineering/testing-strategy.md) | Test layers, fixtures, fault matrix, flake policy |
-| 20 | [Security strategy](engineering/security-strategy.md) | Threat model, TLS, injection, redaction, supply chain |
-| 21 | [Reliability strategy](engineering/reliability-strategy.md) | Lifecycle, timeouts, races, cleanup |
-| 22 | [Performance strategy](engineering/performance-strategy.md) | Budgets, measurement, optimization order |
-| 23 | [Distribution strategy](engineering/distribution-strategy.md) | Platform matrix, artifacts, clean installs |
-| 24 | [Release strategy](engineering/release-strategy.md) | Versioning, RC process, publication, rollback |
+| 2 | [Requirements](product/requirements.md) | Constraints and functional/non-functional requirements |
+| 3 | [MVP scope](product/mvp-scope.md) | Included, excluded, and success conditions |
+| 4 | [Discovery brief](discovery/brief.md) | Falsifiable problem statement and product boundary |
+| 5 | [Constraint ledger](discovery/constraint-ledger.md) | C-01..C-30 traceability |
+| 6 | [Threat model](discovery/threat-model.md) | Assets, trust boundaries, and abuse cases |
+| 7 | [lettre source validation](research/lettre-0.11.23-validation.md) | Pinned API and feature research |
+| 8 | [Node runtime validation plan](research/node-runtime-validation-plan.md) | Node-API 8 candidate matrix and lifecycle probes |
+| 9 | [Architecture overview](architecture/overview.md) | Approved architecture shape and boundaries |
+| 10 | [System design](architecture/system-design.md) | Modules, types, state machine, test seams |
+| 11 | [Public API contract](architecture/public-api.md) | Approved design contract; implementation gate P09 |
+| 12 | [Data flow](architecture/data-flow.md) | Send and close across layers |
+| 13 | [Error model](architecture/error-model.md) | Outcomes, error codes, redaction |
+| 14 | [Architecture approval matrix](architecture/approval-matrix.md) | Approved decisions and downstream validations |
+| 15 | [ADR index](architecture/decisions/README.md) | Architecture decision records |
+| 16 | [Master roadmap](planning/master-roadmap.md) | All 19 phases and outcomes |
+| 17 | [Phase index](planning/phase-index.md) | Entry point to every phase plan |
+| 18 | [Task registry](planning/task-registry.md) | All 95 tasks and prerequisites |
+| 19 | [Dependency graph](planning/dependency-graph.md) | Phase DAG and critical path |
+| 20 | [Milestones](planning/milestones.md) | M0–M7 exit criteria |
+| 21 | [Quality gates](planning/quality-gates.md) | QG-00–QG-17 |
+| 22 | [Definition of done](planning/definition-of-done.md) | Evidence rules |
+| 23 | [Risk registry](planning/risk-registry.md) | Risk IDs, mitigations, owners |
+| 24 | [Dependency research](engineering/dependency-research.md) | Observed facts and sources |
+| 25 | [Testing strategy](engineering/testing-strategy.md) | Test layers, fixtures, fault matrix |
+| 26 | [Security strategy](engineering/security-strategy.md) | TLS, injection, redaction, supply chain |
+| 27 | [Reliability strategy](engineering/reliability-strategy.md) | Lifecycle, timeouts, races, cleanup |
+| 28 | [Performance strategy](engineering/performance-strategy.md) | Budgets and measurement |
+| 29 | [Distribution strategy](engineering/distribution-strategy.md) | Platform matrix and native artifacts |
+| 30 | [Release strategy](engineering/release-strategy.md) | Versioning, RC, publication, rollback |
+| 31 | [QG-00 discovery gate](gates/phase-00-discovery.md) | Discovery approval evidence |
+| 32 | [QG-01 research gate](gates/phase-01-research.md) | Research approval evidence |
+| 33 | [QG-02 architecture gate](gates/phase-02-architecture-approval.md) | Architecture approval evidence |
 
 ## 2. Directory map
 
-```text
-docs/
-├── README.md
-├── product/
-│   ├── vision.md
-│   ├── requirements.md
-│   └── mvp-scope.md
-├── architecture/
-│   ├── overview.md
-│   ├── system-design.md
-│   ├── public-api.md
-│   ├── data-flow.md
-│   ├── error-model.md
-│   └── decisions/
-│       ├── README.md
-│       └── 0001..0014-*.md
-├── planning/
-│   ├── master-roadmap.md
-│   ├── phase-index.md
-│   ├── task-registry.md
-│   ├── dependency-graph.md
-│   ├── milestones.md
-│   ├── risk-registry.md
-│   ├── quality-gates.md
-│   ├── feature-matrix.md
-│   └── definition-of-done.md
-├── phases/
-│   └── phase-00.md ... phase-18.md
-├── engineering/
-│   ├── dependency-research.md
-│   ├── testing-strategy.md
-│   ├── security-strategy.md
-│   ├── reliability-strategy.md
-│   ├── performance-strategy.md
-│   ├── distribution-strategy.md
-│   └── release-strategy.md
-└── decisions/
-    └── README.md          # pointer to architecture/decisions (single ADR home)
-```
-
-### Structural notes
-
-- ADRs live only in `architecture/decisions/`. `docs/decisions/README.md` is a pointer; there is no duplicate ADR set.
-- Task-level detail lives only in `docs/phases/`. Registries index tasks and never restate acceptance criteria.
-- Requirements are authoritative in `product/requirements.md`. Feature classification is authoritative in `planning/feature-matrix.md`.
-- [dependency-research.md](engineering/dependency-research.md) records observed facts and their sources; it does not replace the P01 validation tasks.
+    docs/
+    ├── README.md
+    ├── discovery/
+    │   ├── brief.md
+    │   ├── constraint-ledger.md
+    │   └── threat-model.md
+    ├── research/
+    │   ├── lettre-0.11.23-validation.md
+    │   └── node-runtime-validation-plan.md
+    ├── gates/
+    │   ├── phase-00-discovery.md
+    │   ├── phase-01-research.md
+    │   └── phase-02-architecture-approval.md
+    ├── product/
+    ├── architecture/
+    │   ├── approval-matrix.md
+    │   └── decisions/
+    ├── planning/
+    ├── phases/
+    ├── engineering/
+    └── decisions/  (pointer to architecture/decisions)
 
 ## 3. Status model
 
-All phases and tasks begin at `NOT STARTED`. Allowed states: `NOT STARTED`, `IN PROGRESS`, `BLOCKED`, `IN REVIEW`, `COMPLETED`. A task is `COMPLETED` only with evidence per [definition-of-done.md](planning/definition-of-done.md). A phase is `COMPLETED` only when its gate is approved.
+P00–P02 are COMPLETED with approved evidence. P03–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -99,31 +83,31 @@ All phases and tasks begin at `NOT STARTED`. Allowed states: `NOT STARTED`, `IN 
 
 | Item | State |
 | --- | --- |
-| Repository | Documentation repository with committed planning artifacts |
-| Application implementation | Not present in the audited repository snapshot |
-| Dependencies installed | None |
-| Phase 00 | NOT STARTED |
-| Phase 18 | NOT STARTED |
-| Recommended next task | **P00-001**, subject to the current phase gates |
+| Repository | Documentation and architecture planning |
+| Application implementation | Not present in audited snapshot |
+| Rust toolchain in audit environment | Not installed; no cargo build executed |
+| QG-00 Discovery | APPROVED |
+| QG-01 Research | APPROVED with implementation validation gates |
+| QG-02 Architecture | APPROVED at design level |
+| P03–P18 | NOT STARTED |
+| Next task | P03-001 — create workspace and two-crate skeleton |
 
 ## 5. Conventions
 
-- Constraint IDs: `C-01`–`C-30`.
-- Functional requirements: `FR-001`–`FR-068`.
-- Non-functional requirements: `NFR-001`–`NFR-014`.
-- Open questions: `OQ-01`–`OQ-07`.
-- Phase IDs: `P00`–`P18`.
-- Task IDs: `Pxx-00y` (for example `P07-003`).
-- Decision IDs: `ADR-0001`–`ADR-0014`.
-- Risk IDs: `R-001`–`R-040`.
-- Gate IDs: `QG-00`–`QG-17`.
-- Milestones: `M0`–`M7`.
-- Feature IDs: `F-SMTP-xx`, `F-MSG-xx`, `F-ATT-xx`, `F-DEL-xx`, `F-DX-xx`, `F-SEC-xx`, `F-DIS-xx`, `F-OPS-xx`.
-- Effort: `S`, `M`, `L`, `XL` (relative, no dates).
+- Constraint IDs: C-01–C-30.
+- Functional requirements: FR-001–FR-068.
+- Non-functional requirements: NFR-001–NFR-014.
+- Open questions: OQ-01–OQ-07.
+- Phase IDs: P00–P18.
+- Task IDs: Pxx-00y.
+- Decision IDs: ADR-0001–ADR-0014.
+- Risk IDs: R-001–R-040.
+- Gate IDs: QG-00–QG-17.
+- Milestones: M0–M7.
 
 ## 6. Change rule
 
-- Requirement changes update [requirements.md](product/requirements.md) and the feature matrix.
+- Requirement changes update requirements.md and the feature matrix.
 - Architecture changes require a new or superseding ADR.
-- Task changes update the phase plan, the registry, and, if needed, the dependency graph.
+- Task changes update the phase plan, registry, and dependency graph where applicable.
 - Completion claims without evidence are invalid.

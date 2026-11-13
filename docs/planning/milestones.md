@@ -1,6 +1,6 @@
 # Milestone Registry
 
-Milestones are evidence checkpoints, not calendar dates. A milestone is reached only when every mapped gate task is `COMPLETED` and its evidence is accepted. Effort is relative (S/M/L/XL) and never a delivery estimate.
+Milestones are evidence checkpoints, not calendar dates. A milestone is reached only when every mapped gate task is `COMPLETED` and its evidence is accepted. M0 is reached with QG-00, QG-01, and QG-02 records; all implementation milestones remain pending. Effort is relative (S/M/L/XL) and never a delivery estimate.
 
 ## Milestone summary
 
@@ -17,6 +17,10 @@ Milestones are evidence checkpoints, not calendar dates. A milestone is reached 
 
 ## M0 — Architecture Approved
 
+**REACHED — 2026-11-13**
+
+**Evidence:** [QG-00](../gates/phase-00-discovery.md), [QG-01](../gates/phase-01-research.md), [QG-02](../gates/phase-02-architecture-approval.md), [approval matrix](../architecture/approval-matrix.md).
+
 **Purpose:** Freeze the problem, constraints, dependency decisions, and architecture so implementation cannot drift.
 
 **Required gates:**
@@ -26,11 +30,10 @@ Milestones are evidence checkpoints, not calendar dates. A milestone is reached 
 
 **Exit criteria:**
 - Every constraint C-01 through C-30 maps to an enforcement task.
-- Every mandatory ADR is `ACCEPTED` or explicitly `BLOCKED` with an architecture-time deadline.
+- Every P02-scoped mandatory ADR is `ACCEPTED`; future-phase ADRs may remain `PROPOSED` only when they have a named decision task and do not block the approved architecture baseline.
 - No implementation is required to understand the public contract.
 
-**Risks:** unresolved recipient observability; unproven TLS features; Node-API floor uncertainty.  
-**Mitigation:** P01 must produce evidence, not assumptions; Phase 03 cannot start until the gate passes.
+**Residual implementation risks:** Cargo feature compilation, Node runtime compatibility, SMTP/TLS fake-relay tests. These do not block the design baseline but remain hard implementation gates before dependent behavior is claimed.
 
 ## M1 — Native Binding Proof of Concept
 

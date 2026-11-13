@@ -51,8 +51,8 @@ In scope: `crates/sendust-core/src` modules for validation, addresses, limits, M
 - **Size:** XL
 - **Status:** NOT STARTED
 - **Prerequisites:** P04-001, P04-002, P04-003, P04-004, P01-001, P01-003
-- **Description:** Wire the core to `lettre 0.11.23` using the research-selected API and rustls `ring`/`webpki-roots` features. Implement connect, TLS, auth, MAIL FROM, RCPT TO, DATA, and final-response orchestration with relay-accepted semantics. Do not retry, do not pool, and do not implement a custom SMTP client. Implement P01-003 recipient policy: if lower-level partial status is accessible, map it honestly; otherwise reject the entire envelope before DATA and expose aggregate `unknown`/`attempted`, never per-recipient independent messages. Add core integration tests against the local fake SMTP/TLS harness.
-- **Evidence criteria:** Tests cover successful acceptance, all-recipient rejection before DATA, mixed `250`/`550` per ADR, explicit final DATA `451` as `rejected`, plus missing final reply after DATA terminator as `unknown`, both with zero retries, auth failure, TLS verification failure, connect refusal, and abrupt server close. Success asserts relay acceptance only. No credentials appear in logs. Rust tests run without Node. The core phase gate passes only when all required fault fixtures execute locally.
+- **Description:** Wire the core to `lettre 0.11.23` using the research-selected API and rustls `ring`/`webpki-roots` features. Implement connect, TLS, auth, MAIL FROM, RCPT TO, DATA, and final-response orchestration with relay-accepted semantics. Do not retry, do not pool, and do not implement a custom SMTP client. Implement ADR-0005 recipient policy using lettre's public AsyncSmtpConnection: observe every RCPT response, then send one DATA transaction only to the accepted-recipient subset. A recipient is accepted only after final DATA 2xx. Never fan out independent messages. Add core integration tests against the local fake SMTP/TLS harness.
+- **Evidence criteria:** Tests cover successful acceptance, all-recipient rejection with no DATA, mixed `250`/`550` with one DATA transaction to the accepted subset, explicit final DATA `451` as `rejected`, plus missing final reply after DATA terminator as `unknown`, both with zero retries, auth failure, TLS verification failure, connect refusal, and abrupt server close. Success asserts relay acceptance only. No credentials appear in logs. Rust tests run without Node. The core phase gate passes only when all required fault fixtures execute locally.
 
 ## Technical implementation details
 
@@ -70,7 +70,7 @@ Phase 04 requires Phase 03 approval. P04-001/002/003/004 depend on P03-005 and t
 - IDNA mapping can change domain length and label validity; punycode boundaries need coverage.
 - Timeouts implemented as independent timers can exceed total; shared deadlines are mandatory.
 - Close during an in-flight lettre future may drop it at an unsafe point; drop behavior must be tested for leaks and hangs.
-- Partial RCPT status may be inaccessible; the conservative pre-DATA rejection path must be first-class.
+- The pinned lower-level API exposes RCPT replies; the remaining risk is whether mixed-recipient behavior matches the source contract under real SMTP dialogue. If not, block and supersede ADR-0005.
 - Attachment reads may hit special files or change between stat and read; reject non-regular and bound reads.
 
 ## Testing requirements
@@ -93,7 +93,7 @@ Core tests are Rust unit/integration tests with no Node runtime. Required concre
 
 - Core implements all MVP validation, limits, state, timeout, and SMTP orchestration with relay-accepted semantics.
 - Core has no Node linkage and all tests run as Rust tests.
-- Recipient behavior matches the research ADR, including conservative pre-DATA rejection when partial status is unavailable.
+- Recipient behavior matches ADR-0005: explicit RCPT refusals are preserved, accepted recipients share one DATA transaction, and no per-recipient message fan-out occurs.
 - No custom SMTP, pooling, retries, SMTPUTF8, URL attachments, or GC-dependent close.
 - Fault fixtures pass locally without external network.
 
