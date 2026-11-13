@@ -34,6 +34,19 @@ jobs:
       - name: Core-only unit tests
         run: cargo test -p sendust-core --all-targets
 
+      - name: Fake SMTP harness self-tests
+        run: cargo test -p sendust-core --test harness_self_test
+
+      - name: Verify committed TLS fixtures
+        run: |
+          cd tests/fixtures/tls
+          openssl verify -CAfile ca.crt -verify_hostname localhost valid-server.crt
+          ! openssl verify -CAfile ca.crt self-signed.crt
+          ! openssl verify -CAfile ca.crt expired.crt
+          ! openssl verify -CAfile ca.crt -verify_hostname localhost wrong-host.crt
+          ! openssl verify -CAfile ca.crt incomplete-chain.crt
+          ! openssl x509 -in malformed.pem -noout
+
       - name: Native binding compiles
         run: cargo check -p sendust-napi --all-targets
 

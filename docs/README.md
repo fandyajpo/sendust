@@ -50,6 +50,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 37 | [Toolchain baseline](engineering/toolchain-baseline.md) | Exact Rust, Node.js, Bun, Deno, npm, TypeScript, Biome, Vitest versions and canonical commands |
 | 38 | [Documentation audit](audits/2026-11-13-documentation-audit.md) | Static consistency, traceability, task graph, links, toolchain, and remaining validation owners |
 | 39 | [Dependency and license policy](engineering/dependency-policy.md) | Pinned dependencies, feature admission, feature prohibitions, lockfile rules, and license review |
+| 40 | [Test harness contract](engineering/test-harness-contract.md) | Fake SMTP/TLS seams, safety rules, and the fixture catalog |
 
 ## 2. Directory map
 
@@ -100,7 +101,7 @@ P00–P02 are COMPLETED with approved evidence. P03 is IN PROGRESS: P03-001–P0
 | QG-00 Discovery | APPROVED |
 | QG-01 Research | APPROVED with implementation validation gates |
 | QG-02 Architecture | APPROVED at design level |
-| P03-001–P03-003 | IN REVIEW |
+| P03-001–P03-004 | IN REVIEW |
 | P03-004–P18 | NOT STARTED |
 | Next task | P03-004 — scaffold deterministic fake SMTP and TLS harness seams |
 

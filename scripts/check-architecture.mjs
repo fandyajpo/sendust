@@ -11,7 +11,7 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -225,9 +225,49 @@ function checkAdapterBoundaries() {
   }
 }
 
+function checkTestHarness() {
+  const testsDir = join(ROOT, "crates/sendust-core/tests");
+  const harnessPath = join(testsDir, "support/mod.rs");
+  if (!existsSync(harnessPath)) {
+    fail("missing fake SMTP harness at crates/sendust-core/tests/support/mod.rs");
+    return;
+  }
+
+  const harness = stripComments(readFileSync(harnessPath, "utf8"));
+  if (!harness.includes('"127.0.0.1"')) {
+    fail("the fake SMTP harness must bind the loopback address 127.0.0.1");
+  }
+
+  for (const path of walk(testsDir).filter((file) => file.endsWith(".rs"))) {
+    const source = readFileSync(path, "utf8");
+    if (stripComments(source).includes("0.0.0.0")) {
+      fail(`test code must not bind 0.0.0.0: ${posix(path)}`);
+    }
+    if (/["']\s*https?:\/\//.test(source)) {
+      fail(`test code must not use the network: ${posix(path)}`);
+    }
+  }
+
+  const tlsDir = join(ROOT, "tests/fixtures/tls");
+  for (const name of [
+    "ca.crt",
+    "valid-server.crt",
+    "self-signed.crt",
+    "expired.crt",
+    "wrong-host.crt",
+    "incomplete-chain.crt",
+    "malformed.pem",
+  ]) {
+    if (!existsSync(join(tlsDir, name))) {
+      fail(`missing TLS fixture tests/fixtures/tls/${name}`);
+    }
+  }
+}
+
 checkWorkspaceShape();
 checkCoreModules();
 checkAdapterBoundaries();
+checkTestHarness();
 
 if (failures.length > 0) {
   console.error(`check-architecture: ${failures.length} problem(s)`);

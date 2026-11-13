@@ -41,7 +41,7 @@ In scope: workspace layout, crate manifests, `ts/src` package skeleton, test dir
 ### P03-004 — Scaffold deterministic fake SMTP and TLS test harness seams
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P03-001
 - **Description:** Define harness interfaces and fixture directories under `tests/` for scripted SMTP dialogues, controllable delays, mixed RCPT responses, post-DATA failures, TLS certificate variants, connection resets, and abrupt server closes. Harness must bind to loopback only, use ephemeral ports, require no external network, and expose deterministic synchronization so tests do not sleep arbitrarily. Include fixture naming for fault injection and a policy that production code has no test-only branches.
 - **Evidence criteria:** Harness contract specifies start/stop, dialogue script, delay injection, response injection, and observed commands. Fixture catalog includes mixed RCPT, an explicit final DATA `451` rejection, a dropped connection after the DATA terminator with no final reply (`unknown`), connect stall, command stall, close stall, self-signed, expired, wrong-host, incomplete-chain, malformed cert, reset, and abrupt close. Loopback/ephemeral/no-network rules are explicit.
@@ -107,10 +107,10 @@ Gate `PHASE-03` is `APPROVED` when P03-005 proves the structure, dependency dire
 
 ## Status
 
-IN PROGRESS. P03-001, P03-002, and P03-003 are IN REVIEW: the two-crate
-workspace skeleton, the dependency and feature policy, and the canonical
-quality-command scripts exist and are statically reviewed. P03-004 and P03-005
-remain NOT STARTED.
+IN PROGRESS. P03-001 to P03-004 are IN REVIEW: the two-crate workspace
+skeleton, the dependency and feature policy, the canonical quality-command
+scripts, and the fake SMTP/TLS test seams exist and are verified. P03-005
+remains NOT STARTED.
 
 ## Evidence log
 
@@ -120,13 +120,14 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 | --- | --- | --- |
 | P03-001 | Two-crate workspace, manifests, module tree, `ts/src` skeleton, `rust-toolchain.toml`; `cargo metadata --format-version 1 --no-deps` reports exactly `sendust-core` and `sendust-napi` | IMPLEMENTED, STATICALLY REVIEWED |
 | P03-002 | [Dependency policy](../engineering/dependency-policy.md) plus workspace pins; `cargo tree -e features` resolves `lettre` 0.11.23 with only `smtp-transport`, `tokio1-rustls`, `ring`, and `webpki-roots`, with no `pool` or `native-tls`; a core unit test constructs the pinned `SmtpTransport` builder, so a dropped transport feature fails the build | IMPLEMENTED, STATICALLY REVIEWED |
+| P03-004 | `crates/sendust-core/tests/support/mod.rs` (loopback-only fake SMTP: scripted per-stage replies, per-recipient RCPT, injected delays, command trace), `crates/sendust-core/tests/harness_self_test.rs` (7 passing tests), `scripts/generate-tls-fixtures.sh`, and committed `tests/fixtures/tls/*`; contract in [the harness contract](../engineering/test-harness-contract.md) | IMPLEMENTED, EXECUTED PASS locally and in CI |
 | P03-003 | `scripts/check-architecture.mjs`, `scripts/check-docs.mjs`, npm workspace scripts, `.github/workflows/ci.yml`; `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test -p sendust-core --all-targets`, `cargo test --workspace --all-targets`, and the four `npm --workspace ./ts run` commands exited 0 | EXECUTED PASS in a development container (Rust 1.100.0, Node.js 24.22.x) and in Sendust CI on branch `feat/p03-repository-skeleton`: the Rust workspace, Architecture and documentation checks, TypeScript (Node.js 22.23.5, 24.22.3, 26.13.1), Bun 1.4.4, and Deno 2.9.8 jobs all passed |
 
-Executed evidence now exists both in a development container and in Sendust CI
-on branch `feat/p03-repository-skeleton`. Gate PHASE-03 remains unapproved and
-still requires the P03-004 harness seams and the P03-005 gate record. The
-lockfile-gated `npm ci` and `--locked` paths are also still unexercised; CI
-falls back to `npm install` and emits a warning until the lockfile is committed.
+Executed evidence now exists in a local toolchain and in Sendust CI on branch
+`feat/p03-repository-skeleton`. Gate PHASE-03 remains unapproved and still
+requires the P03-005 gate record. The lockfile-gated `npm ci` and `--locked`
+paths are also still unexercised; CI falls back to `npm install` and emits a
+warning until the lockfile is committed.
 
 `Cargo.lock` and `package-lock.json` are not committed yet. CI installs with
 `npm install` and emits a warning until the lockfile is committed from a
