@@ -1,6 +1,6 @@
 # ADR-0002 — Use lettre 0.11.23 instead of a custom SMTP client
 
-**Status:** ACCEPTED (planning); lower-level async API selected by P01 source review  
+**Status:** ACCEPTED (architecture baseline); lower-level async API selected by P01 source review; behavior validation P06  
 **Date:** 2026-11-13  
 **Deciders:** Research gate (P01-005)  
 **Validated by:** P01-001, P01-003, P06-001
