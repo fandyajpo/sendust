@@ -1,6 +1,6 @@
 # Phase 04 — Rust core
 
-**Phase status:** NOT STARTED  
+**Phase status:** IN PROGRESS  
 **Phase dependency:** Phase 03  
 **Companion references:** [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [reliability strategy](../engineering/reliability-strategy.md)
 
@@ -17,7 +17,7 @@ In scope: `crates/sendust-core/src` modules for validation, addresses, limits, M
 ### P04-001 — Implement core error taxonomy and deterministic validation order
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P03-005, P02-002
 - **Description:** Create core-owned error types for validation, limits, address encoding, attachments, busy, closed, connect, TLS, authentication, protocol, and timeout. Implement a stable machine-readable code mapping and deterministic validation ordering so the same invalid input always returns the same first error. Keep errors Node-agnostic; no napi types in core.
 - **Evidence criteria:** Unit tests cover every error variant and precedence pair. Codes are stable strings with documented categories. No error carries secrets or full message content. Errors compile without Node dependencies.
@@ -25,7 +25,7 @@ In scope: `crates/sendust-core/src` modules for validation, addresses, limits, M
 ### P04-002 — Implement address, header, and Unicode/IDNA policy
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P03-005, P02-004
 - **Description:** Implement envelope validation: ASCII local parts only, IDNA processing for domains, Unicode allowed in display names and message bodies, and SMTPUTF8 explicitly rejected as post-MVP. Encode display names and headers safely to prevent CRLF/header injection. Define required versus optional address forms and reject malformed, empty, overlong, or ambiguous inputs. Ensure header values cannot introduce new headers or recipients.
 - **Evidence criteria:** Unit tests cover valid ASCII local/IDNA domain, Unicode display/body, and rejection of non-ASCII local parts. Injection fixtures include CRLF, bare LF, NUL, encoded-newline, and header-like display names. IDNA fixtures include punycode, uppercase, trailing dot policy, and invalid labels. Error precedence matches P04-001.
@@ -33,7 +33,7 @@ In scope: `crates/sendust-core/src` modules for validation, addresses, limits, M
 ### P04-003 — Implement the message model and hard size accounting
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P03-005, P02-004
 - **Description:** Build an internal message model with headers, body, recipients, and attachment descriptors. Enforce 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw attachment bytes, and 30 MiB wire message. Compute wire size from the final serialized representation, not an estimate, and enforce limits before network connect. Record inclusive boundary behavior and deterministic limit-error precedence.
 - **Evidence criteria:** Unit tests assert 100 recipients pass and 101 fail; 10 MiB attachment passes and 10 MiB + 1 fails; 20 MiB aggregate passes and 20 MiB + 1 fails; 30 MiB wire passes and 30 MiB + 1 fails. Tests assert no SMTP connection is attempted on limit failure. Wire-size computation is covered with UTF-8, encoded headers, and attachment encodings.
@@ -41,7 +41,7 @@ In scope: `crates/sendust-core/src` modules for validation, addresses, limits, M
 ### P04-004 — Implement transport state machine, deadlines, and BUSY semantics
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P03-005, P02-003
 - **Description:** Implement `open -> closing -> closed` with exactly one active send, immediate `BUSY` for overlap, idempotent close, and deadline-bounded drain. Implement finite tunable budgets: connect 10s, operation 30s, total 120s, close 125s, with one shared total deadline preventing overrun. Close must be explicit and never GC-dependent. Exact stage attribution is emitted only where P01-003 proved it; otherwise timeouts are reported at the honest observable level.
 - **Evidence criteria:** Unit tests cover send while open, BUSY on second send with no dial, send during closing, send after closed, double close, close during connect, and drain beyond 125s. Fake-time tests assert the 10s/30s/120s/125s boundaries. No queue is introduced. State transitions are exhaustively tested.
@@ -49,7 +49,7 @@ In scope: `crates/sendust-core/src` modules for validation, addresses, limits, M
 ### P04-005 — Implement lettre-backed SMTP orchestration and core phase test gate
 
 - **Size:** XL
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P04-001, P04-002, P04-003, P04-004, P01-001, P01-003
 - **Description:** Wire the core to `lettre 0.11.23` using the research-selected API and rustls `ring`/`webpki-roots` features. Implement connect, TLS, auth, MAIL FROM, RCPT TO, DATA, and final-response orchestration with relay-accepted semantics. Do not retry, do not pool, and do not implement a custom SMTP client. Implement ADR-0005 recipient policy using lettre's public AsyncSmtpConnection: observe every RCPT response, then send one DATA transaction only to the accepted-recipient subset. A recipient is accepted only after final DATA 2xx. Never fan out independent messages. Add core integration tests against the local fake SMTP/TLS harness.
 - **Evidence criteria:** Tests cover successful acceptance, all-recipient rejection with no DATA, mixed `250`/`550` with one DATA transaction to the accepted subset, explicit final DATA `451` as `rejected`, plus missing final reply after DATA terminator as `unknown`, both with zero retries, auth failure, TLS verification failure, connect refusal, and abrupt server close. Success asserts relay acceptance only. No credentials appear in logs. Rust tests run without Node. The core phase gate passes only when all required fault fixtures execute locally.
@@ -118,4 +118,16 @@ Implement the approved ADR-0016 module responsibilities without creating additio
 
 ## Status
 
-NOT STARTED. No core code has been written.
+IN PROGRESS. P04-001 to P04-005 are IN REVIEW: the lettre adapter, the deterministic deadline budgets, and the core fault matrix are implemented and pass locally. The `PHASE-04` gate is not self-approved; it waits for owner review.
+
+## Evidence log
+
+Evidence labels follow the [AI implementation contract](../engineering/ai-implementation-contract.md).
+
+| Task | Evidence | State |
+| --- | --- | --- |
+| P04-005 | `crates/sendust-core/src/transports/smtp/mod.rs` (lettre 0.11.23 `AsyncSmtpConnection`: implicit TLS or required STARTTLS, AUTH, MAIL, one RCPT command per recipient with explicit replies, one DATA transaction for the accepted subset, and explicit final-response classification), `crates/sendust-core/tests/smtp_faults.rs` (10 fault-matrix tests against the loopback TLS harness: acceptance, all-RCPT refusal with no DATA, mixed 250/550 with a single DATA, final 451 rejected, dropped reply after the terminator unknown, auth failure, unsupported auth mechanism, untrusted certificate, connection refused, STARTTLS not advertised), and `crates/sendust-core/src/config/mod.rs` (`SendDeadlines` moved beside `Timeouts` so the adapter depends only on domain and port modules, as the architecture check requires); 94 core unit tests, 9 harness self-tests, 10 SMTP fault tests. `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets --locked -- -D warnings`, `cargo test --workspace --all-targets --locked`, and all three `node scripts/check-*.mjs` passed locally on macOS with rustc 1.100.0. Deferred: the STARTTLS upgrade path and the five certificate fixtures are P06-002 scope. | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
+| P04-004 | `crates/sendust-core/src/lifecycle/mod.rs` (`open -> closing -> closed`, one-send reservation, immediate BUSY, idempotent close, condvar drain with `TIMEOUT_CLOSE`) and `crates/sendust-core/src/config/mod.rs` (`Timeouts` 10/30/120/125 s, lower-only, connect/operation <= total <= close); 84 core unit tests covering every state transition, double close, send during close, drain and drain timeout, and deadline boundaries. Deferred: the no-dial proof is structural (the permit gates the dial) and becomes executable in P04-005. | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
+| P04-003 | `crates/sendust-core/src/config/mod.rs` (approved hard caps, lower-only), `crates/sendust-core/src/attachments/mod.rs` (descriptor policy, inclusive caps, filesystem opt-in), `crates/sendust-core/src/message/mod.rs` (`OutgoingMessage`, recipient counting, reserved-header rejection), and `crates/sendust-core/src/mime/mod.rs` (deterministic serializer: text/HTML/alternative/mixed, `base64` crate per ADR-0010, RFC 2047 headers, hard folding, BCC exclusion, exact wire-size cap); 69 core unit tests | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending. Deferred: file attachments need the P08 reader; the 30 MiB + 1 boundary is asserted through an exact lowered limit plus a 21/23 MiB straddle of the real cap; the no-connect-on-limit-failure assertion belongs to P04-005. |
+| P04-002 | `crates/sendust-core/src/address/mod.rs` (ASCII local parts, IDNA/UTS #46 strict domain conversion, trailing-dot rejection, Unicode display names with injection-safe quoting) and `crates/sendust-core/src/message/mod.rs` (validated `HeaderName`/`HeaderValue`/`Header` newtypes); 35 core unit tests including IDNA, punycode, uppercase, overlong, malformed, CRLF/NUL/tab injection, and header-name/value fixtures | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
+| P04-001 | `crates/sendust-core/src/errors/mod.rs` (32 stable codes with categories, whitelisted details, stage enum, redaction-by-construction) and `crates/sendust-core/src/validation/mod.rs` (eight-stage precedence, `Failures`, `validate_in_order`); 13 core unit tests including a documentation parity table, adjacent-stage precedence pairs, same-stage determinism, and a redaction scan | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |

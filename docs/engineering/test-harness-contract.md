@@ -78,7 +78,12 @@ Regenerate with:
 scripts/generate-tls-fixtures.sh tests/fixtures/tls
 ```
 
-TLS *serving* (implicit TLS and STARTTLS sessions) is implemented in P06-002, where lettre/rustls verification semantics are under test; this phase commits the fixtures and the regeneration script.
+Implicit TLS serving is available in the harness: `Script::tls` accepts a rustls
+server configuration built from these fixtures, and `tests/support/tls.rs`
+provides a client that trusts only `ca.crt`. The self-tests prove a full SMTP
+dialogue over implicit TLS and that an untrusting client cannot complete the
+handshake. STARTTLS upgrading stays with P06-002, where lettre's upgrade path is
+under test.
 
 ## 7. Evidence commands
 

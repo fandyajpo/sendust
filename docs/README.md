@@ -82,7 +82,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P03 are COMPLETED with approved evidence. P04–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P03 are COMPLETED with approved evidence. P04 is IN PROGRESS: P04-001–P04-005 are IN REVIEW and P05–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -97,14 +97,15 @@ P00–P03 are COMPLETED with approved evidence. P04–P18 remain NOT STARTED. A 
 | Item | State |
 | --- | --- |
 | Repository | Documentation, architecture planning, and the P03 workspace skeleton |
-| Application implementation | Skeleton only; no product behavior implemented |
+| Application implementation | Core domain logic implemented (errors, addresses, message model, MIME composition); SMTP transport, binding, and public API pending |
 | Toolchain validation | Rust 1.100.0 and the Node.js 22.23.5/24.22.3/26.13.1 jobs pass in Sendust CI on branch `feat/p03-repository-skeleton` |
 | QG-00 Discovery | APPROVED |
 | QG-01 Research | APPROVED with implementation validation gates |
 | QG-02 Architecture | APPROVED at design level |
 | P03-001–P03-005 | COMPLETED |
-| P04–P18 | NOT STARTED |
-| Next task | P04-001 — implement core error taxonomy and deterministic validation order |
+| P04-001–P04-005 | IN REVIEW |
+| P05–P18 | NOT STARTED |
+| Next task | PHASE-04 gate review (P04-005) — adapter and fault matrix pass locally; CI evidence pending |
 
 ## 5. Conventions
 

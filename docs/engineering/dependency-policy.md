@@ -16,10 +16,19 @@ A direct dependency may be added only through the review in section 6. Transitiv
 | `napi` | `=3.16.2` | normal | `napi8`, `async` | on | `sendust-napi` | Node-API 8 binding |
 | `napi-derive` | `=3.7.0` | normal | — | on | `sendust-napi` | Exported binding macros |
 | `napi-build` | `=2.6.0` | build | — | on | `sendust-napi` | Binding build setup |
+| `idna` | `=1.1.0` | normal | `std`, `compiled_data` | off | `sendust-core` | IDNA/UTS #46 domain conversion for envelope addresses |
+| `base64` | `=0.23.1` | normal | default | on | `sendust-core` | MIME transfer encoding (ADR-0010) |
+| `tokio` | `=1.54.1` | normal, dev | `time`; dev-only `rt`, `macros` | off | `sendust-core` | Deadline enforcement for the SMTP adapter; core never builds a runtime |
+| `rustls` | `=0.23.46` | normal, dev | `std`, `tls12`, `ring` | off | `sendust-core` | Typed TLS error classification in the SMTP adapter and the TLS test harness |
 
 `sendust-core` declares no build script and no binding, runtime, or Node.js dependency. `sendust-napi` depends on `sendust-core` and never the reverse. `lettre` is declared once, at workspace level, and must not appear in `sendust-napi`.
 
+`base64` and `idna` were already present transitively through `lettre`; both are declared directly as the vetted primitives ADR-0010 requires and add no new transitive weight.
+`idna` was already present transitively through `lettre`/`url` at the same version; it is declared directly so the core cannot silently drift from the resolver's choice, and it adds no new transitive weight.
+
 Test-only dependencies (MIME verification, fake SMTP/TLS tooling, benchmarks) are introduced by the phase that needs them, pinned exactly at that time, recorded in this table with kind `dev`, and never enabled for published artifacts.
+
+`tokio` and `rustls` were already present transitively at these exact versions through `lettre`. `tokio` is now a normal pin because the adapter bounds every SMTP step with the caller's timer; `rustls` is a normal pin because the adapter downcasts the typed rustls cause to distinguish `TLS_CERTIFICATE` from `TLS_HANDSHAKE`. Neither adds a new transitive dependency.
 
 ## 3. Feature and transitive policy
 
@@ -75,6 +84,10 @@ Every direct dependency must have one row. The inventory is completed before rel
 | `napi` | `3.16.2` | MIT | https://crates.io/crates/napi | P03-002 |
 | `napi-derive` | `3.7.0` | MIT | https://crates.io/crates/napi-derive | P03-002 |
 | `napi-build` | `2.6.0` | MIT | https://crates.io/crates/napi-build | P03-002 |
+| `idna` | `1.1.0` | MIT OR Apache-2.0 | https://crates.io/crates/idna | P04-002 |
+| `base64` | `0.23.1` | MIT OR Apache-2.0 | https://crates.io/crates/base64 | P04-003 |
+| `tokio` | `1.54.1` | MIT | https://crates.io/crates/tokio | P04-005 |
+| `rustls` | `0.23.46` | Apache-2.0 OR ISC OR MIT | https://crates.io/crates/rustls | P04-005 |
 
 ## 9. npm development tool pins
 

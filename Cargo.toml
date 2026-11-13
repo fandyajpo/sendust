@@ -18,6 +18,23 @@ lettre = { version = "=0.11.23", default-features = false, features = [
   "webpki-roots",
 ] }
 
+# Transfer encoding for MIME bodies and parts. ADR-0010 requires vetted
+# primitives rather than a hand-rolled encoder; already present via lettre.
+base64 = { version = "=0.23.1" }
+
+# IDNA (UTS #46) domain conversion for envelope addresses. Already present
+# transitively via lettre/url; pinned directly so core cannot drift from it.
+idna = { version = "=1.1.0", default-features = false, features = ["std", "compiled_data"] }
+
+# TLS error classification in the SMTP adapter and the TLS test harness. lettre
+# already pulls this exact rustls version with the ring provider.
+rustls = { version = "=0.23.46", default-features = false, features = ["std", "tls12", "ring"] }
+
+# Deadline enforcement for the SMTP adapter, plus the async test runtime. lettre
+# already pulls this exact Tokio version; the direct pin only makes the features
+# explicit. Core never builds a runtime, it only uses the caller's timer.
+tokio = { version = "=1.54.1", default-features = false, features = ["time"] }
+
 # Node-API 8 binding surface, used by sendust-napi only.
 napi = { version = "=3.16.2", features = ["napi8", "async"] }
 napi-derive = "=3.7.0"

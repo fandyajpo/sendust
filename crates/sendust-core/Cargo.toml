@@ -14,3 +14,11 @@ workspace = true
 
 [dependencies]
 lettre.workspace = true
+idna.workspace = true
+base64.workspace = true
+tokio.workspace = true
+rustls.workspace = true
+
+[dev-dependencies]
+# Test builds need the runtime itself; the library only needs the timer.
+tokio = { workspace = true, features = ["rt", "macros"] }
