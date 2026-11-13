@@ -17,9 +17,11 @@ A direct dependency may be added only through the review in section 6. Transitiv
 | `napi-derive` | `=3.7.0` | normal | — | on | `sendust-napi` | Exported binding macros |
 | `napi-build` | `=2.6.0` | build | — | on | `sendust-napi` | Binding build setup |
 | `idna` | `=1.1.0` | normal | `std`, `compiled_data` | off | `sendust-core` | IDNA/UTS #46 domain conversion for envelope addresses |
+| `base64` | `=0.23.1` | normal | default | on | `sendust-core` | MIME transfer encoding (ADR-0010) |
 
 `sendust-core` declares no build script and no binding, runtime, or Node.js dependency. `sendust-napi` depends on `sendust-core` and never the reverse. `lettre` is declared once, at workspace level, and must not appear in `sendust-napi`.
 
+`base64` and `idna` were already present transitively through `lettre`; both are declared directly as the vetted primitives ADR-0010 requires and add no new transitive weight.
 `idna` was already present transitively through `lettre`/`url` at the same version; it is declared directly so the core cannot silently drift from the resolver's choice, and it adds no new transitive weight.
 
 Test-only dependencies (MIME verification, fake SMTP/TLS tooling, benchmarks) are introduced by the phase that needs them, pinned exactly at that time, recorded in this table with kind `dev`, and never enabled for published artifacts.
@@ -79,6 +81,7 @@ Every direct dependency must have one row. The inventory is completed before rel
 | `napi-derive` | `3.7.0` | MIT | https://crates.io/crates/napi-derive | P03-002 |
 | `napi-build` | `2.6.0` | MIT | https://crates.io/crates/napi-build | P03-002 |
 | `idna` | `1.1.0` | MIT OR Apache-2.0 | https://crates.io/crates/idna | P04-002 |
+| `base64` | `0.23.1` | MIT OR Apache-2.0 | https://crates.io/crates/base64 | P04-003 |
 
 ## 9. npm development tool pins
 

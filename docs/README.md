@@ -97,7 +97,7 @@ P00–P03 are COMPLETED with approved evidence. P04 is IN PROGRESS: P04-001–P0
 | Item | State |
 | --- | --- |
 | Repository | Documentation, architecture planning, and the P03 workspace skeleton |
-| Application implementation | Skeleton only; no product behavior implemented |
+| Application implementation | Core domain logic implemented (errors, addresses, message model, MIME composition); SMTP transport, binding, and public API pending |
 | Toolchain validation | Rust 1.100.0 and the Node.js 22.23.5/24.22.3/26.13.1 jobs pass in Sendust CI on branch `feat/p03-repository-skeleton` |
 | QG-00 Discovery | APPROVED |
 | QG-01 Research | APPROVED with implementation validation gates |

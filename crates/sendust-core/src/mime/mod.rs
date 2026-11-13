@@ -7,6 +7,9 @@
 //! conformance fixtures; it extends this module rather than replacing the
 //! wire-size contract.
 
+use base64::Engine as _;
+use base64::engine::general_purpose::STANDARD;
+
 use crate::attachments::Attachment;
 use crate::config::Limits;
 use crate::errors::{Error, ErrorCode};
@@ -67,6 +70,9 @@ pub fn serialize(
         push_address_header(&mut out, "Reply-To", &message.reply_to);
     }
     push_header(&mut out, "Subject", &encode_header_text(&message.subject));
+    for header in &message.headers {
+        push_header(&mut out, header.name(), &encode_header_text(header.value()));
+    }
     push_header(&mut out, "MIME-Version", "1.0");
 
     if attachments.is_empty() {
@@ -247,6 +253,23 @@ fn fold(name: &str, value: &str) -> String {
 
     let mut line_len = name.len() + 2;
     for (index, word) in value.split(' ').enumerate() {
+        if word.len() > FOLD_WIDTH {
+            if line_len > 1 {
+                out.push_str(CRLF);
+                out.push(' ');
+                line_len = 1;
+            }
+            for chunk in word.as_bytes().chunks(FOLD_WIDTH - 1) {
+                if line_len > 1 {
+                    out.push_str(CRLF);
+                    out.push(' ');
+                }
+                out.push_str(std::str::from_utf8(chunk).unwrap_or_default());
+                line_len = 1 + chunk.len();
+            }
+            continue;
+        }
+
         let addition = if index == 0 {
             word.len()
         } else {
@@ -330,28 +353,7 @@ fn push_base64(out: &mut Vec<u8>, data: &[u8]) {
 }
 
 fn base64(data: &[u8]) -> String {
-    const ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut out = String::with_capacity(data.len().div_ceil(3) * 4);
-
-    for chunk in data.chunks(3) {
-        let first = chunk[0];
-        let second = chunk.get(1).copied().unwrap_or(0);
-        let third = chunk.get(2).copied().unwrap_or(0);
-
-        out.push(ALPHABET[(first >> 2) as usize] as char);
-        out.push(ALPHABET[(((first & 0b0000_0011) << 4) | (second >> 4)) as usize] as char);
-        if chunk.len() > 1 {
-            out.push(ALPHABET[(((second & 0b0000_1111) << 2) | (third >> 6)) as usize] as char);
-        } else {
-            out.push('=');
-        }
-        out.push(if chunk.len() > 2 {
-            ALPHABET[(third & 0b0011_1111) as usize] as char
-        } else {
-            '='
-        });
-    }
-    out
+    STANDARD.encode(data)
 }
 
 #[cfg(test)]
@@ -522,6 +524,42 @@ mod tests {
                 .code(),
             ErrorCode::ValidationInvalidAttachment
         );
+    }
+
+    #[test]
+    fn includes_custom_headers() {
+        let mut message = message();
+        message.headers =
+            vec![crate::message::Header::new("X-Trace-Id", "trace-42").expect("valid")];
+        let wire = text(&serialize(&message, Limits::default(), false).expect("serialized"));
+        assert!(wire.contains("X-Trace-Id: trace-42"));
+    }
+
+    #[test]
+    fn encodes_non_ascii_custom_header_values() {
+        let mut message = message();
+        message.headers = vec![crate::message::Header::new("X-Note", "Grüße").expect("valid")];
+        let bytes = serialize(&message, Limits::default(), false).expect("serialized");
+        assert!(text(&bytes).contains("X-Note: =?UTF-8?B?"));
+        assert!(bytes.iter().all(u8::is_ascii));
+    }
+
+    #[test]
+    fn folds_unbreakable_header_values_within_the_line_limit() {
+        let mut message = message();
+        message.subject = "x".repeat(990);
+        let bytes = serialize(&message, Limits::default(), false).expect("serialized");
+        for line in bytes.split(|byte| *byte == b'\n') {
+            assert!(line.len() <= MAX_LINE + 1, "line of {} bytes", line.len());
+        }
+    }
+
+    #[test]
+    fn encodes_utf8_bodies_without_loss() {
+        let mut message = message();
+        message.text = Some("héllo".to_string());
+        let wire = text(&serialize(&message, Limits::default(), false).expect("serialized"));
+        assert!(wire.contains(&base64("héllo".as_bytes())));
     }
 
     #[test]

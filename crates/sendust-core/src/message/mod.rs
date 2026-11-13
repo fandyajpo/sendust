@@ -125,6 +125,23 @@ fn is_field_name_character(character: char) -> bool {
 use crate::attachments::{self, Attachment};
 use crate::config::Limits;
 
+/// Header names the model owns. A custom header may not override them, or it
+/// could rewrite the envelope, hide BCC, or replace the composed MIME structure.
+const RESERVED_HEADERS: &[&str] = &[
+    "from",
+    "to",
+    "cc",
+    "bcc",
+    "subject",
+    "date",
+    "reply-to",
+    "return-path",
+    "mime-version",
+    "content-type",
+    "content-transfer-encoding",
+    "content-disposition",
+];
+
 /// A complete outgoing message, validated before any network work begins.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OutgoingMessage {
@@ -153,10 +170,9 @@ impl OutgoingMessage {
     /// bytes produced by `mime`. Callers run all stages through
     /// `validation::validate_in_order`, so precedence stays stable.
     pub fn validate(&self, limits: Limits, filesystem_enabled: bool) -> Result<(), Error> {
-        // Stage 2: message identity.
-        if self.subject.is_empty() {
-            return Err(Error::new(ErrorCode::ValidationMissingFrom));
-        }
+        // Stage 2: message identity. `from` is a typed mailbox, so a missing
+        // From address is rejected where absence is representable (the binding),
+        // not here; an empty Subject is legal per RFC 5322.
         // Stage 3: recipient presence and count.
         if self.recipient_count() == 0 {
             return Err(Error::new(ErrorCode::ValidationMissingRecipient));
@@ -170,6 +186,10 @@ impl OutgoingMessage {
         for header in &self.headers {
             HeaderName::parse(header.name())?;
             HeaderValue::parse(header.value())?;
+            let lowered = header.name().to_ascii_lowercase();
+            if RESERVED_HEADERS.iter().any(|reserved| *reserved == lowered) {
+                return Err(Error::new(ErrorCode::ValidationInvalidHeader));
+            }
         }
         // Stages 6 and 7: attachment metadata and known byte caps.
         attachments::validate(&self.attachments, limits, filesystem_enabled)?;
@@ -304,6 +324,40 @@ mod tests {
                 .code(),
             ErrorCode::ValidationHeaderInjection
         );
+    }
+
+    #[test]
+    fn empty_subject_is_allowed() {
+        let mut message = message_with(1);
+        message.subject.clear();
+        assert!(message.validate(Limits::default(), false).is_ok());
+    }
+
+    #[test]
+    fn rejects_reserved_custom_headers() {
+        for name in ["Subject", "BCC", "Content-Type", "Return-Path"] {
+            let mut message = message_with(1);
+            message
+                .headers
+                .push(Header::new(name, "value").expect("valid header"));
+            assert_eq!(
+                message
+                    .validate(Limits::default(), false)
+                    .expect_err("reserved")
+                    .code(),
+                ErrorCode::ValidationInvalidHeader,
+                "{name}"
+            );
+        }
+    }
+
+    #[test]
+    fn accepts_a_custom_header() {
+        let mut message = message_with(1);
+        message
+            .headers
+            .push(Header::new("X-Trace-Id", "abc").expect("valid header"));
+        assert!(message.validate(Limits::default(), false).is_ok());
     }
 
     #[test]

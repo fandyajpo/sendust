@@ -18,6 +18,10 @@ lettre = { version = "=0.11.23", default-features = false, features = [
   "webpki-roots",
 ] }
 
+# Transfer encoding for MIME bodies and parts. ADR-0010 requires vetted
+# primitives rather than a hand-rolled encoder; already present via lettre.
+base64 = { version = "=0.23.1" }
+
 # IDNA (UTS #46) domain conversion for envelope addresses. Already present
 # transitively via lettre/url; pinned directly so core cannot drift from it.
 idna = { version = "=1.1.0", default-features = false, features = ["std", "compiled_data"] }
