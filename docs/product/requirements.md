@@ -76,7 +76,7 @@ Enforced by P02-003, P04-004, P09-004, P10-001.
 
 ### C-10 — Timeout budgets
 
-Defaults: connect 10 s, per-operation 30 s, total send 120 s, close/drain 125 s. Every value MUST be finite and tunable within documented bounds; zero, negative, `NaN`, and infinite values MUST be rejected. Exact stage attribution MUST be reported only where P01-003 proves it observable. Stage attribution is limited to coarse public API operations; internal socket sub-stage timing is not promised.
+Defaults and maximums: connect 10 s, per-operation 30 s, total send 120 s, close/drain 125 s. Values MAY be lowered but MUST NOT exceed these maxima. Each value MUST be at least 1 s and finite. Connect and operation budgets MUST NOT exceed total; close/drain MUST be at least total and no more than 125 s. Zero, negative, sub-second, `NaN`, and infinite values MUST be rejected. Stage attribution is limited to coarse public API operations; internal socket sub-stage timing is not promised.
 
 Enforced by P01-003, P02-003, P04-004, P10-002.
 
