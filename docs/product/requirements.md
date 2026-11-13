@@ -46,7 +46,7 @@ Enforced by P01-004, P05-003, P08-002.
 
 ### C-05 — Node-API level
 
-The binding targets **Node-API 8**. This is proposed and MUST be validated by P01-004. A higher level requires an ADR and a support-matrix update before Phase 05.
+The binding targets **Node-API 8** as the approved design floor. P01-004 records the candidate ABI/runtime research; compilation and runtime compatibility MUST pass at P05-003/P14-004. A higher level requires a superseding ADR and support-matrix update.
 
 Enforced by P01-004, P05-001, P14-002.
 
@@ -58,7 +58,7 @@ Enforced by P01-004, P14-004, P15-001.
 
 ### C-07 — TLS verification
 
-TLS MUST use rustls with the `ring` provider and `webpki-roots` trust anchors, subject to P01-002 feature validation. Certificate and hostname verification MUST be always on. No public option, environment variable, or undocumented flag may disable verification. TLS 1.2 is the minimum.
+TLS MUST use rustls with the `ring` provider and `webpki-roots` trust anchors, with the source-reviewed lettre feature graph in ADR-0003. Cargo compilation and certificate fixtures remain hard implementation gates. Certificate and hostname verification MUST be always on. No public option, environment variable, or undocumented flag may disable verification. TLS 1.2 is the minimum.
 
 Enforced by P01-002, P06-002, P11-002.
 
