@@ -1,6 +1,6 @@
 # Documentation Index
 
-**Sendust — Standalone Native Email Delivery Engine for Node.js**  
+**Sendust — Standalone Native Email Delivery Engine for Node.js, Bun, and Deno**  
 Planning baseline: 2026-11-13.
 
 This documentation set is the source of truth for product scope, requirements, approved architecture design, decisions, and execution planning. QG-00, QG-01, and QG-02 are approved. Application implementation, compilation, runtime validation, and publication have not occurred.
@@ -17,6 +17,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 6 | [Threat model](discovery/threat-model.md) | Assets, trust boundaries, and abuse cases |
 | 7 | [lettre source validation](research/lettre-0.11.23-validation.md) | Pinned API and feature research |
 | 8 | [Node runtime validation plan](research/node-runtime-validation-plan.md) | Node-API 8 candidate matrix and lifecycle probes |
+| 9 | [Multi-runtime compatibility research](research/multi-runtime-compatibility.md) | Node.js, Bun, Deno and native platform evidence |
 | 9 | [Architecture overview](architecture/overview.md) | Approved architecture shape and boundaries |
 | 10 | [System design](architecture/system-design.md) | Modules, types, state machine, test seams |
 | 11 | [Public API contract](architecture/public-api.md) | Approved design contract; implementation gate P09 |
@@ -26,7 +27,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 15 | [ADR index](architecture/decisions/README.md) | Architecture decision records |
 | 16 | [Master roadmap](planning/master-roadmap.md) | All 19 phases and outcomes |
 | 17 | [Phase index](planning/phase-index.md) | Entry point to every phase plan |
-| 18 | [Task registry](planning/task-registry.md) | All 95 tasks and prerequisites |
+| 18 | [Task registry](planning/task-registry.md) | 95 phase tasks plus 4 architecture-amendment tasks and prerequisites |
 | 19 | [Dependency graph](planning/dependency-graph.md) | Phase DAG and critical path |
 | 20 | [Milestones](planning/milestones.md) | M0–M7 exit criteria |
 | 21 | [Quality gates](planning/quality-gates.md) | QG-00–QG-17 |
@@ -41,7 +42,8 @@ This documentation set is the source of truth for product scope, requirements, a
 | 30 | [Release strategy](engineering/release-strategy.md) | Versioning, RC, publication, rollback |
 | 31 | [QG-00 discovery gate](gates/phase-00-discovery.md) | Discovery approval evidence |
 | 32 | [QG-01 research gate](gates/phase-01-research.md) | Research approval evidence |
-| 33 | [QG-02 architecture gate](gates/phase-02-architecture-approval.md) | Architecture approval evidence |
+| 33 | [QG-02 architecture gate](gates/phase-02-architecture-approval.md) | Original architecture approval evidence |
+| 34 | [Architecture Amendment A01](gates/architecture-amendment-a01.md) | Multi-runtime and cross-platform design amendment |
 
 ## 2. Directory map
 
@@ -100,12 +102,16 @@ P00–P02 are COMPLETED with approved evidence. P03–P18 remain NOT STARTED. A 
 - Open questions: OQ-01–OQ-07.
 - Phase IDs: P00–P18.
 - Task IDs: Pxx-00y.
-- Decision IDs: ADR-0001–ADR-0014.
-- Risk IDs: R-001–R-040.
+- Decision IDs: ADR-0001–ADR-0015.
+- Risk IDs: R-001–R-045.
 - Gate IDs: QG-00–QG-17.
 - Milestones: M0–M7.
 
-## 6. Change rule
+## 6. Current architecture amendment
+
+Architecture Amendment A01 and ADR-0015 approve Node.js, Bun, and Deno as required MVP runtime targets while preserving exactly two Rust crates and one Node-API native implementation as the default. No Bun/Deno or additional platform compatibility is claimed until Sendust-owned blocking CI passes. Deno requires local node_modules and --allow-ffi. See the [research report](research/multi-runtime-compatibility.md), [ADR-0015](architecture/decisions/0015-multi-runtime-support.md), and [A01 gate](gates/architecture-amendment-a01.md).
+
+## 7. Change rule
 
 - Requirement changes update requirements.md and the feature matrix.
 - Architecture changes require a new or superseding ADR.
