@@ -10,7 +10,7 @@
 | lettre API | PASS | [lettre validation report](../research/lettre-0.11.23-validation.md) | P06-003 fake SMTP integration test |
 | TLS features | PASS (source graph) | [lettre validation](../research/lettre-0.11.23-validation.md), [ADR-0003](../architecture/decisions/0003-tls-rustls-ring-webpki.md) | P03-002 Cargo compile; P06-002/P11-002 certificate fixtures |
 | Recipient/timeouts | PASS (source/API) | [ADR-0005](../architecture/decisions/0005-recipient-partial-failure.md), [ADR-0007](../architecture/decisions/0007-timeout-budgets.md) | P06-003/P06-004 relay traces; P10-002 timeout tests |
-| Node lifecycle | PASS (design/probe plan) | [Dependency research](../engineering/dependency-research.md), [ADR-0004](../architecture/decisions/0004-napi-async-tokio.md) | P05-003 and P14-004 runtime/GC/exit matrix |
+| Node lifecycle | PASS (design/probe plan) | [Node runtime validation plan](../research/node-runtime-validation-plan.md), [ADR-0004](../architecture/decisions/0004-napi-async-tokio.md) | P05-003 and P14-004 runtime/GC/exit matrix |
 | Decision record | PASS | [ADR index](../architecture/decisions/README.md), [architecture approval matrix](../architecture/approval-matrix.md) | Implementation gates listed in matrix |
 
 ## Source findings adopted
