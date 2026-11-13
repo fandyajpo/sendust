@@ -35,8 +35,8 @@ In scope: relay session configuration, TLS and authentication, MAIL/RCPT/DATA tr
 - **Size:** XL
 - **Status:** NOT STARTED
 - **Prerequisites:** P01-003, P06-001
-- **Description:** Implement the P01-003 / ADR-0005 selected behavior: use AsyncSmtpConnection.command(Rcpt::new(...)) and Error::status() to observe each recipient reply. Continue after explicit 4xx/5xx RCPT refusal; if no recipient is accepted, do not issue DATA. Otherwise send exactly one DATA transaction to the accepted subset. No fallback to whole-envelope rejection and no per-recipient message fan-out.
-- **Evidence criteria:** Mixed fixture first `250`, second `550` records the first recipient as accepted only after final DATA 2xx and the second as rejected. Exactly one DATA transaction is sent to the accepted subset. When every RCPT reply is negative, no DATA command is sent. No per-recipient independent message is ever sent.
+- **Description:** Implement the P01-003 / ADR-0005 selected behavior: use AsyncSmtpConnection.command(Rcpt::new(...)) and Error::status() to observe each recipient reply. Continue after ordinary explicit 4xx/5xx RCPT refusal; if 421 is returned, stop immediately and do not issue DATA. If no recipient is accepted, do not issue DATA. Otherwise send exactly one DATA transaction to the accepted subset. No fallback to whole-envelope rejection and no per-recipient message fan-out.
+- **Evidence criteria:** Mixed fixture first `250`, second `550` records the first recipient as accepted only after final DATA 2xx and the second as rejected. Exactly one DATA transaction is sent to the accepted subset. When every RCPT reply is negative, no DATA command is sent. A 421 RCPT response terminates the session and prevents DATA even if earlier RCPT responses were 2xx. No per-recipient independent message is ever sent.
 
 ### P06-004 — Normalize SMTP responses, unknown-after-DATA, and no-retry behavior
 
@@ -74,7 +74,7 @@ Phase 06 requires Phase 04 and Phase 01 gates. P06-001 needs P04-005 and P01-001
 
 ## Testing requirements
 
-Use loopback fake SMTP/TLS only, with a scripted dialogue and no arbitrary sleeps. Required fixtures: all `250`; all RCPT `550`; mixed `250`/`550`; `451` after final DATA; `535` auth; self-signed, expired, wrong-host, incomplete-chain, and malformed TLS; connection refused; reset during greeting; reset during DATA; abrupt close before final response; connect stall 11s; command stall 31s; total stall 121s; close drain 126s. Assert exact command trace for each, including no DATA when all RCPT commands are rejected, one DATA for mixed RCPT, and no second transaction after unknown. Assert credentials never appear in error text or logs.
+Use loopback fake SMTP/TLS only, with a scripted dialogue and no arbitrary sleeps. Required fixtures: all `250`; all RCPT `550`; mixed `250`/`550`; RCPT `421` after one accepted RCPT; `451` after final DATA; `535` auth; self-signed, expired, wrong-host, incomplete-chain, and malformed TLS; connection refused; reset during greeting; reset during DATA; abrupt close before final response; connect stall 11s; command stall 31s; total stall 121s; close drain 126s. Assert exact command trace for each, including no DATA when all RCPT commands are rejected, one DATA for mixed RCPT, and no second transaction after unknown. Assert credentials never appear in error text or logs.
 
 ## Acceptance criteria
 
