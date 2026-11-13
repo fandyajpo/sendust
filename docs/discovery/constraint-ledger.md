@@ -39,6 +39,13 @@ This ledger maps every authoritative constraint C-01 through C-36 to its archite
 | C-29 | Reject CRLF/control chars; protect reserved headers | ADR-0010/0014 | P04-002, P07-001, P11-003; injection matrix | Policy defined |
 | C-30 | Standalone delivery engine; no hosted platform or job system | Product vision / ADR-0006 | P00-001, P15-005; scope audit | Confirmed product boundary |
 
+| C-31 | Node.js, Bun, Deno are required MVP runtimes | ADR-0015 | P03, P05, P14; blocking runtime CI | Design approved; tests pending |
+| C-32 | One shared Node-API addon; exactly two Rust crates | ADR-0001/0015 | P03, P05; dependency and runtime tests | Design approved; tests pending |
+| C-33 | Runtime-neutral TypeScript API and isolated loader | ADR-0015 | P03, P05, P09; runtime contract tests | Design approved; tests pending |
+| C-34 | Deno local node_modules and explicit --allow-ffi; no install scripts | ADR-0015 | P03, P14, P15; clean install | Design approved; tests pending |
+| C-35 | Support claims require exact runtime × platform evidence | ADR-0011/0015 | P14, P15, P17; blocking CI matrix | Design approved; tests pending |
+| C-36 | Explicit MVP OS/CPU/ABI candidate baseline | ADR-0011/0015 | P03, P14; build/load matrix | Design approved; tests pending |
+
 ## Open validation register
 
 | Question | Resolution from source review | Remaining evidence | Owner task |
