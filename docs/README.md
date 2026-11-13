@@ -17,6 +17,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 6 | [Threat model](discovery/threat-model.md) | Assets, trust boundaries, and abuse cases |
 | 7 | [lettre source validation](research/lettre-0.11.23-validation.md) | Pinned API and feature research |
 | 8 | [Node runtime validation plan](research/node-runtime-validation-plan.md) | Node-API 8 candidate matrix and lifecycle probes |
+| 8a | [Multi-runtime compatibility research](research/multi-runtime-compatibility.md) | Node.js, Bun, Deno and native platform evidence |
 | 9 | [Multi-runtime compatibility research](research/multi-runtime-compatibility.md) | Node.js, Bun, Deno and native platform evidence |
 | 9 | [Architecture overview](architecture/overview.md) | Approved architecture shape and boundaries |
 | 10 | [System design](architecture/system-design.md) | Modules, types, state machine, test seams |
