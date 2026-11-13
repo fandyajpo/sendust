@@ -159,7 +159,7 @@ The following are intentionally absent and must not appear in the MVP type surfa
 - `pool`, `maxConnections`, `maxMessages`
 - `retry`, `retries`, `backoff`
 - `queue`, `worker`, `scheduler`, `job`, `queueAdapter`
-- `abortSignal` as a required option
+- `abortSignal` option; the MVP only exposes explicit bounded `close()` and timeout-based internal cancellation
 - `stream`, `streamTransport`
 - `url` attachments
 - `dkim`
