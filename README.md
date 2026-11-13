@@ -29,18 +29,17 @@ Two runnable entry points exist today. Both read the relay from the environment,
 so no credential lives in the repository, and both report relay acceptance only,
 never a delivery claim.
 
-Rust core:
+Both read `.env` in the repository root (real environment variables win), so:
 
 ```text
-cargo run -p sendust-core --example send_email
-```
+cp .env.example .env
+# edit .env with your relay and recipients
 
-Node-API binding:
+cargo run -p sendust-core --example send_email   # Rust core
 
-```text
 npm ci
 npm run build:native
-node examples/send_email.mjs
+node examples/send_email.mjs                     # Node-API binding
 ```
 
 Both take `SENDUST_HOST`, `SENDUST_PORT` (default 465), `SENDUST_SECURITY` (`tls`
