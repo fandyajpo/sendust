@@ -9,10 +9,10 @@ Likelihood: Low / Medium / High. Impact: Low / Medium / High / Critical.
 | ID | Risk | Likelihood | Impact | Mitigation | Owner phase | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | R-001 | lettre lower-level RCPT API behavior differs from inspected source during mixed-recipient transaction | Medium | High | P01 source audit selected AsyncSmtpConnection; P06-003 must verify one 250/one 550 produces exactly one DATA transaction for the accepted subset | P06 | OPEN |
-| R-002 | Exact SMTP stage attribution is not observable, producing misleading timeout errors | Medium | Medium | Report only observed category and elapsed budget; document limits; do not infer stages | P01, P10 | OPEN |
-| R-003 | rustls `ring` + `webpki-roots` feature set does not compose with lettre 0.11.23 | Medium | High | Validate exact features in P01-002; pin versions; fall back to a smaller verified set without weakening TLS | P01, P03 | OPEN |
-| R-004 | napi-managed Tokio runtime conflicts with lettre executor expectations | Medium | High | Validate in P01-004; use `Tokio1Executor`; no custom runtime | P01, P05 | OPEN |
-| R-005 | Node-API 8 is insufficient for a required napi feature | Low | Medium | Validate floor in P01-004; raise by ADR before P05 | P01, P05 | OPEN |
+| R-002 | Internal SMTP socket sub-stage timing is not observable through lettre public calls | Low | Medium | Approved design reports only coarse public-call boundaries; never infer socket sub-stages; validate deadline behavior in P10-002 | P10 | MITIGATED |
+| R-003 | Source-reviewed rustls `ring` + `webpki-roots` feature graph fails Cargo compilation | Medium | High | Exact feature graph is source-reviewed in P01; prove it with cargo check and cargo tree at P03-002 before implementation depends on it | P03 | OPEN |
+| R-004 | napi-managed Tokio runtime conflicts with lettre executor expectations at runtime | Medium | High | Pin napi 3.16.2 with explicit async feature, use the managed Tokio 1 runtime, and validate real SMTP execution at P05-003 | P05 | OPEN |
+| R-005 | Node-API 8 ABI floor proves insufficient for a required napi feature | Low | Medium | napi 3.16.2 exposes napi8 and async features; compile and runtime-test the pinned set at P05/P14 before claiming support | P05, P14 | OPEN |
 | R-006 | Borrowed JS buffer is retained across async and mutated or detached | Medium | Critical | Copy every buffer/string before await; mutation/detachment tests; ownership audit | P05, P11 | PLANNED |
 | R-007 | Rust panic unwinds across FFI and aborts the process | Medium | Critical | Use `Result`; `catch_unwind` at boundaries; avoid `panic = "abort"`; panic tests | P04, P05, P11 | PLANNED |
 | R-008 | Transport state race allows a second send or a send during close | Medium | High | Explicit state machine; single-send slot; BUSY fast-fail; race matrix | P04, P10 | PLANNED |
@@ -56,7 +56,7 @@ Likelihood: Low / Medium / High. Impact: Low / Medium / High / Critical.
 | R-036 | TypeScript wrapper and Rust core drift in status/error semantics | Medium | High | Single mapping source; golden tests; no wrapper reinterpretation | P09, P12 | PLANNED |
 | R-037 | Dual ESM/CJS packaging creates duplicate class identities or native loads | Low | Medium | Single shared implementation; mixed-format test; loader cache | P14 | PLANNED |
 | R-038 | Premature optimization destabilizes correctness | Medium | Medium | Budgets before measurement; optimize only measured hotspots; re-run QA | P13 | PLANNED |
-| R-039 | Empty repository lacks conventions, leading to inconsistent structure | Low | Medium | Phase 03 establishes workspace and policies before implementation | P03 | PLANNED |
+| R-039 | New implementation workspace lacks source conventions, leading to inconsistent structure | Low | Medium | Phase 03 establishes workspace, Rust MSRV, dependency pins, and policies before implementation | P03 | PLANNED |
 | R-040 | A phase is marked complete without evidence | Medium | High | Definition of done; gate records; registry status sync | All gates | PLANNED |
 
 ## Top risks to watch
