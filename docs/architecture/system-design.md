@@ -1,10 +1,10 @@
 # Sendust — System Design
 
-**Status:** proposed; not frozen. P02-005 is the architecture approval gate.  
+**Status:** approved design baseline at P02-005; implementation and runtime validation remain gated downstream.  
 **Requirements:** [requirements.md](../product/requirements.md).  
 **Call path:** `ts/src -> sendust-napi -> sendust-core -> lettre 0.11.23`.
 
-All paths below are **proposed**; no source exists yet.
+All paths below describe the approved design baseline; application source has not yet been implemented.
 
 ## 1. Workspace layout (proposed)
 
