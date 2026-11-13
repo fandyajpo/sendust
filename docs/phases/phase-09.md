@@ -68,7 +68,7 @@ TypeScript types may accidentally imply delivery or per-recipient success. Reint
 
 ## Testing requirements
 
-Use fake SMTP/TLS fixtures for success, pre-DATA rejection, mixed RCPT, explicit final `451` rejection and missing-final-reply ambiguity, auth failure, TLS failures, connect/command/total timeouts, and close stalls. Add compile-time type tests, error golden tests, redaction scans, concurrent BUSY, double close, send-after-close, and attachment opt-in tests. Verify no external network calls and no retries by counting SMTP transactions. Run examples on candidate Node versions where available.
+Use fake SMTP/TLS fixtures for success, pre-DATA rejection, mixed RCPT, explicit final `451` rejection and missing-final-reply ambiguity, auth failure, TLS failures, connect/command/total timeouts, and close stalls. Add compile-time type tests, error golden tests, redaction scans, concurrent BUSY, double close, send-after-close, and attachment opt-in tests. Verify no external network calls and no retries by counting SMTP transactions. Run examples on the exact Node.js, Bun, and Deno versions in the [toolchain baseline](../engineering/toolchain-baseline.md).
 
 ## Acceptance criteria
 
