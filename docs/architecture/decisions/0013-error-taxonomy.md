@@ -1,6 +1,6 @@
 # ADR-0013 — Error taxonomy and result contract
 
-**Status:** ACCEPTED for architecture; implementation evidence required at P04-001, P05-004, P09-003, and P11-004.  
+**Status:** ACCEPTED (architecture baseline); implementation evidence required at P04-001, P05-004, P09-003, and P11-004.  
 **Date:** 2026-11-13.
 
 ## Context
