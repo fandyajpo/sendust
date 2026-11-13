@@ -6,7 +6,7 @@
 
 ## Objective
 
-Make the package installable and loadable from a clean consumer project on supported platforms and candidate Node runtimes. Distribution must preserve the native binding, two-crate build model, and security posture without introducing install-time network surprises or undocumented platform claims.
+Make the package installable and loadable from a clean consumer project on supported platforms and required Node.js, Bun, and Deno runtimes. Distribution must preserve the native binding, two-crate build model, and security posture without introducing install-time network surprises or undocumented platform claims.
 
 ## Scope
 
@@ -27,7 +27,7 @@ In scope: package metadata, native artifact layout, clean-install smoke, platfor
 - **Size:** M
 - **Status:** NOT STARTED
 - **Prerequisites:** P14-001
-- **Description:** Specify package name, version source, `main`/`types`/`exports`, engine ranges, optional platform packages, native binary naming, and loader resolution order. Document that Node 22/24/26 are candidates pending lifecycle evidence, not guaranteed ranges. Define behavior when the platform binary is absent: a clear load error, never a silent fallback to an unsupported build.
+- **Description:** Specify package name, version source, `main`/`types`/`exports`, engine ranges, optional platform packages, native binary naming, and loader resolution order. Document exact tested Node.js, Bun, and Deno versions; none is a support claim until blocking tests pass. Define behavior when the platform binary is absent: a clear load error, never a silent fallback to an unsupported build.
 - **Evidence criteria:** Metadata contract lists every field and resolution order. Engine range wording is honest. Missing-binary fixture produces a stable error. Exports do not expose internal core or napi paths. Package contents exclude tests, source maps, and secrets.
 
 ### P14-003 — Specify cross-platform build and prebuilt artifact matrix
@@ -35,7 +35,7 @@ In scope: package metadata, native artifact layout, clean-install smoke, platfor
 - **Size:** L
 - **Status:** NOT STARTED
 - **Prerequisites:** P14-002
-- **Description:** Define target platforms and architectures, build toolchain requirements, and prebuilt artifact naming. Cover macOS, Linux, and Windows where supported, including arm64/x64 variants. Specify how rustls `ring`/`webpki-roots` and Node-API 8 are built consistently. Record unsupported targets explicitly and prevent accidental “best effort” publication.
+- **Description:** Define target platforms and architectures, build toolchain requirements, and prebuilt artifact naming. Cover macOS, Linux, and Windows where supported, including arm64/x64 variants. Specify how rustls `ring`/`webpki-roots` and Node-API 8 are built consistently. Validate the runtime × OS × CPU × ABI matrix, including Deno local node_modules and --allow-ffi. Record unsupported targets explicitly and prevent accidental “best effort” publication.
 - **Evidence criteria:** Matrix lists OS, arch, libc where relevant, Node-API level, artifact name, and support status. Each target has a build recipe and validation owner. Unsupported targets are absent from publication inputs. No target weakens TLS verification or changes core behavior.
 
 ### P14-004 — Validate clean installs and runtime loading across the matrix
@@ -68,13 +68,13 @@ Native binary resolution can silently pick the wrong architecture. Engine ranges
 
 ## Testing requirements
 
-Run early clean-consumer smoke with a local artifact and fake SMTP: accepted send, BUSY, close, and missing-binary negative. Final matrix covers every supported OS/arch and candidate Node 22/24/26: install, import, binary selection, accepted send, mixed RCPT ADR behavior, explicit final DATA `451` rejection and missing-final-reply-after-DATA unknown, BUSY, double close, and wrong-architecture/missing-binary errors. No external network, no real credentials, no publication.
+Run early clean-consumer smoke with a local artifact and fake SMTP: accepted send, BUSY, close, and missing-binary negative. Final matrix covers every supported OS/arch and every pinned Node.js, Bun, and Deno version: install, import, binary selection, accepted send, mixed RCPT ADR behavior, explicit final DATA `451` rejection and missing-final-reply-after-DATA unknown, BUSY, double close, and wrong-architecture/missing-binary errors. No external network, no real credentials, no publication.
 
 ## Acceptance criteria
 
 - A clean consumer can install and import the package from local artifacts on every supported target.
 - Native binary selection is correct; missing/wrong artifacts fail clearly.
-- Candidate Node support is validated and honestly declared.
+- Node.js, Bun, and Deno support is validated and honestly declared per exact platform combination.
 - No install-time network, secret, or feature-contract violation exists.
 - Early smoke and final matrix are reconciled.
 
