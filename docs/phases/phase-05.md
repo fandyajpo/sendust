@@ -19,7 +19,7 @@ In scope: `crates/sendust-napi/src`, copied Buffer inputs, napi-managed Tokio 1 
 - **Size:** M
 - **Status:** NOT STARTED
 - **Prerequisites:** P04-005
-- **Description:** Map the frozen core transport, message, send, close, result, and error operations to Node-API 8 exports without moving protocol policy into napi. Specify synchronous validation versus asynchronous execution and object lifetime rules.
+- **Description:** Map the approved core transport, message, send, close, result, and error operations to Node-API 8 exports without moving protocol policy into napi. Pin napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0; enable napi8 and async explicitly. Specify synchronous owned-input preparation versus asynchronous execution and object lifetime rules.
 - **Evidence criteria:** Export table maps every method, input, output, error, and core call. No SMTP behavior is implemented in the binding. Type signatures are reviewed against P02-002.
 
 ### P05-002 — Implement owned Buffer and string conversion
@@ -56,7 +56,7 @@ In scope: `crates/sendust-napi/src`, copied Buffer inputs, napi-managed Tokio 1 
 
 ## Technical implementation details
 
-The binding is only an adapter: TypeScript later calls napi, napi calls core, and core calls lettre. Use Node-API 8 and napi-managed Tokio 1. Copy every Buffer before async execution. One active send returns `BUSY`; no queue, pool, retry, or AbortSignal requirement. Explicit close transitions `open -> closing -> closed` and drains to 125s; GC is never a shutdown mechanism. Defaults remain connect 10s, operation 30s, total 120s. Preserve relay-accepted success, explicit final SMTP rejection, and genuinely unknown post-DATA disposition; never promise delivery or per-recipient independent sends.
+The binding is only an adapter: TypeScript calls napi, napi calls core, and core calls lettre. Pin napi 3.16.2/napi-derive 3.7.0/napi-build 2.6.0; explicitly enable napi8 and async; use napi-managed Tokio 1. Copy every Buffer before async execution. One active send returns `BUSY`; no queue, pool, retry, or AbortSignal requirement. Explicit close transitions `open -> closing -> closed` and drains to 125s; GC is never a shutdown mechanism. Defaults remain connect 10s, operation 30s, total 120s. Preserve relay-accepted success, explicit final SMTP rejection, and genuinely unknown post-DATA disposition; never promise delivery or per-recipient independent sends.
 
 ## Dependencies
 
