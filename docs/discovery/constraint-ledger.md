@@ -4,7 +4,7 @@
 **Source of truth:** [requirements.md](../product/requirements.md)  
 **Date:** 2026-11-13
 
-This ledger maps every authoritative constraint C-01 through C-36 to its architecture decision, enforcement work, and evidence. “Source-reviewed” means API/source documentation was inspected; it does not mean the future implementation has passed tests.
+This ledger maps every authoritative constraint C-01 through C-40 to its architecture decision, enforcement work, and evidence. “Source-reviewed” means API/source documentation was inspected; it does not mean the future implementation has passed tests.
 
 | ID | Constraint summary | Decision / ADR | Enforcement and evidence | Audit status |
 | --- | --- | --- | --- | --- |
