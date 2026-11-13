@@ -3,7 +3,7 @@
 **Sendust** — Standalone Native Email Delivery Engine for Node.js.  
 Planning baseline: **2026-11-13**. The repository contains planning and architecture documentation; implementation and release status are tracked separately.
 
-This documentation set is the source of truth for product scope, requirements, proposed architecture, decisions, and execution planning. Documentation approval does not imply that implementation, dependency validation, or publication has occurred.
+This documentation set is the source of truth for product scope, requirements, approved architecture design, decisions, and execution planning. QG-00, QG-01, and QG-02 are approved; implementation, compilation, runtime validation, and publication have not occurred.
 
 ## 1. Start here
 
@@ -14,9 +14,9 @@ This documentation set is the source of truth for product scope, requirements, p
 | 3 | [MVP scope](product/mvp-scope.md) | Included, excluded, success conditions |
 | 4 | [Feature matrix](planning/feature-matrix.md) | REQUIRED / OPTIONAL / POST-MVP / OUT OF SCOPE with task mapping |
 | 5 | [Master roadmap](planning/master-roadmap.md) | All 19 phases (P00–P18), their outcomes, and gates |
-| 6 | [Architecture overview](architecture/overview.md) | Shape and boundaries |
+| 6 | [Architecture overview](architecture/overview.md) | Approved shape and boundaries |
 | 7 | [System design](architecture/system-design.md) | Modules, types, state machine, test seams |
-| 8 | [Public API contract](architecture/public-api.md) | Behavior of the TypeScript surface |
+| 8 | [Public API contract](architecture/public-api.md) | Approved design contract; implementation gate P09 |
 | 9 | [Data flow](architecture/data-flow.md) | Send and close across layers |
 | 10 | [Error model](architecture/error-model.md) | Outcomes, error codes, redaction |
 | 11 | [Phase index](planning/phase-index.md) | Entry point to every phase plan |
@@ -27,6 +27,14 @@ This documentation set is the source of truth for product scope, requirements, p
 | 16 | [Definition of done](planning/definition-of-done.md) | Evidence rules |
 | 17 | [Risk registry](planning/risk-registry.md) | Risk IDs, mitigations, owners |
 | 18 | [Dependency research](engineering/dependency-research.md) | Observed facts and sources, dated 2026-11-13 |
+| 19 | [Discovery brief](discovery/brief.md) | Falsifiable problem statement and product boundary |
+| 20 | [Constraint ledger](discovery/constraint-ledger.md) | C-01..C-30 traceability |
+| 21 | [Threat model](discovery/threat-model.md) | Assets, trust boundaries, and abuse cases |
+| 22 | [lettre source validation](research/lettre-0.11.23-validation.md) | Pinned API and feature research |
+| 23 | [Architecture approval matrix](architecture/approval-matrix.md) | Approved design decisions and downstream validation |
+| 24 | [QG-00 discovery gate](gates/phase-00-discovery.md) | Discovery approval evidence |
+| 25 | [QG-01 research gate](gates/phase-01-research.md) | Research approval evidence |
+| 26 | [QG-02 architecture gate](gates/phase-02-architecture-approval.md) | Architecture approval evidence |
 | 19 | [Testing strategy](engineering/testing-strategy.md) | Test layers, fixtures, fault matrix, flake policy |
 | 20 | [Security strategy](engineering/security-strategy.md) | Threat model, TLS, injection, redaction, supply chain |
 | 21 | [Reliability strategy](engineering/reliability-strategy.md) | Lifecycle, timeouts, races, cleanup |
@@ -39,7 +47,7 @@ This documentation set is the source of truth for product scope, requirements, p
 ```text
 docs/
 ├── README.md
-├── product/
+├── discovery/\n│   ├── brief.md\n│   ├── constraint-ledger.md\n│   └── threat-model.md\n├── research/\n│   └── lettre-0.11.23-validation.md\n├── gates/\n│   ├── phase-00-discovery.md\n│   ├── phase-01-research.md\n│   └── phase-02-architecture-approval.md\n├── product/
 │   ├── vision.md
 │   ├── requirements.md
 │   └── mvp-scope.md
@@ -85,7 +93,7 @@ docs/
 
 ## 3. Status model
 
-All phases and tasks begin at `NOT STARTED`. Allowed states: `NOT STARTED`, `IN PROGRESS`, `BLOCKED`, `IN REVIEW`, `COMPLETED`. A task is `COMPLETED` only with evidence per [definition-of-done.md](planning/definition-of-done.md). A phase is `COMPLETED` only when its gate is approved.
+P00–P02 are `COMPLETED` with approved evidence. P03–P18 remain `NOT STARTED`. Allowed states: `NOT STARTED`, `IN PROGRESS`, `BLOCKED`, `IN REVIEW`, `COMPLETED`. A task is `COMPLETED` only with evidence per [definition-of-done.md](planning/definition-of-done.md). A phase is `COMPLETED` only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -102,9 +110,9 @@ All phases and tasks begin at `NOT STARTED`. Allowed states: `NOT STARTED`, `IN 
 | Repository | Documentation repository with committed planning artifacts |
 | Application implementation | Not present in the audited repository snapshot |
 | Dependencies installed | None |
-| Phase 00 | NOT STARTED |
-| Phase 18 | NOT STARTED |
-| Recommended next task | **P00-001**, subject to the current phase gates |
+| Phase 00 | COMPLETED — QG-00 approved |
+| Phase 01 | COMPLETED — QG-01 approved |\n| Phase 02 | COMPLETED — QG-02 approved at design level |\n| Phase 18 | NOT STARTED |
+| Recommended next task | **P03-001**, repository workspace baseline |
 
 ## 5. Conventions
 
