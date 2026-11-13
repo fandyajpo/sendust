@@ -1,0 +1,279 @@
+# Quality Gates
+
+Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` only when every required check has linked evidence and no check is `FAIL` or `BLOCKED`. Gates are cumulative: a later gate assumes all earlier gates still pass on the current commit.
+
+## Gate index
+
+| Gate | Name | Phase | Blocks |
+| --- | --- | --- | --- |
+| QG-00 | Discovery integrity | P00 | P01 |
+| QG-01 | Research evidence | P01 | P02 |
+| QG-02 | Architecture freeze | P02 | P03 |
+| QG-03 | Repository baseline | P03 | P04 |
+| QG-04 | Rust safety and core tests | P04 | P05 |
+| QG-05 | Node interoperability | P05 | P06, P09 |
+| QG-06 | SMTP correctness | P06 | P09 |
+| QG-07 | MIME correctness | P07 | P08 |
+| QG-08 | Attachment safety | P08 | P09 |
+| QG-09 | Public API contract | P09 | P10 |
+| QG-10 | Reliability | P10 | P11 |
+| QG-11 | Security | P11 | P12 |
+| QG-12 | QA completeness | P12 | P13, P14 final |
+| QG-13 | Performance | P13 | P14 final, P16 |
+| QG-14 | Distribution | P14 | P16 |
+| QG-15 | Documentation | P15 | P16 |
+| QG-16 | Release engineering | P16 | P17 |
+| QG-17 | Release approval | P17 | MVP release |
+
+## QG-00 — Discovery integrity
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| Problem statement | One falsifiable MVP problem statement with personas and non-goals | P00-001 brief |
+| Constraint ledger | Every constraint C-01..C-30 has an owner task and validation path | P00-002 ledger |
+| Provenance | Version claims labeled observed or candidate, with sources | P00-003 table |
+| Threat boundary | Assets, trust boundaries, abuse cases, test-environment policy | P00-004 record |
+| Handoff | ADR seeds with deadlines, no unowned mandatory question | P00-005 gate record |
+
+## QG-01 — Research evidence
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| lettre API | Chosen async API documented with citations; no assumed partial status | P01-001 matrix |
+| TLS features | Exact feature set composes; verification cannot be disabled | P01-002 matrix |
+| Recipient/timeouts | Observability table; explicit ADR decision | P01-003 report |
+| Node lifecycle | Node 22/24/26 labeled candidate/probed/supported; GC and close probe plan | P01-004 matrix |
+| Decision record | Every mandatory uncertainty decided or given an architecture deadline | P01-005 record |
+
+## QG-02 — Architecture freeze
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| Crate boundary | Exactly two crates; core has no Node linkage | P02-001 diagram and check plan |
+| Status contract | `accepted` = relay acceptance; `unknown` after DATA; no delivery claim | P02-002 table |
+| Error taxonomy | Stable codes/categories; no message parsing required | P02-002 / error model |
+| Lifecycle | `open -> closing -> closed`; BUSY; bounded close; no GC | P02-003 |
+| Ownership | Copy-before-async; no borrowed JS memory | P02-004 |
+| Limits | 100 recipients, 10/20/30 MiB caps; deterministic precedence | P02-004 |
+| ADRs | All mandatory ADRs accepted or explicitly blocked | ADR index |
+| Traceability | Every constraint maps to implementation and test tasks | P02-005 matrix |
+
+## QG-03 — Repository baseline
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| Workspace | Two crates build; TypeScript workspace builds | CI log |
+| Toolchain | `rust-toolchain.toml` and Node version pinned | Repository files |
+| Format/lint | `cargo fmt --check`, `cargo clippy -D warnings`, TS lint/typecheck pass | CI log |
+| Tests | Core unit tests and empty integration harness run | CI log |
+| Dependency policy | Versions pinned; licenses recorded; advisories checked | Policy + inventory |
+| Test seams | Fake SMTP/TLS harness starts, scripts responses, shuts down deterministically | Harness test |
+| No placeholders | No `todo!()`, `unimplemented!()`, or stub modules claimed as complete | Search report |
+
+## QG-04 — Rust safety and core tests
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| Error taxonomy | Every code/category defined; deterministic precedence | Unit tests |
+| Address policy | ASCII local part, IDNA domain, Unicode display; CRLF rejected | Tests |
+| Message model | Types represent only valid states; caps enforced | Tests |
+| State machine | Transitions exhaustive; BUSY and CLOSED tested | Tests |
+| Timeouts | Injected clock; finite values only | Tests |
+| Core isolation | `cargo tree -p sendust-core` has no `napi` | CI check |
+| Panic policy | Recoverable failures are `Result`; no abort strategy | Manifest + review |
+| Unsafe | No new `unsafe` without justification | Review record |
+
+## QG-05 — Node interoperability
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| Node-API level | Compiled level matches declaration | Manifest + probe |
+| Buffer copy | Mutation/detachment after call does not affect sent bytes | JS tests |
+| Async | `send`/`close` return Promises; rejections carry stable codes | JS tests |
+| Lifecycle | Close during connect/DATA; double close; send after close; BUSY | JS tests |
+| GC | Forced GC does not close or corrupt a transport | Forced-GC test |
+| Process exit | No hang without close; no GC-dependent shutdown | Exit tests |
+| Runtime | No custom Tokio runtime created | Code review |
+| Candidate Node | 22/24/26 results recorded as pass/fail/unsupported | CI matrix |
+| Types | Generated declarations compile in strict mode | Type test |
+
+## QG-06 — SMTP correctness
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| Success | Positive final DATA → `accepted` | Command trace |
+| Pre-DATA rejection | MAIL/RCPT refusal → `rejected` | Trace |
+| Mixed RCPT | ADR-0005 behavior; no DATA after pre-DATA rejection | Trace |
+| Post-DATA ambiguity | `451` or reset → `unknown`; no retry | Trace + transaction count |
+| Auth failure | `535` → `AUTH_FAILED`; no message sent | Trace |
+| TLS failures | Self-signed, expired, wrong host, incomplete chain, malformed | Negative tests |
+| Timeouts | Connect 10 s, operation 30 s, total 120 s, close 125 s | Injected-clock tests |
+| No custom SMTP | No hand-written command strings | Search report |
+| No retry/pool | Exactly one transaction; no second connection | Transaction count |
+| No per-recipient send | Forbidden path absent | Code + test audit |
+
+## QG-07 — MIME correctness
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| Structures | text, html, alternative, mixed with attachments | Golden fixtures |
+| Headers | RFC 2047 encoding, legal folding, CRLF | Parser conformance |
+| BCC | Absent from headers, present in envelope | Trace |
+| Filenames | RFC 2231/2047; control characters rejected | Tests |
+| Content type | Explicit or fixed extension map; safe fallback | Tests |
+| Wire parity | Accounted size equals serialized size | Test |
+| Independent parser | All fixtures parse correctly | `mail-parser` report |
+| Determinism | Same input produces identical bytes | Repeat-run hash |
+
+## QG-08 — Attachment safety
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| Default denial | File access disabled unless opted in | Test |
+| File types | Regular only; symlink/FIFO/device/directory/socket rejected | File-type matrix |
+| Bounded read | Cap + 1 probe; growth detected | Tests |
+| Caps | 10 MiB per file, 20 MiB aggregate, 30 MiB wire | Boundary tests |
+| Ownership | Bytes copied; no borrowed JS memory | Ownership audit |
+| No URL/stream/glob | Types and code paths absent | API audit |
+| Redaction | No absolute path in errors | Scan test |
+
+## QG-09 — Public API contract
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| Surface | Only MVP exports; no pooling/retry/SMTPUTF8/URL/AbortSignal requirement | API audit |
+| Results | `accepted`/`rejected`/`unknown`; no delivery claim | Golden tests |
+| Errors | Stable classes and codes; `instanceof` works | Golden tests |
+| Redaction | No password/body/attachment/path in serialized errors | Marker scans |
+| Lifecycle | Close idempotent and bounded; BUSY immediate; CLOSED after close | JS tests |
+| Types | Strict; no `any` in public results/errors | Type tests |
+| Examples | Runnable against fake relay | Example log |
+| Docs hooks | API docs state semantics, defaults, and limits | Review |
+
+## QG-10 — Reliability
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| Races | Send/close, close/connect, close/DATA, double close | Race matrix |
+| Timeout interaction | Stage vs total vs close budgets; no overrun | Injected-clock tests |
+| Cleanup | No leaked tasks, sockets, or file descriptors | Accounting tests |
+| Fault injection | Reset, stall, abrupt close, malformed reply at each stage | Fault suite |
+| Recovery | Transport remains closed or open consistently after failure | State tests |
+| No retry | One transaction per send | Transaction count |
+
+## QG-11 — Security
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| TLS | Verification mandatory; no bypass path | Source audit + negative tests |
+| Auth | Credentials never logged or serialized | Redaction scan |
+| Injection | CRLF/control chars rejected in all fields | Injection matrix |
+| Attachments | Opt-in, regular files, no URLs | File-type matrix |
+| Memory | Copied buffers; no borrowed JS across async | Ownership audit |
+| Panic | No unwind across FFI | Panic tests |
+| Dependencies | Pinned, licensed, advisory-checked, inventoried | SBOM |
+| DoS | Caps and timeouts enforced | Boundary tests |
+| Tests | No real relay, no secrets, no external network | Network-denial test |
+
+## QG-12 — QA completeness
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| Traceability | Every requirement maps to implementation and test tasks | P12-001 matrix |
+| Core coverage | Error, validation, MIME, state, SMTP paths covered | Coverage report |
+| Binding coverage | Ownership, async, lifecycle, mapping covered | Coverage report |
+| TypeScript coverage | Contract, lifecycle, errors, examples covered | Coverage report |
+| Fixtures | SMTP, TLS, filesystem, JS-boundary fixtures complete | Fixture inventory |
+| Regressions | No open regression without a tracked risk | Triage log |
+| Determinism | No flaky tests; no arbitrary sleeps | Repeat-run report |
+
+## QG-13 — Performance
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| Budgets | Defined and approved before measurement | P13-001 |
+| Send path | Within budget | Benchmark report |
+| MIME | Within budget; linear scaling | Benchmark report |
+| Attachments | Peak memory bounded and documented | Measurement report |
+| Lifecycle | BUSY/close/timeout overhead acceptable | Measurement report |
+| Regression | No unexplained regression | P13-005 |
+| Correctness | QA suite still passes | Re-run log |
+
+## QG-14 — Distribution
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| Matrix | Every declared target built and runtime-tested | Matrix report |
+| Clean install | Installs from local artifacts in a clean project | Logs |
+| Loader | Correct binary selected; path and version logged | Logs |
+| Negatives | Missing/wrong-architecture binary fails clearly | Logs |
+| No toolchain | Consumer install needs no Rust compiler | Clean environment |
+| No postinstall download | Package review shows optional packages only | Package review |
+| ESM/CJS | Both load and share one implementation | Consumer tests |
+| Honesty | No untested target claimed | Support table |
+
+## QG-15 — Documentation
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| Semantics | `accepted` = relay acceptance; no delivery claim | Review |
+| Behavior | No retry/pooling/SMTPUTF8/URL claims | Review |
+| Matrix | Exact tested Node versions and targets | Review |
+| Examples | Runnable and match output | Example log |
+| Errors | Every code documented | Catalog review |
+| Limits | Caps and defaults documented | Review |
+| Links | All internal links resolve | Link checker |
+| Maintainer | Build, test, release, and rollback documented | Review |
+
+## QG-16 — Release engineering
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| Reproducibility | Two clean builds produce identical hashes or documented nondeterminism | Hash comparison |
+| Provenance | Source commit, toolchain, dependency inventory, target | Attestation |
+| Artifacts | Manifest complete; no missing or extra binaries | Manifest |
+| Contents | No tests, source maps, secrets, or unsupported binaries | Tarball inspection |
+| Notes | Limitations and semantics accurate | Review |
+| Checklist | Every item has owner and evidence | Checklist |
+| Rollback | Bad binary, contract bug, security issue, install breakage covered | Plan |
+| No publish | Candidate assembly performs no publication | CI log |
+
+## QG-17 — Release approval
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| RC identity | Version, commit, hashes match the approved candidate | Record |
+| Acceptance | MVP feature matrix and all quality gates pass | Review |
+| Authorization | Named approver signs the publication decision | Record |
+| Publication | Root and platform packages share exact version | Registry metadata |
+| Verification | Clean install from registry works on representative targets | Logs |
+| Provenance | Registry shows provenance | Registry |
+| Closure | Release notes, support matrix, and rollback plan published | Links |
+
+## Enforcement rules
+
+1. A gate is `APPROVED` only with a signed record listing each check and its evidence link.
+2. A failed check blocks the phase; it is not waived silently.
+3. Waivers require a written rationale, owner, deadline, and risk entry. Security gates QG-11 and the TLS checks in QG-06 cannot be waived.
+4. Evidence must refer to the exact commit or artifact under review.
+5. Later gates re-run earlier mandatory checks; stale evidence is invalid.
+6. The final task in each phase is its gate; it cannot be marked complete before the others.
+7. A phase cannot be marked `COMPLETED` while any of its gate checks is `FAIL` or `BLOCKED`.
+
+## Gate record template
+
+```text
+Gate: QG-XX
+Phase: PXX
+Commit: <sha>
+Artifacts: <hashes or links>
+Date: <date>
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| ... | PASS/FAIL/N/A | link |
+
+Decision: APPROVED / REJECTED
+Waivers: none | <risk id, rationale, owner, deadline>
+Reviewer: <name/role>
+```

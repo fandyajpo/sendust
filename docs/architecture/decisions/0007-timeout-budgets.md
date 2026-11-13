@@ -1,0 +1,43 @@
+# ADR-0007 — Finite timeout budgets and limited stage attribution
+
+**Status:** PROPOSED; stage attribution pending P01-003  
+**Date:** 2026-11-13  
+**Deciders:** Architecture review (P02-005)  
+**Validated by:** P01-003, P04-004, P10-002
+
+## Context
+
+SMTP sessions can hang at connect, TLS, greeting, AUTH, MAIL, RCPT, DATA, or the final response. Without finite budgets a consumer process can hang indefinitely; without honest stage reporting, errors can mislead operators into retrying an operation that already transmitted the body.
+
+## Decision
+
+- Defaults: connect 10 s, per-operation 30 s, total send 120 s, close/drain 125 s.
+- Every timeout is finite and tunable within documented bounds. `0`, negative, `NaN`, and infinite values are rejected.
+- A single absolute deadline governs the total send.
+- `connect` bounds TCP + TLS/STARTTLS establishment.
+- `operation` bounds each command/response wait.
+- `total` bounds the entire send.
+- `close` bounds shutdown and is greater than `total` so a maximal send can still drain.
+- Report a timeout category and elapsed budget. Report a specific stage only if P01-003 proves it is observable; otherwise omit stage rather than infer it.
+
+## Alternatives
+
+1. **No timeouts, rely on OS TCP timeouts.** Unacceptable: can hang for minutes and ignores SMTP-level stalls.
+2. **Only a total timeout.** Simpler, but produces poor diagnostics and cannot distinguish a connect stall from a DATA stall.
+3. **Per-command timeouts with no total.** Can still exceed a caller’s overall budget across many commands.
+4. **Promise exact stage attribution.** Rejected unless observable; otherwise it is fabricated precision.
+
+## Consequences
+
+- All hangs are bounded.
+- A close during a maximal send has headroom.
+- Tests can use fake time to assert boundaries without real waits.
+- Documentation must not claim stage precision that research did not prove.
+- Timeout after DATA carries duplicate-send risk for the caller; documented in the error catalog.
+
+## Evidence required
+
+- Boundary tests at connect 10 s, operation 30 s, total 120 s, close 125 s.
+- Interaction tests where a stage timeout and total timeout compete.
+- A stage-observability table from P01-003.
+- Validation tests rejecting non-finite and non-positive values.
