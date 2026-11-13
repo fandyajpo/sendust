@@ -105,7 +105,7 @@ Each card names the responsible later task. A card without a task owner fails th
 
 ## Acceptance criteria
 
-- All five discovery tasks have reviewed evidence and `NOT STARTED` becomes eligible to change only through the phase gate.
+- All five discovery tasks are `COMPLETED` with reviewed evidence; status changes require an approved phase gate.
 - The constraint ledger covers every authoritative constraint, including isolation, semantics, caps, lifecycle, TLS, ownership, and platform candidates.
 - Recipient visibility and coarse-stage limits are documented, with executable validation assigned to P06-003 and P10-002.
 - The test-environment boundary forbids real relays and secrets.
