@@ -46,7 +46,7 @@ Enforced by P01-004, P05-003, P08-002.
 
 ### C-05 — Node-API level
 
-The binding targets **Node-API 8** as the approved design floor. P01-004 records the candidate ABI/runtime research; compilation and runtime compatibility MUST pass at P05-003/P14-004. A higher level requires a superseding ADR and support-matrix update.
+The binding targets **Node-API 8** as the approved design floor. The initial pins are napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0; the napi crate MUST enable the `napi8` and `async` features explicitly because its default ABI feature is napi4. P01-004 records the source research; compilation and runtime compatibility MUST pass at P05-003/P14-004. A higher level requires a superseding ADR and support-matrix update.
 
 Enforced by P01-004, P05-001, P14-002.
 
