@@ -35,8 +35,8 @@ In scope: intended users and jobs, relay-accepted semantics, MVP exclusions, all
 - **Size:** S
 - **Status:** COMPLETED
 - **Prerequisites:** P00-001
-- **Description:** Create a provenance table for `lettre 0.11.23`, Tokio 1, Node-API 8, and candidate Node 22/24/26 runtimes. Record where each version was observed, whether it is pinned or merely proposed, and which claims still require validation. Do not assume a high-level SMTP transport exposes recipient-level status or exact stage timings; the source/API report records the lower-level API evidence and coarse-stage limits.
-- **Evidence criteria:** Every version claim has a source artifact, tag, lockfile entry, or explicit “candidate” label. No “latest” assumptions. The table calls out that Node 22/24/26 are test candidates, not guaranteed support declarations.
+- **Description:** Create a provenance table for `lettre 0.11.23`, Tokio 1, Node-API 8, and exact Node.js/Bun/Deno runtime candidates from the [toolchain baseline](../engineering/toolchain-baseline.md). Record where each version was observed, whether it is pinned or merely proposed, and which claims still require validation. Do not assume a high-level SMTP transport exposes recipient-level status or exact stage timings; the source/API report records the lower-level API evidence and coarse-stage limits.
+- **Evidence criteria:** Every version claim has a source artifact, tag, lockfile entry, or explicit “candidate” label. No “latest” assumptions. The table calls out the exact pinned Node.js/Bun/Deno versions as test candidates, not guaranteed support declarations.
 
 ### P00-004 — Define the threat, operational, and test-environment boundaries
 
