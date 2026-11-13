@@ -70,11 +70,11 @@ No second Tokio runtime may be constructed. The Rust core has no Node/N-API depe
 | Forced GC | Drop JS references and force GC during send | In-flight operation remains valid; GC does not close transport |
 | No explicit close | Drop transport and allow process shutdown | No finalizer-dependent correctness; no permanent event-loop hang |
 | Process exit | Terminate child process while send is active | No unbounded shutdown; socket/task cleanup is bounded |
-| Candidate matrix | Run all tests on Node 22, 24, 26 where available | Only passing, blocking-CI targets may be claimed supported |
+| Candidate matrix | Run all tests on exact Node.js, Bun, and Deno versions from the toolchain baseline | Only passing, blocking-CI targets may be claimed supported |
 
 ## 6. Acceptance rule
 
-A runtime/platform combination is supported only after the native addon builds, clean installation succeeds, and all blocking Sendust tests pass for that exact runtime version and platform. Node-API compatibility alone is insufficient. Node.js 22/24/26 remain version candidates; Bun and Deno exact stable versions are pinned at P03.
+A runtime/platform combination is supported only after the native addon builds, clean installation succeeds, and all blocking Sendust tests pass for that exact runtime version and platform. Node-API compatibility alone is insufficient. Exact Node.js, Bun, and Deno versions from the toolchain baseline remain candidates until blocking CI passes.
 
 ## 7. Multi-runtime amendment
 
