@@ -91,6 +91,11 @@ Core tests are Rust unit/integration tests with no Node runtime. Required concre
 
 ## Acceptance criteria
 
+- Core module ownership follows ADR-0016; no third crate is introduced.
+- Domain modules remain independent of lettre, SMTP session types, napi, and runtime APIs.
+- Delivery orchestration depends on a narrow internal port; the SMTP adapter implements it.
+- Module unit tests and dependency checks cover the approved boundaries.
+
 - Core implements all MVP validation, limits, state, timeout, and SMTP orchestration with relay-accepted semantics.
 - Core has no Node linkage and all tests run as Rust tests.
 - Recipient behavior matches ADR-0005: explicit RCPT refusals are preserved, accepted recipients share one DATA transaction, and no per-recipient message fan-out occurs.
