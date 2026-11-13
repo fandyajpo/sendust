@@ -105,6 +105,7 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 | Success | Positive final DATA → `accepted` | Command trace |
 | Envelope refusal | MAIL refusal or all RCPT replies negative → overall `rejected`; a single RCPT refusal is recipient-level only | Trace |
 | Mixed RCPT | One DATA transaction to accepted subset; no DATA when all RCPT replies reject | Trace + transaction count |
+| RCPT 421 | Session terminates; no DATA even if an earlier RCPT was accepted | Trace + transaction count |
 | Final DATA response | Explicit 4xx/5xx (including `451`) → `rejected`; missing final reply after terminator may have reached relay → `unknown` | SMTP trace + transaction count |
 | Auth failure | `535` → `AUTH_FAILED`; no message sent | Trace |
 | TLS failures | Self-signed, expired, wrong host, incomplete chain, malformed | Negative tests |
