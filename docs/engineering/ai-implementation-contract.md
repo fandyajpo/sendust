@@ -16,6 +16,7 @@ This contract does not replace product requirements, architecture documents, ADR
 
 Use this precedence:
 
+0. Tool versions and exact runtime candidates: `docs/engineering/toolchain-baseline.md`; no other document may independently change a version pin.
 1. Product behavior and scope: `docs/product/requirements.md`, then `docs/product/mvp-scope.md` and `docs/product/vision.md`.
 2. Approved architecture: accepted ADRs, with later accepted superseding ADRs taking precedence over earlier ones.
 3. Architecture contracts: `docs/architecture/overview.md`, `system-design.md`, `public-api.md`, `data-flow.md`, and `error-model.md`, interpreted consistently with requirements and ADRs.
@@ -28,7 +29,7 @@ A lower-level document may add detail but cannot override a higher-level decisio
 
 ## 3. Required reading for every task
 
-Read `AGENTS.md` and then the relevant requirements, constraint rows, architecture contracts, accepted ADRs, phase task, prerequisites, engineering strategy, quality gate, and existing implementation. Read linked documents, not only their titles.
+Read `AGENTS.md`, the [toolchain baseline](toolchain-baseline.md), and then the relevant requirements, constraint rows, architecture contracts, accepted ADRs, phase task, prerequisites, engineering strategy, quality gate, and existing implementation. Read linked documents, not only their titles.
 
 Before editing, verify:
 - The task exists exactly once in the task registry and phase plan.
