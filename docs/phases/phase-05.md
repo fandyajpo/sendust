@@ -1,6 +1,6 @@
 # Phase 05 — Binding
 
-**Phase status:** NOT STARTED  
+**Phase status:** IN PROGRESS  
 **Phase dependency:** Phase 04  
 **Companion references:** [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md)
 
@@ -17,7 +17,7 @@ In scope: `crates/sendust-napi/src`, copied Buffer inputs, napi-managed Tokio 1 
 ### P05-001 — Define Node-API 8 binding surface
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P04-005
 - **Description:** Map the approved core transport, message, send, close, result, and error operations to Node-API 8 exports without moving protocol policy into napi. Pin napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0; enable napi8 and async explicitly. Specify synchronous owned-input preparation versus asynchronous execution and object lifetime rules.
 - **Evidence criteria:** Export table maps every method, input, output, error, and core call. No SMTP behavior is implemented in the binding. Type signatures are reviewed against P02-002.
@@ -25,7 +25,7 @@ In scope: `crates/sendust-napi/src`, copied Buffer inputs, napi-managed Tokio 1 
 ### P05-002 — Implement owned Buffer and string conversion
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P05-001
 - **Description:** Convert JS Buffers, strings, arrays, and options into Rust-owned values before any async yield. Reject invalid encodings and preserve exact bytes for bodies and attachments. Never retain borrowed JS memory.
 - **Evidence criteria:** Mutation and detachment immediately after invocation leave sent bytes unchanged. Heap ownership review shows no borrowed Buffer in a future or transport state.
@@ -33,7 +33,7 @@ In scope: `crates/sendust-napi/src`, copied Buffer inputs, napi-managed Tokio 1 
 ### P05-003 — Implement async task and lifecycle adapter
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P05-001, P04-004
 - **Description:** Run core futures through napi’s Tokio 1-managed runtime, retain explicit transport ownership, implement idempotent close and bounded drain, and map overlapping sends to immediate `BUSY`. Do not create a custom runtime or GC-dependent finalizer behavior.
 - **Evidence criteria:** Blocking tests on Node.js, Bun, and Deno cover close during connect/DATA, double close, send after close, concurrent send, forced GC where supported, and process exit. Close completes or reports deadline failure by 125s.
@@ -41,7 +41,7 @@ In scope: `crates/sendust-napi/src`, copied Buffer inputs, napi-managed Tokio 1 
 ### P05-004 — Implement stable result/error conversion
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P05-002, P05-003
 - **Description:** Convert core statuses and machine-readable errors into stable JS objects/errors without leaking credentials, message content, or internal stack data. Preserve overall `accepted`, `rejected`, `unknown`; recipient `accepted`, `rejected`, `unknown`; `BUSY`, timeout, and closed semantics.
 - **Evidence criteria:** Golden mapping tests cover every core error and result. Redaction tests prove credentials and body bytes are absent from errors.
@@ -49,7 +49,7 @@ In scope: `crates/sendust-napi/src`, copied Buffer inputs, napi-managed Tokio 1 
 ### P05-005 — Binding phase gate
 
 - **Size:** S
-- **Status:** NOT STARTED
+- **Status:** IN PROGRESS
 - **Prerequisites:** P05-001, P05-002, P05-003, P05-004
 - **Description:** Verify Node-API 8 compilation, core isolation, ownership, lifecycle, and mapping against the architecture contract on pinned Node.js, Bun, and Deno versions.
 - **Evidence criteria:** Binding tests pass on every available candidate; unsupported candidates are documented. Core still builds without Node. All five tasks have evidence and no API drift.
@@ -91,4 +91,16 @@ P05 is not complete when only Node.js passes. The full binding contract must pas
 
 ## Status
 
-NOT STARTED.
+IN PROGRESS. P05-001 to P05-004 are IN REVIEW; the binding, the owned-input copy, the asynchronous lifecycle, and the error/result mapping are implemented and exercised locally. P05-005 (the phase gate) is IN PROGRESS and is not self-approved.
+
+## Evidence log
+
+Evidence labels follow the [AI implementation contract](../engineering/ai-implementation-contract.md).
+
+| Task | Evidence | State |
+| --- | --- | --- |
+| P05-001 | `crates/sendust-napi/src/lib.rs`: `Transport` class (`constructor`, `state`, `send`, `close`) plus `nativeVersion()`; `TransportOptions`, `MessageOptions`, `SendResultJs` object types; no SMTP, MIME, or validation policy in the binding | IMPLEMENTED, EXECUTED PASS locally |
+| P05-002 | Every JS value is converted to owned Rust values (`String`, `Vec<String>`, `u32`) before the first await; no Buffer is accepted yet because attachments are P08 scope | IMPLEMENTED, EXECUTED PASS locally |
+| P05-003 | `tokio::sync::Mutex` slot plus an atomic phase: one active send, immediate `TRANSPORT_BUSY` from `try_lock`, idempotent `close()` that waits for the active send under the close budget and reports `TIMEOUT_CLOSE`; no runtime is created and no finalizer closes anything | IMPLEMENTED, EXECUTED PASS locally |
+| P05-004 | `to_napi`/`to_result` map the core outcome and every error code into a stable JSON payload (`SENDUST:{...}`) consumed by `ts/src/errors.ts`; credentials and bodies never enter a payload | IMPLEMENTED, EXECUTED PASS locally |
+| P05-005 | TypeScript facade (`ts/src/{index,transport,errors,loader,types}.ts`) plus `ts/test/transport.test.ts` (invalid options, idempotent close, send-after-close, refused connection) run against the staged addon; `npm run build:native` stages it and a CI job builds it | IMPLEMENTED, EXECUTED PASS locally; runtime matrix pending |

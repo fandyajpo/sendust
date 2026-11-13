@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "description": "Standalone native email delivery engine for Node.js, Bun, and Deno",
   "type": "module",
-  "workspaces": ["ts"],
+  "workspaces": [
+    "ts"
+  ],
   "scripts": {
     "check:architecture": "node scripts/check-architecture.mjs",
     "check:docs": "node scripts/check-docs.mjs",
@@ -11,6 +13,7 @@
     "lint": "npm --workspace ./ts run lint",
     "format:check": "npm --workspace ./ts run format:check",
     "typecheck": "npm --workspace ./ts run typecheck",
-    "test": "npm --workspace ./ts run test"
+    "test": "npm --workspace ./ts run test",
+    "build:native": "node scripts/build-addon.mjs"
   }
 }

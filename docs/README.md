@@ -52,6 +52,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 39 | [Dependency and license policy](engineering/dependency-policy.md) | Pinned dependencies, feature admission, feature prohibitions, lockfile rules, and license review |
 | 40 | [Test harness contract](engineering/test-harness-contract.md) | Fake SMTP/TLS seams, safety rules, and the fixture catalog |
 | 41 | [QG-03 repository baseline record](gates/phase-03-repository-baseline.md) | P03 gate checklist, evidence, and approved decision |
+| 42 | [PHASE-04 core record](gates/phase-04-core.md) | P04 gate checklist, evidence, and approved decision |
 
 ## 2. Directory map
 
@@ -82,7 +83,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P03 are COMPLETED with approved evidence. P04 is IN PROGRESS: P04-001–P04-005 are IN REVIEW and P05–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P04 are COMPLETED with approved evidence. P05 is IN PROGRESS and P06–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -97,15 +98,17 @@ P00–P03 are COMPLETED with approved evidence. P04 is IN PROGRESS: P04-001–P0
 | Item | State |
 | --- | --- |
 | Repository | Documentation, architecture planning, and the P03 workspace skeleton |
-| Application implementation | Core domain logic implemented (errors, addresses, message model, MIME composition); SMTP transport, binding, and public API pending |
+| Application implementation | Core complete (errors, addresses, message model, MIME, SMTP orchestration, fault matrix); binding in progress; public API pending |
 | Toolchain validation | Rust 1.100.0 and the Node.js 22.23.5/24.22.3/26.13.1 jobs pass in Sendust CI on branch `feat/p03-repository-skeleton` |
 | QG-00 Discovery | APPROVED |
 | QG-01 Research | APPROVED with implementation validation gates |
 | QG-02 Architecture | APPROVED at design level |
 | P03-001–P03-005 | COMPLETED |
-| P04-001–P04-005 | IN REVIEW |
-| P05–P18 | NOT STARTED |
-| Next task | PHASE-04 gate review (P04-005) — adapter and fault matrix pass locally; CI evidence pending |
+| P04-001–P04-005 | COMPLETED |
+| P05-001–P05-004 | IN REVIEW |
+| P05-005 | IN PROGRESS |
+| P06–P18 | NOT STARTED |
+| Next task | P05-005 — binding gate and runtime matrix |
 
 ## 5. Conventions
 

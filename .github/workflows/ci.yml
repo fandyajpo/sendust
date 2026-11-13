@@ -111,6 +111,34 @@ jobs:
       - name: TypeScript unit and contract tests
         run: npm --workspace ./ts run test
 
+  binding:
+    name: Native binding (Node.js 22)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify pinned Rust toolchain
+        run: rustup show
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.23.5"
+
+      - name: Pin npm
+        run: |
+          npm install --global npm@12.2.2
+          npm --version
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build and stage the addon
+        run: npm run build:native
+
+      - name: Binding tests
+        run: npm --workspace ./ts run test
+
   bun:
     name: Bun runtime-neutral smoke
     runs-on: ubuntu-latest

@@ -210,7 +210,11 @@ impl SmtpTransport {
         &self.config
     }
 
-    async fn send(&mut self, request: DeliveryRequest) -> Result<SendOutcome, Error> {
+    /// Runs exactly one delivery over this transport.
+    ///
+    /// The caller keeps ownership, which is what the FFI layer needs to reuse a
+    /// single transport across `send()` calls.
+    pub async fn run(&mut self, request: DeliveryRequest) -> Result<SendOutcome, Error> {
         let config = &self.config;
         let deadlines = SendDeadlines::start(config.timeouts, Instant::now());
         let envelope = Envelope::of(&request.message)?;
@@ -470,7 +474,25 @@ impl SmtpTransport {
 
 impl DeliveryPort for SmtpTransport {
     fn deliver<'a>(&'a mut self, request: DeliveryRequest) -> DeliveryFuture<'a> {
-        Box::pin(self.send(request))
+        Box::pin(self.run(request))
+    }
+}
+
+/// Borrowed handle that submits one message without giving up the transport.
+pub struct SmtpSession<'a> {
+    transport: &'a mut SmtpTransport,
+}
+
+impl DeliveryPort for SmtpSession<'_> {
+    fn deliver<'a>(&'a mut self, request: DeliveryRequest) -> DeliveryFuture<'a> {
+        Box::pin(self.transport.run(request))
+    }
+}
+
+impl SmtpTransport {
+    /// Borrows this transport for one delivery.
+    pub fn session(&mut self) -> SmtpSession<'_> {
+        SmtpSession { transport: self }
     }
 }
 

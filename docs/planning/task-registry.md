@@ -5,11 +5,11 @@
 - Total phases: 19
 - Phase tasks: 95
 - Architecture amendment tasks: 7 (A01-001–A01-004, A02-001–A02-003)
-- Completed tasks: 20 (P00–P03)
-- In-review tasks: 5 (P04-001–P04-005)
-- In-progress tasks: 0
-- Not-started tasks: 70 (P05–P18)
-- P00–P02 tasks are `COMPLETED` with approved gate evidence. P03-001–P03-005 are `COMPLETED` with CI evidence and an approved QG-03 record; P04-001 to P04-005 are `IN REVIEW`; P05–P18 are `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
+- Completed tasks: 25 (P00–P04)
+- In-review tasks: 4 (P05-001–P05-004)
+- In-progress tasks: 1 (P05-005)
+- Not-started tasks: 65 (P06–P18)
+- P00–P02 tasks are `COMPLETED` with approved gate evidence. P03-001–P03-005 are `COMPLETED` with CI evidence and an approved QG-03 record; P04-001 to P04-005 are `COMPLETED` with an approved PHASE-04 record; P05 is `IN PROGRESS`; P06–P18 are `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
 - Effort is relative: S, M, L, XL. No delivery dates.
 - Gate tasks are the final task in each phase and must not be marked complete before their phase evidence exists.
 
@@ -54,16 +54,16 @@
 | [P03](../phases/phase-03.md) | Repository | [P03-003](../phases/phase-03.md) | Establish formatting, linting, type-check, and unit-test commands | M | P03-001 | COMPLETED |
 | [P03](../phases/phase-03.md) | Repository | [P03-004](../phases/phase-03.md) | Scaffold deterministic fake SMTP and TLS test harness seams | L | P03-001 | COMPLETED |
 | [P03](../phases/phase-03.md) | Repository | [P03-005](../phases/phase-03.md) | Repository gate and baseline verification | S | P03-001, P03-002, P03-003, P03-004 | COMPLETED |
-| [P04](../phases/phase-04.md) | Rust core | [P04-001](../phases/phase-04.md) | Implement core error taxonomy and deterministic validation order | M | P03-005, P02-002 | IN REVIEW |
-| [P04](../phases/phase-04.md) | Rust core | [P04-002](../phases/phase-04.md) | Implement address, header, and Unicode/IDNA policy | L | P03-005, P02-004 | IN REVIEW |
-| [P04](../phases/phase-04.md) | Rust core | [P04-003](../phases/phase-04.md) | Implement the message model and hard size accounting | L | P03-005, P02-004 | IN REVIEW |
-| [P04](../phases/phase-04.md) | Rust core | [P04-004](../phases/phase-04.md) | Implement transport state machine, deadlines, and BUSY semantics | L | P03-005, P02-003 | IN REVIEW |
-| [P04](../phases/phase-04.md) | Rust core | [P04-005](../phases/phase-04.md) | Implement lettre-backed SMTP orchestration and core phase test gate | XL | P04-001, P04-002, P04-003, P04-004, P01-001, P01-003 | IN REVIEW |
-| [P05](../phases/phase-05.md) | Binding | [P05-001](../phases/phase-05.md) | Define Node-API 8 binding surface | M | P04-005 | NOT STARTED |
-| [P05](../phases/phase-05.md) | Binding | [P05-002](../phases/phase-05.md) | Implement owned Buffer and string conversion | M | P05-001 | NOT STARTED |
-| [P05](../phases/phase-05.md) | Binding | [P05-003](../phases/phase-05.md) | Implement async task and lifecycle adapter | L | P05-001, P04-004 | NOT STARTED |
-| [P05](../phases/phase-05.md) | Binding | [P05-004](../phases/phase-05.md) | Implement stable result/error conversion | M | P05-002, P05-003 | NOT STARTED |
-| [P05](../phases/phase-05.md) | Binding | [P05-005](../phases/phase-05.md) | Binding phase gate | S | P05-001, P05-002, P05-003, P05-004 | NOT STARTED |
+| [P04](../phases/phase-04.md) | Rust core | [P04-001](../phases/phase-04.md) | Implement core error taxonomy and deterministic validation order | M | P03-005, P02-002 | COMPLETED |
+| [P04](../phases/phase-04.md) | Rust core | [P04-002](../phases/phase-04.md) | Implement address, header, and Unicode/IDNA policy | L | P03-005, P02-004 | COMPLETED |
+| [P04](../phases/phase-04.md) | Rust core | [P04-003](../phases/phase-04.md) | Implement the message model and hard size accounting | L | P03-005, P02-004 | COMPLETED |
+| [P04](../phases/phase-04.md) | Rust core | [P04-004](../phases/phase-04.md) | Implement transport state machine, deadlines, and BUSY semantics | L | P03-005, P02-003 | COMPLETED |
+| [P04](../phases/phase-04.md) | Rust core | [P04-005](../phases/phase-04.md) | Implement lettre-backed SMTP orchestration and core phase test gate | XL | P04-001, P04-002, P04-003, P04-004, P01-001, P01-003 | COMPLETED |
+| [P05](../phases/phase-05.md) | Binding | [P05-001](../phases/phase-05.md) | Define Node-API 8 binding surface | M | P04-005 | IN REVIEW |
+| [P05](../phases/phase-05.md) | Binding | [P05-002](../phases/phase-05.md) | Implement owned Buffer and string conversion | M | P05-001 | IN REVIEW |
+| [P05](../phases/phase-05.md) | Binding | [P05-003](../phases/phase-05.md) | Implement async task and lifecycle adapter | L | P05-001, P04-004 | IN REVIEW |
+| [P05](../phases/phase-05.md) | Binding | [P05-004](../phases/phase-05.md) | Implement stable result/error conversion | M | P05-002, P05-003 | IN REVIEW |
+| [P05](../phases/phase-05.md) | Binding | [P05-005](../phases/phase-05.md) | Binding phase gate | S | P05-001, P05-002, P05-003, P05-004 | IN PROGRESS |
 | [P06](../phases/phase-06.md) | SMTP | [P06-001](../phases/phase-06.md) | Configure lettre 0.11.23 relay session and envelope submission | L | P04-005, P01-001 | NOT STARTED |
 | [P06](../phases/phase-06.md) | SMTP | [P06-002](../phases/phase-06.md) | Enforce TLS verification and authentication failure semantics | M | P06-001, P01-002 | NOT STARTED |
 | [P06](../phases/phase-06.md) | SMTP | [P06-003](../phases/phase-06.md) | Validate and implement recipient partial-failure policy | XL | P01-003, P06-001 | NOT STARTED |
