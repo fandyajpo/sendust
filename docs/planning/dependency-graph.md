@@ -145,3 +145,8 @@ When a task dependency changes:
 3. Update this graph if a phase edge changed.
 4. Re-run the cycle audit.
 5. Record the change in the phase gate record.
+
+
+## Architecture Amendment A01 dependency
+
+A01-001–A01-004 are a documentation/research amendment chain completed before P03. P03-001 now depends on both P02-005 and A01-004. P05 and P14 retain their phase positions but their acceptance criteria now include blocking Node.js, Bun, and Deno tests and runtime × platform evidence. A01 does not add a new implementation phase or change the P00–P18 phase numbering.
