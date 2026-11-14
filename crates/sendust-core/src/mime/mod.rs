@@ -574,6 +574,9 @@ mod body_tests {
     #[test]
     fn normalization_is_idempotent() {
         let once = normalize_body("a\nb\rc\r\nd");
-        assert_eq!(normalize_body(&String::from_utf8(once.clone()).expect("utf8")), once);
+        assert_eq!(
+            normalize_body(&String::from_utf8(once.clone()).expect("utf8")),
+            once
+        );
     }
 }

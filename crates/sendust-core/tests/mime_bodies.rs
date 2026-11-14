@@ -25,7 +25,7 @@ fn message(text: Option<&str>, html: Option<&str>) -> OutgoingMessage {
     }
 }
 
-fn wire(text: Option<&str>, html: Option<&str>) -> Vec<u8> {
+fn serialize_body(text: Option<&str>, html: Option<&str>) -> Vec<u8> {
     serialize(&message(text, html), Limits::default(), false).expect("serialized")
 }
 
@@ -66,47 +66,46 @@ const GOLDEN_ALTERNATIVE: &str = concat!(
 
 #[test]
 fn text_only_body_matches_the_golden_fixture() {
-    let bytes = wire(Some("hello world"), None);
+    let bytes = serialize_body(Some("hello world"), None);
     assert_eq!(String::from_utf8(bytes).expect("utf8"), GOLDEN_TEXT_ONLY);
 }
 
 #[test]
 fn alternative_body_matches_the_golden_fixture() {
-    let bytes = wire(Some("hello world"), Some("<p>hi</p>"));
+    let bytes = serialize_body(Some("hello world"), Some("<p>hi</p>"));
     assert_eq!(String::from_utf8(bytes).expect("utf8"), GOLDEN_ALTERNATIVE);
 }
 
 #[test]
 fn html_only_body_is_text_html() {
-    let wire = String::from_utf8(wire(None, Some("<p>hi</p>"))).expect("utf8");
-    assert!(wire.contains("Content-Type: text/html; charset=utf-8\r\n"));
-    assert!(wire.contains("PHA+aGk8L3A+\r\n"));
-    assert!(!wire.contains("multipart/alternative"));
+    let bytes = String::from_utf8(serialize_body(None, Some("<p>hi</p>"))).expect("utf8");
+    assert!(bytes.contains("Content-Type: text/html; charset=utf-8\r\n"));
+    assert!(bytes.contains("PHA+aGk8L3A+\r\n"));
+    assert!(!bytes.contains("multipart/alternative"));
 }
 
 #[test]
 fn empty_string_bodies_produce_an_empty_part() {
-    let wire = String::from_utf8(wire(Some(""), None)).expect("utf8");
-    assert!(wire.ends_with("Content-Transfer-Encoding: base64\r\n\r\n"));
+    let text_only = String::from_utf8(serialize_body(Some(""), None)).expect("utf8");
+    assert!(text_only.ends_with("Content-Transfer-Encoding: base64\r\n\r\n"));
 
-    let wire = String::from_utf8(wire(Some(""), Some(""))).expect("utf8");
-    assert!(wire.contains("multipart/alternative"));
-    assert!(wire.contains("text/plain"));
-    assert!(wire.contains("text/html"));
+    let alternative = String::from_utf8(serialize_body(Some(""), Some(""))).expect("utf8");
+    assert!(alternative.contains("multipart/alternative"));
+    assert!(alternative.contains("text/plain"));
+    assert!(alternative.contains("text/html"));
 }
 
 #[test]
 fn line_endings_normalize_to_crlf_before_encoding() {
-    let lf = wire(Some("line one\nline two"), None);
-    let crlf = wire(Some("line one\r\nline two"), None);
-    let cr = wire(Some("line one\rline two"), None);
+    let lf = serialize_body(Some("line one\nline two"), None);
+    let crlf = serialize_body(Some("line one\r\nline two"), None);
+    let cr = serialize_body(Some("line one\rline two"), None);
     assert_eq!(lf, crlf);
     assert_eq!(lf, cr);
 }
 
 #[test]
 fn a_message_without_a_body_is_rejected() {
-    let error = serialize(&message(None, None), Limits::default(), false)
-        .expect_err("no body");
+    let error = serialize(&message(None, None), Limits::default(), false).expect_err("no body");
     assert_eq!(error.code(), ErrorCode::ValidationInvalidOption);
 }
