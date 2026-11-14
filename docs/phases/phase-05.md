@@ -91,7 +91,7 @@ P05 is not complete when only Node.js passes. The full binding contract must pas
 
 ## Status
 
-IN PROGRESS. P05-001 to P05-004 are IN REVIEW; the binding, the owned-input copy, the asynchronous lifecycle, and the error/result mapping are implemented, exercised locally, and proven by a real Gmail send through the Node binding. P05-005 (the phase gate) is IN PROGRESS, needs the Bun/Deno addon matrix, and is not self-approved.
+IN PROGRESS. P05-001 to P05-004 are IN REVIEW; the binding, the owned-input copy, the asynchronous lifecycle, and the error/result mapping are implemented, exercised locally, and proven by a real Gmail send through the Node binding. P05-005 (the phase gate) is in progress: the Node.js/Bun/Deno addon matrix is done and the gate waits only on owner review — it is not self-approved.
 
 ## Evidence log
 
