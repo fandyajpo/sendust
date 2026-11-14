@@ -223,17 +223,16 @@ impl SmtpTransport {
         match session.mail_from(&envelope.from).await {
             Ok(reply) if reply.is_positive() => {}
             Ok(reply) => {
+                quiet_quit(&mut session, config).await;
                 return match verdict(&reply) {
                     Verdict::Refused => Ok(rejected_outcome(
                         &envelope,
                         &vec![RecipientStatus::Rejected; envelope.recipients.len()],
                         Some(smtp_response(&reply)),
                     )),
-                    Verdict::Complete | Verdict::Invalid => Err(unexpected_response(
-                        config,
-                        Stage::Mail,
-                        reply.value(),
-                    )),
+                    Verdict::Complete | Verdict::Invalid => {
+                        Err(unexpected_response(config, Stage::Mail, reply.value()))
+                    }
                 };
             }
             Err(error) => return Err(annotate(error, config, deadlines, Stage::Mail)),
@@ -266,6 +265,7 @@ impl SmtpTransport {
         }
 
         if closing || accepted.is_empty() {
+            quiet_quit(&mut session, config).await;
             return Ok(rejected_outcome(&envelope, &statuses, None));
         }
 
