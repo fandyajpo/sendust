@@ -4,6 +4,7 @@
 //! network code, no retry, and no queue: a failed or ambiguous send is returned
 //! to the caller as an outcome or an error.
 
+use crate::attachments::AttachmentPolicy;
 use crate::config::Limits;
 use crate::errors::Error;
 use crate::message::OutgoingMessage;
@@ -15,15 +16,15 @@ use crate::results::SendOutcome;
 pub struct Delivery<P> {
     port: P,
     limits: Limits,
-    filesystem_enabled: bool,
+    attachment_policy: AttachmentPolicy,
 }
 
 impl<P: DeliveryPort> Delivery<P> {
-    pub fn new(port: P, limits: Limits, filesystem_enabled: bool) -> Self {
+    pub fn new(port: P, limits: Limits, attachment_policy: AttachmentPolicy) -> Self {
         Self {
             port,
             limits,
-            filesystem_enabled,
+            attachment_policy,
         }
     }
 
@@ -39,7 +40,7 @@ impl<P: DeliveryPort> Delivery<P> {
         let wire = mime::serialize_at(
             &message,
             self.limits,
-            self.filesystem_enabled,
+            self.attachment_policy,
             std::time::SystemTime::now(),
         )?;
         let request = DeliveryRequest { message, wire };
@@ -123,7 +124,7 @@ mod tests {
     #[tokio::test]
     async fn submits_once_with_serialized_wire_bytes() {
         let (port, calls, wire) = fake(None);
-        let mut delivery = Delivery::new(port, Limits::default(), false);
+        let mut delivery = Delivery::new(port, Limits::default(), AttachmentPolicy::disabled);
 
         let outcome = delivery.send(message()).await.expect("sent");
 
@@ -136,7 +137,7 @@ mod tests {
     #[tokio::test]
     async fn returns_a_rejected_outcome_unchanged() {
         let (port, calls, _) = fake(Some((451, "4.3.0 Try later")));
-        let mut delivery = Delivery::new(port, Limits::default(), false);
+        let mut delivery = Delivery::new(port, Limits::default(), AttachmentPolicy::disabled);
 
         let outcome = delivery.send(message()).await.expect("sent");
 
@@ -147,7 +148,7 @@ mod tests {
     #[tokio::test]
     async fn a_validation_failure_never_reaches_the_port() {
         let (port, calls, _) = fake(None);
-        let mut delivery = Delivery::new(port, Limits::default(), false);
+        let mut delivery = Delivery::new(port, Limits::default(), AttachmentPolicy::disabled);
         let mut invalid = message();
         invalid.to.clear();
 
@@ -167,7 +168,7 @@ mod tests {
         let limits = Limits::default()
             .with_max_wire_bytes(10)
             .expect("lowered limit");
-        let mut delivery = Delivery::new(port, limits, false);
+        let mut delivery = Delivery::new(port, limits, AttachmentPolicy::disabled);
 
         let error = delivery.send(message()).await.expect_err("limit");
 

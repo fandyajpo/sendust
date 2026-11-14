@@ -4,11 +4,38 @@
 //! Reading file attachments safely, and enforcing their byte caps at read time,
 //! belongs to P08; until then a file descriptor is policy-checked but not opened.
 
+use std::path::Path;
+
 use crate::config::Limits;
 use crate::errors::{Error, ErrorCode};
 
 /// Maximum filename length accepted by the model.
 const MAX_FILENAME: usize = 255;
+/// Maximum path length accepted for a file attachment.
+const MAX_PATH: usize = 1_024;
+
+/// Filesystem attachment policy.
+///
+/// Disabled unless the caller opts in explicitly. There is no global or
+/// ambient switch: the policy is transport-scoped and passed to every send.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum AttachmentPolicy {
+    /// File attachments are refused before any filesystem operation.
+    #[default]
+    Disabled,
+    /// File attachments may be read, subject to the caps and file-type rules.
+    Enabled,
+}
+
+impl AttachmentPolicy {
+    pub const fn filesystem_enabled(self) -> bool {
+        matches!(self, Self::Enabled)
+    }
+
+    pub const fn from_flag(enabled: bool) -> Self {
+        if enabled { Self::Enabled } else { Self::Disabled }
+    }
+}
 
 /// An attachment supplied by the caller.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -64,13 +91,13 @@ impl Attachment {
 pub fn validate(
     attachments: &[Attachment],
     limits: Limits,
-    filesystem_enabled: bool,
+    policy: AttachmentPolicy,
 ) -> Result<u64, Error> {
     let mut total: u64 = 0;
     let mut names: Vec<String> = Vec::with_capacity(attachments.len());
 
     for attachment in attachments {
-        validate_descriptor(attachment, filesystem_enabled)?;
+        validate_descriptor(attachment, policy)?;
 
         // Two attachments with the same display name would collide in most
         // clients, so the ambiguity is rejected instead of guessed at. The
@@ -139,7 +166,7 @@ fn is_token_character(character: char) -> bool {
     is_field_name_character(character)
 }
 
-fn validate_descriptor(attachment: &Attachment, filesystem_enabled: bool) -> Result<(), Error> {
+fn validate_descriptor(attachment: &Attachment, policy: AttachmentPolicy) -> Result<(), Error> {
     match attachment {
         Attachment::Bytes {
             filename,
@@ -153,7 +180,7 @@ fn validate_descriptor(attachment: &Attachment, filesystem_enabled: bool) -> Res
             Ok(())
         }
         Attachment::File(file) => {
-            if !filesystem_enabled {
+            if !policy.filesystem_enabled() {
                 return Err(Error::new(ErrorCode::ConfigFileAccessDisabled));
             }
             if let Some(name) = &file.display_name {
@@ -162,12 +189,27 @@ fn validate_descriptor(attachment: &Attachment, filesystem_enabled: bool) -> Res
             if let Some(value) = &file.content_type {
                 normalize_content_type(value)?;
             }
-            if file.path.trim().is_empty() {
-                return Err(invalid_attachment());
-            }
+            validate_path(&file.path)?;
             Ok(())
         }
     }
+}
+
+/// A file attachment path must be absolute and free of control characters, so a
+/// relative path cannot resolve against an unexpected working directory and an
+/// error can never echo an injection attempt.
+fn validate_path(path: &str) -> Result<(), Error> {
+    let value = path.trim();
+    if value.is_empty() || value.len() > MAX_PATH {
+        return Err(invalid_attachment());
+    }
+    if value.chars().any(char::is_control) {
+        return Err(Error::new(ErrorCode::ValidationHeaderInjection));
+    }
+    if !Path::new(value).is_absolute() {
+        return Err(invalid_attachment());
+    }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -193,7 +235,12 @@ mod tests {
 
     #[test]
     fn accepts_a_buffer_attachment() {
-        let total = validate(&[bytes("report.pdf", 3)], Limits::default(), false).expect("valid");
+        let total = validate(
+            &[bytes("report.pdf", 3)],
+            Limits::default(),
+            AttachmentPolicy::disabled,
+        )
+        .expect("valid");
         assert_eq!(total, 3);
     }
 
@@ -220,7 +267,7 @@ mod tests {
 
         let at_cap = vec![bytes("a.bin", 10 * MIB), bytes("b.bin", 10 * MIB)];
         assert_eq!(
-            validate(&at_cap, Limits::default(), false).expect("at cap"),
+            validate(&at_cap, Limits::default(), AttachmentPolicy::disabled).expect("at cap"),
             20 * MIB
         );
 
@@ -231,7 +278,7 @@ mod tests {
             bytes("c.bin", 1),
         ];
         assert_eq!(
-            validate(&over, Limits::default(), false)
+            validate(&over, Limits::default(), AttachmentPolicy::disabled)
                 .expect_err("over total")
                 .code(),
             ErrorCode::LimitAttachmentTotal
@@ -289,7 +336,12 @@ mod tests {
             "Grüße.pdf"
         );
         assert_eq!(
-            validate(&[bytes("Grüße.pdf", 1)], Limits::default(), false).expect("valid"),
+            validate(
+                &[bytes("Grüße.pdf", 1)],
+                Limits::default(),
+                AttachmentPolicy::disabled
+            )
+            .expect("valid"),
             1
         );
     }
@@ -315,7 +367,7 @@ mod tests {
             validate(
                 &[bytes("a.txt", 1), bytes("b.txt", 1)],
                 Limits::default(),
-                false
+                AttachmentPolicy::disabled
             )
             .expect("distinct names"),
             2
@@ -338,8 +390,59 @@ mod tests {
         );
     }
 
+    #[test]
+    fn filesystem_access_is_disabled_by_default() {
+        assert_eq!(AttachmentPolicy::default(), AttachmentPolicy::Disabled);
+        assert!(!AttachmentPolicy::default().filesystem_enabled());
+        assert!(AttachmentPolicy::Enabled.filesystem_enabled());
+        assert_eq!(AttachmentPolicy::from_flag(true), AttachmentPolicy::Enabled);
+        assert_eq!(
+            AttachmentPolicy::from_flag(false),
+            AttachmentPolicy::Disabled
+        );
+    }
+
+    #[test]
+    fn rejects_relative_or_malformed_paths() {
+        let mut descriptor = FileDescriptor {
+            display_name: Some("notes.txt".to_string()),
+            content_type: None,
+            path: "relative/notes.txt".to_string(),
+        };
+        assert_eq!(code_file(&descriptor), ErrorCode::ValidationInvalidAttachment);
+
+        descriptor.path = "  ".to_string();
+        assert_eq!(code_file(&descriptor), ErrorCode::ValidationInvalidAttachment);
+
+        descriptor.path = "/tmp/notes\r\n.txt".to_string();
+        assert_eq!(code_file(&descriptor), ErrorCode::ValidationHeaderInjection);
+
+        descriptor.path = format!("/tmp/{}", "a".repeat(MAX_PATH));
+        assert_eq!(code_file(&descriptor), ErrorCode::ValidationInvalidAttachment);
+
+        descriptor.path = "/tmp/notes.txt".to_string();
+        assert!(
+            validate(
+                &[Attachment::File(descriptor)],
+                Limits::default(),
+                AttachmentPolicy::Enabled
+            )
+            .is_ok()
+        );
+    }
+
+    fn code_file(descriptor: &FileDescriptor) -> ErrorCode {
+        validate(
+            &[Attachment::File(descriptor.clone())],
+            Limits::default(),
+            AttachmentPolicy::Enabled,
+        )
+        .expect_err("must fail")
+        .code()
+    }
+
     fn code(attachments: &[Attachment]) -> ErrorCode {
-        validate(attachments, Limits::default(), false)
+        validate(attachments, Limits::default(), AttachmentPolicy::disabled)
             .expect_err("must be rejected")
             .code()
     }

@@ -4,7 +4,7 @@
 //! deterministic boundary, the charset declaration, and base64 transfer
 //! encoding. The serializer must reproduce it byte for byte.
 
-use sendust_core::{ErrorCode, Limits, Mailbox, OutgoingMessage, serialize};
+use sendust_core::{AttachmentPolicy, ErrorCode, Limits, Mailbox, OutgoingMessage, serialize};
 
 fn mailbox(value: &str) -> Mailbox {
     value.parse().expect("valid mailbox")
@@ -26,7 +26,12 @@ fn message(text: Option<&str>, html: Option<&str>) -> OutgoingMessage {
 }
 
 fn serialize_body(text: Option<&str>, html: Option<&str>) -> Vec<u8> {
-    serialize(&message(text, html), Limits::default(), false).expect("serialized")
+    serialize(
+        &message(text, html),
+        Limits::default(),
+        AttachmentPolicy::disabled,
+    )
+    .expect("serialized")
 }
 
 /// Text-only message: `text/plain`, UTF-8, base64 ("hello world").
@@ -106,6 +111,11 @@ fn line_endings_normalize_to_crlf_before_encoding() {
 
 #[test]
 fn a_message_without_a_body_is_rejected() {
-    let error = serialize(&message(None, None), Limits::default(), false).expect_err("no body");
+    let error = serialize(
+        &message(None, None),
+        Limits::default(),
+        AttachmentPolicy::disabled,
+    )
+    .expect_err("no body");
     assert_eq!(error.code(), ErrorCode::ValidationInvalidOption);
 }

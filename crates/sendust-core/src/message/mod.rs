@@ -122,7 +122,7 @@ fn is_field_name_character(character: char) -> bool {
         )
 }
 
-use crate::attachments::{self, Attachment};
+use crate::attachments::{self, Attachment, AttachmentPolicy};
 use crate::config::Limits;
 
 /// Header names the model owns. A custom header may not override them, or it
@@ -171,7 +171,7 @@ impl OutgoingMessage {
     /// the transport validates its options, and wire size needs the serialized
     /// bytes produced by `mime`. Callers run all stages through
     /// `validation::validate_in_order`, so precedence stays stable.
-    pub fn validate(&self, limits: Limits, filesystem_enabled: bool) -> Result<(), Error> {
+    pub fn validate(&self, limits: Limits, policy: AttachmentPolicy) -> Result<(), Error> {
         // Stage 2: message identity. `from` is a typed mailbox, so a missing
         // From address is rejected where absence is representable (the binding),
         // not here; an empty Subject is legal per RFC 5322.
@@ -206,7 +206,7 @@ impl OutgoingMessage {
             return Err(Error::new(ErrorCode::ValidationInvalidOption));
         }
         // Stages 6 and 7: attachment metadata and known byte caps.
-        attachments::validate(&self.attachments, limits, filesystem_enabled)?;
+        attachments::validate(&self.attachments, limits, policy)?;
         Ok(())
     }
 }
@@ -293,7 +293,7 @@ mod tests {
     #[test]
     fn accepts_a_complete_message() {
         let message = message_with(1);
-        assert!(message.validate(Limits::default(), false).is_ok());
+        assert!(message.validate(Limits::default(), AttachmentPolicy::disabled).is_ok());
     }
 
     #[test]
@@ -306,10 +306,10 @@ mod tests {
 
     #[test]
     fn recipient_cap_is_inclusive() {
-        assert!(message_with(100).validate(Limits::default(), false).is_ok());
+        assert!(message_with(100).validate(Limits::default(), AttachmentPolicy::disabled).is_ok());
         assert_eq!(
             message_with(101)
-                .validate(Limits::default(), false)
+                .validate(Limits::default(), AttachmentPolicy::disabled)
                 .expect_err("over cap")
                 .code(),
             ErrorCode::LimitRecipients
@@ -320,7 +320,7 @@ mod tests {
     fn requires_at_least_one_recipient() {
         assert_eq!(
             message_with(0)
-                .validate(Limits::default(), false)
+                .validate(Limits::default(), AttachmentPolicy::disabled)
                 .expect_err("no recipients")
                 .code(),
             ErrorCode::ValidationMissingRecipient
@@ -334,7 +334,7 @@ mod tests {
         message.html = None;
         assert_eq!(
             message
-                .validate(Limits::default(), false)
+                .validate(Limits::default(), AttachmentPolicy::disabled)
                 .expect_err("no body")
                 .code(),
             ErrorCode::ValidationInvalidOption
@@ -345,7 +345,7 @@ mod tests {
     fn allows_empty_string_bodies() {
         let mut message = message_with(1);
         message.text = Some(String::new());
-        assert!(message.validate(Limits::default(), false).is_ok());
+        assert!(message.validate(Limits::default(), AttachmentPolicy::disabled).is_ok());
     }
 
     #[test]
@@ -354,7 +354,7 @@ mod tests {
         message.subject = "Hello\r\nBcc: evil@example.test".to_string();
         assert_eq!(
             message
-                .validate(Limits::default(), false)
+                .validate(Limits::default(), AttachmentPolicy::disabled)
                 .expect_err("injection")
                 .code(),
             ErrorCode::ValidationHeaderInjection
@@ -365,7 +365,7 @@ mod tests {
     fn empty_subject_is_allowed() {
         let mut message = message_with(1);
         message.subject.clear();
-        assert!(message.validate(Limits::default(), false).is_ok());
+        assert!(message.validate(Limits::default(), AttachmentPolicy::disabled).is_ok());
     }
 
     #[test]
@@ -377,7 +377,7 @@ mod tests {
                 .push(Header::new(name, "value").expect("valid header"));
             assert_eq!(
                 message
-                    .validate(Limits::default(), false)
+                    .validate(Limits::default(), AttachmentPolicy::disabled)
                     .expect_err("reserved")
                     .code(),
                 ErrorCode::ValidationInvalidHeader,
@@ -392,7 +392,7 @@ mod tests {
         message
             .headers
             .push(Header::new("X-Trace-Id", "abc").expect("valid header"));
-        assert!(message.validate(Limits::default(), false).is_ok());
+        assert!(message.validate(Limits::default(), AttachmentPolicy::disabled).is_ok());
     }
 
     #[test]
@@ -405,7 +405,7 @@ mod tests {
         });
         assert_eq!(
             message
-                .validate(Limits::default(), false)
+                .validate(Limits::default(), AttachmentPolicy::disabled)
                 .expect_err("over cap")
                 .code(),
             ErrorCode::LimitAttachmentBytes
@@ -474,7 +474,7 @@ mod duplicate_policy_tests {
 
         assert_eq!(
             message
-                .validate(Limits::default(), false)
+                .validate(Limits::default(), AttachmentPolicy::disabled)
                 .expect_err("duplicate")
                 .code(),
             ErrorCode::ValidationInvalidHeader
@@ -490,7 +490,7 @@ mod duplicate_policy_tests {
                 .push(Header::new(name, "value").expect("valid"));
             assert_eq!(
                 message
-                    .validate(Limits::default(), false)
+                    .validate(Limits::default(), AttachmentPolicy::disabled)
                     .expect_err("reserved")
                     .code(),
                 ErrorCode::ValidationInvalidHeader,
@@ -508,6 +508,6 @@ mod duplicate_policy_tests {
         message
             .headers
             .push(Header::new("X-B", "2").expect("valid"));
-        assert!(message.validate(Limits::default(), false).is_ok());
+        assert!(message.validate(Limits::default(), AttachmentPolicy::disabled).is_ok());
     }
 }

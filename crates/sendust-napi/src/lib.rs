@@ -237,7 +237,7 @@ impl Transport {
             let mut delivery = Delivery::new(
                 transport.session(),
                 self.inner.limits,
-                self.inner.filesystem,
+                sendust_core::AttachmentPolicy::from_flag(self.inner.filesystem),
             );
             delivery.send(prepared).await
         };

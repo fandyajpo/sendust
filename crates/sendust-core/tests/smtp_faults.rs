@@ -11,8 +11,8 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use sendust_core::{
-    Delivery, DeliveryStatus, ErrorCode, Limits, Mailbox, OutgoingMessage, RecipientStatus,
-    SmtpConfig, SmtpCredentials, SmtpSecurity, SmtpTransport, Stage, Timeouts,
+    AttachmentPolicy, Delivery, DeliveryStatus, ErrorCode, Limits, Mailbox, OutgoingMessage,
+    RecipientStatus, SmtpConfig, SmtpCredentials, SmtpSecurity, SmtpTransport, Stage, Timeouts,
 };
 use support::tls;
 use support::{AfterBody, FakeSmtp, Reply, Script};
@@ -61,7 +61,7 @@ fn message(to: &[&str]) -> OutgoingMessage {
 }
 
 fn delivery(config: SmtpConfig) -> Delivery<SmtpTransport> {
-    Delivery::new(SmtpTransport::new(config), Limits::default(), false)
+    Delivery::new(SmtpTransport::new(config), Limits::default(), AttachmentPolicy::disabled)
 }
 
 #[tokio::test]

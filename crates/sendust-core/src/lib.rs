@@ -20,7 +20,7 @@ mod transports;
 mod validation;
 
 pub use crate::address::Mailbox;
-pub use crate::attachments::{Attachment, FileDescriptor};
+pub use crate::attachments::{Attachment, AttachmentPolicy, FileDescriptor};
 pub use crate::config::{Limits, MIB, Timeouts};
 pub use crate::delivery::Delivery;
 pub use crate::errors::{Error, ErrorCategory, ErrorCode, ErrorDetails, Stage};

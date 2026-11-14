@@ -13,8 +13,8 @@ use std::collections::HashMap;
 use std::env;
 
 use sendust_core::{
-    Delivery, Limits, Mailbox, OutgoingMessage, SmtpConfig, SmtpCredentials, SmtpSecurity,
-    SmtpTransport,
+    AttachmentPolicy, Delivery, Limits, Mailbox, OutgoingMessage, SmtpConfig, SmtpCredentials,
+    SmtpSecurity, SmtpTransport,
 };
 
 /// Environment plus an optional `.env` file, with real variables taking priority.
@@ -210,7 +210,11 @@ async fn run(settings: &Settings) -> Result<(), Box<dyn std::error::Error>> {
     );
 
     let mut transport = SmtpTransport::new(config);
-    let mut delivery = Delivery::new(transport.session(), Limits::default(), false);
+    let mut delivery = Delivery::new(
+        transport.session(),
+        Limits::default(),
+        AttachmentPolicy::disabled,
+    );
     let outcome = delivery.send(message).await?;
 
     println!("status: {}", outcome.status().as_str());
