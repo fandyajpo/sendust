@@ -6,9 +6,9 @@
 - Phase tasks: 95
 - Architecture amendment tasks: 7 (A01-001–A01-004, A02-001–A02-003)
 - Completed tasks: 30 (P00–P05)
-- In-review tasks: 0
+- In-review tasks: 1 (P06-001)
 - In-progress tasks: 0
-- Not-started tasks: 65 (P06–P18)
+- Not-started tasks: 64 (P06-002–P06-005, P07–P18)
 - P00–P02 tasks are `COMPLETED` with approved gate evidence. P03-001–P03-005 are `COMPLETED` with CI evidence and an approved QG-03 record; P04-001 to P04-005 are `COMPLETED` with an approved PHASE-04 record; P05-001 to P05-005 are `COMPLETED` with an approved PHASE-05 record; P06–P18 are `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
 - Effort is relative: S, M, L, XL. No delivery dates.
 - Gate tasks are the final task in each phase and must not be marked complete before their phase evidence exists.
@@ -64,7 +64,7 @@
 | [P05](../phases/phase-05.md) | Binding | [P05-003](../phases/phase-05.md) | Implement async task and lifecycle adapter | L | P05-001, P04-004 | COMPLETED |
 | [P05](../phases/phase-05.md) | Binding | [P05-004](../phases/phase-05.md) | Implement stable result/error conversion | M | P05-002, P05-003 | COMPLETED |
 | [P05](../phases/phase-05.md) | Binding | [P05-005](../phases/phase-05.md) | Binding phase gate | S | P05-001, P05-002, P05-003, P05-004 | COMPLETED |
-| [P06](../phases/phase-06.md) | SMTP | [P06-001](../phases/phase-06.md) | Implement the SMTP command codec and response parser | L | P04-005 | NOT STARTED |
+| [P06](../phases/phase-06.md) | SMTP | [P06-001](../phases/phase-06.md) | Implement the SMTP command codec and response parser | L | P04-005 | IN REVIEW |
 | [P06](../phases/phase-06.md) | SMTP | [P06-002](../phases/phase-06.md) | Implement the native connection, implicit TLS, and STARTTLS client | L | P06-001 | NOT STARTED |
 | [P06](../phases/phase-06.md) | SMTP | [P06-003](../phases/phase-06.md) | Implement SMTP AUTH and the session state machine | L | P06-001, P06-002 | NOT STARTED |
 | [P06](../phases/phase-06.md) | SMTP | [P06-004](../phases/phase-06.md) | Swap the delivery adapter and prove the differential fault matrix | XL | P06-003, P04-005 | NOT STARTED |
