@@ -76,6 +76,8 @@ pub struct Script {
     pub ehlo: Reply,
     pub start_tls: Reply,
     pub auth: Reply,
+    /// Replies for a multi-step AUTH exchange (334 challenges, final 235/5xx).
+    pub auth_flow: Vec<Reply>,
     pub mail: Reply,
     /// Reply per `RCPT TO` index; the last entry repeats.
     pub rcpt: Vec<Reply>,
@@ -98,6 +100,7 @@ impl Default for Script {
             ehlo: Reply::lines(&["250-sendust.test", "250-PIPELINING", "250 8BITMIME"]),
             start_tls: Reply::line("220 2.0.0 Ready to start TLS"),
             auth: Reply::line("235 2.7.0 Authentication successful"),
+            auth_flow: Vec::new(),
             mail: Reply::line("250 2.1.0 Sender ok"),
             rcpt: vec![Reply::line("250 2.1.5 Recipient ok")],
             data: Reply::line("354 End data with <CR><LF>.<CR><LF>"),
@@ -326,6 +329,8 @@ fn serve(stream: TcpStream, script: &Script, trace: &Trace) {
     }
 
     let mut in_data = false;
+    let mut in_auth = false;
+    let mut auth_index = 0usize;
     let mut rcpt_index = 0usize;
 
     loop {
@@ -361,6 +366,36 @@ fn serve(stream: TcpStream, script: &Script, trace: &Trace) {
 
         trace.push_line(&trimmed);
         let (verb, rest) = split_command(&trimmed);
+
+        if in_auth {
+            let reply = script
+                .auth_flow
+                .get(auth_index)
+                .cloned()
+                .unwrap_or_else(|| Reply::line("535 5.7.8 Authentication failed"));
+            auth_index += 1;
+            in_auth = reply.is_final("334");
+            if write_reply(&mut conn, &reply).is_err() {
+                conn.shutdown();
+                return;
+            }
+            continue;
+        }
+
+        if verb == "AUTH" && !script.auth_flow.is_empty() {
+            let reply = script
+                .auth_flow
+                .first()
+                .cloned()
+                .unwrap_or_else(|| Reply::line("535 5.7.8 Authentication failed"));
+            auth_index = 1;
+            in_auth = reply.is_final("334");
+            if write_reply(&mut conn, &reply).is_err() {
+                conn.shutdown();
+                return;
+            }
+            continue;
+        }
 
         if verb == "NOOP" || verb == "RSET" {
             let _ = write_reply(&mut conn, &Reply::line("250 2.0.0 OK"));

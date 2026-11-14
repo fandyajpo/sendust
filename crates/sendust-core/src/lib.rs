@@ -44,6 +44,7 @@ pub mod __internal {
     pub use crate::transports::smtp::proto::capabilities::Capabilities;
     pub use crate::transports::smtp::proto::command::{AuthMechanism, Command};
     pub use crate::transports::smtp::proto::response::Reply;
+    pub use crate::transports::smtp::session::Session;
 }
 
 /// Crate version, surfaced to the binding for diagnostics.

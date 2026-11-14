@@ -11,3 +11,4 @@
 pub mod capabilities;
 pub mod command;
 pub mod response;
+pub mod transcript;
