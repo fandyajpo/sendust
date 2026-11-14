@@ -10,3 +10,6 @@
 # Staged native addon from `npm run build:native`
 ts/sendust.node
 node_modules/
+
+# macOS Finder metadata
+.DS_Store
