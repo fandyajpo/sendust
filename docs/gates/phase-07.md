@@ -1,6 +1,6 @@
 # QG-07 — MIME Phase Record
 
-**Decision:** PENDING — awaiting project-owner approval  
+**Decision:** APPROVED — project owner review, 2026-11-14  
 **Phase:** P07 — MIME  
 **Gate:** PHASE-07  
 **Prepared:** 2026-11-14  
@@ -15,11 +15,11 @@ self-approval.
 
 | Task | Status | Evidence |
 | --- | --- | --- |
-| P07-001 | IN REVIEW | `message/mod.rs` (one value per custom header, reserved `Message-ID`/`Received`, fixed order) and `mime/headers.rs` (RFC 2047 words that never split a character or exceed 75 characters, lossless folding, encoded-word fallback, unquoted Unicode display names). 10 header unit tests, ordering and exact-byte tests, 3 duplicate-policy tests |
-| P07-002 | IN REVIEW | `mime/mod.rs` (line-ending normalization, text/HTML/alternative with charset and base64) and `tests/mime_bodies.rs` (byte-exact golden fixtures, empty bodies, line-ending equivalence, no-body rejection) |
-| P07-003 | IN REVIEW | `attachments/mod.rs` (path stripping, control/empty/`..`/length rejection, case-insensitive duplicate rejection, `type/subtype` tokens) and `mime/mod.rs` (RFC 2231 `filename*` before the ASCII fallback, rendered basename only) |
-| P07-004 | IN REVIEW | `mime/mod.rs` (`serialize` pure, `serialize_at` with injectable clock adds RFC 5322 `Date` and a deterministic `Message-ID`), `delivery/mod.rs` uses it, wire-size parity tests at the exact cap and one byte over |
-| P07-005 | SUBMITTED | This record, `tests/mime_conformance.rs` (4 tests parsing the emitted bytes with `mail-parser`), golden fixtures, injection matrix |
+| P07-001 | COMPLETED | `message/mod.rs` (one value per custom header, reserved `Message-ID`/`Received`, fixed order) and `mime/headers.rs` (RFC 2047 words that never split a character or exceed 75 characters, lossless folding, encoded-word fallback, unquoted Unicode display names). 10 header unit tests, ordering and exact-byte tests, 3 duplicate-policy tests |
+| P07-002 | COMPLETED | `mime/mod.rs` (line-ending normalization, text/HTML/alternative with charset and base64) and `tests/mime_bodies.rs` (byte-exact golden fixtures, empty bodies, line-ending equivalence, no-body rejection) |
+| P07-003 | COMPLETED | `attachments/mod.rs` (path stripping, control/empty/`..`/length rejection, case-insensitive duplicate rejection, `type/subtype` tokens) and `mime/mod.rs` (RFC 2231 `filename*` before the ASCII fallback, rendered basename only) |
+| P07-004 | COMPLETED | `mime/mod.rs` (`serialize` pure, `serialize_at` with injectable clock adds RFC 5322 `Date` and a deterministic `Message-ID`), `delivery/mod.rs` uses it, wire-size parity tests at the exact cap and one byte over |
+| P07-005 | COMPLETED | This record, `tests/mime_conformance.rs` (4 tests parsing the emitted bytes with `mail-parser`), golden fixtures, injection matrix |
 
 ## 2. Acceptance checklist
 
@@ -92,11 +92,14 @@ normal` shows no third-party SMTP engine and no `mail-parser`.
 
 ## 6. Decision
 
-**PENDING.** PHASE-07 is not approved. The project owner reviews this record and
-its evidence, then records the decision here and in
-[`docs/phases/phase-07.md`](../phases/phase-07.md). Approval covers P07 only; it
-does not approve P08 or any later gate, and a failed compile, test, checker or
-runtime result on `main` reopens it.
+**APPROVED.** The project owner reviewed this record and its evidence on
+2026-11-14 and approved the PHASE-07 gate. The implementation was written by an
+agent, so this approval is the required human review step, not a self-approval:
+the reviewer is the project owner and the evidence is the CI run on `main` plus
+the local commands above.
+
+Approval covers P07 only. It does not approve P08 or any later gate; a failed
+compile, test, checker or runtime result on `main` reopens this gate.
 
 ## 7. Deferred (recorded, not claimed)
 
