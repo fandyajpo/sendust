@@ -33,7 +33,21 @@ rustls = { version = "=0.23.46", default-features = false, features = ["std", "t
 # Deadline enforcement for the SMTP adapter, plus the async test runtime. lettre
 # already pulls this exact Tokio version; the direct pin only makes the features
 # explicit. Core never builds a runtime, it only uses the caller's timer.
-tokio = { version = "=1.54.1", default-features = false, features = ["time", "sync"] }
+tokio = { version = "=1.54.1", default-features = false, features = [
+  "time",
+  "sync",
+  "net",
+  "io-util",
+] }
+
+# Async TLS for the native SMTP client (ADR-0017); rustls stays the TLS engine.
+tokio-rustls = { version = "=0.26.6", default-features = false, features = ["tls12"] }
+
+# Bundled Mozilla roots for the native client's trust store (ADR-0003).
+webpki-roots = { version = "=1.0.12" }
+
+# rustls key/certificate types used by the native client (already transitive).
+rustls-pki-types = { version = "=1.16.0" }
 
 # Node-API 8 binding surface, used by sendust-napi only.
 napi = { version = "=3.16.2", features = ["napi8", "async"] }

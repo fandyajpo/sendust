@@ -36,6 +36,16 @@ pub use crate::transports::smtp::{
 };
 pub use crate::validation::{Failures as ValidationFailures, ValidationStage, validate_in_order};
 
+#[doc(hidden)]
+pub mod __internal {
+    //! Internal seams used by the integration tests. Not a supported API.
+
+    pub use crate::transports::smtp::client::connection::Connection;
+    pub use crate::transports::smtp::proto::capabilities::Capabilities;
+    pub use crate::transports::smtp::proto::command::{AuthMechanism, Command};
+    pub use crate::transports::smtp::proto::response::Reply;
+}
+
 /// Crate version, surfaced to the binding for diagnostics.
 pub fn version() -> &'static str {
     env!("CARGO_PKG_VERSION")

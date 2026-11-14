@@ -87,6 +87,8 @@ pub struct Script {
     pub delays: Vec<(Stage, Duration)>,
     /// When set, the harness completes an implicit TLS handshake first.
     pub tls: Option<Arc<rustls::ServerConfig>>,
+    /// Serve plaintext and upgrade on STARTTLS instead of implicit TLS.
+    pub starttls_mode: bool,
 }
 
 impl Default for Script {
@@ -104,6 +106,7 @@ impl Default for Script {
             unknown: Reply::line("500 5.5.2 Command unrecognized"),
             delays: Vec::new(),
             tls: None,
+            starttls_mode: false,
         }
     }
 }
@@ -279,6 +282,17 @@ impl Write for Conn {
 }
 
 impl Conn {
+    /// Replaces a plaintext connection with a TLS session using the script config.
+    fn upgrade(self, config: &Arc<rustls::ServerConfig>) -> Option<Conn> {
+        match self {
+            Conn::Plain(stream) => {
+                let session = ServerConnection::new(Arc::clone(config)).ok()?;
+                Some(Conn::Tls(Box::new(StreamOwned::new(session, stream))))
+            }
+            Conn::Tls(existing) => Some(Conn::Tls(existing)),
+        }
+    }
+
     fn shutdown(self) {
         match self {
             Self::Plain(stream) => {
@@ -295,12 +309,12 @@ fn serve(stream: TcpStream, script: &Script, trace: &Trace) {
     let _ = stream.set_read_timeout(Some(Duration::from_secs(10)));
     let _ = stream.set_write_timeout(Some(Duration::from_secs(10)));
 
-    let mut conn = match &script.tls {
-        Some(config) => match ServerConnection::new(Arc::clone(config)) {
+    let mut conn = match (&script.tls, script.starttls_mode) {
+        (Some(config), false) => match ServerConnection::new(Arc::clone(config)) {
             Ok(session) => Conn::Tls(Box::new(StreamOwned::new(session, stream))),
             Err(_) => return,
         },
-        None => Conn::Plain(stream),
+        _ => Conn::Plain(stream),
     };
 
     if let Some(delay) = script.delay_for(Stage::Greeting) {
@@ -348,6 +362,11 @@ fn serve(stream: TcpStream, script: &Script, trace: &Trace) {
         trace.push_line(&trimmed);
         let (verb, rest) = split_command(&trimmed);
 
+        if verb == "NOOP" || verb == "RSET" {
+            let _ = write_reply(&mut conn, &Reply::line("250 2.0.0 OK"));
+            continue;
+        }
+
         let selection = match verb.as_str() {
             "EHLO" | "HELO" => Some((Stage::Ehlo, &script.ehlo)),
             "STARTTLS" => Some((Stage::StartTls, &script.start_tls)),
@@ -379,6 +398,16 @@ fn serve(stream: TcpStream, script: &Script, trace: &Trace) {
         if write_reply(&mut conn, reply).is_err() {
             conn.shutdown();
             return;
+        }
+
+        if stage == Stage::StartTls
+            && reply.is_final("220")
+            && let Some(config) = &script.tls
+        {
+            conn = match conn.upgrade(config) {
+                Some(next) => next,
+                None => return,
+            };
         }
 
         if stage == Stage::Data {
