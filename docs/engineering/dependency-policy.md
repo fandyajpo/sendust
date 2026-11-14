@@ -22,6 +22,7 @@ A direct dependency may be added only through the review in section 6. Transitiv
 | `tokio-rustls` | `=0.26.6` | normal | `tls12` | off | `sendust-core` | Async TLS stream for the native SMTP client (ADR-0017) |
 | `webpki-roots` | `=1.0.12` | normal | default | on | `sendust-core` | Bundled trust store for the native client (ADR-0003) |
 | `rustls-pki-types` | `=1.16.0` | normal | default | on | `sendust-core` | `ServerName` and certificate types for the native client |
+| `mail-parser` | `=0.11.9` | dev | default | on | `sendust-core` | Independent MIME parser for conformance tests (P07-005); never ships |
 
 `sendust-core` declares no build script and no binding, runtime, or Node.js dependency. `sendust-napi` depends on `sendust-core` and never the reverse. No third-party SMTP engine is declared anywhere, in any kind of dependency, after PHASE-06 (ADR-0017).
 
@@ -88,6 +89,7 @@ Every direct dependency must have one row. The inventory is completed before rel
 | `base64` | `0.23.1` | MIT OR Apache-2.0 | https://crates.io/crates/base64 | P04-003 |
 | `tokio` | `1.54.1` | MIT | https://crates.io/crates/tokio | P04-005 |
 | `rustls` | `0.23.46` | Apache-2.0 OR ISC OR MIT | https://crates.io/crates/rustls | P04-005 |
+| `mail-parser` | `0.11.9` | Apache-2.0 OR MIT | https://crates.io/crates/mail-parser | P07-005 (dev-only) |
 
 ## 9. npm development tool pins
 

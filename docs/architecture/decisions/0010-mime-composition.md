@@ -21,6 +21,7 @@ Correct MIME is a product requirement. lettre provides a typed message builder a
   - filename encoding,
   - final wire-size accounting.
 - The final serialized bytes are parsed by an independent parser (`mail-parser`, test-only) in conformance tests.
+- The independent parser is `mail-parser`, a dev-only dependency; it never ships.
 - No hand-rolled base64/quoted-printable implementation unless a proven defect requires it.
 
 ## Alternatives

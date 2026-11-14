@@ -49,7 +49,7 @@ In scope: message construction, header encoding and injection defense, text/html
 ### P07-005 — MIME conformance and phase gate
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P07-001, P07-002, P07-003, P07-004
 - **Description:** Validate the MIME output with local parsers and golden fixtures. Confirm no SMTPUTF8, no URL content, no header injection, and deterministic size behavior. Record any deferred MIME features as post-MVP.
 - **Evidence criteria:** Golden fixtures pass for text-only, alternative, Unicode, long headers, and representative attachment metadata. Header-injection and control-character fixtures all fail safely. Phase 08 can consume attachment metadata without redefining MIME rules.
@@ -91,6 +91,7 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 
 | Task | Evidence | State |
 | --- | --- | --- |
+| P07-005 | [`docs/gates/phase-07.md`](../gates/phase-07.md): task evidence, acceptance checklist, `tests/mime_conformance.rs` (four tests parsing the emitted bytes back with `mail-parser`), the golden fixtures, the injection/control-character matrix, the executed commands and the dependency proof. | SUBMITTED, awaiting project-owner approval |
 | P07-004 | `mime/mod.rs`: `serialize` stays pure for golden tests, while `serialize_at(message, limits, fs, now)` adds an RFC 5322 `Date` (UTC) and a `Message-ID` derived from the instant and a content hash; `Delivery::send` calls `serialize_at` with `SystemTime::now()`, so real sends carry both. Tests pin the epoch and a known instant, prove the id is stable per instant and different across instants, and assert wire-size parity for a multipart message at the exact cap and one byte over; the existing 21/23 MiB and exact-cap tests keep the 30 MiB behavior covered. | IMPLEMENTED, EXECUTED PASS locally and in CI (8/8 on the branch). |
 | P07-003 | `attachments/mod.rs`: a filename is a display name, so the last path component is kept and the rest discarded; `.`/`..`, empty names, control characters, over-long names and case-insensitive duplicates are rejected, and content types stay `type/subtype` tokens. `mime/mod.rs`: Unicode names render as RFC 2231 (`filename*=UTF-8''…`) with an ASCII fallback and `filename*` last, and the rendered part never repeats the caller's directory. Tests cover ASCII, Unicode, long, path-bearing, control-character and duplicate names, plus the exact rendered header. | IMPLEMENTED, EXECUTED PASS locally and in CI (8/8 on the branch). |
 | P07-002 | `mime/mod.rs`: `normalize_body` converts CRLF, bare CR and bare LF to CRLF before transfer encoding; text-only, HTML-only and `multipart/alternative` render with `charset=utf-8` and base64. `tests/mime_bodies.rs` pins byte-exact golden fixtures for text-only and alternative, and covers HTML-only, empty-string bodies, line-ending equivalence and the no-body rejection. `message/mod.rs` rejects a message with neither body as `VALIDATION_INVALID_OPTION`, matching the public API contract. | IMPLEMENTED, EXECUTED PASS locally and in CI (8/8 on the branch); CI evidence on the branch. |
@@ -98,4 +99,4 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 
 ## Status
 
-IN PROGRESS. P07-001 to P07-004 are IN REVIEW; P07-005 is NOT STARTED.
+IN PROGRESS. P07-001 to P07-005 are IN REVIEW; the PHASE-07 gate record is submitted and awaiting project-owner approval.
