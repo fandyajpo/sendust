@@ -416,7 +416,6 @@ mod tests {
     }
 }
 
-
 #[cfg(test)]
 mod duplicate_policy_tests {
     use super::*;

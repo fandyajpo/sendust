@@ -175,13 +175,16 @@ mod tests {
     fn splits_long_unicode_into_encoded_words_within_the_limit() {
         let value = "ü".repeat(120);
         let header = rendered("Subject", &value);
+        let mut words = 0;
         for word in header.trim_end_matches("\r\n").split(' ') {
             if word.starts_with("=?") {
+                words += 1;
                 assert!(word.len() <= 75, "{word} is too long");
-                assert!(word.ends_with("?="));
+                assert!(word.ends_with("?="), "{word} is malformed");
             }
             assert!(word.is_ascii());
         }
+        assert!(words > 1, "a long value must use several encoded words");
         assert!(header.contains("=?UTF-8?B?"));
     }
 
@@ -231,9 +234,8 @@ mod tests {
     fn joins_an_address_list() {
         let first = Mailbox::parse("bob@example.test").expect("valid");
         let second = Mailbox::parse("carol@example.test").expect("valid");
-        let header =
-            String::from_utf8(render_addresses("To", &[first, second]).expect("rendered"))
-                .expect("utf8");
+        let header = String::from_utf8(render_addresses("To", &[first, second]).expect("rendered"))
+            .expect("utf8");
         assert_eq!(header, "To: bob@example.test, carol@example.test\r\n");
     }
 }
