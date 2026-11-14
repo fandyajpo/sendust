@@ -33,7 +33,7 @@ In scope: the SMTP protocol codec, the multiline response parser, EHLO capabilit
 ### P06-003 — Implement SMTP AUTH and the session state machine
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P06-001, P06-002
 - **Description:** Implement AUTH PLAIN and LOGIN after TLS, including the 334 challenge exchange with a bounded challenge count, and a session state machine connecting the parsed replies to MAIL, one RCPT per recipient, DATA, and QUIT. AUTH is refused before TLS; unsupported mechanisms fail with a stable code. Map pre-transaction failures to connection, TLS or authentication errors, never to a delivery outcome.
 - **Evidence criteria:** Tests cover successful PLAIN and LOGIN, 535 rejection, no advertised mechanism, challenge exhaustion, AUTH attempted before TLS, and every state transition including early close and protocol violations. Credentials never appear in errors or logs.
@@ -112,9 +112,10 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 
 | Task | Evidence | State |
 | --- | --- | --- |
+| P06-003 | `client/connection.rs` (`authenticate`: PLAIN with an RFC 4616 initial response, LOGIN with a bounded 334 challenge exchange, refused before TLS, `AUTH_UNSUPPORTED` when no mechanism is advertised, `AUTH_FAILED` with the relay code on rejection) and `session.rs` (open, authenticate, MAIL, RCPT, DATA, body, QUIT returning raw replies for ADR-0005 classification) plus `proto/transcript.rs` (dot-stuffing and terminator). Harness gained multi-step `auth_flow` replies. `tests/smtp_session.rs`: 6 tests — PLAIN, LOGIN challenges, 535, no mechanism, AUTH before TLS refused, full transaction with dot-stuffing. | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
 | P06-002 | `crates/sendust-core/src/transports/smtp/client/` — `connection.rs` (Tokio TCP, greeting, EHLO, implicit TLS, required STARTTLS with re-EHLO, bounded reads under `SendDeadlines`) and `tls.rs` (rustls with `ring`, WebPKI roots plus validated PEM anchors, TLS 1.2 floor, no bypass). Harness gained a real STARTTLS upgrade and named-certificate serving; `tests/smtp_client.rs` adds 6 tests. | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
 | P06-001 | `crates/sendust-core/src/transports/smtp/proto/` — `command.rs` (EHLO, STARTTLS, AUTH PLAIN/LOGIN, MAIL, RCPT, DATA, RSET, NOOP, QUIT with injection rejection and the 512-byte cap), `response.rs` (three-digit code validation, multiline builder, 1000-byte line and 64 KiB reply caps, RFC 3463 enhanced status), `capabilities.rs` (STARTTLS, AUTH mechanisms, SIZE, 8BITMIME). 15 new unit tests; 109 core tests total, `cargo clippy -D warnings`, architecture/docs/secrets checks all pass locally. The module is I/O-free and carries a temporary `dead_code` allow until P06-002/P06-003 wire it in. | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
 
 ## Status
 
-IN PROGRESS. P06-001 and P06-002 are IN REVIEW; P06-003 to P06-005 are NOT STARTED.
+IN PROGRESS. P06-001 to P06-003 are IN REVIEW; P06-004 and P06-005 are NOT STARTED.

@@ -12,6 +12,7 @@
 
 pub mod client;
 pub mod proto;
+pub mod session;
 
 use std::fmt;
 use std::future::Future;

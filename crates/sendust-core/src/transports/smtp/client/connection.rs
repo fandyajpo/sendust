@@ -18,9 +18,11 @@ use tokio_rustls::client::TlsStream;
 use crate::config::SendDeadlines;
 use crate::errors::{Error, ErrorCode, ErrorDetails, Stage};
 use crate::transports::smtp::proto::capabilities::Capabilities;
-use crate::transports::smtp::proto::command::Command;
+use crate::transports::smtp::proto::command::{AuthMechanism, Command, auth_plain_initial};
 use crate::transports::smtp::proto::response::{MAX_LINE_BYTES, Reply, ReplyBuilder};
 use crate::transports::smtp::{SmtpConfig, SmtpSecurity};
+use base64::Engine as _;
+use base64::engine::general_purpose::STANDARD;
 
 use super::tls;
 
@@ -83,6 +85,7 @@ pub struct Connection {
     server_name: ServerName<'static>,
     tls_config: Arc<ClientConfig>,
     deadlines: SendDeadlines,
+    encrypted: bool,
 }
 
 impl Connection {
@@ -133,6 +136,7 @@ impl Connection {
             server_name,
             tls_config,
             deadlines,
+            encrypted: matches!(config.security(), SmtpSecurity::ImplicitTls),
         };
 
         let greeting = connection.read_reply().await?;
@@ -143,6 +147,24 @@ impl Connection {
 
     pub fn capabilities(&self) -> &Capabilities {
         &self.capabilities
+    }
+
+    pub fn is_encrypted(&self) -> bool {
+        self.encrypted
+    }
+
+    /// Writes raw protocol bytes (the DATA body) under the operation budget.
+    pub async fn write_raw(&mut self, bytes: &[u8]) -> Result<(), Error> {
+        let budget = self.budget();
+        let deadline = self.deadlines;
+        let stream = self.transport_mut()?;
+        tokio::time::timeout(budget, async {
+            stream.write_all(bytes).await?;
+            stream.flush().await
+        })
+        .await
+        .map_err(|_| deadline.timeout_error(Instant::now(), true, Stage::DataBody))?
+        .map_err(io_error)
     }
 
     async fn rehandshake(&mut self) -> Result<(), Error> {
@@ -192,6 +214,7 @@ impl Connection {
             .map_err(tls_error)?;
 
         self.stream = Some(Transport::Tls(Box::new(stream)));
+        self.encrypted = true;
         self.capabilities = Capabilities::default();
         self.rehandshake().await
     }
@@ -216,7 +239,7 @@ impl Connection {
         self.read_reply().await
     }
 
-    async fn read_reply(&mut self) -> Result<Reply, Error> {
+    pub async fn read_reply(&mut self) -> Result<Reply, Error> {
         let mut builder = ReplyBuilder::new();
         loop {
             let line = self.read_line().await?;
@@ -304,4 +327,94 @@ fn tls_error(error: std::io::Error) -> Error {
         });
     }
     Error::new(ErrorCode::TlsHandshake)
+}
+
+impl Connection {
+    /// Authenticates after TLS with PLAIN or LOGIN, per ADR-0017.
+    pub async fn authenticate(&mut self, user: &str, password: &str) -> Result<(), Error> {
+        if !self.encrypted {
+            return Err(auth_error(ErrorCode::AuthUnsupported, None));
+        }
+
+        let plain = self.capabilities.supports_auth(AuthMechanism::Plain);
+        let login = self.capabilities.supports_auth(AuthMechanism::Login);
+        if !plain && !login {
+            return Err(auth_error(ErrorCode::AuthUnsupported, None));
+        }
+
+        if plain {
+            let reply = self
+                .command(
+                    Command::Auth {
+                        mechanism: AuthMechanism::Plain,
+                        initial_response: Some(auth_plain_initial(user, password)),
+                    },
+                    Stage::Auth,
+                )
+                .await?;
+            return confirm_auth(reply);
+        }
+
+        let reply = self
+            .command(
+                Command::Auth {
+                    mechanism: AuthMechanism::Login,
+                    initial_response: None,
+                },
+                Stage::Auth,
+            )
+            .await?;
+        if reply.value() != 334 {
+            return confirm_auth(reply);
+        }
+
+        let mut challenges = 0;
+        let mut reply = self
+            .command(
+                Command::AuthResponse {
+                    response: STANDARD.encode(user),
+                },
+                Stage::Auth,
+            )
+            .await?;
+
+        while reply.value() == 334 {
+            challenges += 1;
+            if challenges > 1 {
+                return Err(auth_error(ErrorCode::AuthFailed, Some(reply.value())));
+            }
+            reply = self
+                .command(
+                    Command::AuthResponse {
+                        response: STANDARD.encode(password),
+                    },
+                    Stage::Auth,
+                )
+                .await?;
+        }
+
+        confirm_auth(reply)
+    }
+}
+
+fn confirm_auth(reply: Reply) -> Result<(), Error> {
+    if reply.value() == 235 {
+        return Ok(());
+    }
+    Err(auth_error(
+        if reply.value() == 334 || reply.value() == 535 {
+            ErrorCode::AuthFailed
+        } else {
+            ErrorCode::ProtocolUnexpectedResponse
+        },
+        Some(reply.value()),
+    ))
+}
+
+fn auth_error(code: ErrorCode, smtp_code: Option<u16>) -> Error {
+    let mut details = ErrorDetails::default().stage(Stage::Auth);
+    if let Some(smtp_code) = smtp_code {
+        details = details.smtp_code(smtp_code);
+    }
+    Error::new(code).with_details(details)
 }
