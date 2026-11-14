@@ -108,8 +108,8 @@ P00–P05 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P04-001–P04-005 | COMPLETED |
 | P05-001–P05-005 | COMPLETED |
 | P06-001–P06-005 | COMPLETED; PHASE-06 APPROVED (2026-11-14) |
-| P07–P18 | P07-001 and P07-002 IN REVIEW; the rest NOT STARTED |
-| Next task | P07-003 — implement filename and content-type handling policy |
+| P07–P18 | P07-001 to P07-003 IN REVIEW; the rest NOT STARTED |
+| Next task | P07-004 — implement deterministic serialization and wire-size parity |
 
 ## 5. Conventions
 

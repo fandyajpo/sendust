@@ -218,6 +218,7 @@ deadline = start + min(total, remaining close budget)
   - Reject symlink, directory, FIFO, device, socket, and unreadable file.
   - Read at most the per-file cap + 1 byte to detect overflow.
   - Never echo the absolute path in public errors; use the caller-supplied filename or a redacted marker.
+- Attachment filenames are display names, never paths: the last component is kept, control characters and duplicates are rejected, and Unicode names render as RFC 2231 `filename*` with an ASCII fallback. Content types are validated `type/subtype` tokens.
 - Buffer attachments are copied before async work.
 - Aggregate raw attachment bytes are checked before MIME composition; wire size is checked after composition.
 
