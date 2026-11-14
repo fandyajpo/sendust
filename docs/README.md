@@ -53,6 +53,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 40 | [Test harness contract](engineering/test-harness-contract.md) | Fake SMTP/TLS seams, safety rules, and the fixture catalog |
 | 41 | [QG-03 repository baseline record](gates/phase-03-repository-baseline.md) | P03 gate checklist, evidence, and approved decision |
 | 42 | [PHASE-04 core record](gates/phase-04-core.md) | P04 gate checklist, evidence, and approved decision |
+| 43 | [PHASE-05 binding record](gates/phase-05-binding.md) | P05 gate checklist, evidence, and approved decision |
 
 ## 2. Directory map
 
@@ -83,7 +84,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P04 are COMPLETED with approved evidence. P05 is IN PROGRESS and P06–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P05 are COMPLETED with approved evidence. P06–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -105,10 +106,9 @@ P00–P04 are COMPLETED with approved evidence. P05 is IN PROGRESS and P06–P18
 | QG-02 Architecture | APPROVED at design level |
 | P03-001–P03-005 | COMPLETED |
 | P04-001–P04-005 | COMPLETED |
-| P05-001–P05-004 | IN REVIEW |
-| P05-005 | IN PROGRESS |
+| P05-001–P05-005 | COMPLETED |
 | P06–P18 | NOT STARTED |
-| Next task | P05-005 — binding gate and runtime matrix |
+| Next task | P06-001 — lettre relay session and envelope submission |
 
 ## 5. Conventions
 
