@@ -150,19 +150,15 @@ async fn channel_close_at_rcpt_matches_the_lettre_oracle() {
             Reply::line("250 2.1.5 Recipient ok"),
             Reply::line("421 4.4.1 Closing connection"),
         ]),
-        &[
-            "ok@example.test",
-            "two@example.test",
-            "three@example.test",
-        ],
+        &["ok@example.test", "two@example.test", "three@example.test"],
     )
     .await;
 }
 
 #[tokio::test]
 async fn explicit_final_rejection_matches_the_lettre_oracle() {
-    let script = Script::default()
-        .after_body(AfterBody::Reply(Reply::line("451 4.3.0 Try again later")));
+    let script =
+        Script::default().after_body(AfterBody::Reply(Reply::line("451 4.3.0 Try again later")));
     compare(script, &["bob@example.test"]).await;
 }
 
@@ -199,7 +195,10 @@ where
 }
 
 /// The pre-P06-004 delivery path, kept as the differential oracle.
-async fn lettre_send(config: &SmtpConfig, message: &OutgoingMessage) -> Result<SendOutcome, String> {
+async fn lettre_send(
+    config: &SmtpConfig,
+    message: &OutgoingMessage,
+) -> Result<SendOutcome, String> {
     let wire = sendust_core::serialize(message, Limits::default(), false)
         .map_err(|error| error.to_string())?;
     let from = message

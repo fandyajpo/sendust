@@ -229,9 +229,11 @@ impl SmtpTransport {
                         &vec![RecipientStatus::Rejected; envelope.recipients.len()],
                         Some(smtp_response(&reply)),
                     )),
-                    Verdict::Invalid => {
-                        Err(unexpected_response(config, Stage::Mail, reply.value()))
-                    }
+                    Verdict::Complete | Verdict::Invalid => Err(unexpected_response(
+                        config,
+                        Stage::Mail,
+                        reply.value(),
+                    )),
                 };
             }
             Err(error) => return Err(annotate(error, config, deadlines, Stage::Mail)),
@@ -276,9 +278,11 @@ impl SmtpTransport {
                         &vec![RecipientStatus::Rejected; envelope.recipients.len()],
                         Some(smtp_response(&reply)),
                     )),
-                    Verdict::Complete | Verdict::Invalid => {
-                        Err(unexpected_response(config, Stage::DataCommand, reply.value()))
-                    }
+                    Verdict::Complete | Verdict::Invalid => Err(unexpected_response(
+                        config,
+                        Stage::DataCommand,
+                        reply.value(),
+                    )),
                 };
             }
             Err(error) => return Err(annotate(error, config, deadlines, Stage::DataCommand)),
@@ -444,12 +448,7 @@ fn rejected_outcome(
 
 /// Adds the relay context the public error contract reports, without dropping
 /// anything the session already classified.
-fn annotate(
-    error: Error,
-    config: &SmtpConfig,
-    deadlines: SendDeadlines,
-    stage: Stage,
-) -> Error {
+fn annotate(error: Error, config: &SmtpConfig, deadlines: SendDeadlines, stage: Stage) -> Error {
     let existing = error.details();
     let mut details = ErrorDetails::default()
         .host(
@@ -570,9 +569,7 @@ mod tests {
     #[test]
     fn envelope_rejects_addresses_the_codec_would_misread() {
         assert_eq!(
-            envelope_address(String::new())
-                .expect_err("empty")
-                .code(),
+            envelope_address(String::new()).expect_err("empty").code(),
             ErrorCode::ValidationInvalidAddress
         );
         assert_eq!(
