@@ -219,6 +219,7 @@ fn build_attachment_part(
     content_type: Option<&str>,
     bytes: &[u8],
 ) -> Result<Vec<u8>, Error> {
+    let filename = crate::attachments::normalize_filename(filename)?;
     let mut part = Vec::new();
     push_header(
         &mut part,
@@ -229,7 +230,7 @@ fn build_attachment_part(
     push_header(
         &mut part,
         "Content-Disposition",
-        &format!("attachment; filename=\"{}\"", escape_quotes(filename)),
+        &content_disposition(&filename),
     )?;
     part.extend_from_slice(CRLF.as_bytes());
     push_base64(&mut part, bytes);
@@ -261,6 +262,64 @@ fn push_header(out: &mut Vec<u8>, name: &str, value: &str) -> Result<(), Error> 
 
 fn escape_quotes(value: &str) -> String {
     value.replace('\\', "\\\\").replace('"', "\\\"")
+}
+
+/// `Content-Disposition` for an attachment.
+///
+/// An ASCII name stays a quoted `filename`. A Unicode name also carries an
+/// RFC 2231 `filename*` with an ASCII fallback, and `filename*` comes last so
+/// receivers that understand it prefer it over the fallback (RFC 6266 §4.3).
+fn content_disposition(filename: &str) -> String {
+    if filename.is_ascii() {
+        return format!("attachment; filename=\"{}\"", escape_quotes(filename));
+    }
+
+    let fallback: String = filename
+        .chars()
+        .map(|character| {
+            if character.is_ascii() {
+                character
+            } else {
+                '_'
+            }
+        })
+        .collect();
+
+    format!(
+        "attachment; filename=\"{}\"; filename*=UTF-8''{}",
+        escape_quotes(&fallback),
+        rfc2231(filename)
+    )
+}
+
+/// Percent-encodes a filename for RFC 2231, leaving only `attr-char` bytes
+/// literal (RFC 2231 §3, RFC 5987 §3.2.1).
+fn rfc2231(value: &str) -> String {
+    let mut out = String::with_capacity(value.len() * 3);
+    for byte in value.as_bytes() {
+        let character = *byte as char;
+        if character.is_ascii_alphanumeric()
+            || matches!(
+                character,
+                '!' | '#'
+                    | '$'
+                    | '&'
+                    | '+'
+                    | '-'
+                    | '.'
+                    | '^'
+                    | '_'
+                    | '`'
+                    | '|'
+                    | '~'
+            )
+        {
+            out.push(character);
+        } else {
+            out.push_str(&format!("%{byte:02X}"));
+        }
+    }
+    out
 }
 
 fn unique_boundary(parts: &[Vec<u8>]) -> String {
@@ -375,6 +434,36 @@ mod tests {
             !wire.contains("hidden@example.test"),
             "BCC must never appear"
         );
+    }
+
+    #[test]
+    fn strips_a_path_from_the_rendered_filename() {
+        let mut message = message();
+        message.attachments = vec![Attachment::Bytes {
+            filename: "dir/notes.txt".to_string(),
+            content_type: Some("text/plain".to_string()),
+            bytes: b"x".to_vec(),
+        }];
+
+        let wire = text(&serialize(&message, Limits::default(), false).expect("serialized"));
+        assert!(wire.contains("Content-Disposition: attachment; filename=\"notes.txt\"\r\n"));
+        assert!(!wire.contains("dir/"));
+    }
+
+    #[test]
+    fn encodes_a_unicode_filename_per_rfc2231() {
+        let mut message = message();
+        message.attachments = vec![Attachment::Bytes {
+            filename: "Grüße.pdf".to_string(),
+            content_type: Some("application/pdf".to_string()),
+            bytes: b"pdf".to_vec(),
+        }];
+
+        let wire = text(&serialize(&message, Limits::default(), false).expect("serialized"));
+        assert!(wire.contains(
+            "Content-Disposition: attachment; filename=\"Gr__e.pdf\"; filename*=UTF-8''Gr%C3%BC%C3%9Fe.pdf\r\n"
+        ));
+        assert!(wire.is_ascii(), "headers must be ASCII clean");
     }
 
     #[test]

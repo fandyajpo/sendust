@@ -67,9 +67,21 @@ pub fn validate(
     filesystem_enabled: bool,
 ) -> Result<u64, Error> {
     let mut total: u64 = 0;
+    let mut names: Vec<String> = Vec::with_capacity(attachments.len());
 
     for attachment in attachments {
         validate_descriptor(attachment, filesystem_enabled)?;
+
+        // Two attachments with the same display name would collide in most
+        // clients, so the ambiguity is rejected instead of guessed at. The
+        // comparison uses the stripped basename both renderers will emit.
+        if let Some(name) = attachment.display_name() {
+            let key = normalize_filename(name)?.to_lowercase();
+            if names.contains(&key) {
+                return Err(invalid_attachment());
+            }
+            names.push(key);
+        }
 
         if let Some(len) = attachment.known_len() {
             if len > limits.max_attachment_bytes() {
@@ -89,22 +101,20 @@ fn invalid_attachment() -> Error {
     Error::new(ErrorCode::ValidationInvalidAttachment)
 }
 
-fn normalize_filename(raw: &str) -> Result<String, Error> {
-    let name = raw.trim();
-    if name.is_empty() || name.len() > MAX_FILENAME {
+pub(crate) fn normalize_filename(raw: &str) -> Result<String, Error> {
+    // A filename is a display name, never a path. Keep the last component so a
+    // caller cannot leak a local directory or traverse, and so a path from
+    // `path.join` still works instead of failing the whole send.
+    let name = raw
+        .rsplit(['/', '\\'])
+        .next()
+        .unwrap_or_default()
+        .trim();
+    if name.is_empty() || name.len() > MAX_FILENAME || name == "." || name == ".." {
         return Err(invalid_attachment());
     }
     if name.chars().any(char::is_control) {
         return Err(Error::new(ErrorCode::ValidationHeaderInjection));
-    }
-    // A filename is a display name, never a path: separators are rejected so
-    // nothing can look like a directory traversal or leak an absolute path.
-    if name.contains('/') || name.contains('\\') {
-        return Err(invalid_attachment());
-    }
-    if !name.is_ascii() {
-        // RFC 2231 filename encoding arrives in P07; ASCII-only until then.
-        return Err(invalid_attachment());
     }
     Ok(name.to_string())
 }
@@ -234,7 +244,7 @@ mod tests {
 
     #[test]
     fn rejects_invalid_filenames_and_content_types() {
-        for name in ["", "   ", "dir/name.txt", "dir\\name.txt", "big.bin/"] {
+        for name in ["", "   ", "big.bin/", ".", ".."] {
             assert_eq!(
                 code(&[bytes(name, 1)]),
                 ErrorCode::ValidationInvalidAttachment,
@@ -257,6 +267,63 @@ mod tests {
     }
 
     #[test]
+    fn strips_paths_down_to_the_display_name() {
+        assert_eq!(
+            normalize_filename("/etc/passwd").expect("stripped"),
+            "passwd"
+        );
+        assert_eq!(
+            normalize_filename("dir\\report.pdf").expect("stripped"),
+            "report.pdf"
+        );
+        assert_eq!(
+            normalize_filename("../../secrets/notes.txt").expect("stripped"),
+            "notes.txt"
+        );
+        assert_eq!(normalize_filename("  report.pdf  ").expect("trimmed"), "report.pdf");
+    }
+
+    #[test]
+    fn accepts_unicode_filenames() {
+        assert_eq!(
+            normalize_filename("Grüße.pdf").expect("unicode"),
+            "Grüße.pdf"
+        );
+        assert_eq!(
+            validate(&[bytes("Grüße.pdf", 1)], Limits::default(), false).expect("valid"),
+            1
+        );
+    }
+
+    #[test]
+    fn rejects_filenames_over_the_length_limit() {
+        let exactly = "a".repeat(MAX_FILENAME);
+        assert!(normalize_filename(&exactly).is_ok());
+        let over = "a".repeat(MAX_FILENAME + 1);
+        assert_eq!(
+            normalize_filename(&over).expect_err("too long").code(),
+            ErrorCode::ValidationInvalidAttachment
+        );
+    }
+
+    #[test]
+    fn rejects_duplicate_filenames_case_insensitively() {
+        assert_eq!(
+            code(&[bytes("Report.pdf", 1), bytes("report.PDF", 1)]),
+            ErrorCode::ValidationInvalidAttachment
+        );
+        assert_eq!(
+            validate(
+                &[bytes("a.txt", 1), bytes("b.txt", 1)],
+                Limits::default(),
+                false
+            )
+            .expect("distinct names"),
+            2
+        );
+    }
+
+    #[test]
     fn rejects_file_attachments_without_opt_in() {
         assert_eq!(
             code(&[file(Some("notes.txt"))]),
@@ -269,14 +336,6 @@ mod tests {
         assert_eq!(
             validate(&[file(Some("report.pdf"))], Limits::default(), true).expect("valid"),
             0
-        );
-    }
-
-    #[test]
-    fn rejects_paths_as_filenames() {
-        assert_eq!(
-            code(&[bytes("/etc/passwd", 1)]),
-            ErrorCode::ValidationInvalidAttachment
         );
     }
 
