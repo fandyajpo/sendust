@@ -17,7 +17,7 @@ Every `REQUIRED FOR MVP` row must map to at least one implementation task and at
 | ID | Feature | Class | Implementation | Tests | Notes |
 | --- | --- | --- | --- | --- | --- |
 | F-ARC-01 | Modular core module boundaries and ownership | REQUIRED | P03-001, P04-001 | P03-005, P04-005, P12-001 | Logical Rust modules; no additional crate |
-| F-ARC-02 | Acyclic dependency and domain isolation checks | REQUIRED | P03-003 | P03-005, P04-005 | Domain modules do not depend on lettre/SMTP/napi/runtime |
+| F-ARC-02 | Acyclic dependency and domain isolation checks | REQUIRED | P03-003 | P03-005, P04-005 | Domain modules do not depend on SMTP/napi/runtime |
 | F-ARC-03 | SMTP adapter behind narrow internal delivery port | REQUIRED | P04-005, P06-001 | P06-005, P12-001 | SMTP is sole MVP implementation; no public plugin API |
 
 ## SMTP

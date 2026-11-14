@@ -5,7 +5,7 @@ Architectural decisions for Sendust. One decision per file. ADR-0016 defines the
 | ADR | Title | Status | Owner task |
 | --- | --- | --- | --- |
 | [0001](0001-two-crates.md) | Two crates: Node-free core plus napi adapter | ACCEPTED (architecture baseline) | P02-001 |
-| [0002](0002-lettre-over-custom-smtp.md) | Use lettre 0.11.23 instead of a custom SMTP client; low-level API selected | ACCEPTED (architecture baseline; behavior gate P06) | P01-001, P01-005 |
+| [0002](0002-lettre-over-custom-smtp.md) | Use lettre 0.11.23 instead of a custom SMTP client; low-level API selected | SUPERSEDED by ADR-0017 | P01-001, P01-005 |
 | [0003](0003-tls-rustls-ring-webpki.md) | rustls with ring and webpki-roots, verification mandatory | ACCEPTED (architecture baseline; build gate P03-002) | P01-002 |
 | [0004](0004-napi-async-tokio.md) | Pinned napi-rs crates, Node-API 8, and managed Tokio 1 | ACCEPTED (architecture baseline; runtime tests P05/P14) | P01-004, P05-003 |
 | [0005](0005-recipient-partial-failure.md) | Recipient partial-failure policy | ACCEPTED (architecture baseline; behavior gate P06-003) | P01-003, P06-003 |
@@ -20,6 +20,7 @@ Architectural decisions for Sendust. One decision per file. ADR-0016 defines the
 | [0014](0014-attachment-filesystem-policy.md) | Filesystem attachments opt-in, regular files only, no URLs | ACCEPTED (architecture baseline; safety gates P08/P11) | P08-001, P08-002 |
 | [0015](0015-multi-runtime-support.md) | Multi-runtime Node-API support and server platform policy | ACCEPTED (design amendment A01; runtime evidence P05/P14) | A01-001–A01-004, P05, P14 |
 | [0016](0016-modular-monolith.md) | Modular monolith and internal module boundaries | ACCEPTED (design amendment A02; implementation evidence P03/P04/P06/P12) | A02-001–A02-003, P03, P04, P06, P12 |
+| [0017](0017-native-smtp-engine.md) | Own the SMTP engine on trusted TLS/I/O primitives; lettre superseded | ACCEPTED (supersedes ADR-0002; implementation gate P06-005) | P06-001–P06-005 |
 
 ## ADR format
 

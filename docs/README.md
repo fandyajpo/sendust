@@ -84,7 +84,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P05 are COMPLETED with approved evidence. P06–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P05 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine for P06. P06–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -99,7 +99,7 @@ P00–P05 are COMPLETED with approved evidence. P06–P18 remain NOT STARTED. A 
 | Item | State |
 | --- | --- |
 | Repository | Documentation, architecture planning, and the P03 workspace skeleton |
-| Application implementation | Core complete (errors, addresses, message model, MIME, SMTP orchestration, fault matrix); Node-API binding and TypeScript facade implemented; public API contract (P09) and runtime matrix pending |
+| Application implementation | Core complete (errors, addresses, message model, MIME, orchestration, fault matrix); Node-API binding and TypeScript facade implemented; native SMTP engine selected by ADR-0017 and pending P06; public API contract (P09) pending |
 | Toolchain validation | Rust 1.100.0 and the Node.js 22.23.5/24.22.3/26.13.1 jobs pass in Sendust CI on branch `feat/p03-repository-skeleton` |
 | QG-00 Discovery | APPROVED |
 | QG-01 Research | APPROVED with implementation validation gates |

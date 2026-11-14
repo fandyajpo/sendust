@@ -10,7 +10,7 @@ This ledger maps every authoritative constraint C-01 through C-40 to its archite
 | --- | --- | --- | --- | --- |
 | C-01 | Exactly two Rust crates; core has no Node linkage | ADR-0001 | P02-001, P03-001, P04-005; dependency-tree check | Architecture defined |
 | C-02 | TS → napi → core → lettre; dependencies point downward | ADR-0001/0002 | P02-001, P03-001, P09-001; dependency graph | Architecture defined |
-| C-03 | lettre 0.11.23; no custom SMTP without proof | ADR-0002 | P01-001/P01-003; P06-001/P06-005 | Source-reviewed; lower-level API selected |
+| C-03 | Sendust-owned SMTP engine on trusted TLS/I/O primitives; no third-party SMTP engine | ADR-0017 (supersedes ADR-0002) | P06-001..P06-005; cargo tree check | Native engine pending P06 |
 | C-04 | napi-managed Tokio 1; no second runtime | ADR-0004 | P01-004, P05-003; runtime integration tests | Source-reviewed; napi async feature enables tokio_rt; runtime probe remains |
 | C-05 | Node-API 8 | ADR-0004 | P01-004, P05-001, P14-004; ABI matrix | napi8 feature explicitly required; runtime tests remain |
 | C-06 | Node 22/24/26 are candidates only | ADR-0004/0011 | P01-004, P14-004, P15-001; blocking CI matrix | Candidate-only |

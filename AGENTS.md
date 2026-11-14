@@ -57,7 +57,7 @@ Do not ask the user to resolve decisions already made in approved documentation.
 - TypeScript owns the public facade and isolated native loader, not SMTP/MIME business policy.
 - Node.js, Bun, and Deno are required MVP runtime targets; support is not claimed until exact-version, exact-platform blocking CI evidence exists.
 - Rust core is a modular monolith with the module ownership defined by ADR-0016.
-- SMTP via lettre is the only MVP outbound transport. SMTP protocol behavior belongs only in `transports::smtp`.
+- Sendust owns its SMTP engine (ADR-0017): the native client is the only MVP outbound transport. SMTP protocol behavior belongs only in `transports::smtp`.
 - No third Rust crate, microservice, public plugin registry, alternate transport, queue, worker, scheduler, persistence layer, connection pool, automatic retry, URL attachment fetch, or GC-dependent lifecycle behavior is allowed in MVP.
 - TLS certificate and hostname verification are mandatory. No insecure bypass or plaintext fallback.
 - One active send per transport; a second concurrent send fails immediately with BUSY. Close is explicit, idempotent, and bounded.

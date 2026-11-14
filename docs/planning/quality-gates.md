@@ -158,7 +158,7 @@ Node.js, Bun, and Deno are required MVP targets. A pass on Node.js does not sati
 | Auth failure | `535` → `AUTH_FAILED`; no message sent | Trace |
 | TLS failures | Self-signed, expired, wrong host, incomplete chain, malformed | Negative tests |
 | Timeouts | Connect 10 s, operation 30 s, total 120 s, close 125 s | Injected-clock tests |
-| No custom SMTP | No hand-written command strings | Search report |
+| No third-party SMTP engine | Sendust client is the only implementation | Architecture check + `cargo tree` |
 | No retry/pool | Exactly one transaction; no second connection | Transaction count |
 | No per-recipient send | Forbidden path absent | Code + test audit |
 

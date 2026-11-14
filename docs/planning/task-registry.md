@@ -64,11 +64,11 @@
 | [P05](../phases/phase-05.md) | Binding | [P05-003](../phases/phase-05.md) | Implement async task and lifecycle adapter | L | P05-001, P04-004 | COMPLETED |
 | [P05](../phases/phase-05.md) | Binding | [P05-004](../phases/phase-05.md) | Implement stable result/error conversion | M | P05-002, P05-003 | COMPLETED |
 | [P05](../phases/phase-05.md) | Binding | [P05-005](../phases/phase-05.md) | Binding phase gate | S | P05-001, P05-002, P05-003, P05-004 | COMPLETED |
-| [P06](../phases/phase-06.md) | SMTP | [P06-001](../phases/phase-06.md) | Configure lettre 0.11.23 relay session and envelope submission | L | P04-005, P01-001 | NOT STARTED |
-| [P06](../phases/phase-06.md) | SMTP | [P06-002](../phases/phase-06.md) | Enforce TLS verification and authentication failure semantics | M | P06-001, P01-002 | NOT STARTED |
-| [P06](../phases/phase-06.md) | SMTP | [P06-003](../phases/phase-06.md) | Validate and implement recipient partial-failure policy | XL | P01-003, P06-001 | NOT STARTED |
-| [P06](../phases/phase-06.md) | SMTP | [P06-004](../phases/phase-06.md) | Normalize SMTP responses, unknown-after-DATA, and no-retry behavior | L | P06-001, P06-002 | NOT STARTED |
-| [P06](../phases/phase-06.md) | SMTP | [P06-005](../phases/phase-06.md) | SMTP fault-matrix phase gate | M | P06-001, P06-002, P06-003, P06-004 | NOT STARTED |
+| [P06](../phases/phase-06.md) | SMTP | [P06-001](../phases/phase-06.md) | Implement the SMTP command codec and response parser | L | P04-005 | NOT STARTED |
+| [P06](../phases/phase-06.md) | SMTP | [P06-002](../phases/phase-06.md) | Implement the native connection, implicit TLS, and STARTTLS client | L | P06-001 | NOT STARTED |
+| [P06](../phases/phase-06.md) | SMTP | [P06-003](../phases/phase-06.md) | Implement SMTP AUTH and the session state machine | L | P06-001, P06-002 | NOT STARTED |
+| [P06](../phases/phase-06.md) | SMTP | [P06-004](../phases/phase-06.md) | Swap the delivery adapter and prove the differential fault matrix | XL | P06-003, P04-005 | NOT STARTED |
+| [P06](../phases/phase-06.md) | SMTP | [P06-005](../phases/phase-06.md) | Native SMTP engine phase gate | M | P06-001, P06-002, P06-003, P06-004 | NOT STARTED |
 | [P07](../phases/phase-07.md) | MIME | [P07-001](../phases/phase-07.md) | Implement header model and safe encoding | L | P04-002, P04-003 | NOT STARTED |
 | [P07](../phases/phase-07.md) | MIME | [P07-002](../phases/phase-07.md) | Implement plain text and HTML alternative bodies | M | P07-001 | NOT STARTED |
 | [P07](../phases/phase-07.md) | MIME | [P07-003](../phases/phase-07.md) | Implement filename and content-type handling policy | M | P07-001 | NOT STARTED |

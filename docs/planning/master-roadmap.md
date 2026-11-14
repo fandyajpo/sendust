@@ -11,10 +11,10 @@ This roadmap summarizes the 19 phase plans. Detailed tasks, tests, acceptance cr
 | Phase | Outcome | Gate |
 | --- | --- | --- |
 | P00 Discovery | Problem, constraints, semantics, threat boundary, and open questions fixed | PHASE-00 |
-| P01 Research | lettre, rustls, recipient observability, and Node runtime probe requirements resolved | PHASE-01 |
+| P01 Research | SMTP engine, rustls, recipient observability, and Node runtime probe requirements resolved | PHASE-01 |
 | P02 Architecture | Approve two-crate design, status/error contract, lifecycle, ownership, and limits | PHASE-02 |
 | P03 Repository | Workspace, toolchain, policies, and deterministic test seams exist | PHASE-03 |
-| P04 Rust core | Validation, message model, state machine, and lettre orchestration compile and pass core tests | PHASE-04 |
+| P04 Rust core | Validation, message model, state machine, and SMTP orchestration compile and pass core tests | PHASE-04 |
 | P05 Binding | Node-API 8 adapter exposes core with owned memory and stable mapping | PHASE-05 |
 | P06 SMTP | Relay sessions, TLS/auth, recipient policy, and response normalization pass the fault matrix | PHASE-06 |
 | P07 MIME | Headers, alternative bodies, filenames, and deterministic serialization conform to MIME | PHASE-07 |
@@ -46,12 +46,12 @@ Established the non-negotiable semantics: relay acceptance is not delivery, one 
 
 Resolved the source/API questions that can invalidate the architecture:
 
-1. Which lettre 0.11.23 async API to use.
+1. Which SMTP engine and API to use (resolved: Sendust-owned client, ADR-0017).
 2. Whether rustls `ring` + `webpki-roots` composes and keeps verification mandatory.
 3. Whether per-recipient RCPT status and exact timeout stages are observable.
 4. The napi-managed Tokio 1 / Node-API 8 design, with the exact Node.js, Bun, and Deno versions in the toolchain baseline retained as candidates until native runtime CI proves support.
 
-**Key risk:** relying on high-level transport semantics. **Mitigation:** selected lettre's public lower-level API and explicit RCPT response checks; P06-003 still validates with a fake relay.
+**Key risk:** relying on third-party transport semantics. **Mitigation:** the native client observes each RCPT reply directly; P06-004 proves the behaviour against a fake relay and a differential oracle.
 
 ### P02 — Architecture
 
@@ -69,7 +69,7 @@ Creates the Cargo workspace with exactly two crates, the TypeScript workspace, p
 
 ### P04 — Rust core
 
-Implements the error taxonomy and deterministic validation order, address/header/IDNA policy, message model and size accounting, transport state machine with deadlines and BUSY, and lettre-backed orchestration. Core tests run without Node.
+Implements the error taxonomy and deterministic validation order, address/header/IDNA policy, message model and size accounting, transport state machine with deadlines and BUSY, and SMTP orchestration. Core tests run without Node.
 
 **Key risk:** state machine races and nondeterministic error precedence. **Mitigation:** explicit transition table, injected clock, ordered validation tests.
 
@@ -81,7 +81,7 @@ Defines the Node-API 8 surface, copies all JS inputs, runs async tasks on the na
 
 ### P06 — SMTP
 
-Configures lettre relay sessions, enforces mandatory TLS verification and authentication semantics, implements exactly one recipient policy from P01-003, normalizes responses, and passes the full SMTP fault matrix with exact command traces.
+Configures native relay sessions, enforces mandatory TLS verification and authentication semantics, implements exactly one recipient policy from P01-003, normalizes responses, and passes the full SMTP fault matrix with exact command traces.
 
 **Key risk:** retrying after DATA or splitting per recipient. **Mitigation:** transaction-count assertions and a forbidden-path audit.
 

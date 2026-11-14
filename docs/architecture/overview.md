@@ -22,7 +22,7 @@ crates/sendust-napi  ── Node-API adapter: copy inputs, map errors, own async
 crates/sendust-core  ── validation, message model, MIME, transport state, SMTP orchestration
         │  uses
         ▼
-lettre 0.11.23 (Tokio 1 executor) ── SMTP session, TLS, AUTH, DATA
+Sendust SMTP client (Tokio 1 + rustls) ── SMTP protocol, TLS, AUTH, DATA
         │
         ▼
 Consumer-configured SMTP relay
@@ -35,7 +35,7 @@ Consumer-configured SMTP relay
 | TypeScript wrapper | Public names, types, defaults documentation, error classes, module formats | Keeps the native surface small and lets JS-facing ergonomics change without recompiling Rust |
 | napi adapter | Convert JS values to owned Rust values; convert core results/errors; schedule async work | Isolates all Node-API and `unsafe`-adjacent code in one crate |
 | Rust core | All protocol-independent policy and all SMTP/MIME behavior | Testable without Node; enforces validation, limits, lifecycle, and delivery semantics |
-| lettre | SMTP/TLS/AUTH/MIME primitives | Avoids writing and maintaining an SMTP client; pinned and researched |
+| Sendust SMTP client (native) | SMTP protocol, TLS, AUTH, DATA | Owns the engine on rustls/Tokio primitives (ADR-0017); lettre 0.11.23 is superseded and remains only as a dev-only differential oracle during P06 |
 
 The TypeScript wrapper is deliberately thin. It validates only public shape and option compatibility that cannot be expressed in generated types. It MUST NOT reinterpret core statuses or implement SMTP/MIME policy. This prevents the two implementations from drifting.
 
@@ -53,8 +53,8 @@ A separate `sendust-mime` or `sendust-smtp` crate is not justified yet: MIME and
 1. The caller constructs a transport with relay, TLS, auth, timeout, attachment, and cap options.
 2. `send(message)` synchronously prepares an owned native operation, snapshots JS-owned buffers/strings, and reserves the single-send slot; synchronous preparation failures become Promise rejections.
 3. The binding schedules the owned operation on napi-managed Tokio 1.
-4. Core validates in deterministic order, composes the MIME message, enforces caps, and opens one AsyncSmtpConnection through lettre.
-5. lettre performs connect, TLS/required STARTTLS, AUTH, MAIL, one RCPT command per recipient, and one DATA transaction for the accepted-recipient subset.
+4. Core validates in deterministic order, composes the MIME message, enforces caps, and opens one native SMTP session.
+5. The Sendust client performs connect, TLS/required STARTTLS, AUTH, MAIL, one RCPT command per recipient, and one DATA transaction for the accepted-recipient subset.
 6. Core maps the final observable state to `accepted`, `rejected`, or `unknown` and closes the session.
 7. The binding converts the result or error into a stable JS object; the wrapper returns it unchanged.
 
@@ -108,7 +108,7 @@ The public TypeScript API is runtime-neutral. Native loading is isolated in the 
 
 ## 10. Modular architecture (ADR-0016)
 
-Sendust is a modular monolith, not a microservice system or a crate-per-feature workspace. The installable product remains one package, the native addon remains shared, and the Rust workspace remains exactly two crates. Inside sendust-core, configuration, address, message, validation, attachments, MIME, delivery orchestration, SMTP adapter, lifecycle, and errors/results have explicit ownership. Domain modules remain independent of SMTP/lettre and runtime bindings. SMTP is isolated behind a narrow internal delivery port; it is the only MVP adapter. No public plugin registry, speculative extension points, or alternate transport is added. See [ADR-0016](decisions/0016-modular-monolith.md).
+Sendust is a modular monolith, not a microservice system or a crate-per-feature workspace. The installable product remains one package, the native addon remains shared, and the Rust workspace remains exactly two crates. Inside sendust-core, configuration, address, message, validation, attachments, MIME, delivery orchestration, SMTP adapter, lifecycle, and errors/results have explicit ownership. Domain modules remain independent of SMTP and runtime bindings. SMTP is isolated behind a narrow internal delivery port; it is the only MVP adapter. No public plugin registry, speculative extension points, or alternate transport is added. See [ADR-0016](decisions/0016-modular-monolith.md).
 
 ## 11. What the architecture deliberately excludes
 

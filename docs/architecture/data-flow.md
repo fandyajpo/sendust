@@ -11,7 +11,7 @@ sequenceDiagram
     participant TS as ts/src
     participant N as sendust-napi
     participant C as sendust-core
-    participant L as lettre
+    participant L as SMTP client
     participant R as SMTP relay
 
     App->>TS: transport.send(message)
@@ -56,7 +56,7 @@ sequenceDiagram
 | Core validation | Rust heap | Rust heap | No |
 | File attachment read | OS file | Rust heap | Yes, bounded |
 | MIME composition | Rust heap | Rust heap | Serialized bytes |
-| lettre submission | Rust heap | lettre internal | lettre serializes to socket |
+| SMTP submission | Rust heap | Sendust session buffer | the client serializes to socket |
 | Result conversion | Rust heap | JS heap | Values only, no bodies |
 
 **Invariant:** after the napi conversion returns to the async runtime, no pointer into JS-owned memory is retained. A JS mutation or `ArrayBuffer` detachment after the call cannot alter sent bytes. This is tested in P05-002 and P11-004.
@@ -73,15 +73,15 @@ All deterministic failures (validation, limits, configuration, MIME composition,
 
 | Stage | If it fails | Result certainty |
 | --- | --- | --- |
-| DNS/connect/greeting/EHLO/TLS | No message transaction | Connection/TLS error; outer connect deadline required because lettre's inner timeout does not cover DNS/greeting/EHLO/TLS |
+| DNS/connect/greeting/EHLO/TLS | No message transaction | Connection/TLS error; the outer connect deadline covers DNS, greeting, EHLO and TLS as one boundary |
 | AUTH | Authentication failed | `AUTH` error; no message was submitted |
 | MAIL FROM | Definitive SMTP refusal | `rejected` outcome |
 | RCPT TO | Individual recipient refusal | Record explicit rejected; continue with other recipients; if none accepted, do not issue DATA |
 | DATA command | Explicit 4xx/5xx before message body | `rejected` outcome |
 | DATA command | Any response other than required 354 (and not a definitive 4xx/5xx) | Protocol error; no message body sent |
-| DATA body + terminator + final reply (lettre `message()`) | Explicit final 4xx/5xx | `rejected` outcome |
-| DATA body + terminator + final reply (lettre `message()`) | Positive final 2xx | `accepted` outcome for RCPT-accepted recipients |
-| DATA body + terminator + final reply (lettre `message()`) | Write/read/reset/timeout or non-final 3xx without final disposition | `unknown` conservatively because lettre exposes no public terminator-write checkpoint |
+| DATA body + terminator + final reply (client `data()`) | Explicit final 4xx/5xx | `rejected` outcome |
+| DATA body + terminator + final reply (client `data()`) | Positive final 2xx | `accepted` outcome for RCPT-accepted recipients |
+| DATA body + terminator + final reply (client `data()`) | Write/read/reset/timeout or non-final 3xx without final disposition | `unknown` conservatively because the terminator write is not individually observable |
 
 A result is `accepted` only after a positive final response to DATA. An explicit negative final response (4xx/5xx) is a known `rejected` outcome, including when it arrives after the message body. `unknown` is reserved for cases where the final disposition cannot be established, such as losing the connection after the DATA terminator may have reached the relay but before its final reply arrives. Connection, TLS, and AUTH failures are operational errors, not delivery outcomes. Acceptance means relay responsibility, not mailbox delivery.
 
@@ -94,7 +94,7 @@ sequenceDiagram
     participant TS as ts/src
     participant N as sendust-napi
     participant C as sendust-core
-    participant L as lettre
+    participant L as SMTP client
 
     App->>TS: transport.close()
     TS->>N: beginClose() synchronously
@@ -167,7 +167,7 @@ No limit is enforced after bytes have been written to the socket except the tota
 ## 5. Backpressure and memory
 
 - The MVP buffers the entire message before sending. There is no streaming.
-- Peak memory is approximately: owned message inputs + serialized wire bytes + lettre’s internal encoding buffer.
+- Peak memory is approximately: owned message inputs + serialized wire bytes + the client's line/encoding buffer.
 - Caps are chosen so worst-case peak remains bounded and documented (see P13-003 for measured numbers).
 - Attachment files are read with a bounded read loop; a file that grows during read is detected by the cap probe and rejected.
 - No global state, no cross-transport cache, no pool.

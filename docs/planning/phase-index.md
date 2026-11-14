@@ -12,7 +12,7 @@ Entry point to all 19 Sendust phases. P00–P05 are completed with reviewed gate
 | [P03](../phases/phase-03.md) | Repository | Create workspace, toolchain, multi-runtime CI policies, modular boundaries, and deterministic test seams | P02 + A01 + A02 | 5 | P03-005 | COMPLETED |
 | [P04](../phases/phase-04.md) | Rust core | Implement errors, validation, message model, state machine, and SMTP orchestration | P03 | 5 | P04-005 | COMPLETED |
 | [P05](../phases/phase-05.md) | Binding | Expose core through Node-API 8 with owned memory and stable mapping | P04 | 5 | P05-005 | COMPLETED |
-| [P06](../phases/phase-06.md) | SMTP | Relay sessions, TLS/auth, recipient policy, and response normalization | P04, P01 | 5 | P06-005 | NOT STARTED |
+| [P06](../phases/phase-06.md) | SMTP engine | Native protocol client: codec, parser, capabilities, STARTTLS, AUTH, recipient policy, and fault matrix | P04, P01 | 5 | P06-005 | NOT STARTED |
 | [P07](../phases/phase-07.md) | MIME | Headers, alternative bodies, filenames, and deterministic serialization | P04 | 5 | P07-005 | NOT STARTED |
 | [P08](../phases/phase-08.md) | Attachments | Opt-in files, safe reads, caps, and MIME integration | P07, P05 | 5 | P08-005 | NOT STARTED |
 | [P09](../phases/phase-09.md) | Public API | TypeScript transport, send, close, errors, and contract gate | P05, P06, P08 | 5 | P09-005 | NOT STARTED |
