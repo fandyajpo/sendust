@@ -8,10 +8,11 @@ mod support;
 
 use std::net::{SocketAddr, TcpListener};
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 use sendust_core::{
     Delivery, DeliveryStatus, ErrorCode, Limits, Mailbox, OutgoingMessage, RecipientStatus,
-    SmtpConfig, SmtpCredentials, SmtpSecurity, SmtpTransport, Stage,
+    SmtpConfig, SmtpCredentials, SmtpSecurity, SmtpTransport, Stage, Timeouts,
 };
 use support::tls;
 use support::{AfterBody, FakeSmtp, Reply, Script};
@@ -308,4 +309,140 @@ async fn an_intermediate_rcpt_reply_is_a_protocol_error() {
     assert_eq!(error.details().operation_stage(), Some(Stage::Rcpt));
     assert_eq!(error.details().smtp_status(), Some(354));
     assert_eq!(server.trace().count_prefix("DATA"), 0);
+}
+
+
+/// Budgets lowered in proportion to the approved maximums so a stall of the
+/// same shape as the 11 s / 31 s / 121 s cases runs in seconds.
+fn lowered(connect: u64, operation: u64, total: u64, close: u64) -> Timeouts {
+    Timeouts::default()
+        .with_connect(Duration::from_secs(connect))
+        .expect("connect budget")
+        .with_operation(Duration::from_secs(operation))
+        .expect("operation budget")
+        .with_total(Duration::from_secs(total))
+        .expect("total budget")
+        .with_close(Duration::from_secs(close))
+        .expect("close budget")
+}
+
+#[tokio::test]
+async fn every_bad_certificate_fixture_fails_before_mail() {
+    for name in ["self-signed", "expired", "wrong-host", "incomplete-chain"] {
+        let script = Script {
+            tls: Some(tls::server_config_named(&tls_dir(), name)),
+            ..Script::default()
+        };
+        let server = FakeSmtp::start(script).expect("start fake smtp");
+        let mut delivery = delivery(config(server.addr()));
+
+        let error = delivery
+            .send(message(&["bob@example.test"]))
+            .await
+            .expect_err(name);
+
+        assert_eq!(error.code(), ErrorCode::TlsCertificate, "{name}");
+        assert_eq!(server.trace().count_prefix("MAIL"), 0, "{name}");
+        assert_eq!(server.trace().count_prefix("DATA"), 0, "{name}");
+    }
+
+    let malformed = std::fs::read(tls_dir().join("malformed.pem")).expect("malformed fixture");
+    let error = SmtpConfig::new("127.0.0.1", 465, SmtpSecurity::ImplicitTls)
+        .expect("valid relay")
+        .with_root_certificate_pem(malformed)
+        .expect_err("malformed anchor");
+    assert_eq!(error.code(), ErrorCode::ValidationInvalidOption);
+}
+
+#[tokio::test]
+async fn greeting_reset_is_a_protocol_error() {
+    let server = serving(Script::default().hangup(support::Stage::Greeting));
+    let mut delivery = delivery(config(server.addr()));
+
+    let error = delivery
+        .send(message(&["bob@example.test"]))
+        .await
+        .expect_err("greeting reset");
+
+    assert_eq!(error.code(), ErrorCode::ProtocolConnectionReset);
+    assert_eq!(
+        error.details().operation_stage(),
+        Some(Stage::ConnectionSetup)
+    );
+}
+
+#[tokio::test]
+async fn data_command_reset_is_a_protocol_error() {
+    let server = serving(Script::default().hangup(support::Stage::Data));
+    let mut delivery = delivery(config(server.addr()));
+
+    let error = delivery
+        .send(message(&["bob@example.test"]))
+        .await
+        .expect_err("reset before the DATA reply");
+
+    assert_eq!(error.code(), ErrorCode::ProtocolConnectionReset);
+    assert_eq!(error.details().operation_stage(), Some(Stage::DataCommand));
+    assert!(server.trace().body().is_empty(), "no body was written");
+}
+
+#[tokio::test]
+async fn connect_stall_is_a_connect_timeout() {
+    let script = Script::default().delay(support::Stage::Greeting, Duration::from_millis(2_500));
+    let server = serving(script);
+    let mut delivery = delivery(
+        config(server.addr())
+            .with_timeouts(lowered(2, 2, 2, 2))
+            .expect("lowered budgets"),
+    );
+
+    let error = delivery
+        .send(message(&["bob@example.test"]))
+        .await
+        .expect_err("connect stall");
+
+    assert_eq!(error.code(), ErrorCode::TimeoutConnect);
+    assert_eq!(
+        error.details().operation_stage(),
+        Some(Stage::ConnectionSetup)
+    );
+}
+
+#[tokio::test]
+async fn command_stall_is_an_operation_timeout() {
+    let script = Script::default().delay(support::Stage::Mail, Duration::from_millis(1_500));
+    let server = serving(script);
+    let mut delivery = delivery(
+        config(server.addr())
+            .with_timeouts(lowered(1, 1, 2, 2))
+            .expect("lowered budgets"),
+    );
+
+    let error = delivery
+        .send(message(&["bob@example.test"]))
+        .await
+        .expect_err("command stall");
+
+    assert_eq!(error.code(), ErrorCode::TimeoutOperation);
+    assert_eq!(error.details().operation_stage(), Some(Stage::Mail));
+}
+
+#[tokio::test]
+async fn total_stall_is_a_total_timeout() {
+    let script = Script::default()
+        .delay(support::Stage::Greeting, Duration::from_millis(1_500))
+        .delay(support::Stage::Rcpt, Duration::from_millis(2_000));
+    let server = serving(script);
+    let mut delivery = delivery(
+        config(server.addr())
+            .with_timeouts(lowered(2, 1, 2, 2))
+            .expect("lowered budgets"),
+    );
+
+    let error = delivery
+        .send(message(&["bob@example.test"]))
+        .await
+        .expect_err("total stall");
+
+    assert_eq!(error.code(), ErrorCode::TimeoutTotal);
 }

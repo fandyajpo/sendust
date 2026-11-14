@@ -87,6 +87,8 @@ pub struct Script {
     pub unknown: Reply,
     /// Injected delay applied before the reply of a stage.
     pub delays: Vec<(Stage, Duration)>,
+    /// Stages where the server closes the connection instead of replying.
+    pub hangup: Vec<Stage>,
     /// When set, the harness completes an implicit TLS handshake first.
     pub tls: Option<Arc<rustls::ServerConfig>>,
     /// Serve plaintext and upgrade on STARTTLS instead of implicit TLS.
@@ -108,6 +110,7 @@ impl Default for Script {
             quit: Reply::line("221 2.0.0 Bye"),
             unknown: Reply::line("500 5.5.2 Command unrecognized"),
             delays: Vec::new(),
+            hangup: Vec::new(),
             tls: None,
             starttls_mode: false,
         }
@@ -132,6 +135,12 @@ impl Script {
 
     pub fn delay(mut self, stage: Stage, duration: Duration) -> Self {
         self.delays.push((stage, duration));
+        self
+    }
+
+    /// Closes the connection at `stage` instead of writing its reply.
+    pub fn hangup(mut self, stage: Stage) -> Self {
+        self.hangup.push(stage);
         self
     }
 
@@ -320,6 +329,10 @@ fn serve(stream: TcpStream, script: &Script, trace: &Trace) {
         _ => Conn::Plain(stream),
     };
 
+    if script.hangup.contains(&Stage::Greeting) {
+        conn.shutdown();
+        return;
+    }
     if let Some(delay) = script.delay_for(Stage::Greeting) {
         thread::sleep(delay);
     }
@@ -427,6 +440,10 @@ fn serve(stream: TcpStream, script: &Script, trace: &Trace) {
             continue;
         };
 
+        if script.hangup.contains(&stage) {
+            conn.shutdown();
+            return;
+        }
         if let Some(delay) = script.delay_for(stage) {
             thread::sleep(delay);
         }

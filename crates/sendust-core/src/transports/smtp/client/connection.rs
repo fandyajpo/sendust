@@ -86,6 +86,9 @@ pub struct Connection {
     tls_config: Arc<ClientConfig>,
     deadlines: SendDeadlines,
     encrypted: bool,
+    /// True until greeting, EHLO and any implicit TLS finish, so those reads
+    /// are bounded by the connect window (ADR-0007).
+    in_setup: bool,
 }
 
 impl Connection {
@@ -137,11 +140,13 @@ impl Connection {
             tls_config,
             deadlines,
             encrypted: matches!(config.security(), SmtpSecurity::ImplicitTls),
+            in_setup: true,
         };
 
         let greeting = connection.read_reply(Stage::ConnectionSetup).await?;
         expect(&greeting, 220, Stage::ConnectionSetup)?;
         connection.rehandshake().await?;
+        connection.in_setup = false;
         Ok(connection)
     }
 
@@ -226,6 +231,7 @@ impl Connection {
         let bytes = command.to_bytes()?;
         let budget = self.budget();
         let deadline = self.deadlines;
+        let connected = !self.in_setup;
 
         let stream = self.transport_mut()?;
         tokio::time::timeout(budget, async {
@@ -233,7 +239,7 @@ impl Connection {
             stream.flush().await
         })
         .await
-        .map_err(|_| deadline.timeout_error(Instant::now(), true, stage))?
+        .map_err(|_| deadline.timeout_error(Instant::now(), connected, stage))?
         .map_err(io_error)?;
 
         self.read_reply(stage).await
@@ -261,9 +267,10 @@ impl Connection {
             let mut chunk = [0u8; 1024];
             let budget = self.budget();
             let deadline = self.deadlines;
+            let connected = !self.in_setup;
             let read = tokio::time::timeout(budget, self.transport_mut()?.read(&mut chunk))
                 .await
-                .map_err(|_| deadline.timeout_error(Instant::now(), true, stage))?
+                .map_err(|_| deadline.timeout_error(Instant::now(), connected, stage))?
                 .map_err(io_error)?;
 
             if read == 0 {
@@ -273,8 +280,14 @@ impl Connection {
         }
     }
 
+    /// Budget for one read or write. During connection setup the connect window
+    /// governs greeting, EHLO and TLS; afterwards the operation budget does,
+    /// always capped by the remaining total.
     fn budget(&self) -> Duration {
         let now = Instant::now();
+        if self.in_setup {
+            return self.remaining(self.deadlines.connect_by());
+        }
         self.deadlines
             .operation_deadline(now)
             .saturating_duration_since(now)
