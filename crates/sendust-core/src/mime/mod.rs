@@ -276,13 +276,7 @@ fn content_disposition(filename: &str) -> String {
 
     let fallback: String = filename
         .chars()
-        .map(|character| {
-            if character.is_ascii() {
-                character
-            } else {
-                '_'
-            }
-        })
+        .map(|character| if character.is_ascii() { character } else { '_' })
         .collect();
 
     format!(

@@ -105,11 +105,7 @@ pub(crate) fn normalize_filename(raw: &str) -> Result<String, Error> {
     // A filename is a display name, never a path. Keep the last component so a
     // caller cannot leak a local directory or traverse, and so a path from
     // `path.join` still works instead of failing the whole send.
-    let name = raw
-        .rsplit(['/', '\\'])
-        .next()
-        .unwrap_or_default()
-        .trim();
+    let name = raw.rsplit(['/', '\\']).next().unwrap_or_default().trim();
     if name.is_empty() || name.len() > MAX_FILENAME || name == "." || name == ".." {
         return Err(invalid_attachment());
     }
@@ -280,7 +276,10 @@ mod tests {
             normalize_filename("../../secrets/notes.txt").expect("stripped"),
             "notes.txt"
         );
-        assert_eq!(normalize_filename("  report.pdf  ").expect("trimmed"), "report.pdf");
+        assert_eq!(
+            normalize_filename("  report.pdf  ").expect("trimmed"),
+            "report.pdf"
+        );
     }
 
     #[test]
