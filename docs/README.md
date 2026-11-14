@@ -108,7 +108,7 @@ P00–P05 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P04-001–P04-005 | COMPLETED |
 | P05-001–P05-005 | COMPLETED |
 | P06–P18 | NOT STARTED |
-| Next task | P06-002 — native connection, implicit TLS, and STARTTLS client |
+| Next task | P06-003 — SMTP AUTH and the session state machine |
 
 ## 5. Conventions
 

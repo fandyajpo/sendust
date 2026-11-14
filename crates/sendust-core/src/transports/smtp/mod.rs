@@ -10,7 +10,8 @@
 //! positive final `DATA` response. A refusal at `RCPT` is a recipient outcome,
 //! not an error, and nothing is ever fanned out into per-recipient messages.
 
-mod proto;
+pub mod client;
+pub mod proto;
 
 use std::fmt;
 use std::future::Future;
@@ -148,9 +149,15 @@ impl SmtpConfig {
     /// certificate is not trusted.
     pub fn with_root_certificate_pem(mut self, pem: impl Into<Vec<u8>>) -> Result<Self, Error> {
         let pem = pem.into();
-        Certificate::from_pem(&pem).map_err(|_| Error::new(ErrorCode::ValidationInvalidOption))?;
+        client::tls::validate_anchor(&pem)
+            .map_err(|_| Error::new(ErrorCode::ValidationInvalidOption))?;
         self.root_certificates.push(pem);
         Ok(self)
+    }
+
+    /// Extra PEM trust anchors supplied by the caller.
+    pub fn root_certificates(&self) -> &[Vec<u8>] {
+        &self.root_certificates
     }
 
     pub fn host(&self) -> &str {

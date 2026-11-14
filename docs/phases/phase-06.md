@@ -25,7 +25,7 @@ In scope: the SMTP protocol codec, the multiline response parser, EHLO capabilit
 ### P06-002 — Implement the native connection, implicit TLS, and STARTTLS client
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P06-001
 - **Description:** Connect with Tokio over one resolved relay address, read the greeting, send EHLO, and parse capabilities. Support implicit TLS and a required STARTTLS upgrade using rustls with `ring` and `webpki-roots`, SNI and hostname verification always on. Re-EHLO after STARTTLS. Never fall back to plaintext, never treat a missing STARTTLS advertisement as success, and never disable verification.
 - **Evidence criteria:** Loopback harness proves greeting, EHLO, implicit TLS, STARTTLS upgrade, and re-EHLO. Self-signed, expired, wrong-host, incomplete-chain and malformed fixtures all fail closed with distinct codes; no configuration can disable verification.
@@ -112,8 +112,9 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 
 | Task | Evidence | State |
 | --- | --- | --- |
+| P06-002 | `crates/sendust-core/src/transports/smtp/client/` — `connection.rs` (Tokio TCP, greeting, EHLO, implicit TLS, required STARTTLS with re-EHLO, bounded reads under `SendDeadlines`) and `tls.rs` (rustls with `ring`, WebPKI roots plus validated PEM anchors, TLS 1.2 floor, no bypass). Harness gained a real STARTTLS upgrade and named-certificate serving; `tests/smtp_client.rs` adds 6 tests. | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
 | P06-001 | `crates/sendust-core/src/transports/smtp/proto/` — `command.rs` (EHLO, STARTTLS, AUTH PLAIN/LOGIN, MAIL, RCPT, DATA, RSET, NOOP, QUIT with injection rejection and the 512-byte cap), `response.rs` (three-digit code validation, multiline builder, 1000-byte line and 64 KiB reply caps, RFC 3463 enhanced status), `capabilities.rs` (STARTTLS, AUTH mechanisms, SIZE, 8BITMIME). 15 new unit tests; 109 core tests total, `cargo clippy -D warnings`, architecture/docs/secrets checks all pass locally. The module is I/O-free and carries a temporary `dead_code` allow until P06-002/P06-003 wire it in. | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
 
 ## Status
 
-IN PROGRESS. P06-001 is IN REVIEW; P06-002 to P06-005 are NOT STARTED.
+IN PROGRESS. P06-001 and P06-002 are IN REVIEW; P06-003 to P06-005 are NOT STARTED.

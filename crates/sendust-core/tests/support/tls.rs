@@ -53,13 +53,18 @@ fn install_provider() {
 
 /// Server config serving `valid-server` with the committed key.
 pub fn server_config(tls_dir: &Path) -> Arc<ServerConfig> {
+    server_config_named(tls_dir, "valid-server")
+}
+
+/// Server config serving one named fixture pair, e.g. `self-signed`.
+pub fn server_config_named(tls_dir: &Path, name: &str) -> Arc<ServerConfig> {
     install_provider();
 
-    let chain = read(&tls_dir.join("valid-server.crt"), "CERTIFICATE")
+    let chain = read(&tls_dir.join(format!("{name}.crt")), "CERTIFICATE")
         .into_iter()
         .map(CertificateDer::from)
         .collect::<Vec<_>>();
-    let key = read(&tls_dir.join("valid-server.key"), "PRIVATE KEY")
+    let key = read(&tls_dir.join(format!("{name}.key")), "PRIVATE KEY")
         .into_iter()
         .next()
         .map(|bytes| PrivateKeyDer::Pkcs8(PrivatePkcs8KeyDer::from(bytes)))

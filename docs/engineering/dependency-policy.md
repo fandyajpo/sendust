@@ -18,8 +18,11 @@ A direct dependency may be added only through the review in section 6. Transitiv
 | `napi-build` | `=2.6.0` | build | — | on | `sendust-napi` | Binding build setup |
 | `idna` | `=1.1.0` | normal | `std`, `compiled_data` | off | `sendust-core` | IDNA/UTS #46 domain conversion for envelope addresses |
 | `base64` | `=0.23.1` | normal | default | on | `sendust-core` | MIME transfer encoding (ADR-0010) |
-| `tokio` | `=1.54.1` | normal, dev | `time`; dev-only `rt`, `macros` | off | `sendust-core` | Deadline enforcement for the SMTP adapter; core never builds a runtime |
+| `tokio` | `=1.54.1` | normal, dev | `time`, `sync`, `net`, `io-util`; dev-only `rt`, `macros` | off | `sendust-core` | Deadline enforcement and native TCP I/O; core never builds a runtime |
 | `rustls` | `=0.23.46` | normal, dev | `std`, `tls12`, `ring` | off | `sendust-core` | Typed TLS error classification in the SMTP adapter and the TLS test harness |
+| `tokio-rustls` | `=0.26.6` | normal | `tls12` | off | `sendust-core` | Async TLS stream for the native SMTP client (ADR-0017) |
+| `webpki-roots` | `=1.0.12` | normal | default | on | `sendust-core` | Bundled trust store for the native client (ADR-0003) |
+| `rustls-pki-types` | `=1.16.0` | normal | default | on | `sendust-core` | `ServerName` and certificate types for the native client |
 
 `sendust-core` declares no build script and no binding, runtime, or Node.js dependency. `sendust-napi` depends on `sendust-core` and never the reverse. `lettre` is declared once, at workspace level, and must not appear in `sendust-napi`.
 
