@@ -360,14 +360,10 @@ async fn greeting_reset_is_a_protocol_error() {
     let server = FakeSmtp::start(Script::default().hangup(support::Stage::Greeting))
         .expect("start plain fake smtp");
     let mut delivery = delivery(
-        SmtpConfig::new(
-            "127.0.0.1",
-            server.addr().port(),
-            SmtpSecurity::StartTls,
-        )
-        .expect("valid relay")
-        .with_root_certificate_pem(ca_pem())
-        .expect("trusted fixture root"),
+        SmtpConfig::new("127.0.0.1", server.addr().port(), SmtpSecurity::StartTls)
+            .expect("valid relay")
+            .with_root_certificate_pem(ca_pem())
+            .expect("trusted fixture root"),
     );
 
     let error = delivery
