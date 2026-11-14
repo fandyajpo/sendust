@@ -91,7 +91,7 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 
 | Task | Evidence | State |
 | --- | --- | --- |
-| P07-001 | `message/mod.rs`: a custom header may appear once (case-insensitive), `Message-ID` and `Received` join the reserved set, and the model documents the fixed header order. `mime/headers.rs`: RFC 2047 encoded words that never split a character and never exceed 75 characters, ASCII words left unencoded, folding that only replaces an existing space so unfolding restores the value, unbreakable tokens falling back to encoded words instead of being split, and Unicode display names rendered as unquoted phrases. 10 header unit tests, ordering and exact-encoded-byte serialization tests, and 3 duplicate-policy tests. | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
+| P07-001 | `message/mod.rs`: a custom header may appear once (case-insensitive), `Message-ID` and `Received` join the reserved set, and the model documents the fixed header order. `mime/headers.rs`: RFC 2047 encoded words that never split a character and never exceed 75 characters, ASCII words left unencoded, folding that only replaces an existing space so unfolding restores the value, unbreakable tokens falling back to encoded words instead of being split, and Unicode display names rendered as unquoted phrases. 10 header unit tests, ordering and exact-encoded-byte serialization tests, and 3 duplicate-policy tests. | IMPLEMENTED, EXECUTED PASS locally and in CI (all 8 workflows); CI evidence on the branch. |
 
 ## Status
 
