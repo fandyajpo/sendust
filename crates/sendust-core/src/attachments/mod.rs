@@ -251,7 +251,7 @@ mod tests {
             validate(
                 &[bytes("at-cap", limits.max_attachment_bytes())],
                 limits,
-                false
+                AttachmentPolicy::Disabled
             )
             .is_ok()
         );
@@ -385,7 +385,12 @@ mod tests {
     #[test]
     fn accepts_file_descriptor_with_opt_in_without_reading_it() {
         assert_eq!(
-            validate(&[file(Some("report.pdf"))], Limits::default(), true).expect("valid"),
+            validate(
+                &[file(Some("report.pdf"))],
+                Limits::default(),
+                AttachmentPolicy::Enabled
+            )
+            .expect("valid"),
             0
         );
     }

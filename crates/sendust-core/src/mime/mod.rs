@@ -635,7 +635,7 @@ mod tests {
         })];
 
         assert_eq!(
-            serialize(&message, Limits::default(), true)
+            serialize(&message, Limits::default(), AttachmentPolicy::Enabled)
                 .expect_err("not readable yet")
                 .code(),
             ErrorCode::ValidationInvalidAttachment
