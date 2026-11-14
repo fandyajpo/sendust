@@ -139,6 +139,25 @@ jobs:
       - name: Binding tests
         run: npm --workspace ./ts run test
 
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.9.8
+
+      - name: Runtime smoke (Node.js)
+        run: node tests/runtime/smoke.mjs
+
+      - name: Runtime smoke (Bun)
+        run: bun tests/runtime/smoke.mjs
+
+      - name: Runtime smoke (Deno)
+        run: deno run --allow-ffi --allow-read --allow-net tests/runtime/smoke.mjs
+
   bun:
     name: Bun runtime-neutral smoke
     runs-on: ubuntu-latest
