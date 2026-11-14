@@ -76,6 +76,14 @@ impl Settings {
     }
 }
 
+/// Values shipped in `.env.example`; an unedited copy must not send.
+fn is_placeholder(value: &str) -> bool {
+    let lowered = value.to_ascii_lowercase();
+    lowered.contains("example.com")
+        || lowered.contains("your-name")
+        || lowered.contains("your-16-char-app-password")
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let settings = Settings::load();
     tokio::runtime::Builder::new_current_thread()
@@ -92,19 +100,61 @@ async fn run(settings: &Settings) -> Result<(), Box<dyn std::error::Error>> {
             return Err(format!("unknown SENDUST_SECURITY {other}; use tls or starttls").into());
         }
     };
+    let mode = match security {
+        SmtpSecurity::ImplicitTls => "tls",
+        SmtpSecurity::StartTls => "starttls",
+    };
 
-    let mut config = SmtpConfig::new(
-        settings.required("SENDUST_HOST")?,
-        settings.number("SENDUST_PORT", 465)?,
-        security,
-    )?;
-
-    match (settings.get("SENDUST_USER"), settings.get("SENDUST_PASS")) {
-        (Some(user), Some(password)) => {
-            config = config.with_credentials(SmtpCredentials::new(user, password)?);
+    for key in [
+        "SENDUST_HOST",
+        "SENDUST_USER",
+        "SENDUST_PASS",
+        "SENDUST_FROM",
+        "SENDUST_TO",
+    ] {
+        if let Some(value) = settings.get(key) {
+            if is_placeholder(&value) {
+                return Err(format!(
+                    "{key} still contains an example placeholder; edit .env (see .env.example)"
+                )
+                .into());
+            }
         }
-        (None, None) => {}
-        _ => return Err("set both SENDUST_USER and SENDUST_PASS, or neither".into()),
+    }
+
+    let host = settings.required("SENDUST_HOST")?;
+    let port = settings.number("SENDUST_PORT", 465)?;
+    if (security == SmtpSecurity::ImplicitTls && port == 587)
+        || (security == SmtpSecurity::StartTls && port == 465)
+    {
+        eprintln!("warning: port {port} is unusual for {mode}; 465 is implicit TLS, 587 is STARTTLS");
+    }
+
+    let mut config = SmtpConfig::new(host.clone(), port, security)?;
+
+    let user = settings.get("SENDUST_USER");
+    let password = match (user.as_ref(), settings.get("SENDUST_PASS")) {
+        (Some(_), None) => {
+            return Err(
+                "SENDUST_USER is set but SENDUST_PASS is empty; set the password or unset both"
+                    .into(),
+            );
+        }
+        (None, Some(_)) => {
+            return Err(
+                "SENDUST_PASS is set but SENDUST_USER is empty; set the user or unset both".into(),
+            );
+        }
+        (Some(_), Some(value))
+            if host.to_ascii_lowercase().ends_with("gmail.com") && value.contains(' ') =>
+        {
+            println!("note: removed spaces from the Gmail app password");
+            Some(value.replace(' ', ""))
+        }
+        (_, other) => other,
+    };
+    if let (Some(user), Some(password)) = (user, password) {
+        config = config.with_credentials(SmtpCredentials::new(user, password)?);
     }
 
     if let Some(path) = settings.get("SENDUST_EXTRA_ROOT") {
@@ -121,8 +171,8 @@ async fn run(settings: &Settings) -> Result<(), Box<dyn std::error::Error>> {
         .collect::<Result<Vec<_>, _>>()?;
 
     let message = OutgoingMessage {
-        from,
-        to: recipients,
+        from: from.clone(),
+        to: recipients.clone(),
         cc: Vec::new(),
         bcc: Vec::new(),
         reply_to: Vec::new(),
@@ -138,6 +188,24 @@ async fn run(settings: &Settings) -> Result<(), Box<dyn std::error::Error>> {
         headers: Vec::new(),
         attachments: Vec::new(),
     };
+
+    println!(
+        "relay: {host}:{port} {mode}, auth: {}",
+        if config.credentials().is_some() {
+            "yes"
+        } else {
+            "no"
+        }
+    );
+    println!("from: {from}");
+    println!(
+        "to: {}",
+        recipients
+            .iter()
+            .map(|mailbox| mailbox.address())
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
 
     let mut transport = SmtpTransport::new(config);
     let mut delivery = Delivery::new(transport.session(), Limits::default(), false);

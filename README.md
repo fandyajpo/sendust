@@ -29,7 +29,8 @@ Two runnable entry points exist today. Both read the relay from the environment,
 so no credential lives in the repository, and both report relay acceptance only,
 never a delivery claim.
 
-Both read `.env` in the repository root (real environment variables win), so:
+Both read `.env` in the repository root (real environment variables win), so
+start from the committed example and pick one relay profile:
 
 ```text
 cp .env.example .env
@@ -42,12 +43,18 @@ npm run build:native
 node examples/send_email.mjs                     # Node-API binding
 ```
 
-Both take `SENDUST_HOST`, `SENDUST_PORT` (default 465), `SENDUST_SECURITY` (`tls`
-or `starttls`), optional `SENDUST_USER`/`SENDUST_PASS`, `SENDUST_FROM`,
-`SENDUST_TO` (comma separated), `SENDUST_SUBJECT`, and `SENDUST_TEXT`. The Rust
-example also accepts `SENDUST_EXTRA_ROOT`, a PEM trust anchor for local test
-relays. `npm --workspace ./ts run test` runs the TypeScript and binding tests
-against the staged addon.
+The examples refuse values that still look like the shipped placeholders, and
+for a `gmail.com` relay they strip the spaces Google shows in an app password.
+For Gmail, create an app password at
+`https://myaccount.google.com/security/apppasswords` and set
+`SENDUST_USER`/`SENDUST_PASS` to the same account; `SENDUST_FROM` must be that
+address or an alias you own. Both take `SENDUST_HOST`, `SENDUST_PORT` (default
+465), `SENDUST_SECURITY` (`tls` or `starttls`), optional
+`SENDUST_USER`/`SENDUST_PASS`, `SENDUST_FROM`, `SENDUST_TO` (comma separated),
+`SENDUST_SUBJECT`, and `SENDUST_TEXT`. The Rust example also accepts
+`SENDUST_EXTRA_ROOT`, a PEM trust anchor for local test relays.
+`npm --workspace ./ts run test` runs the TypeScript and binding tests against
+the staged addon.
 
 ## Project status
 

@@ -2,9 +2,13 @@
 //
 // Usage: npm run build:native && node examples/send_email.mjs
 //
-// SENDUST_HOST/PORT/SECURITY/FROM/TO/SUBJECT/TEXT are required as needed;
-// SENDUST_USER and SENDUST_PASS are optional. Credentials are read from the
-// environment and never written anywhere by this script.
+// Configuration comes from `.env` in the repository root, or from real
+// environment variables, which win. Start from the committed `.env.example`;
+// its placeholder values are refused here, so an unedited copy cannot send.
+//
+// Credentials are read from the environment and never written anywhere by this
+// script. A successful result means the relay accepted responsibility, not that
+// a mailbox received the message.
 
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -37,23 +41,59 @@ if (!env.SENDUST_HOST || !env.SENDUST_FROM || !env.SENDUST_TO) {
   process.exit(2);
 }
 
-const options = {
-  host: env.SENDUST_HOST,
-  port: Number(env.SENDUST_PORT ?? "465"),
-  secure: env.SENDUST_SECURITY ?? "tls",
-};
-if (env.SENDUST_USER) {
-  options.auth = { user: env.SENDUST_USER, pass: env.SENDUST_PASS ?? "" };
+const placeholders = /example\.com|your-name|your-16-char-app-password/i;
+for (const key of [
+  "SENDUST_HOST",
+  "SENDUST_USER",
+  "SENDUST_PASS",
+  "SENDUST_FROM",
+  "SENDUST_TO",
+]) {
+  if (env[key] && placeholders.test(env[key])) {
+    console.error(`${key} still contains an example placeholder; edit .env (see .env.example)`);
+    process.exit(2);
+  }
 }
+
+const user = env.SENDUST_USER || "";
+let password = env.SENDUST_PASS || "";
+if (Boolean(user) !== Boolean(password)) {
+  console.error("set both SENDUST_USER and SENDUST_PASS, or neither");
+  process.exit(2);
+}
+
+const host = env.SENDUST_HOST;
+const port = Number(env.SENDUST_PORT ?? "465");
+const secure = env.SENDUST_SECURITY ?? "tls";
+
+if ((secure === "tls" && port === 587) || (secure === "starttls" && port === 465)) {
+  console.warn(`warning: port ${port} is unusual for ${secure}; 465 is implicit TLS, 587 is STARTTLS`);
+}
+
+if (user && /gmail\.com$/i.test(host) && password.includes(" ")) {
+  console.warn("note: removed spaces from the Gmail app password");
+  password = password.replace(/ /g, "");
+}
+
+const options = { host, port, secure };
+if (user) {
+  options.auth = { user, pass: password };
+}
+
+const recipients = (env.SENDUST_TO ?? "")
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
+
+console.log(`relay: ${host}:${port} ${secure}, auth: ${user ? "yes" : "no"}`);
+console.log(`from: ${env.SENDUST_FROM}`);
+console.log(`to: ${recipients.join(", ")}`);
 
 const transport = new native.Transport(options);
 try {
   const result = await transport.send({
     from: env.SENDUST_FROM,
-    to: (env.SENDUST_TO ?? "")
-      .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean),
+    to: recipients,
     subject: env.SENDUST_SUBJECT ?? "Hello from Sendust",
     text: env.SENDUST_TEXT ?? "Sent through the Sendust Node-API binding.",
   });
