@@ -142,10 +142,10 @@ compile, test, checker or runtime result on `main` reopens this gate.
 
 ## 7. Deferred (recorded, not claimed)
 
-- A live relay send through the native engine is not part of this matrix. The
-  loopback harness and the differential oracle prove the protocol; a real
-  `node examples/send_email.mjs` run against a Gmail relay is recommended before
-  release.
+- A live relay send through the native engine succeeded on 2026-11-14: the project
+  owner ran `cargo run -p sendust-core --example send_email` and the relay accepted
+  the message. The Node-API entry point is covered by the CI runtime smoke; a live
+  run through `node examples/send_email.mjs` is still worth doing before release.
 - Public TypeScript API, MIME headers (`Date`, `Message-ID`), attachments,
   runtime/platform matrices, and observability are P07–P18 scope.
 - The 11 s / 31 s / 121 s / 126 s cases are proven with proportionally lowered
