@@ -1,6 +1,6 @@
 # Phase 08 — Attachments
 
-**Phase status:** NOT STARTED  
+**Phase status:** IN PROGRESS  
 **Phase dependency:** Phase 07, Phase 05  
 **Companion references:** [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md)
 
@@ -17,7 +17,7 @@ In scope: attachment configuration, opt-in filesystem gate, regular-file validat
 ### P08-001 — Define opt-in filesystem configuration and descriptor contract
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P07-005, P05-005
 - **Description:** Specify an explicit configuration that enables filesystem access; default is disabled. Define attachment descriptors with path, filename, and optional content type. Without opt-in, every path attachment fails before any filesystem operation. Propose a transport-scoped or send-scoped setting for approval in P02-004; do not assume it is frozen before the architecture gate. Never use ambient global state.
 - **Evidence criteria:** Tests prove disabled-by-default rejects path attachments with no file open. Enabling access permits regular files only. Descriptor validation rejects missing fields, relative-path ambiguity, and unsupported content type forms with stable errors.
@@ -88,4 +88,12 @@ Opt-in configuration, descriptor validation, safe file reader, cap enforcement, 
 
 ## Status
 
-NOT STARTED.
+IN PROGRESS. P08-001 is IN REVIEW; P08-002 to P08-005 are NOT STARTED.
+
+## Evidence log
+
+Evidence labels follow the [AI implementation contract](../engineering/ai-implementation-contract.md).
+
+| Task | Evidence | State |
+| --- | --- | --- |
+| P08-001 | `attachments/mod.rs`: `AttachmentPolicy` (`Disabled` by default, explicit `Enabled` opt-in, no ambient global), `filesystem_enabled`/`from_flag`, and descriptor path validation (absolute, non-empty, at most 1024 bytes, control-free). The policy is threaded through `Delivery`, `OutgoingMessage::validate`, `mime::serialize[_at]` and the Node-API adapter. Tests prove disabled-by-default with no open, relative/malformed path rejection, and opt-in acceptance of an absolute path. | IN REVIEW |

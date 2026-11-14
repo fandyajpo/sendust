@@ -108,8 +108,8 @@ P00–P05 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P04-001–P04-005 | COMPLETED |
 | P05-001–P05-005 | COMPLETED |
 | P06-001–P06-005 | COMPLETED; PHASE-06 APPROVED (2026-11-14) |
-| P07–P18 | P07-001 to P07-005 COMPLETED with the approved PHASE-07 record; P08–P18 NOT STARTED |
-| Next task | P08-001 — define opt-in filesystem configuration and descriptor contract |
+| P08–P18 | P08-001 IN REVIEW; the rest NOT STARTED |
+| Next task | P08-002 — implement safe regular-file validation and bounded reads |
 
 ## 5. Conventions
 
