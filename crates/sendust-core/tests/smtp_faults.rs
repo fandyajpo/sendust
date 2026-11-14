@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 
 use sendust_core::{
     Delivery, DeliveryStatus, ErrorCode, Limits, Mailbox, OutgoingMessage, RecipientStatus,
-    SmtpConfig, SmtpCredentials, SmtpSecurity, SmtpTransport,
+    SmtpConfig, SmtpCredentials, SmtpSecurity, SmtpTransport, Stage,
 };
 use support::tls;
 use support::{AfterBody, FakeSmtp, Reply, Script};
@@ -269,5 +269,44 @@ async fn starttls_is_required_and_fails_closed_without_the_extension() {
 
     assert_eq!(error.code(), ErrorCode::TlsHandshake);
     assert_eq!(server.trace().count_prefix("MAIL"), 0);
+    assert_eq!(server.trace().count_prefix("DATA"), 0);
+}
+
+
+#[tokio::test]
+async fn a_refused_sender_is_a_rejected_outcome() {
+    let script = Script {
+        mail: Reply::line("550 5.7.1 Relay access denied"),
+        ..Script::default()
+    };
+    let server = serving(script);
+    let mut delivery = delivery(config(server.addr()));
+
+    let outcome = delivery
+        .send(message(&["bob@example.test"]))
+        .await
+        .expect("rejected outcome");
+
+    assert_eq!(outcome.status(), DeliveryStatus::Rejected);
+    assert_eq!(outcome.recipients()[0].status, RecipientStatus::Rejected);
+    assert_eq!(outcome.response().expect("response").code, 550);
+    assert_eq!(server.trace().count_prefix("RCPT"), 0);
+    assert_eq!(server.trace().count_prefix("DATA"), 0);
+}
+
+#[tokio::test]
+async fn an_intermediate_rcpt_reply_is_a_protocol_error() {
+    let script = Script::default().rcpt_reply(Reply::line("354 Send data now"));
+    let server = serving(script);
+    let mut delivery = delivery(config(server.addr()));
+
+    let error = delivery
+        .send(message(&["bob@example.test"]))
+        .await
+        .expect_err("protocol violation");
+
+    assert_eq!(error.code(), ErrorCode::ProtocolUnexpectedResponse);
+    assert_eq!(error.details().operation_stage(), Some(Stage::Rcpt));
+    assert_eq!(error.details().smtp_status(), Some(354));
     assert_eq!(server.trace().count_prefix("DATA"), 0);
 }
