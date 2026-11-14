@@ -19,7 +19,7 @@ Pin napi 3.16.2, napi-derive 3.7.0, and napi-build 2.6.0 for the initial impleme
 - Do not create, own, or shut down a separate Tokio runtime in the addon.
 - Target Node-API 8; raise only through a superseding ADR if a future required feature cannot be implemented at this ABI level.
 - Use `catch_unwind` at exported boundaries where the panic strategy permits; never build the addon with `panic = "abort"`.
-- Keep all Node-API code inside `sendust-napi`; core stays Node-API-free but uses Tokio 1 for lettre networking and deadlines.
+- Keep all Node-API code inside `sendust-napi`; core stays Node-API-free but uses Tokio 1 for SMTP networking and deadlines.
 
 ## Alternatives
 

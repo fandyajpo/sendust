@@ -12,7 +12,7 @@ A direct dependency may be added only through the review in section 6. Transitiv
 
 | Crate | Pin | Kind | Features | Default features | Owner crate | Purpose |
 | --- | --- | --- | --- | --- | --- | --- |
-| `lettre` | `=0.11.23` | normal (migration) | `smtp-transport`, `tokio1-rustls`, `ring`, `webpki-roots` | off | `sendust-core` | Current SMTP backend; becomes a dev-only differential oracle and is removed from production at P06-004 (ADR-0017) |
+| `lettre` | `=0.11.23` | dev | `smtp-transport`, `tokio1-rustls`, `ring`, `webpki-roots` | off | `sendust-core` | Differential oracle for P06-004 only; never a production dependency (ADR-0017) |
 | `napi` | `=3.16.2` | normal | `napi8`, `async` | on | `sendust-napi` | Node-API 8 binding |
 | `napi-derive` | `=3.7.0` | normal | — | on | `sendust-napi` | Exported binding macros |
 | `napi-build` | `=2.6.0` | build | — | on | `sendust-napi` | Binding build setup |
@@ -24,18 +24,17 @@ A direct dependency may be added only through the review in section 6. Transitiv
 | `webpki-roots` | `=1.0.12` | normal | default | on | `sendust-core` | Bundled trust store for the native client (ADR-0003) |
 | `rustls-pki-types` | `=1.16.0` | normal | default | on | `sendust-core` | `ServerName` and certificate types for the native client |
 
-`sendust-core` declares no build script and no binding, runtime, or Node.js dependency. `sendust-napi` depends on `sendust-core` and never the reverse. `lettre` is declared once, at workspace level, and must not appear in `sendust-napi`.
+`sendust-core` declares no build script and no binding, runtime, or Node.js dependency. `sendust-napi` depends on `sendust-core` and never the reverse. `lettre` is declared once, at workspace level, and reached only as a `sendust-core` dev-dependency: it must not appear in `sendust-napi`, in any production dependency list, or in any `src/` module.
 
-`base64` and `idna` were already present transitively through `lettre`; both are declared directly as the vetted primitives ADR-0010 requires and add no new transitive weight.
-`idna` was already present transitively through `lettre`/`url` at the same version; it is declared directly so the core cannot silently drift from the resolver's choice, and it adds no new transitive weight.
+`base64` and `idna` are the vetted primitives ADR-0010 requires; both are declared directly and add no new transitive weight. `idna` is declared directly so the core cannot silently drift from the resolver's choice.
 
 Test-only dependencies (MIME verification, fake SMTP/TLS tooling, benchmarks) are introduced by the phase that needs them, pinned exactly at that time, recorded in this table with kind `dev`, and never enabled for published artifacts.
 
-`tokio` and `rustls` were already present transitively at these exact versions through `lettre`. `tokio` is now a normal pin because the adapter bounds every SMTP step with the caller's timer; `rustls` is a normal pin because the adapter downcasts the typed rustls cause to distinguish `TLS_CERTIFICATE` from `TLS_HANDSHAKE`. Neither adds a new transitive dependency.
+`tokio` is a normal pin because the native client bounds every SMTP step with the caller's timer; `rustls` and `tokio-rustls` are normal pins because the native client builds the TLS configuration and classifies the typed rustls cause to distinguish `TLS_CERTIFICATE` from `TLS_HANDSHAKE`. They are the same versions the test harness uses, so the fixtures exercise the production TLS stack.
 
 ## 3. Feature and transitive policy
 
-- lettre's default `pool` and `native-tls` features must never resolve. Pooling and connection reuse are outside MVP scope.
+- lettre is a dev-dependency only; its default `pool` and `native-tls` features must never resolve even there. Pooling and connection reuse are outside MVP scope.
 - TLS uses the rustls `ring` provider with `webpki-roots`; certificate and hostname verification are always on. No configuration, feature, or method that disables verification may be added.
 - Feature flags are declared once at workspace level. Enabling an optional capability per crate to work around a pin is a policy violation, not a convenience.
 - A dependency that pulls OpenSSL, `native-tls`, or a second TLS stack blocks the change.
@@ -83,7 +82,7 @@ Every direct dependency must have one row. The inventory is completed before rel
 
 | Crate | Version | License | Source | Introduced by |
 | --- | --- | --- | --- | --- |
-| `lettre` | `0.11.23` | MIT | https://crates.io/crates/lettre | P03-002 |
+| `lettre` | `0.11.23` | MIT | https://crates.io/crates/lettre | P03-002 (dev-only since P06-004) |
 | `napi` | `3.16.2` | MIT | https://crates.io/crates/napi | P03-002 |
 | `napi-derive` | `3.7.0` | MIT | https://crates.io/crates/napi-derive | P03-002 |
 | `napi-build` | `2.6.0` | MIT | https://crates.io/crates/napi-build | P03-002 |

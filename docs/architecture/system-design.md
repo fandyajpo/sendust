@@ -191,10 +191,10 @@ A single absolute deadline is computed per send:
 deadline = start + min(total, remaining close budget)
 ```
 
-- `connect` bounds DNS + TCP + greeting + EHLO + implicit TLS/required STARTTLS negotiation through one outer deadline. lettre's inner timeout only bounds TCP attempts; Sendust must wrap the complete connection future.
+- `connect` bounds DNS + TCP + greeting + EHLO + implicit TLS/required STARTTLS negotiation through one outer deadline owned by the client.
 - `operation` bounds each SMTP command/response wait.
 - `total` bounds the entire send, including composition wait and DATA.
-- An operation timer wraps each public lettre operation. Report only coarse boundaries: connection setup; AUTH; MAIL; each RCPT; DATA command; DATA body+terminator+final response; cleanup. Do not claim internal socket-read/write attribution.
+- An operation timer wraps each SMTP command or response wait, and every read and write carries the stage that issued it. Report only coarse boundaries: connection setup; AUTH; MAIL; each RCPT; DATA command; DATA body+terminator+final response; cleanup. Do not claim internal socket-read/write attribution.
 - Defaults are hard maximums: connect ≤10 s, operation ≤30 s, total ≤120 s, close ≤125 s. Values may be lowered but not raised. Each is an integer of at least 1 s; connect and operation ≤ total; close ≥ total. Zero, negative, sub-second, NaN, infinity, and inconsistent combinations are rejected.
 
 ### 2.6 SMTP orchestration
@@ -205,7 +205,7 @@ deadline = start + min(total, remaining close budget)
 - Send one `MAIL FROM`, then one `RCPT TO` command per recipient. Record exact 2xx acceptance and 4xx/5xx rejection by response class; 3xx is never acceptance. Continue after ordinary RCPT refusals; 421 closes the session and stops the envelope. If no recipient is accepted or 421 occurs, do not issue DATA. Otherwise issue exactly one DATA transaction for the accepted-recipient envelope. This is one message/one SMTP transaction, not per-recipient message fan-out.
 - Require DATA command reply 354 before sending body bytes. A positive final DATA reply (2xx) → overall `accepted`; RCPT-accepted recipients become `accepted`, while explicit RCPT refusals remain `rejected`.
 - An explicit negative final DATA reply (4xx/5xx) → overall `rejected`; RCPT-accepted recipients also become `rejected`.
-- A non-final/unexpected 3xx after message transmission, or a transport/write/read error once `message()` begins, yields `unknown` because lettre does not expose a public checkpoint proving the final disposition. No retry.
+- A non-final/unexpected 3xx after message transmission, or a transport/write/read error once the body is being written, yields `unknown` because no public checkpoint proves the final disposition. No retry.
 - Connection, TLS, and AUTH failures before message submission are operational errors, not `Rejected` delivery outcomes.
 
 ### 2.7 Attachment policy
@@ -237,13 +237,13 @@ sendust-core/src/
 ├── delivery/              # send use-case orchestration and delivery certainty
 ├── ports/                 # narrow internal outbound delivery contract
 ├── transports/
-│   └── smtp/              # lettre session, TLS, AUTH, envelope, RCPT/DATA
+│   └── smtp/              # native SMTP session, TLS, AUTH, envelope, RCPT/DATA
 ├── lifecycle/             # open/closing/closed, BUSY and bounded close
 ├── errors/                # internal error taxonomy
 └── results/               # accepted/rejected/unknown and recipient outcomes
 ```
 
-The folder names may be adjusted during implementation to fit idiomatic Rust module/file structure, but responsibility ownership must remain stable. Domain modules (address, message, config value types, results and core validation rules) must not import lettre, SMTP session types, napi, Node, or JavaScript runtime APIs. The delivery module owns the use case and depends on a narrow internal port; `transports::smtp` implements that port and is the only MVP adapter. The core public facade re-exports only types/functions needed by `sendust-napi` and tests; internal modules are private by default.
+The folder names may be adjusted during implementation to fit idiomatic Rust module/file structure, but responsibility ownership must remain stable. Domain modules (address, message, config value types, results and core validation rules) must not import SMTP session types, napi, Node, or JavaScript runtime APIs. The delivery module owns the use case and depends on a narrow internal port; `transports::smtp` implements that port and is the only MVP adapter. The core public facade re-exports only types/functions needed by `sendust-napi` and tests; internal modules are private by default.
 
 `sendust-napi` remains a thin inbound adapter: convert and snapshot JS inputs, reserve lifecycle, call the core facade, schedule work, and map outcomes/errors. It contains no MIME or SMTP policy. `ts/src` remains the public JS API and runtime loader only; it must not duplicate core validation, MIME, or delivery decisions.
 

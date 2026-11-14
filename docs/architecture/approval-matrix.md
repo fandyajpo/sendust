@@ -12,7 +12,7 @@
       -> Node-API adapter (synchronous snapshot/reservation)
       -> napi-managed Tokio 1 async execution
       -> sendust-core (Node-free)
-      -> lettre 0.11.23 AsyncSmtpConnection
+      -> native SMTP client (Sendust codec, rustls, Tokio)
       -> configured SMTP relay
 
 Exactly two Rust crates:
@@ -27,7 +27,7 @@ The TypeScript wrapper is the only public package surface. It exposes createTran
 | --- | --- | --- | --- |
 | Crate boundary | Exactly two crates; core has no Node linkage | ADR-0001 | P03-001, P04-005, P05-005 |
 | SMTP engine | Sendust-owned native client (codec, parser, capabilities, AUTH, STARTTLS, state machine); no third-party SMTP engine | ADR-0017; supersedes ADR-0002 | P06-001..P06-005 |
-| SMTP feature graph | Defaults off; smtp-transport + tokio1-rustls + ring + webpki-roots | ADR-0003; lettre Cargo.toml v0.11.23 | P03-002 Cargo check/tree |
+| TLS feature graph | rustls `ring` provider + `webpki-roots` through `tokio-rustls`, TLS 1.2 floor; no third-party SMTP engine in production | ADR-0003, ADR-0017 | P06-002, P06-004 Cargo tree |
 | TLS policy | TLS 1.2 minimum; explicit WebPKI roots; hostname+chain verification; implicit TLS or required STARTTLS only; no bypass/fallback | ADR-0003 | P06-002, P11-002 |
 | Async runtime | napi 3.16.2 + napi-derive 3.7.0 + napi-build 2.6.0; features napi8 + async; managed Tokio 1; no second runtime | ADR-0004 | P05-001, P05-003, P14-004 |
 | Rust MSRV | At least 1.88 per pinned napi 3.16.2 source; P03 pins the build toolchain | ADR-0004 | P03-001, P03-002, P05-001 |
@@ -79,7 +79,7 @@ No queue, worker, scheduler, persistence, queue adapter, automatic retry, backof
 
 | Validation | Required proof | Gate |
 | --- | --- | --- |
-| lettre feature compilation | cargo check + cargo tree shows selected TLS features and no pool/native-tls | P03-002 |
+| Production dependency set | `cargo tree -e normal` shows no third-party SMTP engine; lettre is a dev-only oracle | P06-004, P06-005 |
 | SMTP protocol behavior | Scripted loopback relay for RCPT mix, DATA 354, final 250/451, dropped final reply | P03-004, P06-003, P06-004 |
 | TLS | Five negative certificate fixtures; mandatory hostname/chain verification | P06-002, P11-002 |
 | Native memory | Buffer mutation/detachment test; owned-copy audit | P05-002, P11-004 |

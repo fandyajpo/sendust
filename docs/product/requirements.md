@@ -28,7 +28,7 @@ Enforced by P02-001, P03-001, P04-005, P05-005.
 
 ### C-02 — Dependency direction
 
-The runtime path is `TypeScript wrapper (ts/src) -> napi binding -> sendust-core -> lettre`. Dependencies MUST NOT point upward. The TypeScript wrapper MUST NOT implement SMTP, MIME, or validation policy beyond public-boundary shape checks.
+The runtime path is `TypeScript wrapper (ts/src) -> napi binding -> sendust-core -> native SMTP engine (rustls, Tokio)`. Dependencies MUST NOT point upward. The TypeScript wrapper MUST NOT implement SMTP, MIME, or validation policy beyond public-boundary shape checks.
 
 Enforced by P02-001, P03-001, P09-001.
 
@@ -36,7 +36,7 @@ Enforced by P02-001, P03-001, P09-001.
 
 Sendust MUST own its SMTP engine (ADR-0017): command serialization, response parsing, capability negotiation, STARTTLS, AUTH and the transaction state machine are implemented in `sendust-core` on trusted TLS/I/O primitives, and no third-party SMTP engine may be a production dependency.
 
-Enforced by P01-001, P01-005, P06-001.
+Enforced by P01-001, P01-005, P06-001–P06-005.
 
 ### C-04 — Async runtime
 
@@ -58,7 +58,7 @@ Enforced by P01-004, P14-004, P15-001.
 
 ### C-07 — TLS verification
 
-TLS MUST use rustls with the `ring` provider and `webpki-roots` trust anchors, with the source-reviewed lettre feature graph in ADR-0003. Cargo compilation and certificate fixtures remain hard implementation gates. Certificate and hostname verification MUST be always on. No public option, environment variable, or undocumented flag may disable verification. TLS 1.2 is the minimum.
+TLS MUST use rustls with the `ring` provider and `webpki-roots` trust anchors, with the feature graph frozen in ADR-0003. Cargo compilation and certificate fixtures remain hard implementation gates. Certificate and hostname verification MUST be always on. No public option, environment variable, or undocumented flag may disable verification. TLS 1.2 is the minimum.
 
 Enforced by P01-002, P06-002, P11-002.
 
@@ -132,7 +132,7 @@ Enforced by P02-003, P09-004, P18-002.
 
 ### C-18 — Recipient-level SMTP outcomes
 
-Sendust MUST observe each RCPT reply through lettre's public lower-level async connection API. A 2xx RCPT reply is accepted at the envelope stage; an ordinary 4xx/5xx reply is a definitive rejection for that recipient. A 421 reply closes the session, so Sendust MUST stop recipient collection and MUST NOT issue DATA even if earlier RCPT replies were 2xx. Otherwise, if at least one recipient is accepted, Sendust MUST submit exactly one DATA transaction to the accepted-recipient subset. A recipient is `accepted` only after positive final DATA. If final DATA is explicitly refused, those accepted-RCPT recipients become `rejected`; if final disposition is unknown, they become `unknown`. Sendust MUST NOT send independent per-recipient messages.
+Sendust MUST observe every RCPT reply its own SMTP client receives. A 2xx RCPT reply is accepted at the envelope stage; an ordinary 4xx/5xx reply is a definitive rejection for that recipient. A 421 reply closes the session, so Sendust MUST stop recipient collection and MUST NOT issue DATA even if earlier RCPT replies were 2xx. Otherwise, if at least one recipient is accepted, Sendust MUST submit exactly one DATA transaction to the accepted-recipient subset. A recipient is `accepted` only after positive final DATA. If final DATA is explicitly refused, those accepted-RCPT recipients become `rejected`; if final disposition is unknown, they become `unknown`. Sendust MUST NOT send independent per-recipient messages.
 
 Enforced by P01-003, P02-002, P06-003, P09-002.
 
@@ -319,10 +319,10 @@ Enforced by P00-001 and P15-005.
 
 | ID | Question / proof | Research/design status | Remaining owner | Blocks |
 | --- | --- | --- | --- | --- |
-| OQ-01 | Can lettre expose individual RCPT outcomes? | RESOLVED by P01 source review; selected lower-level async API | P06-003, P09-002 executable proof | P06-003, P09-002 |
+| OQ-01 | Can the SMTP client expose individual RCPT outcomes? | RESOLVED: the native engine parses every RCPT reply (P06-003) and P06-004 proves parity with the lettre oracle | P09-002 executable proof | P06-005, P09-002 |
 | OQ-02 | Which timeout stages are observable? | RESOLVED at coarse public-operation boundaries; no socket read/write attribution | P10-002 executable proof | P10-002 |
-| OQ-03 | Which rustls feature set composes with lettre 0.11.23? | SOURCE-REVIEWED; exact feature graph selected | P03-002 compile/tree proof; P06-002 TLS proof | P03-002, P06-002 |
-| OQ-04 | Does napi-managed Tokio satisfy lettre? | DESIGN SELECTED; runtime behavior not yet executed | P05-003 and P14-004 on Node.js, Bun, Deno | P05-003, P14-004 |
+| OQ-03 | Which rustls feature set does the native client need? | SOURCE-REVIEWED; exact feature graph selected in ADR-0017 | P03-002 compile/tree proof; P06-002 TLS proof | P03-002, P06-002 |
+| OQ-04 | Does napi-managed Tokio satisfy the native client's I/O? | DESIGN SELECTED; runtime behavior not yet executed | P05-003 and P14-004 on Node.js, Bun, Deno | P05-003, P14-004 |
 | OQ-05 | Which Node-API level is required by selected napi features? | RESOLVED by pinned napi source review: Node-API 8 explicitly enabled | P05-001 compile/ABI proof | P05-001 |
 | OQ-06 | Which exact runtime × OS × CPU × ABI/libc targets pass CI? | OPEN; candidates only | P03-001 pinning; P14-003/P14-004 validation | P14-004, P15-001 |
 | OQ-07 | What performance budget is defensible? | OPEN | P13-001 | P13-005 |
@@ -360,10 +360,10 @@ Initial platform candidates are Linux x64 glibc, Linux ARM64 glibc, Linux x64 mu
 The MVP MUST use a modular-monolith structure inside the existing two-crate Rust workspace and TypeScript package. Module boundaries are logical source boundaries, not independently published crates, services, or runtime processes. The architecture MUST preserve one installable product and one shared native addon.
 
 ### C-38 — Core module ownership and dependency direction
-The core MUST separate configuration, address, message, validation, attachments, MIME, delivery orchestration, SMTP transport adapter, lifecycle, and error/result responsibilities. Domain modules MUST NOT depend on lettre, SMTP protocol details, napi, Node, or JavaScript runtime APIs. Dependencies MUST be acyclic and flow through narrow internal contracts.
+The core MUST separate configuration, address, message, validation, attachments, MIME, delivery orchestration, SMTP transport adapter, lifecycle, and error/result responsibilities. Domain modules MUST NOT depend on the SMTP engine, SMTP protocol details, napi, Node, or JavaScript runtime APIs. Dependencies MUST be acyclic and flow through narrow internal contracts.
 
 ### C-39 — SMTP adapter isolation and transport extension policy
-SMTP is the only MVP transport and SMTP protocol behavior MUST live only in the SMTP adapter using lettre. A narrow internal delivery port MAY be introduced when justified by orchestration. No public custom-transport API, dynamic plugin registry, speculative provider abstraction, or alternate transport implementation is permitted in MVP. Additional transports require a separate ADR and scope review.
+SMTP is the only MVP transport and SMTP protocol behavior MUST live only in the SMTP adapter using the native engine (ADR-0017). A narrow internal delivery port MAY be introduced when justified by orchestration. No public custom-transport API, dynamic plugin registry, speculative provider abstraction, or alternate transport implementation is permitted in MVP. Additional transports require a separate ADR and scope review.
 
 ### C-40 — Module boundary enforcement
 Module responsibilities, allowed dependencies, and public/private interfaces MUST be documented and checked through architecture tests or static dependency checks. TypeScript and napi MUST NOT duplicate core validation, MIME, or SMTP policy. Each module MUST have focused unit tests and cross-module behavior MUST be verified through core contracts and fake-SMTP integration tests.

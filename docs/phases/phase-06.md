@@ -41,7 +41,7 @@ In scope: the SMTP protocol codec, the multiline response parser, EHLO capabilit
 ### P06-004 — Swap the delivery adapter and prove the differential fault matrix
 
 - **Size:** XL
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P06-003, P04-005
 - **Description:** Implement `DeliveryPort` over the native session behind the unchanged `SmtpConfig`, `SmtpTransport` and `SmtpSession` surface, preserving ADR-0005 recipient semantics, ADR-0006 lifecycle, ADR-0007 deadlines and the existing outcome/error mapping. While migrating, run the fault matrix against both the native client and the lettre backend as a dev-only oracle; then remove lettre from production dependencies.
 - **Evidence criteria:** Identical outcomes and stable codes from both backends for the whole matrix; one DATA transaction for the accepted subset; no DATA when every RCPT is refused; 421 stops the envelope; explicit final `451` is `rejected`; missing final reply after the terminator is `unknown`; no retry path exists. `cargo tree` proves lettre is absent from production dependencies.
@@ -112,10 +112,11 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 
 | Task | Evidence | State |
 | --- | --- | --- |
+| P06-004 | `transports/smtp/mod.rs` runs the delivery on the native `Session`: required STARTTLS, AUTH after TLS, `MAIL`/`RCPT`/`DATA`, one transaction for the accepted subset, reply classes mapped to accepted/rejected/unknown, and `annotate` restoring host/port/stage/elapsed context. `Session::starttls` and a stage-aware `Connection::read_reply` keep timeout and protocol stages accurate. `lettre` moved to `sendust-core` dev-dependencies; `tests/differential_lettre.rs` runs six matrix cases against both backends; `scripts/check-architecture.mjs` rejects lettre in production dependencies and anywhere under `src/`. | IMPLEMENTED; EXECUTED evidence pending |
 | P06-003 | `client/connection.rs` (`authenticate`: PLAIN with an RFC 4616 initial response, LOGIN with a bounded 334 challenge exchange, refused before TLS, `AUTH_UNSUPPORTED` when no mechanism is advertised, `AUTH_FAILED` with the relay code on rejection) and `session.rs` (open, authenticate, MAIL, RCPT, DATA, body, QUIT returning raw replies for ADR-0005 classification) plus `proto/transcript.rs` (dot-stuffing and terminator). Harness gained multi-step `auth_flow` replies. `tests/smtp_session.rs`: 6 tests — PLAIN, LOGIN challenges, 535, no mechanism, AUTH before TLS refused, full transaction with dot-stuffing. | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
 | P06-002 | `crates/sendust-core/src/transports/smtp/client/` — `connection.rs` (Tokio TCP, greeting, EHLO, implicit TLS, required STARTTLS with re-EHLO, bounded reads under `SendDeadlines`) and `tls.rs` (rustls with `ring`, WebPKI roots plus validated PEM anchors, TLS 1.2 floor, no bypass). Harness gained a real STARTTLS upgrade and named-certificate serving; `tests/smtp_client.rs` adds 6 tests. | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
 | P06-001 | `crates/sendust-core/src/transports/smtp/proto/` — `command.rs` (EHLO, STARTTLS, AUTH PLAIN/LOGIN, MAIL, RCPT, DATA, RSET, NOOP, QUIT with injection rejection and the 512-byte cap), `response.rs` (three-digit code validation, multiline builder, 1000-byte line and 64 KiB reply caps, RFC 3463 enhanced status), `capabilities.rs` (STARTTLS, AUTH mechanisms, SIZE, 8BITMIME). 15 new unit tests; 109 core tests total, `cargo clippy -D warnings`, architecture/docs/secrets checks all pass locally. The module is I/O-free and carries a temporary `dead_code` allow until P06-002/P06-003 wire it in. | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
 
 ## Status
 
-IN PROGRESS. P06-001 to P06-003 are IN REVIEW; P06-004 and P06-005 are NOT STARTED.
+IN PROGRESS. P06-001 to P06-004 are IN REVIEW; P06-005 is NOT STARTED.

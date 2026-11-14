@@ -9,8 +9,8 @@ This ledger maps every authoritative constraint C-01 through C-40 to its archite
 | ID | Constraint summary | Decision / ADR | Enforcement and evidence | Audit status |
 | --- | --- | --- | --- | --- |
 | C-01 | Exactly two Rust crates; core has no Node linkage | ADR-0001 | P02-001, P03-001, P04-005; dependency-tree check | Architecture defined |
-| C-02 | TS → napi → core → lettre; dependencies point downward | ADR-0001/0002 | P02-001, P03-001, P09-001; dependency graph | Architecture defined |
-| C-03 | Sendust-owned SMTP engine on trusted TLS/I/O primitives; no third-party SMTP engine | ADR-0017 (supersedes ADR-0002) | P06-001..P06-005; cargo tree check | Native engine pending P06 |
+| C-02 | TS → napi → core → native SMTP engine; dependencies point downward | ADR-0001/0017 | P02-001, P03-001, P09-001; dependency graph | Architecture defined |
+| C-03 | Sendust-owned SMTP engine on trusted TLS/I/O primitives; no third-party SMTP engine | ADR-0017 (supersedes ADR-0002) | P06-001..P06-005; `cargo tree -e normal` check | Engine implemented P06-001..P06-003; adapter swap in review at P06-004 |
 | C-04 | napi-managed Tokio 1; no second runtime | ADR-0004 | P01-004, P05-003; runtime integration tests | Source-reviewed; napi async feature enables tokio_rt; runtime probe remains |
 | C-05 | Node-API 8 | ADR-0004 | P01-004, P05-001, P14-004; ABI matrix | napi8 feature explicitly required; runtime tests remain |
 | C-06 | Node 22/24/26 are candidates only | ADR-0004/0011 | P01-004, P14-004, P15-001; blocking CI matrix | Candidate-only |
@@ -55,7 +55,7 @@ This ledger maps every authoritative constraint C-01 through C-40 to its archite
 | Question | Resolution from source review | Remaining evidence | Owner task |
 | --- | --- | --- | --- |
 | Per-recipient RCPT status | Public AsyncSmtpConnection.command + Error.status() expose each SMTP reply | Mixed-recipient fake-relay test and behavior test | P06-003 |
-| SMTP stage attribution | Sendust can label coarse operations around public lettre methods; lettre does not expose all internal sub-stages | Injected timeout/fault tests | P10-002 |
+| SMTP stage attribution | Sendust labels the native client's own coarse operations; every read and write is bounded by the stage that issued it | Injected timeout/fault tests | P10-002 |
 | TLS features | Exact feature graph is expressible with defaults disabled | Cargo build and five negative TLS fixtures | P03-002, P06-002, P11-002 |
 | Node runtime | NAPI-RS async/AsyncBlock runs on managed Tokio; Node-API 8 is ABI-compatible with candidates | Actual runtime/GC/exit CI matrix | P05-003, P14-004 |
 | Buffer ownership | Buffer retains JS memory; sync copy into Vec<u8> before returning AsyncBlock is required | Mutation/detachment integration test | P05-002 |

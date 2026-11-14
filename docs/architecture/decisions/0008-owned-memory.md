@@ -12,7 +12,7 @@ Node-API values are scoped to a call and may be mutated, detached, or garbage co
 ## Decision
 
 - Every `Buffer`, `ArrayBuffer`, typed array, and string is copied into Rust-owned memory before the first `await`.
-- No borrowed JS memory is stored in a future, transport state, or lettre message.
+- No borrowed JS memory is stored in a future, transport state, or composed message.
 - Attachment files are read into bounded Rust-owned buffers only after explicit opt-in and regular-file validation.
 - File reads use open-then-fstat semantics to reduce TOCTOU risk and never follow symlinks when the platform supports no-follow.
 - Per-file, aggregate, and wire caps are enforced before bytes are written to the socket.
