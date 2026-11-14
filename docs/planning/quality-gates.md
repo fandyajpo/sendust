@@ -47,7 +47,7 @@ A01 approves the design target only. It does not approve runtime or platform com
 | --- | --- | --- |
 | Crate boundary | Exactly `sendust-core` and `sendust-napi`; no third Rust crate | ADR-0016; P03-001 |
 | Module ownership | Core modules and sole responsibility match ADR-0016 | ADR-0016; system design |
-| Dependency direction | Acyclic; domain has no lettre/SMTP/napi/runtime dependency | P03/P04 architecture checks |
+| Dependency direction | Acyclic; domain has no SMTP/napi/runtime dependency | P03/P04 architecture checks |
 | SMTP adapter | SMTP protocol implementation exists only in `transports::smtp` and uses the narrow delivery port | P04/P06 contract tests |
 | Binding boundary | napi and TypeScript contain no SMTP/MIME policy | P05/P09 source and contract tests |
 | Test ownership | Module invariants and cross-module contracts have named test owners | Testing strategy; P12 traceability |
