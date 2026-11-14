@@ -28,6 +28,14 @@ pub enum AttachmentPolicy {
 }
 
 impl AttachmentPolicy {
+    pub const fn disabled() -> Self {
+        Self::Disabled
+    }
+
+    pub const fn enabled() -> Self {
+        Self::Enabled
+    }
+
     pub const fn filesystem_enabled(self) -> bool {
         matches!(self, Self::Enabled)
     }
