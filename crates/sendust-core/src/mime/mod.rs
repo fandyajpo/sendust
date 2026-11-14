@@ -5,6 +5,8 @@
 //! model and its duplicate policy live in `message`. The composed bytes are the
 //! single source of truth for transport and for the size cap.
 
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use base64::Engine as _;
 use base64::engine::general_purpose::STANDARD;
 
@@ -31,6 +33,29 @@ pub fn serialize(
     message: &OutgoingMessage,
     limits: Limits,
     filesystem_enabled: bool,
+) -> Result<Vec<u8>, Error> {
+    compose(message, limits, filesystem_enabled, None)
+}
+
+/// Serializes with the `Date` and `Message-ID` headers the relay expects.
+///
+/// The clock is a parameter so a caller can pin it in tests; the send path
+/// passes the current time. Both headers are deterministic for a given message
+/// and instant.
+pub fn serialize_at(
+    message: &OutgoingMessage,
+    limits: Limits,
+    filesystem_enabled: bool,
+    now: SystemTime,
+) -> Result<Vec<u8>, Error> {
+    compose(message, limits, filesystem_enabled, Some(now))
+}
+
+fn compose(
+    message: &OutgoingMessage,
+    limits: Limits,
+    filesystem_enabled: bool,
+    now: Option<SystemTime>,
 ) -> Result<Vec<u8>, Error> {
     message.validate(limits, filesystem_enabled)?;
 
@@ -71,6 +96,10 @@ pub fn serialize(
         push_address_header(&mut out, "Reply-To", &message.reply_to)?;
     }
     push_header(&mut out, "Subject", message.subject.trim())?;
+    if let Some(now) = now {
+        push_header(&mut out, "Date", &format_date(now))?;
+        push_header(&mut out, "Message-ID", &message_id(now, message))?;
+    }
     for header in &message.headers {
         push_header(&mut out, header.name(), header.value())?;
     }
@@ -262,6 +291,79 @@ fn push_header(out: &mut Vec<u8>, name: &str, value: &str) -> Result<(), Error> 
 
 fn escape_quotes(value: &str) -> String {
     value.replace('\\', "\\\\").replace('"', "\\\"")
+}
+
+const WEEKDAYS: [&str; 7] = ["Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"];
+const MONTHS: [&str; 12] = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+/// RFC 5322 §3.3 date in UTC.
+fn format_date(now: SystemTime) -> String {
+    let seconds = now.duration_since(UNIX_EPOCH).unwrap_or_default().as_secs();
+    let days = i64::try_from(seconds / 86_400).unwrap_or(0);
+    let rest = seconds % 86_400;
+    let (year, month, day) = civil_from_days(days);
+    let weekday = WEEKDAYS[usize::try_from(days.rem_euclid(7)).unwrap_or(0)];
+    let month_name = MONTHS[usize::try_from(month.saturating_sub(1)).unwrap_or(0)];
+
+    format!(
+        "{weekday}, {day:02} {month_name} {year} {:02}:{:02}:{:02} +0000",
+        rest / 3_600,
+        rest % 3_600 / 60,
+        rest % 60
+    )
+}
+
+/// Civil date from days since the Unix epoch (Howard Hinnant's algorithm).
+fn civil_from_days(days: i64) -> (i64, u32, u32) {
+    let z = days + 719_468;
+    let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
+    let doe = z - era * 146_097;
+    let yoe = (doe - doe / 1_460 + doe / 36_524 - doe / 146_096) / 365;
+    let year = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let day = doy - (153 * mp + 2) / 5 + 1;
+    let month = if mp < 10 { mp + 3 } else { mp - 9 };
+
+    (
+        if month <= 2 { year + 1 } else { year },
+        u32::try_from(month).unwrap_or(1),
+        u32::try_from(day).unwrap_or(1),
+    )
+}
+
+/// A `Message-ID` that is unique per instant and message content, and equal for
+/// the same instant and content.
+fn message_id(now: SystemTime, message: &OutgoingMessage) -> String {
+    let elapsed = now.duration_since(UNIX_EPOCH).unwrap_or_default();
+    format!(
+        "<{}.{:09}.{:016x}@{}>",
+        elapsed.as_secs(),
+        elapsed.subsec_nanos(),
+        content_hash(message),
+        message.from.domain()
+    )
+}
+
+fn content_hash(message: &OutgoingMessage) -> u64 {
+    let mut hash = 0xcbf2_9ce4_8422_2325u64;
+    feed(&mut hash, &message.from.address());
+    for mailbox in message.to.iter().chain(&message.cc).chain(&message.bcc) {
+        feed(&mut hash, &mailbox.address());
+    }
+    feed(&mut hash, &message.subject);
+    feed(&mut hash, message.text.as_deref().unwrap_or_default());
+    feed(&mut hash, message.html.as_deref().unwrap_or_default());
+    hash
+}
+
+fn feed(hash: &mut u64, text: &str) {
+    for byte in text.as_bytes() {
+        *hash ^= u64::from(*byte);
+        *hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
 }
 
 /// `Content-Disposition` for an attachment.
@@ -650,6 +752,98 @@ mod body_tests {
         assert_eq!(
             normalize_body(&String::from_utf8(once.clone()).expect("utf8")),
             once
+        );
+    }
+}
+
+
+#[cfg(test)]
+mod metadata_tests {
+    use super::*;
+    use std::time::Duration;
+
+    fn fixed() -> SystemTime {
+        UNIX_EPOCH + Duration::from_secs(1_000_000_000)
+    }
+
+    fn message() -> OutgoingMessage {
+        OutgoingMessage {
+            from: "alice@example.test".parse().expect("valid"),
+            to: vec!["bob@example.test".parse().expect("valid")],
+            cc: Vec::new(),
+            bcc: Vec::new(),
+            reply_to: Vec::new(),
+            subject: "Hello".to_string(),
+            text: Some("body".to_string()),
+            html: None,
+            headers: Vec::new(),
+            attachments: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn formats_dates_in_utc() {
+        assert_eq!(format_date(UNIX_EPOCH), "Thu, 01 Jan 1970 00:00:00 +0000");
+        assert_eq!(
+            format_date(fixed()),
+            "Sun, 09 Sep 2001 01:46:40 +0000"
+        );
+    }
+
+    #[test]
+    fn message_id_is_deterministic_and_time_dependent() {
+        let first = message_id(fixed(), &message());
+        let second = message_id(fixed(), &message());
+
+        assert_eq!(first, second);
+        assert!(first.starts_with("<1000000000.000000000."));
+        assert!(first.ends_with("@example.test>"));
+        assert_ne!(first, message_id(fixed() + Duration::from_nanos(1), &message()));
+    }
+
+    #[test]
+    fn serialize_at_adds_date_and_message_id() {
+        let message = message();
+        let wire = String::from_utf8(
+            serialize_at(&message, Limits::default(), false, fixed()).expect("serialized"),
+        )
+        .expect("utf8");
+
+        assert!(wire.contains("Date: Sun, 09 Sep 2001 01:46:40 +0000\r\n"));
+        assert!(wire.contains("Message-ID: <1000000000.000000000."));
+        assert!(wire.contains("@example.test>\r\n"));
+
+        let bare = String::from_utf8(serialize(&message, Limits::default(), false).expect("bare"))
+            .expect("utf8");
+        assert!(!bare.contains("Date: "));
+        assert!(!bare.contains("Message-ID: "));
+    }
+
+    #[test]
+    fn wire_size_parity_holds_for_multipart_messages() {
+        let mut message = message();
+        message.html = Some("<p>hi</p>".to_string());
+
+        let bytes =
+            serialize_at(&message, Limits::default(), false, fixed()).expect("serialized");
+        let exact = Limits::default()
+            .with_max_wire_bytes(bytes.len() as u64)
+            .expect("lowering is allowed");
+        assert_eq!(
+            serialize_at(&message, exact, false, fixed())
+                .expect("at cap")
+                .len(),
+            bytes.len()
+        );
+
+        let under = Limits::default()
+            .with_max_wire_bytes(bytes.len() as u64 - 1)
+            .expect("lowering is allowed");
+        assert_eq!(
+            serialize_at(&message, under, false, fixed())
+                .expect_err("over the cap")
+                .code(),
+            ErrorCode::LimitWireBytes
         );
     }
 }

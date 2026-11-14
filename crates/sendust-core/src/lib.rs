@@ -26,7 +26,7 @@ pub use crate::delivery::Delivery;
 pub use crate::errors::{Error, ErrorCategory, ErrorCode, ErrorDetails, Stage};
 pub use crate::lifecycle::{LifecycleState, SendDeadlines, SendPermit, Transport};
 pub use crate::message::{Header, HeaderName, HeaderValue, OutgoingMessage};
-pub use crate::mime::serialize;
+pub use crate::mime::{serialize, serialize_at};
 pub use crate::ports::{DeliveryPort, DeliveryRequest};
 pub use crate::results::{
     AmbiguityStage, DeliveryStatus, RecipientOutcome, RecipientStatus, SendOutcome, SmtpResponse,

@@ -36,7 +36,12 @@ impl<P: DeliveryPort> Delivery<P> {
     /// A validation or limit failure returns before the port is called, so no
     /// connection can be attempted for an invalid message.
     pub async fn send(&mut self, message: OutgoingMessage) -> Result<SendOutcome, Error> {
-        let wire = mime::serialize(&message, self.limits, self.filesystem_enabled)?;
+        let wire = mime::serialize_at(
+            &message,
+            self.limits,
+            self.filesystem_enabled,
+            std::time::SystemTime::now(),
+        )?;
         let request = DeliveryRequest { message, wire };
         self.port.deliver(request).await
     }
