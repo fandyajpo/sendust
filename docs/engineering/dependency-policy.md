@@ -12,7 +12,7 @@ A direct dependency may be added only through the review in section 6. Transitiv
 
 | Crate | Pin | Kind | Features | Default features | Owner crate | Purpose |
 | --- | --- | --- | --- | --- | --- | --- |
-| `lettre` | `=0.11.23` | normal | `smtp-transport`, `tokio1-rustls`, `ring`, `webpki-roots` | off | `sendust-core` | Only MVP outbound transport |
+| `lettre` | `=0.11.23` | normal (migration) | `smtp-transport`, `tokio1-rustls`, `ring`, `webpki-roots` | off | `sendust-core` | Current SMTP backend; becomes a dev-only differential oracle and is removed from production at P06-004 (ADR-0017) |
 | `napi` | `=3.16.2` | normal | `napi8`, `async` | on | `sendust-napi` | Node-API 8 binding |
 | `napi-derive` | `=3.7.0` | normal | — | on | `sendust-napi` | Exported binding macros |
 | `napi-build` | `=2.6.0` | build | — | on | `sendust-napi` | Binding build setup |
@@ -48,7 +48,7 @@ Test-only dependencies (MIME verification, fake SMTP/TLS tooling, benchmarks) ar
 
 The following are out of scope for MVP regardless of the crate that provides them:
 
-- a custom SMTP protocol stack or SMTP parser (lettre is the only implementation);
+- a third-party SMTP engine or protocol client (Sendust owns the client under ADR-0017; TLS, I/O and encoding primitives remain third-party);
 - insecure TLS toggles, plaintext fallback, or certificate/hostname bypass;
 - URL, HTTP, or remote attachment fetching;
 - connection pooling, automatic retry, internal queues, workers, schedulers, or persistence;

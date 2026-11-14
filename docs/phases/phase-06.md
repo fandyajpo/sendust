@@ -1,101 +1,111 @@
-# Phase 06 — SMTP
+# Phase 06 — SMTP engine
 
 **Phase status:** NOT STARTED  
-**Phase dependency:** Phase 04, Phase 01  
-**Companion references:** [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [reliability strategy](../engineering/reliability-strategy.md)
+**Phase dependency:** Phase 04  
+**Companion references:** [system design](../architecture/system-design.md), [ADR-0017](../architecture/decisions/0017-native-smtp-engine.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [reliability strategy](../engineering/reliability-strategy.md)
 
 ## Objective
 
-Implement SMTP behavior through `lettre 0.11.23` with honest relay-accepted semantics, fail-closed TLS, aggregate recipient outcomes, and no retry or per-recipient message splitting. This phase resolves the remaining recipient-observability question in code and tests.
+Own the SMTP engine: a Sendust-implemented client for command serialization, response parsing, capability negotiation, STARTTLS, AUTH, and the MAIL/RCPT/DATA transaction, behind the existing `DeliveryPort`, with relay-accepted semantics, fail-closed TLS, aggregate recipient outcomes, honest unknown-after-DATA, and no retry or per-recipient fan-out. Trusted libraries remain for TLS (`rustls` + `ring` + `webpki-roots`), Tokio I/O and timers, `base64` and `idna`.
 
 ## Scope
 
-In scope: relay session configuration, TLS and authentication, MAIL/RCPT/DATA transaction handling, response normalization, unknown-after-DATA behavior, and the P06-003 recipient-policy validation. Out of scope: MIME construction, attachment file access, TypeScript API, pooling, automatic retries, SMTPUTF8, and custom SMTP implementation.
+In scope: the SMTP protocol codec, the multiline response parser, EHLO capabilities, implicit TLS and STARTTLS, AUTH PLAIN/LOGIN, the session state machine, MAIL/RCPT/DATA and QUIT, response normalization, unknown-after-DATA, and the fault matrix. Out of scope: MIME construction, attachment file access, TypeScript API, pooling, retries, queues, SMTPUTF8, DKIM, CHUNKING/BDAT, PIPELINING, DSN, and any third-party SMTP engine.
 
 ## Tasks
 
-### P06-001 — Configure lettre 0.11.23 relay session and envelope submission
+### P06-001 — Implement the SMTP command codec and response parser
 
 - **Size:** L
 - **Status:** NOT STARTED
-- **Prerequisites:** P04-005, P01-001
-- **Description:** Implement relay connection configuration from validated core options: host, port, EHLO identity, optional credentials, and required TLS mode. Submit one MAIL command and one RCPT command per recipient using lettre's selected lower-level async API, then one DATA transaction for the accepted-recipient subset. Do not implement SMTP commands manually. Define behavior for missing/invalid relay configuration before any network attempt.
-- **Evidence criteria:** Tests prove valid configuration reaches the fake relay and invalid host/port/EHLO/auth options fail before send. No custom SMTP command path exists. The implementation cites the P01-001 API choice.
+- **Prerequisites:** P04-005
+- **Description:** Implement Sendust-owned serialization for EHLO, STARTTLS, AUTH, MAIL, RCPT, DATA, RSET, NOOP and QUIT, and a bounded parser for single and multiline replies (code class, continuation, last line, enhanced status when present). Enforce RFC 5321 line and response caps, reject malformed replies, and represent results in Sendust types. Keep the module I/O-free so it is unit-testable without a socket. No lettre type may appear.
+- **Evidence criteria:** Unit tests cover every command's exact bytes, single and multiline replies, continuation without a final line, oversized lines and responses, invalid codes, and enhanced-status extraction. No hand-written command string exists outside the codec. Architecture check still proves lettre is confined to no module.
 
-### P06-002 — Enforce TLS verification and authentication failure semantics
+### P06-002 — Implement the native connection, implicit TLS, and STARTTLS client
 
-- **Size:** M
+- **Size:** L
 - **Status:** NOT STARTED
-- **Prerequisites:** P06-001, P01-002
-- **Description:** Wire rustls with the P01-002-proven `ring` and `webpki-roots` feature set. Certificate and hostname verification are mandatory and not configurable off. Map TLS, certificate, and authentication failures to closed, non-retryable errors without leaking credentials. Support the relay authentication modes approved in architecture; reject unsupported modes explicitly.
-- **Evidence criteria:** Self-signed, expired, wrong-host, incomplete-chain, and malformed-certificate fixtures all fail closed before DATA. No public or internal option disables verification. Authentication failure returns a stable error and never logs the password.
+- **Prerequisites:** P06-001
+- **Description:** Connect with Tokio over one resolved relay address, read the greeting, send EHLO, and parse capabilities. Support implicit TLS and a required STARTTLS upgrade using rustls with `ring` and `webpki-roots`, SNI and hostname verification always on. Re-EHLO after STARTTLS. Never fall back to plaintext, never treat a missing STARTTLS advertisement as success, and never disable verification.
+- **Evidence criteria:** Loopback harness proves greeting, EHLO, implicit TLS, STARTTLS upgrade, and re-EHLO. Self-signed, expired, wrong-host, incomplete-chain and malformed fixtures all fail closed with distinct codes; no configuration can disable verification.
 
-### P06-003 — Validate and implement recipient partial-failure policy
-
-- **Size:** XL
-- **Status:** NOT STARTED
-- **Prerequisites:** P01-003, P06-001
-- **Description:** Implement the P01-003 / ADR-0005 selected behavior: use AsyncSmtpConnection.command(Rcpt::new(...)) and Error::status() to observe each recipient reply. Continue after ordinary explicit 4xx/5xx RCPT refusal; if 421 is returned, stop immediately and do not issue DATA. If no recipient is accepted, do not issue DATA. Otherwise send exactly one DATA transaction to the accepted subset. No fallback to whole-envelope rejection and no per-recipient message fan-out.
-- **Evidence criteria:** Mixed fixture first `250`, second `550` records the first recipient as accepted only after final DATA 2xx and the second as rejected. Exactly one DATA transaction is sent to the accepted subset. When every RCPT reply is negative, no DATA command is sent. A 421 RCPT response terminates the session and prevents DATA even if earlier RCPT responses were 2xx. No per-recipient independent message is ever sent.
-
-### P06-004 — Normalize SMTP responses, unknown-after-DATA, and no-retry behavior
+### P06-003 — Implement SMTP AUTH and the session state machine
 
 - **Size:** L
 - **Status:** NOT STARTED
 - **Prerequisites:** P06-001, P06-002
-- **Description:** Map SMTP reply classes to core results: relay acceptance for a successful final DATA response, definite rejection before acceptance where certainty exists, and `unknown` after DATA when the final outcome cannot be known. Implement zero automatic retries, including after timeouts, resets, or ambiguous replies. Preserve attempt counts without creating duplicate sends. Define how protocol violations and abrupt closes map without pretending certainty.
-- **Evidence criteria:** An explicit final DATA `451` yields `rejected`; a dropped connection after the terminator may have reached the relay and before a final reply yields `unknown`. Both use exactly one SMTP transaction. `550` before DATA yields `rejected`; `250` final response yields `accepted` meaning relay accepted, not delivered. A reset during DATA yields `unknown`. No retry loop exists in code or test.
+- **Description:** Implement AUTH PLAIN and LOGIN after TLS, including the 334 challenge exchange with a bounded challenge count, and a session state machine connecting the parsed replies to MAIL, one RCPT per recipient, DATA, and QUIT. AUTH is refused before TLS; unsupported mechanisms fail with a stable code. Map pre-transaction failures to connection, TLS or authentication errors, never to a delivery outcome.
+- **Evidence criteria:** Tests cover successful PLAIN and LOGIN, 535 rejection, no advertised mechanism, challenge exhaustion, AUTH attempted before TLS, and every state transition including early close and protocol violations. Credentials never appear in errors or logs.
 
-### P06-005 — SMTP fault-matrix phase gate
+### P06-004 — Swap the delivery adapter and prove the differential fault matrix
+
+- **Size:** XL
+- **Status:** NOT STARTED
+- **Prerequisites:** P06-003, P04-005
+- **Description:** Implement `DeliveryPort` over the native session behind the unchanged `SmtpConfig`, `SmtpTransport` and `SmtpSession` surface, preserving ADR-0005 recipient semantics, ADR-0006 lifecycle, ADR-0007 deadlines and the existing outcome/error mapping. While migrating, run the fault matrix against both the native client and the lettre backend as a dev-only oracle; then remove lettre from production dependencies.
+- **Evidence criteria:** Identical outcomes and stable codes from both backends for the whole matrix; one DATA transaction for the accepted subset; no DATA when every RCPT is refused; 421 stops the envelope; explicit final `451` is `rejected`; missing final reply after the terminator is `unknown`; no retry path exists. `cargo tree` proves lettre is absent from production dependencies.
+
+### P06-005 — Native SMTP engine phase gate
 
 - **Size:** M
 - **Status:** NOT STARTED
 - **Prerequisites:** P06-001, P06-002, P06-003, P06-004
-- **Description:** Run the complete SMTP fault matrix against the deterministic loopback harness and review the recipient ADR implementation. Confirm every result is honest, TLS cannot be weakened, no retry/pooling exists, and timeout stages are reported only where observable.
-- **Evidence criteria:** Gate covers success, all RCPT rejected, mixed RCPT, explicit final `451` and missing-final-reply-after-DATA, auth `535`, five TLS certificate failures, connection refused, greeting reset, DATA reset, abrupt pre-final close, connect 11s, command 31s, total 121s, and close 126s. Phase 07 and Phase 09 may consume SMTP only after approval.
+- **Description:** Run the complete fault matrix against the native engine and review the parser's security posture: bounded input, smuggling resistance, STARTTLS downgrade resistance, truncation handling, redaction, and stage-accurate error mapping. Confirm no retry, no pooling, no third-party engine, and no weakened TLS.
+- **Evidence criteria:** Gate covers success, all-RCPT rejection, mixed RCPT, explicit final `451`, missing final reply after DATA, AUTH `535`, five certificate failures, connection refused, greeting reset, DATA reset, abrupt pre-final close, connect 11s, command 31s, total 121s, and close 126s. Includes a parser security review and a final `cargo tree` showing only the approved dependency set. Phases 07 and 09 may consume SMTP only after approval.
 
 ## Technical implementation details
 
-SMTP is exclusively `lettre 0.11.23`; no custom protocol client is permitted unless Phase 01 explicitly justified it, and the default decision is no custom SMTP. Relay configuration is core-owned and validated before connect. TLS uses rustls with `ring` and `webpki-roots`; verification is always enabled. Authentication failures are terminal. A transport handles one active send; `BUSY` is enforced by the lifecycle layer. Success means the relay accepted the message; it never means mailbox delivery. After DATA, ambiguity maps to `unknown` with no retry. Recipient handling follows ADR-0005: observe each RCPT response, send one DATA transaction to the accepted subset, and report recipient accepted only after final DATA 2xx. If the pinned API behavior differs from source review, block and supersede ADR-0005; do not silently change the contract. Timeout defaults remain connect 10s, operation 30s, total 120s, close 125s. There is no pooling, no retry, and no SMTPUTF8.
+```text
+transports/smtp/
+  mod.rs            public config/types and the DeliveryPort impl (unchanged surface)
+  client/           Tokio TCP connect and tokio-rustls upgrade (implicit TLS, STARTTLS)
+  proto/            command codec, response parser, capabilities, AUTH, dot-stuffing
+  session.rs        connect -> greeting -> EHLO -> [STARTTLS -> EHLO] -> [AUTH] -> MAIL -> RCPT* -> DATA -> QUIT
+  transport.rs      delivery orchestration over the session and SendDeadlines
+  error.rs          mapping into the existing ErrorCode/Stage taxonomy
+```
+
+Relay configuration stays core-owned and is validated before connect. TLS uses rustls with `ring` and `webpki-roots`; verification is always enabled. A transport handles one active send; `BUSY` is enforced by the lifecycle layer. Success means the relay accepted the message, never mailbox delivery. After DATA, ambiguity maps to `unknown` with no retry. Recipient handling follows ADR-0005: observe each RCPT response, send one DATA transaction to the accepted subset, and report a recipient accepted only after a final DATA 2xx. Timeout defaults remain connect 10s, operation 30s, total 120s, close 125s. There is no pooling, no retry, no SMTPUTF8, and no third-party SMTP implementation.
 
 ## Dependencies
 
-Phase 06 requires Phase 04 and Phase 01 gates. P06-001 needs P04-005 and P01-001; P06-002 needs P01-002; P06-003 needs P01-003 and P06-001; P06-004 needs P06-001/002; P06-005 depends on all SMTP tasks. Phase 09 consumes P06-005; Phase 08 may proceed independently after its own inputs.
+Phase 06 requires the Phase 04 gate and accepted ADR-0017. P06-001 needs P04-005; P06-002 needs P06-001; P06-003 needs P06-001 and P06-002; P06-004 needs P06-003 and P04-005; P06-005 depends on all four. Phase 09 consumes P06-005; Phase 07 may proceed independently after P04.
 
 ## Risks and edge cases
 
-- The high-level lettre transport may not expose RCPT outcomes; promising partial success is forbidden.
-- A server may accept RCPT and then explicitly reject the final DATA with 4xx/5xx; result is `rejected`. If the final response is missing after the terminator may have reached the relay, result is `unknown`.
-- Greeting, EHLO, STARTTLS, AUTH, MAIL, RCPT, DATA, and final response may fail at different points; certainty depends on observable stage.
-- Retrying an unknown result can duplicate mail and is prohibited.
-- TLS feature drift or permissive roots would violate security posture.
-- Abrupt server closure can look like a timeout; both remain honest failures.
-- Credentials may appear in debug errors; redaction is mandatory.
+- Parser correctness and adversarial input: oversized lines, truncated replies, smuggling, invalid codes.
+- STARTTLS downgrade and re-EHLO regressions; verification must never be bypassed.
+- Regression against a previously proven engine; the differential oracle is mandatory until parity.
+- Provider quirks in greeting, capabilities and reply text.
+- Enhanced-status parsing may change error detail shape; codes remain append-only.
+- AUTH challenge loops and credential redaction.
+- Ambiguity after the DATA terminator must remain `unknown` and never be retried.
 
 ## Testing requirements
 
-Use loopback fake SMTP/TLS only, with a scripted dialogue and no arbitrary sleeps. Required fixtures: all `250`; all RCPT `550`; mixed `250`/`550`; RCPT `421` after one accepted RCPT; `451` after final DATA; `535` auth; self-signed, expired, wrong-host, incomplete-chain, and malformed TLS; connection refused; reset during greeting; reset during DATA; abrupt close before final response; connect stall 11s; command stall 31s; total stall 121s; close drain 126s. Assert exact command trace for each, including no DATA when all RCPT commands are rejected, one DATA for mixed RCPT, and no second transaction after unknown. Assert credentials never appear in error text or logs.
+Loopback fake SMTP/TLS only, scripted dialogue, no arbitrary sleeps. Required fixtures: all `250`; all RCPT `550`; mixed `250`/`550`; RCPT `421` after one accepted RCPT; `451` after final DATA; `535` auth; PLAIN and LOGIN success; no advertised mechanism; self-signed, expired, wrong-host, incomplete-chain and malformed TLS; STARTTLS advertised, refused, absent and stripped; connection refused; reset during greeting; reset during DATA; abrupt close before final response; oversized and malformed replies; connect stall 11s; command stall 31s; total stall 121s; close drain 126s. Assert exact command traces, no DATA when all RCPT commands are rejected, one DATA for mixed RCPT, and no second transaction after unknown. Assert credentials never appear in error text or logs.
 
 ## Acceptance criteria
 
-- SMTP uses lettre only and follows the research-selected API.
-- TLS verification is mandatory and all certificate failures close the connection.
-- Recipient policy matches the explicit ADR and never promises high-level partial status.
-- Accepted, rejected, and unknown results are honest; no retry exists.
-- Fault matrix passes with exact command traces.
+- The SMTP engine is implemented in Sendust and no third-party SMTP engine is a production dependency.
+- TLS verification is mandatory and every certificate failure closes before DATA.
+- Recipient policy matches ADR-0005 and never fans out per recipient.
+- Accepted, rejected and unknown results are honest; no retry exists.
+- The differential fault matrix passes with exact command traces.
 
 ## Deliverables
 
-Relay configuration, TLS/auth enforcement, recipient-policy implementation, SMTP response mapping, and SMTP fault-matrix gate report.
+Native SMTP codec and parser, TLS/STARTTLS client, AUTH and session state machine, native delivery adapter, differential fault-matrix evidence, and the phase gate report.
 
 ## Completion gate
 
-Gate `PHASE-06` is `APPROVED` only when P06-005 proves the full fault matrix, the recipient ADR is explicit and implemented, no retry/pooling/custom SMTP exists, and the result contract remains relay-accepted.
+Gate `PHASE-06` is `APPROVED` only when P06-005 proves the full fault matrix, the parser security review, no retry/pooling/third-party engine, and the unchanged relay-accepted result contract.
 
 ## SMTP adapter boundary requirements
 
-All SMTP protocol interaction, TLS, AUTH, RCPT/DATA and SMTP response mapping must remain inside the SMTP adapter. Delivery orchestration must call the narrow internal delivery port and must not depend on lettre types. lettre is the sole MVP SMTP implementation. No public transport plugin registry or alternate provider is introduced.
+All SMTP protocol interaction, TLS, AUTH, RCPT/DATA and response mapping remain inside the SMTP adapter. Delivery orchestration calls the narrow internal delivery port and must not depend on protocol types. Sendust's native client is the sole MVP SMTP implementation; no public transport plugin registry or alternate provider is introduced.
 
 ## Status
 
-NOT STARTED. No SMTP code has been written.
+NOT STARTED. No native-engine code has been written.

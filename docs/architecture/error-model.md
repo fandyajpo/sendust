@@ -41,7 +41,7 @@ export interface SendResult {
 | `rejected` | The relay explicitly refused this recipient at RCPT, or accepted its RCPT but explicitly refused the final DATA transaction. |
 | `unknown` | The recipient was part of an envelope whose final status is unknown. |
 
-**Critical rule (ADR-0005):** Sendust uses lettre's public lower-level async connection API to observe each RCPT reply. Explicitly refused recipients remain `rejected`; accepted recipients are sent one shared DATA transaction. RCPT acceptance alone never means message acceptance. A recipient becomes `accepted` only after positive final DATA. If final disposition is unknown, accepted-RCPT recipients become `unknown`. Sendust never sends one message per recipient.
+**Critical rule (ADR-0005):** Sendust observes each RCPT reply through its own SMTP client (ADR-0017). Explicitly refused recipients remain `rejected`; accepted recipients are sent one shared DATA transaction. RCPT acceptance alone never means message acceptance. A recipient becomes `accepted` only after positive final DATA. If final disposition is unknown, accepted-RCPT recipients become `unknown`. Sendust never sends one message per recipient.
 
 ### 2.3 No delivery claim
 
@@ -125,7 +125,7 @@ Codes are append-only within a major version. Removing or renaming a code is a b
 
 `details` must never include passwords, full bodies, attachment bytes, tokens, or absolute paths.
 
-## 4. Mapping from core and lettre
+## 4. Mapping from core and the SMTP client
 
 | Source | Core category | Public code |
 | --- | --- | --- |
@@ -135,7 +135,7 @@ Codes are append-only within a major version. Removing or renaming a code is a b
 | Cap exceeded | limit | `LIMIT_*` |
 | rustls certificate error | tls | `TLS_CERTIFICATE` |
 | rustls handshake/protocol error | tls | `TLS_HANDSHAKE` / `TLS_PROTOCOL` |
-| lettre auth error | authentication | `AUTH_FAILED` |
+| SMTP AUTH rejection | authentication | `AUTH_FAILED` |
 | TCP/connect/TLS/AUTH failure before an SMTP message transaction | operational error | `PROTOCOL_*`, `TLS_*`, or `AUTH_*`; never `rejected` delivery status |
 | MAIL/DATA/final DATA explicit negative response, or all RCPT replies negative | delivery outcome | `rejected` |
 | Individual RCPT explicit negative response in a mixed envelope | recipient outcome | That recipient `rejected`; continue with accepted subset |

@@ -106,4 +106,4 @@ Gate `PHASE-01` is `APPROVED` only when P01-005 records resolved ADRs and the ar
 
 ## Status
 
-COMPLETED. Pinned-source/API research and the decision gate are recorded. Cargo/runtime/fake-relay probes remain hard implementation gates, not research-phase claims.
+COMPLETED. Pinned-source/API research and the decision gate are recorded. Cargo/runtime/fake-relay probes remain hard implementation gates, not research-phase claims. Partially superseded by ADR-0017: the lettre API research is retained as a reference and as the basis for the dev-only differential oracle, but the SMTP engine decision now belongs to the native-engine work in Phase 06.

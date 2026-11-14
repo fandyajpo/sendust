@@ -2,7 +2,7 @@
 
 **Status:** approved design baseline at P02-005; implementation and runtime validation remain gated downstream.  
 **Requirements:** [requirements.md](../product/requirements.md).  
-**Call path:** `ts/src -> sendust-napi -> sendust-core -> lettre 0.11.23`.
+**Call path:** `ts/src -> sendust-napi -> sendust-core -> Sendust SMTP client` (ADR-0017).
 
 All paths below describe the approved design baseline; application source has not yet been implemented.
 
@@ -199,10 +199,10 @@ deadline = start + min(total, remaining close budget)
 
 ### 2.6 SMTP orchestration
 
-- Core creates one `AsyncSmtpConnection` per send (no pool), using lettre's public lower-level async connection API. The selected API is required for individual RCPT responses; Sendust does not implement SMTP parsing or command formatting.
-- lettre features are pinned with `default-features = false` and `smtp-transport`, `tokio1-rustls`, `ring`, and `webpki-roots`; this excludes lettre's default pool/native-tls features. Cargo compilation is a P03-002 hard gate. Build `TlsParameters` with `CertificateStore::WebpkiRoots` and TLS 1.2 minimum. Never call dangerous certificate/hostname bypass methods. Implicit TLS uses `connect_tokio1` with TLS parameters; STARTTLS connects without TLS then requires `can_starttls()` and `starttls()` before AUTH. No plaintext fallback.
-- Auth uses lettre `Credentials` and only `Mechanism::Plain` / `Mechanism::Login`, after TLS. Validate the returned AUTH response is 235; do not treat arbitrary 2xx/3xx as authenticated.
-- Send one `MAIL FROM`, then one `RCPT TO` command per recipient through `AsyncSmtpConnection::command`. Record exact 2xx acceptance and 4xx/5xx rejection using `Error::status()`; check response classes explicitly because lettre treats both 2xx and 3xx as generic positive responses. Continue after ordinary RCPT refusals; 421 closes the session and stops the envelope. If no recipient is accepted or 421 occurs, do not issue DATA. Otherwise issue exactly one DATA transaction for the accepted-recipient envelope. This is one message/one SMTP transaction, not per-recipient message fan-out.
+- Core opens one native SMTP session per send (no pool). Sendust implements command serialization, response parsing, capability negotiation, STARTTLS, AUTH and the transaction state machine inside `transports::smtp` (ADR-0017); per-RCPT responses are observed directly with no third-party engine in the path.
+- TLS is rustls with the `ring` provider and `webpki-roots` (ADR-0003), reached through `tokio-rustls`. TLS 1.2 is the minimum, certificate and hostname verification are always on, and no bypass or plaintext fallback exists. Implicit TLS connects through the TLS stream; STARTTLS connects plaintext, requires the advertisement, upgrades, and re-sends EHLO before AUTH.
+- Auth implements AUTH PLAIN and LOGIN after TLS, with a bounded 334 challenge exchange. The final AUTH response must be 235; arbitrary 2xx/3xx is never treated as authenticated, and credentials never appear in errors or logs.
+- Send one `MAIL FROM`, then one `RCPT TO` command per recipient. Record exact 2xx acceptance and 4xx/5xx rejection by response class; 3xx is never acceptance. Continue after ordinary RCPT refusals; 421 closes the session and stops the envelope. If no recipient is accepted or 421 occurs, do not issue DATA. Otherwise issue exactly one DATA transaction for the accepted-recipient envelope. This is one message/one SMTP transaction, not per-recipient message fan-out.
 - Require DATA command reply 354 before sending body bytes. A positive final DATA reply (2xx) → overall `accepted`; RCPT-accepted recipients become `accepted`, while explicit RCPT refusals remain `rejected`.
 - An explicit negative final DATA reply (4xx/5xx) → overall `rejected`; RCPT-accepted recipients also become `rejected`.
 - A non-final/unexpected 3xx after message transmission, or a transport/write/read error once `message()` begins, yields `unknown` because lettre does not expose a public checkpoint proving the final disposition. No retry.
@@ -247,7 +247,7 @@ The folder names may be adjusted during implementation to fit idiomatic Rust mod
 
 `sendust-napi` remains a thin inbound adapter: convert and snapshot JS inputs, reserve lifecycle, call the core facade, schedule work, and map outcomes/errors. It contains no MIME or SMTP policy. `ts/src` remains the public JS API and runtime loader only; it must not duplicate core validation, MIME, or delivery decisions.
 
-This is a modular monolith in one process and one package, not a microservice architecture. Do not create a crate per module, a public plugin system, runtime-specific business engines, empty feature hooks, or extra transport implementations. The only MVP transport is SMTP via lettre. Module dependency rules must be checked by static architecture tests at P03/P04 and re-audited at P12.
+This is a modular monolith in one process and one package, not a microservice architecture. Do not create a crate per module, a public plugin system, runtime-specific business engines, empty feature hooks, or extra transport implementations. The only MVP transport is Sendust's native SMTP client (ADR-0017). Module dependency rules must be checked by static architecture tests at P03/P04 and re-audited at P12.
 
 ## 3. `sendust-napi`
 
@@ -377,7 +377,7 @@ Codes are stable strings; classes are stable for `instanceof`. The full catalog 
 
 | Dependency | Purpose | MVP | Alternative | Notes |
 | --- | --- | --- | --- | --- |
-| `lettre` 0.11.23 | SMTP connection, TLS, auth, command, DATA codec | Required | Custom SMTP client; `mail-send` | Mature, async, Tokio support. Pin exact version; builder feature is not enabled. |
+| Sendust SMTP client (native) | Command codec, response parser, capabilities, AUTH, STARTTLS, session state machine | Required | lettre 0.11.23 (superseded) | ADR-0017; built on rustls/tokio primitives. lettre remains only as a dev-only differential oracle during P06. |
 | `tokio` 1 | Async runtime via napi | Required | async-std | napi-rs manages the runtime; do not create another. |
 | `rustls` 0.23 | TLS | Required | native-tls | `ring` provider, `webpki-roots`; no verification bypass. |
 | `napi` 3.16.2 + `napi-derive` 3.7.0 + `napi-build` 2.6.0 | Node-API binding | Required | neon, node-bindgen | Pin exact versions; enable `napi8` and `async` features explicitly. |
@@ -404,7 +404,7 @@ Each has a validation task and cannot be assumed in implementation.
 
 ## 4. Runtime interoperability amendment
 
-The approved native call path remains TypeScript wrapper → Node-API 8 adapter → runtime-independent core → lettre. Under ADR-0015, Node.js, Bun, and Deno are required MVP targets, but the runtime implementation and loader must be validated on each exact version. The public TypeScript API must remain behaviorally identical.
+The approved native call path remains TypeScript wrapper → Node-API 8 adapter → runtime-independent core → Sendust SMTP client. Under ADR-0015, Node.js, Bun, and Deno are required MVP targets, but the runtime implementation and loader must be validated on each exact version. The public TypeScript API must remain behaviorally identical.
 
 Keep native loading isolated in `ts/src/loader.ts`. Shared TypeScript code must not assume Node-only globals or built-ins. Audit the generated NAPI-RS loader rather than assuming it works unchanged in all runtimes. A minimal runtime-specific loader branch is permitted if needed; separate Rust adapters or another crate are not permitted without a failing compatibility test and superseding ADR.
 

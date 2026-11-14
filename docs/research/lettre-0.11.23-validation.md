@@ -1,7 +1,7 @@
 # lettre 0.11.23 — Source Validation Report
 
 **Research date:** 2026-11-13  
-**Status:** source inspection complete; compile and runtime probes remain  
+**Status:** source inspection complete; retained as a reference after ADR-0017 superseded lettre as the engine. The API findings below still describe the dev-only differential oracle.  
 **Pinned source:** [lettre v0.11.23](https://github.com/lettre/lettre/tree/v0.11.23)
 
 ## 1. Decision summary

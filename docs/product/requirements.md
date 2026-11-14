@@ -34,7 +34,7 @@ Enforced by P02-001, P03-001, P09-001.
 
 ### C-03 — SMTP engine
 
-`lettre 0.11.23` is the observed SMTP engine at planning time. Sendust MUST use lettre rather than a custom SMTP client unless P01-001/P01-003 prove a required MVP capability is inaccessible through public APIs. Any replacement requires an ADR approved before Phase 06.
+Sendust MUST own its SMTP engine (ADR-0017): command serialization, response parsing, capability negotiation, STARTTLS, AUTH and the transaction state machine are implemented in `sendust-core` on trusted TLS/I/O primitives, and no third-party SMTP engine may be a production dependency.
 
 Enforced by P01-001, P01-005, P06-001.
 
