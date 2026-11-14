@@ -6,10 +6,10 @@
 - Phase tasks: 95
 - Architecture amendment tasks: 7 (A01-001–A01-004, A02-001–A02-003)
 - Completed tasks: 30 (P00–P05)
-- In-review tasks: 4 (P06-001–P06-004)
+- In-review tasks: 5 (P06-001–P06-005)
 - In-progress tasks: 0
-- Not-started tasks: 61 (P06-005, P07–P18)
-- P00–P02 tasks are `COMPLETED` with approved gate evidence. P03-001–P03-005 are `COMPLETED` with CI evidence and an approved QG-03 record; P04-001 to P04-005 are `COMPLETED` with an approved PHASE-04 record; P05-001 to P05-005 are `COMPLETED` with an approved PHASE-05 record; P06-001 to P06-004 are `IN REVIEW`; P06-005 and P07–P18 are `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
+- Not-started tasks: 60 (P07–P18)
+- P00–P02 tasks are `COMPLETED` with approved gate evidence. P03-001–P03-005 are `COMPLETED` with CI evidence and an approved QG-03 record; P04-001 to P04-005 are `COMPLETED` with an approved PHASE-04 record; P05-001 to P05-005 are `COMPLETED` with an approved PHASE-05 record; P06-001 to P06-005 are `IN REVIEW` pending the PHASE-06 gate decision; P07–P18 are `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
 - Effort is relative: S, M, L, XL. No delivery dates.
 - Gate tasks are the final task in each phase and must not be marked complete before their phase evidence exists.
 
@@ -68,7 +68,7 @@
 | [P06](../phases/phase-06.md) | SMTP | [P06-002](../phases/phase-06.md) | Implement the native connection, implicit TLS, and STARTTLS client | L | P06-001 | IN REVIEW |
 | [P06](../phases/phase-06.md) | SMTP | [P06-003](../phases/phase-06.md) | Implement SMTP AUTH and the session state machine | L | P06-001, P06-002 | IN REVIEW |
 | [P06](../phases/phase-06.md) | SMTP | [P06-004](../phases/phase-06.md) | Swap the delivery adapter and prove the differential fault matrix | XL | P06-003, P04-005 | IN REVIEW |
-| [P06](../phases/phase-06.md) | SMTP | [P06-005](../phases/phase-06.md) | Native SMTP engine phase gate | M | P06-001, P06-002, P06-003, P06-004 | NOT STARTED |
+| [P06](../phases/phase-06.md) | SMTP | [P06-005](../phases/phase-06.md) | Native SMTP engine phase gate | M | P06-001, P06-002, P06-003, P06-004 | IN REVIEW |
 | [P07](../phases/phase-07.md) | MIME | [P07-001](../phases/phase-07.md) | Implement header model and safe encoding | L | P04-002, P04-003 | NOT STARTED |
 | [P07](../phases/phase-07.md) | MIME | [P07-002](../phases/phase-07.md) | Implement plain text and HTML alternative bodies | M | P07-001 | NOT STARTED |
 | [P07](../phases/phase-07.md) | MIME | [P07-003](../phases/phase-07.md) | Implement filename and content-type handling policy | M | P07-001 | NOT STARTED |
