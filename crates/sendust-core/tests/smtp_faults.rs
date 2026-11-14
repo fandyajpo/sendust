@@ -311,7 +311,6 @@ async fn an_intermediate_rcpt_reply_is_a_protocol_error() {
     assert_eq!(server.trace().count_prefix("DATA"), 0);
 }
 
-
 /// Budgets lowered in proportion to the approved maximums so a stall of the
 /// same shape as the 11 s / 31 s / 121 s cases runs in seconds.
 fn lowered(connect: u64, operation: u64, total: u64, close: u64) -> Timeouts {
@@ -356,8 +355,20 @@ async fn every_bad_certificate_fixture_fails_before_mail() {
 
 #[tokio::test]
 async fn greeting_reset_is_a_protocol_error() {
-    let server = serving(Script::default().hangup(support::Stage::Greeting));
-    let mut delivery = delivery(config(server.addr()));
+    // A plaintext greeting keeps the reset inside the SMTP session: the TLS
+    // handshake is not involved, so the failure is the missing banner.
+    let server = FakeSmtp::start(Script::default().hangup(support::Stage::Greeting))
+        .expect("start plain fake smtp");
+    let mut delivery = delivery(
+        SmtpConfig::new(
+            "127.0.0.1",
+            server.addr().port(),
+            SmtpSecurity::StartTls,
+        )
+        .expect("valid relay")
+        .with_root_certificate_pem(ca_pem())
+        .expect("trusted fixture root"),
+    );
 
     let error = delivery
         .send(message(&["bob@example.test"]))
