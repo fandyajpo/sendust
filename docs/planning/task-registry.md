@@ -6,9 +6,9 @@
 - Phase tasks: 95
 - Architecture amendment tasks: 7 (A01-001–A01-004, A02-001–A02-003)
 - Completed tasks: 35 (P00–P06)
-- In-review tasks: 1 (P07-001)
+- In-review tasks: 2 (P07-001, P07-002)
 - In-progress tasks: 0
-- Not-started tasks: 59 (P07-002 to P07-005, P08–P18)
+- Not-started tasks: 58 (P07-003 to P07-005, P08–P18)
 - P00–P02 tasks are `COMPLETED` with approved gate evidence. P03-001–P03-005 are `COMPLETED` with CI evidence and an approved QG-03 record; P04-001 to P04-005 are `COMPLETED` with an approved PHASE-04 record; P05-001 to P05-005 are `COMPLETED` with an approved PHASE-05 record; P06-001 to P06-005 are `COMPLETED` with the approved PHASE-06 record; P07–P18 are `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
 - Effort is relative: S, M, L, XL. No delivery dates.
 - Gate tasks are the final task in each phase and must not be marked complete before their phase evidence exists.
@@ -70,7 +70,7 @@
 | [P06](../phases/phase-06.md) | SMTP | [P06-004](../phases/phase-06.md) | Swap the delivery adapter and prove the differential fault matrix | XL | P06-003, P04-005 | COMPLETED |
 | [P06](../phases/phase-06.md) | SMTP | [P06-005](../phases/phase-06.md) | Native SMTP engine phase gate | M | P06-001, P06-002, P06-003, P06-004 | COMPLETED |
 | [P07](../phases/phase-07.md) | MIME | [P07-001](../phases/phase-07.md) | Implement header model and safe encoding | L | P04-002, P04-003 | IN REVIEW |
-| [P07](../phases/phase-07.md) | MIME | [P07-002](../phases/phase-07.md) | Implement plain text and HTML alternative bodies | M | P07-001 | NOT STARTED |
+| [P07](../phases/phase-07.md) | MIME | [P07-002](../phases/phase-07.md) | Implement plain text and HTML alternative bodies | M | P07-001 | IN REVIEW |
 | [P07](../phases/phase-07.md) | MIME | [P07-003](../phases/phase-07.md) | Implement filename and content-type handling policy | M | P07-001 | NOT STARTED |
 | [P07](../phases/phase-07.md) | MIME | [P07-004](../phases/phase-07.md) | Implement deterministic serialization and wire-size parity | L | P07-001, P07-002, P07-003 | NOT STARTED |
 | [P07](../phases/phase-07.md) | MIME | [P07-005](../phases/phase-07.md) | MIME conformance and phase gate | M | P07-001, P07-002, P07-003, P07-004 | NOT STARTED |

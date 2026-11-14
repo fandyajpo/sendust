@@ -25,7 +25,7 @@ In scope: message construction, header encoding and injection defense, text/html
 ### P07-002 — Implement plain text and HTML alternative bodies
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P07-001
 - **Description:** Support text-only and multipart/alternative text+HTML bodies with correct charset declarations, transfer encoding, and deterministic boundaries. Define UTF-8 body handling and line-ending normalization policy. Reject unsupported content combinations explicitly.
 - **Evidence criteria:** Golden MIME fixtures verify text-only and alternative messages byte-for-byte. UTF-8 bodies decode correctly. Boundary uniqueness is deterministic. Unsupported combinations produce stable validation errors.
@@ -91,8 +91,9 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 
 | Task | Evidence | State |
 | --- | --- | --- |
+| P07-002 | `mime/mod.rs`: `normalize_body` converts CRLF, bare CR and bare LF to CRLF before transfer encoding; text-only, HTML-only and `multipart/alternative` render with `charset=utf-8` and base64. `tests/mime_bodies.rs` pins byte-exact golden fixtures for text-only and alternative, and covers HTML-only, empty-string bodies, line-ending equivalence and the no-body rejection. `message/mod.rs` rejects a message with neither body as `VALIDATION_INVALID_OPTION`, matching the public API contract. | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
 | P07-001 | `message/mod.rs`: a custom header may appear once (case-insensitive), `Message-ID` and `Received` join the reserved set, and the model documents the fixed header order. `mime/headers.rs`: RFC 2047 encoded words that never split a character and never exceed 75 characters, ASCII words left unencoded, folding that only replaces an existing space so unfolding restores the value, unbreakable tokens falling back to encoded words instead of being split, and Unicode display names rendered as unquoted phrases. 10 header unit tests, ordering and exact-encoded-byte serialization tests, and 3 duplicate-policy tests. | IMPLEMENTED, EXECUTED PASS locally and in CI (all 8 workflows); CI evidence on the branch. |
 
 ## Status
 
-IN PROGRESS. P07-001 is IN REVIEW; P07-002 to P07-005 are NOT STARTED.
+IN PROGRESS. P07-001 and P07-002 are IN REVIEW; P07-003 to P07-005 are NOT STARTED.
