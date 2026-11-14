@@ -38,6 +38,10 @@ webpki-roots = { version = "=1.0.12" }
 # rustls key/certificate types used by the native client (already transitive).
 rustls-pki-types = { version = "=1.16.0" }
 
+# Independent MIME parser for conformance tests only (P07-005). Dev-only: it
+# never ships and it re-parses the emitted bytes with a second implementation.
+mail-parser = { version = "=0.11.9" }
+
 # Node-API 8 binding surface, used by sendust-napi only.
 napi = { version = "=3.16.2", features = ["napi8", "async"] }
 napi-derive = "=3.7.0"

@@ -24,6 +24,6 @@ webpki-roots.workspace = true
 [dev-dependencies]
 # Independent MIME parser for conformance tests only (P07-005). Test-only: it
 # never ships and it re-parses the emitted bytes with a second implementation.
-mail-parser = "=0.11.9"
+mail-parser.workspace = true
 # Test builds need the runtime itself; the library only needs the timer.
 tokio = { workspace = true, features = ["rt", "macros"] }

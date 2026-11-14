@@ -50,10 +50,7 @@ fn parses_a_text_only_message() {
     assert_eq!(to.address.as_deref(), Some("bob@example.test"));
 
     assert_eq!(parsed.subject(), Some("Hello"));
-    assert_eq!(
-        parsed.body_text(0).expect("body").trim(),
-        "hello world"
-    );
+    assert_eq!(parsed.body_text(0).expect("body").trim(), "hello world");
 
     assert!(
         parsed
