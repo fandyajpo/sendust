@@ -118,8 +118,8 @@ function checkWorkspaceShape() {
 
   const core = packages.get("sendust-core");
   const napi = packages.get("sendust-napi");
-  // Dev- and build-dependencies are filtered out: an engine Sendust replaced
-  // may stay as a test oracle, but never as a production dependency.
+  // Dev- and build-dependencies are filtered out; lettre is forbidden in every
+  // kind because Sendust owns the SMTP engine (ADR-0017).
   const productionDependencies = (pkg) =>
     new Set(
       pkg.dependencies

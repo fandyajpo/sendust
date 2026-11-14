@@ -35,7 +35,7 @@ Sendust must own its email engine. Trusted infrastructure libraries remain in us
 
 **Explicitly out of MVP scope:** DKIM (RFC 6376), SMTPUTF8 (RFC 6531/6532), CHUNKING/BDAT (RFC 3030), PIPELINING (RFC 2920), DSN (RFC 3461/3464), connection pooling, retries, queues, persistence and any third-party SMTP engine.
 
-During migration, lettre stays available as a **dev-dependency differential oracle**: the same fault matrix runs against both implementations until parity is proven. It must not be linked into the production artifact once P06-005 is approved.
+During migration, lettre was available as a **dev-dependency differential oracle**: the same fault matrix ran against both implementations until parity was proven. It was removed on PHASE-06 approval (2026-11-14) and is absent from the tree.
 
 ## Alternatives
 

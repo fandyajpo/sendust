@@ -1,6 +1,6 @@
 # ADR-0002 — Use lettre 0.11.23 instead of a custom SMTP client
 
-**Status:** SUPERSEDED by [ADR-0017](0017-native-smtp-engine.md). Retained as the historical decision and as the rationale for the dev-only differential oracle.  
+**Status:** SUPERSEDED by [ADR-0017](0017-native-smtp-engine.md). Retained as the historical decision only; lettre was removed from the tree at PHASE-06.  
 **Date:** 2026-11-13  
 **Deciders:** Research gate (P01-005)  
 **Validated by:** P01-001, P01-003, P06-001

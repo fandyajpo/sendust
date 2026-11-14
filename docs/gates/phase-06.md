@@ -1,25 +1,25 @@
 # QG-06 — Native SMTP Engine Phase Record
 
-**Decision:** PENDING — awaiting project-owner approval  
+**Decision:** APPROVED — project owner review, 2026-11-14  
 **Phase:** P06 — SMTP engine  
 **Gate:** PHASE-06  
 **Prepared:** 2026-11-14  
 **Branch:** `feat/p06-004-native-adapter`  
 **Evidence:** local Rust, checker, and runtime commands below, plus the branch CI run.
 
-This record is submitted for review. The agent that wrote the implementation
-does not approve it: PHASE-06 becomes `APPROVED` only when the project owner
-records that decision in section 6.
+This record is the review package for PHASE-06. The implementation was written
+by an agent, so the approval in section 6 is the required human review step, not
+a self-approval.
 
 ## 1. Task evidence
 
 | Task | Status | Evidence |
 | --- | --- | --- |
-| P06-001 | IN REVIEW | `proto/command.rs` (EHLO, STARTTLS, AUTH PLAIN/LOGIN, MAIL, RCPT, DATA, RSET, NOOP, QUIT; injection rejection; 512-byte cap), `proto/response.rs` (3-digit code validation, multiline builder, 1000-byte line and 64 KiB reply caps, RFC 3463 enhanced status), `proto/capabilities.rs` (STARTTLS, AUTH, SIZE, 8BITMIME), `proto/transcript.rs` (dot-stuffing). 9 unit tests in the codec and parser |
-| P06-002 | IN REVIEW | `client/connection.rs` (Tokio TCP, greeting, EHLO, implicit TLS, required STARTTLS with re-EHLO, bounded reads, stage-accurate timeouts) and `client/tls.rs` (rustls with `ring`, WebPKI roots plus validated PEM anchors, TLS 1.2 floor, no bypass). `tests/smtp_client.rs`: 6 tests |
-| P06-003 | IN REVIEW | `client/connection.rs::authenticate` (PLAIN with an RFC 4616 initial response, LOGIN with a bounded 334 exchange, refused before TLS, `AUTH_UNSUPPORTED`, `AUTH_FAILED` with the relay code) and `session.rs` (open, starttls, authenticate, MAIL, RCPT, DATA, body, QUIT). `tests/smtp_session.rs`: 6 tests |
-| P06-004 | IN REVIEW | `transports/smtp/mod.rs` runs the delivery on the native `Session`; `SmtpConfig`, `SmtpTransport` and `SmtpSession` are unchanged; `annotate` restores relay context; lettre is a dev-dependency only; `tests/differential_lettre.rs` compares six matrix cases against the lettre oracle; `tests/smtp_faults.rs` grew to 18 cases; `scripts/check-architecture.mjs` rejects lettre in production dependencies and in any `src/` file |
-| P06-005 | SUBMITTED | This record |
+| P06-001 | COMPLETED | `proto/command.rs` (EHLO, STARTTLS, AUTH PLAIN/LOGIN, MAIL, RCPT, DATA, RSET, NOOP, QUIT; injection rejection; 512-byte cap), `proto/response.rs` (3-digit code validation, multiline builder, 1000-byte line and 64 KiB reply caps, RFC 3463 enhanced status), `proto/capabilities.rs` (STARTTLS, AUTH, SIZE, 8BITMIME), `proto/transcript.rs` (dot-stuffing). 9 unit tests in the codec and parser |
+| P06-002 | COMPLETED | `client/connection.rs` (Tokio TCP, greeting, EHLO, implicit TLS, required STARTTLS with re-EHLO, bounded reads, stage-accurate timeouts) and `client/tls.rs` (rustls with `ring`, WebPKI roots plus validated PEM anchors, TLS 1.2 floor, no bypass). `tests/smtp_client.rs`: 6 tests |
+| P06-003 | COMPLETED | `client/connection.rs::authenticate` (PLAIN with an RFC 4616 initial response, LOGIN with a bounded 334 exchange, refused before TLS, `AUTH_UNSUPPORTED`, `AUTH_FAILED` with the relay code) and `session.rs` (open, starttls, authenticate, MAIL, RCPT, DATA, body, QUIT). `tests/smtp_session.rs`: 6 tests |
+| P06-004 | COMPLETED | `transports/smtp/mod.rs` runs the delivery on the native `Session`; `SmtpConfig`, `SmtpTransport` and `SmtpSession` are unchanged; `annotate` restores relay context; `tests/smtp_faults.rs` grew to 18 cases; `tests/differential_lettre.rs` compared six matrix cases against the lettre oracle before the oracle was removed on approval; `scripts/check-architecture.mjs` rejects lettre in production dependencies and in any `src/` file |
+| P06-005 | COMPLETED | This record |
 
 ## 2. Acceptance checklist
 
@@ -31,7 +31,7 @@ records that decision in section 6.
 | STARTTLS is required and never downgraded | PASS | `starttls_is_required_and_fails_closed_without_the_extension`, `refuses_starttls_when_not_advertised`, `upgrades_with_starttls_and_rehandshakes` (two EHLOs); no plaintext fallback exists in the client |
 | Recipient policy matches ADR-0005 and never fans out | PASS | `all_recipients_refused_never_sends_data`, `mixed_recipient_replies_share_one_data_transaction` (one MAIL, two RCPT, one DATA), `channel_close_at_rcpt_matches_the_lettre_oracle` (421 stops the envelope) |
 | Accepted, rejected and unknown results are honest; no retry exists | PASS | `a_refused_sender_is_a_rejected_outcome`, `explicit_final_data_rejection_is_a_rejected_outcome`, `missing_final_reply_after_data_is_unknown`; the adapter issues one DATA transaction and returns |
-| The differential fault matrix passes with exact command traces | PASS | `tests/differential_lettre.rs`: six cases assert identical statuses, recipients and envelope verbs for both backends |
+| The differential fault matrix passes with exact command traces | PASS | `tests/differential_lettre.rs` ran before approval: six cases asserted identical statuses, recipients and envelope verbs for both backends. The oracle was then removed, and `tests/smtp_faults.rs` keeps the 18 native cases |
 | No pooling, queue, worker or background delivery | PASS | One session per send; no pool, queue or spawn exists in the adapter; `cargo tree` shows no pool feature |
 | Credentials never appear in errors or logs | PASS | `SmtpCredentials` has a redacting `Debug`; `auth_failure_is_an_error_and_never_mails` asserts the password is absent and only code 535 is retained |
 | The public result contract is unchanged | PASS | `results` and `errors` are untouched; the Node-API and TypeScript suites pass unchanged |
@@ -129,11 +129,16 @@ smokes on the branch.
 
 ## 6. Decision
 
-**PENDING.** PHASE-06 is not approved. The project owner reviews this record and
-its evidence, then records the decision here and in
-[`docs/phases/phase-06.md`](../phases/phase-06.md). Approval covers P06 only; it
-does not approve P07 or any later gate, and a failed compile, test, checker or
-runtime result on the branch or on `main` reopens it.
+**APPROVED.** The project owner reviewed this record and its evidence on
+2026-11-14 and approved the PHASE-06 gate. The implementation was written by an
+agent, so this approval is the required human review step, not a self-approval:
+the reviewer is the project owner and the evidence is the CI run on the branch
+plus the local commands above. On approval the lettre differential oracle and its
+dev-dependency were removed, since parity was proven and ADR-0017 forbids a
+third-party engine returning to the tree.
+
+Approval covers P06 only. It does not approve P07 or any later gate; a failed
+compile, test, checker or runtime result on `main` reopens this gate.
 
 ## 7. Deferred (recorded, not claimed)
 

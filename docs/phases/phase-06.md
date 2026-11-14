@@ -1,6 +1,6 @@
 # Phase 06 — SMTP engine
 
-**Phase status:** IN PROGRESS  
+**Phase status:** COMPLETED  
 **Phase dependency:** Phase 04  
 **Companion references:** [system design](../architecture/system-design.md), [ADR-0017](../architecture/decisions/0017-native-smtp-engine.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [reliability strategy](../engineering/reliability-strategy.md)
 
@@ -17,7 +17,7 @@ In scope: the SMTP protocol codec, the multiline response parser, EHLO capabilit
 ### P06-001 — Implement the SMTP command codec and response parser
 
 - **Size:** L
-- **Status:** IN REVIEW
+- **Status:** COMPLETED
 - **Prerequisites:** P04-005
 - **Description:** Implement Sendust-owned serialization for EHLO, STARTTLS, AUTH, MAIL, RCPT, DATA, RSET, NOOP and QUIT, and a bounded parser for single and multiline replies (code class, continuation, last line, enhanced status when present). Enforce RFC 5321 line and response caps, reject malformed replies, and represent results in Sendust types. Keep the module I/O-free so it is unit-testable without a socket. No lettre type may appear.
 - **Evidence criteria:** Unit tests cover every command's exact bytes, single and multiline replies, continuation without a final line, oversized lines and responses, invalid codes, and enhanced-status extraction. No hand-written command string exists outside the codec. Architecture check still proves lettre is confined to no module.
@@ -25,7 +25,7 @@ In scope: the SMTP protocol codec, the multiline response parser, EHLO capabilit
 ### P06-002 — Implement the native connection, implicit TLS, and STARTTLS client
 
 - **Size:** L
-- **Status:** IN REVIEW
+- **Status:** COMPLETED
 - **Prerequisites:** P06-001
 - **Description:** Connect with Tokio over one resolved relay address, read the greeting, send EHLO, and parse capabilities. Support implicit TLS and a required STARTTLS upgrade using rustls with `ring` and `webpki-roots`, SNI and hostname verification always on. Re-EHLO after STARTTLS. Never fall back to plaintext, never treat a missing STARTTLS advertisement as success, and never disable verification.
 - **Evidence criteria:** Loopback harness proves greeting, EHLO, implicit TLS, STARTTLS upgrade, and re-EHLO. Self-signed, expired, wrong-host, incomplete-chain and malformed fixtures all fail closed with distinct codes; no configuration can disable verification.
@@ -33,7 +33,7 @@ In scope: the SMTP protocol codec, the multiline response parser, EHLO capabilit
 ### P06-003 — Implement SMTP AUTH and the session state machine
 
 - **Size:** L
-- **Status:** IN REVIEW
+- **Status:** COMPLETED
 - **Prerequisites:** P06-001, P06-002
 - **Description:** Implement AUTH PLAIN and LOGIN after TLS, including the 334 challenge exchange with a bounded challenge count, and a session state machine connecting the parsed replies to MAIL, one RCPT per recipient, DATA, and QUIT. AUTH is refused before TLS; unsupported mechanisms fail with a stable code. Map pre-transaction failures to connection, TLS or authentication errors, never to a delivery outcome.
 - **Evidence criteria:** Tests cover successful PLAIN and LOGIN, 535 rejection, no advertised mechanism, challenge exhaustion, AUTH attempted before TLS, and every state transition including early close and protocol violations. Credentials never appear in errors or logs.
@@ -41,7 +41,7 @@ In scope: the SMTP protocol codec, the multiline response parser, EHLO capabilit
 ### P06-004 — Swap the delivery adapter and prove the differential fault matrix
 
 - **Size:** XL
-- **Status:** IN REVIEW
+- **Status:** COMPLETED
 - **Prerequisites:** P06-003, P04-005
 - **Description:** Implement `DeliveryPort` over the native session behind the unchanged `SmtpConfig`, `SmtpTransport` and `SmtpSession` surface, preserving ADR-0005 recipient semantics, ADR-0006 lifecycle, ADR-0007 deadlines and the existing outcome/error mapping. While migrating, run the fault matrix against both the native client and the lettre backend as a dev-only oracle; then remove lettre from production dependencies.
 - **Evidence criteria:** Identical outcomes and stable codes from both backends for the whole matrix; one DATA transaction for the accepted subset; no DATA when every RCPT is refused; 421 stops the envelope; explicit final `451` is `rejected`; missing final reply after the terminator is `unknown`; no retry path exists. `cargo tree` proves lettre is absent from production dependencies.
@@ -49,7 +49,7 @@ In scope: the SMTP protocol codec, the multiline response parser, EHLO capabilit
 ### P06-005 — Native SMTP engine phase gate
 
 - **Size:** M
-- **Status:** IN REVIEW
+- **Status:** COMPLETED
 - **Prerequisites:** P06-001, P06-002, P06-003, P06-004
 - **Description:** Run the complete fault matrix against the native engine and review the parser's security posture: bounded input, smuggling resistance, STARTTLS downgrade resistance, truncation handling, redaction, and stage-accurate error mapping. Confirm no retry, no pooling, no third-party engine, and no weakened TLS.
 - **Evidence criteria:** Gate covers success, all-RCPT rejection, mixed RCPT, explicit final `451`, missing final reply after DATA, AUTH `535`, five certificate failures, connection refused, greeting reset, DATA reset, abrupt pre-final close, connect 11s, command 31s, total 121s, and close 126s. Includes a parser security review and a final `cargo tree` showing only the approved dependency set. Phases 07 and 09 may consume SMTP only after approval.
@@ -112,12 +112,12 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 
 | Task | Evidence | State |
 | --- | --- | --- |
-| P06-005 | [`docs/gates/phase-06.md`](../gates/phase-06.md): task evidence, acceptance checklist, the full fault matrix (18 rows), the parser security review, the executed command list and the `cargo tree` proof. | SUBMITTED, awaiting project-owner approval |
-| P06-004 | `transports/smtp/mod.rs` runs the delivery on the native `Session`: required STARTTLS, AUTH after TLS, `MAIL`/`RCPT`/`DATA`, one transaction for the accepted subset, reply classes mapped to accepted/rejected/unknown, and `annotate` restoring host/port/stage/elapsed context. `Session::starttls` and a stage-aware `Connection::read_reply` keep timeout and protocol stages accurate. `lettre` moved to `sendust-core` dev-dependencies; `tests/differential_lettre.rs` runs six matrix cases against both backends; `tests/smtp_faults.rs` grows to 18 cases, including a refused MAIL and an intermediate RCPT reply; `scripts/check-architecture.mjs` rejects lettre in production dependencies and anywhere under `src/`. | IMPLEMENTED, EXECUTED PASS locally and in CI (all 8 workflows, including the Rust workspace and native binding jobs): 114 core unit, 6 differential, 9 harness, 6 client, 18 fault, 6 session; `cargo fmt --check`, `cargo clippy -D warnings`, architecture/docs/secrets checks, `build:native`, TS tests, and the Node/Bun/Deno smoke all pass; `cargo tree -e normal` reports no lettre. |
+| P06-005 | [`docs/gates/phase-06.md`](../gates/phase-06.md): task evidence, acceptance checklist, the full fault matrix (18 rows), the parser security review, the executed command list and the `cargo tree` proof. | APPROVED by the project owner, 2026-11-14 |
+| P06-004 | `transports/smtp/mod.rs` runs the delivery on the native `Session`: required STARTTLS, AUTH after TLS, `MAIL`/`RCPT`/`DATA`, one transaction for the accepted subset, reply classes mapped to accepted/rejected/unknown, and `annotate` restoring host/port/stage/elapsed context. `Session::starttls` and a stage-aware `Connection::read_reply` keep timeout and protocol stages accurate. `lettre` moved to `sendust-core` dev-dependencies; `tests/differential_lettre.rs` ran six matrix cases against both backends before the oracle was removed on approval; `tests/smtp_faults.rs` grows to 18 cases, including a refused MAIL and an intermediate RCPT reply; `scripts/check-architecture.mjs` rejects lettre in production dependencies and anywhere under `src/`. | IMPLEMENTED, EXECUTED PASS locally and in CI (all 8 workflows, including the Rust workspace and native binding jobs): 114 core unit, 6 differential, 9 harness, 6 client, 18 fault, 6 session; `cargo fmt --check`, `cargo clippy -D warnings`, architecture/docs/secrets checks, `build:native`, TS tests, and the Node/Bun/Deno smoke all pass; `cargo tree -e normal` reports no lettre. |
 | P06-003 | `client/connection.rs` (`authenticate`: PLAIN with an RFC 4616 initial response, LOGIN with a bounded 334 challenge exchange, refused before TLS, `AUTH_UNSUPPORTED` when no mechanism is advertised, `AUTH_FAILED` with the relay code on rejection) and `session.rs` (open, authenticate, MAIL, RCPT, DATA, body, QUIT returning raw replies for ADR-0005 classification) plus `proto/transcript.rs` (dot-stuffing and terminator). Harness gained multi-step `auth_flow` replies. `tests/smtp_session.rs`: 6 tests — PLAIN, LOGIN challenges, 535, no mechanism, AUTH before TLS refused, full transaction with dot-stuffing. | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
 | P06-002 | `crates/sendust-core/src/transports/smtp/client/` — `connection.rs` (Tokio TCP, greeting, EHLO, implicit TLS, required STARTTLS with re-EHLO, bounded reads under `SendDeadlines`) and `tls.rs` (rustls with `ring`, WebPKI roots plus validated PEM anchors, TLS 1.2 floor, no bypass). Harness gained a real STARTTLS upgrade and named-certificate serving; `tests/smtp_client.rs` adds 6 tests. | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
 | P06-001 | `crates/sendust-core/src/transports/smtp/proto/` — `command.rs` (EHLO, STARTTLS, AUTH PLAIN/LOGIN, MAIL, RCPT, DATA, RSET, NOOP, QUIT with injection rejection and the 512-byte cap), `response.rs` (three-digit code validation, multiline builder, 1000-byte line and 64 KiB reply caps, RFC 3463 enhanced status), `capabilities.rs` (STARTTLS, AUTH mechanisms, SIZE, 8BITMIME). 15 new unit tests; 109 core tests total, `cargo clippy -D warnings`, architecture/docs/secrets checks all pass locally. The module is I/O-free and carries a temporary `dead_code` allow until P06-002/P06-003 wire it in. | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
 
 ## Status
 
-IN PROGRESS. P06-001 to P06-005 are IN REVIEW; the PHASE-06 gate record is submitted and awaiting project-owner approval.
+COMPLETED. PHASE-06 is APPROVED (project owner, 2026-11-14). The lettre differential oracle and its dev-dependency were removed on approval; the native fault matrix remains as the regression suite.

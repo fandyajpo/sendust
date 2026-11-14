@@ -99,16 +99,17 @@ P00–P05 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | Item | State |
 | --- | --- |
 | Repository | Documentation, architecture planning, and the P03 workspace skeleton |
-| Application implementation | Core complete (errors, addresses, message model, MIME, orchestration, fault matrix); Node-API binding and TypeScript facade implemented; native SMTP engine selected by ADR-0017 and pending P06; public API contract (P09) pending |
-| Toolchain validation | Rust 1.100.0 and the Node.js 22.23.5/24.22.3/26.13.1 jobs pass in Sendust CI on branch `feat/p03-repository-skeleton` |
+| Application implementation | Core complete (errors, addresses, message model, MIME, orchestration, fault matrix); Node-API binding and TypeScript facade implemented; native SMTP engine completed in P06 and approved under PHASE-06; public API contract (P09) pending |
+| Toolchain validation | Rust 1.100.0 and the Node.js 22.23.5/24.22.3/26.13.1 jobs pass in Sendust CI |
 | QG-00 Discovery | APPROVED |
 | QG-01 Research | APPROVED with implementation validation gates |
 | QG-02 Architecture | APPROVED at design level |
 | P03-001–P03-005 | COMPLETED |
 | P04-001–P04-005 | COMPLETED |
 | P05-001–P05-005 | COMPLETED |
-| P06–P18 | NOT STARTED |
-| Next task | P06-004 — swap the delivery adapter and prove the differential fault matrix |
+| P06-001–P06-005 | COMPLETED; PHASE-06 APPROVED (2026-11-14) |
+| P07–P18 | NOT STARTED |
+| Next task | P07-001 — implement the header model and safe encoding |
 
 ## 5. Conventions
 

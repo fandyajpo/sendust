@@ -11,7 +11,7 @@ SMTP can accept some RCPT TO commands and reject others within one transaction. 
 
 ## Decision
 
-**Amended by ADR-0017:** the policy below is unchanged. The mechanism that makes it observable is now the native SMTP client, whose parser returns the exact reply for every RCPT command; lettre's lower-level API was the original evidence and is retained only as a dev-only differential oracle during P06.
+**Amended by ADR-0017:** the policy below is unchanged. The mechanism that makes it observable is now the native SMTP client, whose parser returns the exact reply for every RCPT command; lettre's lower-level API was the original evidence and served as the differential oracle during P06, then was removed.
 
 Use lettre 0.11.23's public lower-level `AsyncSmtpConnection` API. `command(Rcpt::new(...))` returns an individual response or an SMTP error with a public numeric `status()`. Source inspection confirms this API is sufficient to observe each RCPT response. Do not use the high-level transport for Sendust's send path.
 

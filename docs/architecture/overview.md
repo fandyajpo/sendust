@@ -35,7 +35,7 @@ Consumer-configured SMTP relay
 | TypeScript wrapper | Public names, types, defaults documentation, error classes, module formats | Keeps the native surface small and lets JS-facing ergonomics change without recompiling Rust |
 | napi adapter | Convert JS values to owned Rust values; convert core results/errors; schedule async work | Isolates all Node-API and `unsafe`-adjacent code in one crate |
 | Rust core | All protocol-independent policy and all SMTP/MIME behavior | Testable without Node; enforces validation, limits, lifecycle, and delivery semantics |
-| Sendust SMTP client (native) | SMTP protocol, TLS, AUTH, DATA | Owns the engine on rustls/Tokio primitives (ADR-0017); lettre 0.11.23 is superseded and remains only as a dev-only differential oracle during P06 |
+| Sendust SMTP client (native) | SMTP protocol, TLS, AUTH, DATA | Owns the engine on rustls/Tokio primitives (ADR-0017); lettre 0.11.23 was superseded and removed from the tree at PHASE-06 |
 
 The TypeScript wrapper is deliberately thin. It validates only public shape and option compatibility that cannot be expressed in generated types. It MUST NOT reinterpret core statuses or implement SMTP/MIME policy. This prevents the two implementations from drifting.
 

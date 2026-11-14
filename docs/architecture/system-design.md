@@ -377,7 +377,7 @@ Codes are stable strings; classes are stable for `instanceof`. The full catalog 
 
 | Dependency | Purpose | MVP | Alternative | Notes |
 | --- | --- | --- | --- | --- |
-| Sendust SMTP client (native) | Command codec, response parser, capabilities, AUTH, STARTTLS, session state machine | Required | lettre 0.11.23 (superseded) | ADR-0017; built on rustls/tokio primitives. lettre remains only as a dev-only differential oracle during P06. |
+| Sendust SMTP client (native) | Command codec, response parser, capabilities, AUTH, STARTTLS, session state machine | Required | lettre 0.11.23 (superseded) | ADR-0017; built on rustls/tokio primitives. No third-party SMTP engine is linked; lettre was removed at PHASE-06. |
 | `tokio` 1 | Async runtime via napi | Required | async-std | napi-rs manages the runtime; do not create another. |
 | `rustls` 0.23 | TLS | Required | native-tls | `ring` provider, `webpki-roots`; no verification bypass. |
 | `napi` 3.16.2 + `napi-derive` 3.7.0 + `napi-build` 2.6.0 | Node-API binding | Required | neon, node-bindgen | Pin exact versions; enable `napi8` and `async` features explicitly. |
