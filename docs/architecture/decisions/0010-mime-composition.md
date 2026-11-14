@@ -1,6 +1,6 @@
 # ADR-0010 — MIME composition in core with lettre primitives
 
-**Status:** ACCEPTED (architecture baseline); conformance validation required at P07-005  
+**Status:** ACCEPTED (architecture baseline; amended by ADR-0017: lettre is gone, so every encoding primitive is core-owned); conformance validation required at P07-005  
 **Date:** 2026-11-13  
 **Deciders:** Architecture review (P02-005)  
 **Validated by:** P07-001–P07-005

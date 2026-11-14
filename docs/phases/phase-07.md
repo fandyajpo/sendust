@@ -1,6 +1,6 @@
 # Phase 07 — MIME
 
-**Phase status:** NOT STARTED  
+**Phase status:** IN PROGRESS  
 **Phase dependency:** Phase 04  
 **Companion references:** [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md)
 
@@ -17,7 +17,7 @@ In scope: message construction, header encoding and injection defense, text/html
 ### P07-001 — Implement header model and safe encoding
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P04-002, P04-003
 - **Description:** Build a header model for required and optional headers, with CRLF/LF/NUL rejection and RFC-compliant encoded words for Unicode display names and header values. Define header ordering and duplicate policy. Prevent message content from injecting headers or recipients.
 - **Evidence criteria:** Tests cover ASCII and Unicode encoded words, long-line folding, duplicate header policy, and injection attempts using CRLF, bare LF, NUL, and folded whitespace. Exact rendered header bytes are asserted.
@@ -85,6 +85,14 @@ Header model, body renderer, filename/content-type policy, deterministic seriali
 
 `PHASE-07` is approved only when P07-005 proves conformance, injection safety, and wire-size parity, and Phase 08 can attach bytes without changing MIME semantics.
 
+## Evidence log
+
+Evidence labels follow the [AI implementation contract](../engineering/ai-implementation-contract.md).
+
+| Task | Evidence | State |
+| --- | --- | --- |
+| P07-001 | `message/mod.rs`: a custom header may appear once (case-insensitive), `Message-ID` and `Received` join the reserved set, and the model documents the fixed header order. `mime/headers.rs`: RFC 2047 encoded words that never split a character and never exceed 75 characters, ASCII words left unencoded, folding that only replaces an existing space so unfolding restores the value, unbreakable tokens falling back to encoded words instead of being split, and Unicode display names rendered as unquoted phrases. 10 header unit tests, ordering and exact-encoded-byte serialization tests, and 3 duplicate-policy tests. | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
+
 ## Status
 
-NOT STARTED.
+IN PROGRESS. P07-001 is IN REVIEW; P07-002 to P07-005 are NOT STARTED.
