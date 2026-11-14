@@ -57,8 +57,12 @@ for (const key of [
 
 const user = env.SENDUST_USER || "";
 let password = env.SENDUST_PASS || "";
-if (Boolean(user) !== Boolean(password)) {
-  console.error("set both SENDUST_USER and SENDUST_PASS, or neither");
+if (user && !password) {
+  console.error("SENDUST_USER is set but SENDUST_PASS is empty; set the password or unset both");
+  process.exit(2);
+}
+if (!user && password) {
+  console.error("SENDUST_PASS is set but SENDUST_USER is empty; set the user or unset both");
   process.exit(2);
 }
 
