@@ -61,7 +61,7 @@ fn message(to: &[&str]) -> OutgoingMessage {
 }
 
 fn delivery(config: SmtpConfig) -> Delivery<SmtpTransport> {
-    Delivery::new(SmtpTransport::new(config), Limits::default(), AttachmentPolicy::disabled)
+    Delivery::new(SmtpTransport::new(config), Limits::default(), AttachmentPolicy::Disabled)
 }
 
 #[tokio::test]

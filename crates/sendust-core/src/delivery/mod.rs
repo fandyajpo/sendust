@@ -124,7 +124,7 @@ mod tests {
     #[tokio::test]
     async fn submits_once_with_serialized_wire_bytes() {
         let (port, calls, wire) = fake(None);
-        let mut delivery = Delivery::new(port, Limits::default(), AttachmentPolicy::disabled);
+        let mut delivery = Delivery::new(port, Limits::default(), AttachmentPolicy::Disabled);
 
         let outcome = delivery.send(message()).await.expect("sent");
 
@@ -137,7 +137,7 @@ mod tests {
     #[tokio::test]
     async fn returns_a_rejected_outcome_unchanged() {
         let (port, calls, _) = fake(Some((451, "4.3.0 Try later")));
-        let mut delivery = Delivery::new(port, Limits::default(), AttachmentPolicy::disabled);
+        let mut delivery = Delivery::new(port, Limits::default(), AttachmentPolicy::Disabled);
 
         let outcome = delivery.send(message()).await.expect("sent");
 
@@ -148,7 +148,7 @@ mod tests {
     #[tokio::test]
     async fn a_validation_failure_never_reaches_the_port() {
         let (port, calls, _) = fake(None);
-        let mut delivery = Delivery::new(port, Limits::default(), AttachmentPolicy::disabled);
+        let mut delivery = Delivery::new(port, Limits::default(), AttachmentPolicy::Disabled);
         let mut invalid = message();
         invalid.to.clear();
 
@@ -168,7 +168,7 @@ mod tests {
         let limits = Limits::default()
             .with_max_wire_bytes(10)
             .expect("lowered limit");
-        let mut delivery = Delivery::new(port, limits, AttachmentPolicy::disabled);
+        let mut delivery = Delivery::new(port, limits, AttachmentPolicy::Disabled);
 
         let error = delivery.send(message()).await.expect_err("limit");
 

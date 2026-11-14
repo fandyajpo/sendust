@@ -28,14 +28,6 @@ pub enum AttachmentPolicy {
 }
 
 impl AttachmentPolicy {
-    pub const fn disabled() -> Self {
-        Self::Disabled
-    }
-
-    pub const fn enabled() -> Self {
-        Self::Enabled
-    }
-
     pub const fn filesystem_enabled(self) -> bool {
         matches!(self, Self::Enabled)
     }
@@ -246,7 +238,7 @@ mod tests {
         let total = validate(
             &[bytes("report.pdf", 3)],
             Limits::default(),
-            AttachmentPolicy::disabled,
+            AttachmentPolicy::Disabled,
         )
         .expect("valid");
         assert_eq!(total, 3);
@@ -275,7 +267,7 @@ mod tests {
 
         let at_cap = vec![bytes("a.bin", 10 * MIB), bytes("b.bin", 10 * MIB)];
         assert_eq!(
-            validate(&at_cap, Limits::default(), AttachmentPolicy::disabled).expect("at cap"),
+            validate(&at_cap, Limits::default(), AttachmentPolicy::Disabled).expect("at cap"),
             20 * MIB
         );
 
@@ -286,7 +278,7 @@ mod tests {
             bytes("c.bin", 1),
         ];
         assert_eq!(
-            validate(&over, Limits::default(), AttachmentPolicy::disabled)
+            validate(&over, Limits::default(), AttachmentPolicy::Disabled)
                 .expect_err("over total")
                 .code(),
             ErrorCode::LimitAttachmentTotal
@@ -347,7 +339,7 @@ mod tests {
             validate(
                 &[bytes("Grüße.pdf", 1)],
                 Limits::default(),
-                AttachmentPolicy::disabled
+                AttachmentPolicy::Disabled
             )
             .expect("valid"),
             1
@@ -375,7 +367,7 @@ mod tests {
             validate(
                 &[bytes("a.txt", 1), bytes("b.txt", 1)],
                 Limits::default(),
-                AttachmentPolicy::disabled
+                AttachmentPolicy::Disabled
             )
             .expect("distinct names"),
             2
@@ -450,7 +442,7 @@ mod tests {
     }
 
     fn code(attachments: &[Attachment]) -> ErrorCode {
-        validate(attachments, Limits::default(), AttachmentPolicy::disabled)
+        validate(attachments, Limits::default(), AttachmentPolicy::Disabled)
             .expect_err("must be rejected")
             .code()
     }

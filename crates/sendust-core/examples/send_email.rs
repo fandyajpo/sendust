@@ -213,7 +213,7 @@ async fn run(settings: &Settings) -> Result<(), Box<dyn std::error::Error>> {
     let mut delivery = Delivery::new(
         transport.session(),
         Limits::default(),
-        AttachmentPolicy::disabled,
+        AttachmentPolicy::Disabled,
     );
     let outcome = delivery.send(message).await?;
 

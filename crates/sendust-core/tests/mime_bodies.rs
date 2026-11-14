@@ -29,7 +29,7 @@ fn serialize_body(text: Option<&str>, html: Option<&str>) -> Vec<u8> {
     serialize(
         &message(text, html),
         Limits::default(),
-        AttachmentPolicy::disabled,
+        AttachmentPolicy::Disabled,
     )
     .expect("serialized")
 }
@@ -114,7 +114,7 @@ fn a_message_without_a_body_is_rejected() {
     let error = serialize(
         &message(None, None),
         Limits::default(),
-        AttachmentPolicy::disabled,
+        AttachmentPolicy::Disabled,
     )
     .expect_err("no body");
     assert_eq!(error.code(), ErrorCode::ValidationInvalidOption);

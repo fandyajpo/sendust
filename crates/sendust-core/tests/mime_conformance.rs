@@ -39,7 +39,7 @@ fn wire(message: &OutgoingMessage) -> Vec<u8> {
     serialize_at(
         message,
         Limits::default(),
-        AttachmentPolicy::disabled,
+        AttachmentPolicy::Disabled,
         fixed(),
     )
     .expect("serialized")

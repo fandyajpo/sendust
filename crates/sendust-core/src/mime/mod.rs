@@ -468,7 +468,7 @@ mod tests {
 
     #[test]
     fn serializes_a_plain_text_message() {
-        let bytes = serialize(&message(), Limits::default(), AttachmentPolicy::disabled).expect("serialized");
+        let bytes = serialize(&message(), Limits::default(), AttachmentPolicy::Disabled).expect("serialized");
         let wire = text(&bytes);
 
         assert!(wire.starts_with("From: \"Alice\" <alice@example.test>\r\n"));
@@ -485,7 +485,7 @@ mod tests {
         message.text = None;
         message.html = Some("<p>hi</p>".to_string());
 
-        let wire = text(&serialize(&message, Limits::default(), AttachmentPolicy::disabled).expect("serialized"));
+        let wire = text(&serialize(&message, Limits::default(), AttachmentPolicy::Disabled).expect("serialized"));
         assert!(wire.contains("Content-Type: text/html; charset=utf-8\r\n"));
         assert!(wire.contains(&base64(b"<p>hi</p>")));
     }
@@ -495,7 +495,7 @@ mod tests {
         let mut message = message();
         message.html = Some("<p>hi</p>".to_string());
 
-        let wire = text(&serialize(&message, Limits::default(), AttachmentPolicy::disabled).expect("serialized"));
+        let wire = text(&serialize(&message, Limits::default(), AttachmentPolicy::Disabled).expect("serialized"));
         assert!(wire.contains("multipart/alternative; boundary=\""));
         assert!(wire.contains("Content-Type: text/plain; charset=utf-8"));
         assert!(wire.contains("Content-Type: text/html; charset=utf-8"));
@@ -512,7 +512,7 @@ mod tests {
             bytes: b"attachment body".to_vec(),
         }];
 
-        let wire = text(&serialize(&message, Limits::default(), AttachmentPolicy::disabled).expect("serialized"));
+        let wire = text(&serialize(&message, Limits::default(), AttachmentPolicy::Disabled).expect("serialized"));
         assert!(wire.contains("multipart/mixed; boundary=\""));
         assert!(wire.contains("Content-Disposition: attachment; filename=\"notes.txt\""));
         assert!(wire.contains(&base64(b"attachment body")));
@@ -531,7 +531,7 @@ mod tests {
             bytes: b"x".to_vec(),
         }];
 
-        let wire = text(&serialize(&message, Limits::default(), AttachmentPolicy::disabled).expect("serialized"));
+        let wire = text(&serialize(&message, Limits::default(), AttachmentPolicy::Disabled).expect("serialized"));
         assert!(wire.contains("Content-Disposition: attachment; filename=\"notes.txt\"\r\n"));
         assert!(!wire.contains("dir/"));
     }
@@ -545,7 +545,7 @@ mod tests {
             bytes: b"pdf".to_vec(),
         }];
 
-        let wire = text(&serialize(&message, Limits::default(), AttachmentPolicy::disabled).expect("serialized"));
+        let wire = text(&serialize(&message, Limits::default(), AttachmentPolicy::Disabled).expect("serialized"));
         let unfolded = wire.replace("\r\n", "");
         assert!(unfolded.contains(
             "Content-Disposition: attachment; filename*=UTF-8''Gr%C3%BC%C3%9Fe.pdf; filename=\"Gr__e.pdf\""
@@ -559,7 +559,7 @@ mod tests {
         message.subject = "Grüße".to_string();
         message.from = mailbox("Böb <bob@example.test>");
 
-        let bytes = serialize(&message, Limits::default(), AttachmentPolicy::disabled).expect("serialized");
+        let bytes = serialize(&message, Limits::default(), AttachmentPolicy::Disabled).expect("serialized");
         let wire = text(&bytes);
         assert!(wire.contains("Subject: =?UTF-8?B?"));
         assert!(wire.contains("From: =?UTF-8?B?"));
@@ -571,8 +571,8 @@ mod tests {
 
     #[test]
     fn is_deterministic() {
-        let first = serialize(&message(), Limits::default(), AttachmentPolicy::disabled).expect("first");
-        let second = serialize(&message(), Limits::default(), AttachmentPolicy::disabled).expect("second");
+        let first = serialize(&message(), Limits::default(), AttachmentPolicy::Disabled).expect("first");
+        let second = serialize(&message(), Limits::default(), AttachmentPolicy::Disabled).expect("second");
         assert_eq!(first, second);
     }
 
@@ -580,7 +580,7 @@ mod tests {
     fn every_line_is_within_the_rfc_limit() {
         let mut message = message();
         message.text = Some("x".repeat(4000));
-        let bytes = serialize(&message, Limits::default(), AttachmentPolicy::disabled).expect("serialized");
+        let bytes = serialize(&message, Limits::default(), AttachmentPolicy::Disabled).expect("serialized");
         for line in bytes.split(|byte| *byte == b'\n') {
             assert!(
                 line.len() <= headers::MAX_LINE + 1,
@@ -592,17 +592,17 @@ mod tests {
 
     #[test]
     fn wire_cap_is_inclusive_and_exact() {
-        let bytes = serialize(&message(), Limits::default(), AttachmentPolicy::disabled).expect("serialized");
+        let bytes = serialize(&message(), Limits::default(), AttachmentPolicy::Disabled).expect("serialized");
         let exact = Limits::default()
             .with_max_wire_bytes(bytes.len() as u64)
             .expect("lowering is allowed");
-        assert!(serialize(&message(), exact, AttachmentPolicy::disabled).is_ok());
+        assert!(serialize(&message(), exact, AttachmentPolicy::Disabled).is_ok());
 
         let under = Limits::default()
             .with_max_wire_bytes(bytes.len() as u64 - 1)
             .expect("lowering is allowed");
         assert_eq!(
-            serialize(&message(), under, AttachmentPolicy::disabled)
+            serialize(&message(), under, AttachmentPolicy::Disabled)
                 .expect_err("over the cap")
                 .code(),
             ErrorCode::LimitWireBytes
@@ -613,12 +613,12 @@ mod tests {
     fn enforces_the_default_wire_cap_on_large_bodies() {
         let mut message = message();
         message.text = Some("a".repeat(21 * 1024 * 1024));
-        let bytes = serialize(&message, Limits::default(), AttachmentPolicy::disabled).expect("under the cap");
+        let bytes = serialize(&message, Limits::default(), AttachmentPolicy::Disabled).expect("under the cap");
         assert!(bytes.len() as u64 <= Limits::default().max_wire_bytes());
 
         message.text = Some("a".repeat(23 * 1024 * 1024));
         assert_eq!(
-            serialize(&message, Limits::default(), AttachmentPolicy::disabled)
+            serialize(&message, Limits::default(), AttachmentPolicy::Disabled)
                 .expect_err("over the cap")
                 .code(),
             ErrorCode::LimitWireBytes
@@ -647,7 +647,7 @@ mod tests {
         let mut message = message();
         message.headers =
             vec![crate::message::Header::new("X-Trace-Id", "trace-42").expect("valid")];
-        let wire = text(&serialize(&message, Limits::default(), AttachmentPolicy::disabled).expect("serialized"));
+        let wire = text(&serialize(&message, Limits::default(), AttachmentPolicy::Disabled).expect("serialized"));
         assert!(wire.contains("X-Trace-Id: trace-42"));
     }
 
@@ -655,7 +655,7 @@ mod tests {
     fn encodes_non_ascii_custom_header_values() {
         let mut message = message();
         message.headers = vec![crate::message::Header::new("X-Note", "Grüße").expect("valid")];
-        let bytes = serialize(&message, Limits::default(), AttachmentPolicy::disabled).expect("serialized");
+        let bytes = serialize(&message, Limits::default(), AttachmentPolicy::Disabled).expect("serialized");
         assert!(text(&bytes).contains("X-Note: =?UTF-8?B?"));
         assert!(bytes.iter().all(u8::is_ascii));
     }
@@ -664,7 +664,7 @@ mod tests {
     fn folds_unbreakable_header_values_within_the_line_limit() {
         let mut message = message();
         message.subject = "x".repeat(990);
-        let bytes = serialize(&message, Limits::default(), AttachmentPolicy::disabled).expect("serialized");
+        let bytes = serialize(&message, Limits::default(), AttachmentPolicy::Disabled).expect("serialized");
         for line in bytes.split(|byte| *byte == b'\n') {
             assert!(
                 line.len() <= headers::MAX_LINE + 1,
@@ -678,7 +678,7 @@ mod tests {
     fn encodes_utf8_bodies_without_loss() {
         let mut message = message();
         message.text = Some("héllo".to_string());
-        let wire = text(&serialize(&message, Limits::default(), AttachmentPolicy::disabled).expect("serialized"));
+        let wire = text(&serialize(&message, Limits::default(), AttachmentPolicy::Disabled).expect("serialized"));
         assert!(wire.contains(&base64("héllo".as_bytes())));
     }
 
@@ -691,7 +691,7 @@ mod tests {
             .headers
             .push(crate::message::Header::new("X-Trace-Id", "abc").expect("valid"));
 
-        let wire = text(&serialize(&message, Limits::default(), AttachmentPolicy::disabled).expect("serialized"));
+        let wire = text(&serialize(&message, Limits::default(), AttachmentPolicy::Disabled).expect("serialized"));
         let names: Vec<&str> = wire
             .lines()
             .filter(|line| !line.is_empty() && !line.starts_with(' '))
@@ -711,7 +711,7 @@ mod tests {
     fn renders_exact_encoded_word_bytes() {
         let mut message = message();
         message.subject = "Grüße".to_string();
-        let wire = text(&serialize(&message, Limits::default(), AttachmentPolicy::disabled).expect("serialized"));
+        let wire = text(&serialize(&message, Limits::default(), AttachmentPolicy::Disabled).expect("serialized"));
         assert!(wire.contains("Subject: =?UTF-8?B?R3LDvMOfZQ==?=\r\n"));
     }
 
@@ -804,7 +804,7 @@ mod metadata_tests {
     fn serialize_at_adds_date_and_message_id() {
         let message = message();
         let wire = String::from_utf8(
-            serialize_at(&message, Limits::default(), AttachmentPolicy::disabled, fixed())
+            serialize_at(&message, Limits::default(), AttachmentPolicy::Disabled, fixed())
                 .expect("serialized"),
         )
         .expect("utf8");
@@ -813,7 +813,7 @@ mod metadata_tests {
         assert!(wire.contains("Message-ID: <1000000000.000000000."));
         assert!(wire.contains("@example.test>\r\n"));
 
-        let bare = String::from_utf8(serialize(&message, Limits::default(), AttachmentPolicy::disabled).expect("bare"))
+        let bare = String::from_utf8(serialize(&message, Limits::default(), AttachmentPolicy::Disabled).expect("bare"))
             .expect("utf8");
         assert!(!bare.contains("Date: "));
         assert!(!bare.contains("Message-ID: "));
@@ -824,12 +824,12 @@ mod metadata_tests {
         let mut message = message();
         message.html = Some("<p>hi</p>".to_string());
 
-        let bytes = serialize_at(&message, Limits::default(), AttachmentPolicy::disabled, fixed()).expect("serialized");
+        let bytes = serialize_at(&message, Limits::default(), AttachmentPolicy::Disabled, fixed()).expect("serialized");
         let exact = Limits::default()
             .with_max_wire_bytes(bytes.len() as u64)
             .expect("lowering is allowed");
         assert_eq!(
-            serialize_at(&message, exact, AttachmentPolicy::disabled, fixed())
+            serialize_at(&message, exact, AttachmentPolicy::Disabled, fixed())
                 .expect("at cap")
                 .len(),
             bytes.len()
@@ -839,7 +839,7 @@ mod metadata_tests {
             .with_max_wire_bytes(bytes.len() as u64 - 1)
             .expect("lowering is allowed");
         assert_eq!(
-            serialize_at(&message, under, AttachmentPolicy::disabled, fixed())
+            serialize_at(&message, under, AttachmentPolicy::Disabled, fixed())
                 .expect_err("over the cap")
                 .code(),
             ErrorCode::LimitWireBytes
