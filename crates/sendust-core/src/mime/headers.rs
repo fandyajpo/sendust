@@ -176,7 +176,7 @@ mod tests {
         let value = "ü".repeat(120);
         let header = rendered("Subject", &value);
         let words: Vec<&str> = header
-            .split(|character: char| character == ' ' || character == '\r' || character == '\n')
+            .split([' ', '\r', '\n'])
             .filter(|word| !word.is_empty())
             .collect();
         let encoded: Vec<&str> = words
@@ -185,7 +185,10 @@ mod tests {
             .filter(|word| word.starts_with("=?"))
             .collect();
 
-        assert!(encoded.len() > 1, "a long value must use several encoded words");
+        assert!(
+            encoded.len() > 1,
+            "a long value must use several encoded words"
+        );
         for word in &encoded {
             assert!(word.len() <= 75, "{word} is too long");
             assert!(word.ends_with("?="), "{word} is malformed");
