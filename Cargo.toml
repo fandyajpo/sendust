@@ -9,8 +9,9 @@ rust-version = "1.88"
 publish = false
 
 [workspace.dependencies]
-# SMTP transport, TLS and authentication only. lettre's default `pool` and
-# `native-tls` features are deliberately excluded; see dependency policy.
+# Dev-only differential oracle for the P06 migration (ADR-0017). Sendust owns
+# its SMTP engine; lettre stays reachable from `sendust-core` dev-dependencies
+# to prove behavioural parity and must never return to the production graph.
 lettre = { version = "=0.11.23", default-features = false, features = [
   "smtp-transport",
   "tokio1-rustls",
@@ -18,21 +19,19 @@ lettre = { version = "=0.11.23", default-features = false, features = [
   "webpki-roots",
 ] }
 
-# Transfer encoding for MIME bodies and parts. ADR-0010 requires vetted
-# primitives rather than a hand-rolled encoder; already present via lettre.
+# Transfer encoding for MIME bodies and parts and the AUTH challenge responses.
+# ADR-0010 requires vetted primitives rather than a hand-rolled encoder.
 base64 = { version = "=0.23.1" }
 
-# IDNA (UTS #46) domain conversion for envelope addresses. Already present
-# transitively via lettre/url; pinned directly so core cannot drift from it.
+# IDNA (UTS #46) domain conversion for envelope addresses. Pinned directly so
+# the core cannot drift from the conversion the address model was built on.
 idna = { version = "=1.1.0", default-features = false, features = ["std", "compiled_data"] }
 
-# TLS error classification in the SMTP adapter and the TLS test harness. lettre
-# already pulls this exact rustls version with the ring provider.
+# TLS error classification in the native client and the TLS test harness.
 rustls = { version = "=0.23.46", default-features = false, features = ["std", "tls12", "ring"] }
 
-# Deadline enforcement for the SMTP adapter, plus the async test runtime. lettre
-# already pulls this exact Tokio version; the direct pin only makes the features
-# explicit. Core never builds a runtime, it only uses the caller's timer.
+# Deadline enforcement and I/O for the native SMTP client, plus the async test
+# runtime. Core never builds a runtime, it only uses the caller's timer.
 tokio = { version = "=1.54.1", default-features = false, features = [
   "time",
   "sync",

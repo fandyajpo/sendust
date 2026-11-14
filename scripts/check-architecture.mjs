@@ -118,13 +118,24 @@ function checkWorkspaceShape() {
 
   const core = packages.get("sendust-core");
   const napi = packages.get("sendust-napi");
-  const coreDependencies = new Set(core.dependencies.map((dependency) => dependency.name));
-  const napiDependencies = new Set(napi.dependencies.map((dependency) => dependency.name));
+  // Dev- and build-dependencies are filtered out: an engine Sendust replaced
+  // may stay as a test oracle, but never as a production dependency.
+  const productionDependencies = (pkg) =>
+    new Set(
+      pkg.dependencies
+        .filter((dependency) => dependency.kind === null)
+        .map((dependency) => dependency.name),
+    );
+  const coreDependencies = productionDependencies(core);
+  const napiDependencies = productionDependencies(napi);
 
   for (const forbidden of FORBIDDEN_IN_CORE) {
     if (coreDependencies.has(forbidden)) {
       fail(`sendust-core must not depend on ${forbidden}`);
     }
+  }
+  if (coreDependencies.has("lettre")) {
+    fail("sendust-core must not depend on lettre in production (ADR-0017)");
   }
   if (!napiDependencies.has("sendust-core")) {
     fail("sendust-napi must depend on sendust-core");
@@ -164,11 +175,11 @@ function checkCoreModules() {
       edges.get(owner).add(target);
     }
 
-    if (code.includes("lettre::") && !relativePath.startsWith("transports/smtp/")) {
-      fail(`lettre is only allowed in transports/smtp: ${posix(path)}`);
+    if (code.includes("lettre::")) {
+      fail(`sendust source must not reference lettre (ADR-0017): ${posix(path)}`);
     }
     if (MODULE_LAYERS.get(owner) === "domain") {
-      for (const forbidden of ["crate::transports", "lettre::", "napi::"]) {
+      for (const forbidden of ["crate::transports", "napi::"]) {
         if (code.includes(forbidden)) {
           fail(`domain module ${owner} must not reference ${forbidden}: ${posix(path)}`);
         }

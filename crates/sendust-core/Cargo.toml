@@ -13,7 +13,6 @@ path = "src/lib.rs"
 workspace = true
 
 [dependencies]
-lettre.workspace = true
 idna.workspace = true
 base64.workspace = true
 tokio.workspace = true
@@ -25,3 +24,7 @@ webpki-roots.workspace = true
 [dev-dependencies]
 # Test builds need the runtime itself; the library only needs the timer.
 tokio = { workspace = true, features = ["rt", "macros"] }
+# Differential oracle for P06-004 only: proves the native engine matches the
+# behaviour the fault matrix already proved against lettre. Never a production
+# dependency (ADR-0017).
+lettre.workspace = true

@@ -139,7 +139,7 @@ impl Connection {
             encrypted: matches!(config.security(), SmtpSecurity::ImplicitTls),
         };
 
-        let greeting = connection.read_reply().await?;
+        let greeting = connection.read_reply(Stage::ConnectionSetup).await?;
         expect(&greeting, 220, Stage::ConnectionSetup)?;
         connection.rehandshake().await?;
         Ok(connection)
@@ -236,20 +236,20 @@ impl Connection {
         .map_err(|_| deadline.timeout_error(Instant::now(), true, stage))?
         .map_err(io_error)?;
 
-        self.read_reply().await
+        self.read_reply(stage).await
     }
 
-    pub async fn read_reply(&mut self) -> Result<Reply, Error> {
+    pub async fn read_reply(&mut self, stage: Stage) -> Result<Reply, Error> {
         let mut builder = ReplyBuilder::new();
         loop {
-            let line = self.read_line().await?;
+            let line = self.read_line(stage).await?;
             if builder.push_line(&line)? {
                 return builder.finish();
             }
         }
     }
 
-    async fn read_line(&mut self) -> Result<Vec<u8>, Error> {
+    async fn read_line(&mut self, stage: Stage) -> Result<Vec<u8>, Error> {
         loop {
             if let Some(position) = self.buffer.iter().position(|byte| *byte == b'\n') {
                 return Ok(self.buffer.drain(..=position).collect());
@@ -263,7 +263,7 @@ impl Connection {
             let deadline = self.deadlines;
             let read = tokio::time::timeout(budget, self.transport_mut()?.read(&mut chunk))
                 .await
-                .map_err(|_| deadline.timeout_error(Instant::now(), true, Stage::ConnectionSetup))?
+                .map_err(|_| deadline.timeout_error(Instant::now(), true, stage))?
                 .map_err(io_error)?;
 
             if read == 0 {

@@ -32,6 +32,11 @@ impl Session {
         self.connection.is_encrypted()
     }
 
+    /// Performs the required STARTTLS upgrade and the re-EHLO that follows it.
+    pub async fn starttls(&mut self) -> Result<(), Error> {
+        self.connection.starttls().await
+    }
+
     pub async fn authenticate(&mut self, user: &str, password: &str) -> Result<(), Error> {
         self.connection.authenticate(user, password).await
     }
@@ -66,7 +71,7 @@ impl Session {
 
     pub async fn data_body(&mut self, wire: &[u8]) -> Result<Reply, Error> {
         self.connection.write_raw(&transcript::encode(wire)).await?;
-        self.connection.read_reply().await
+        self.connection.read_reply(Stage::DataCommand).await
     }
 
     pub async fn quit(&mut self) -> Result<Reply, Error> {

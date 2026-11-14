@@ -1,32 +1,26 @@
-//! SMTP session, TLS, AUTH, envelope, RCPT/DATA, and response mapping via lettre.
+//! SMTP delivery adapter over the native session (ADR-0017).
 //!
-//! The adapter owns every lettre type: domain and application modules never see
-//! an SMTP session. It implements the narrow [`DeliveryPort`] once, submits one
-//! message per call, never retries, and never reuses a connection.
+//! The adapter owns every SMTP type: domain and application modules never see a
+//! session, a reply, or a command. It implements the narrow [`DeliveryPort`]
+//! once, submits one message per call, never retries, and never reuses a
+//! connection.
 //!
 //! Recipient handling follows ADR-0005. Every `RCPT TO` reply is observed
 //! individually, only the recipients the relay accepted take part in the single
 //! `DATA` transaction, and a recipient is reported `accepted` only after a
 //! positive final `DATA` response. A refusal at `RCPT` is a recipient outcome,
 //! not an error, and nothing is ever fanned out into per-recipient messages.
+//!
+//! TLS is mandatory: implicit TLS is encrypted from the first byte, and
+//! `StartTls` requires an advertised upgrade that is then performed. A relay
+//! that does not offer STARTTLS fails the send instead of downgrading.
 
 pub mod client;
 pub mod proto;
 pub mod session;
 
 use std::fmt;
-use std::future::Future;
 use std::time::{Duration, Instant};
-
-use lettre::Address;
-use lettre::transport::smtp::Error as LettreError;
-use lettre::transport::smtp::authentication::{Credentials, Mechanism};
-use lettre::transport::smtp::client::{
-    AsyncSmtpConnection, Certificate, CertificateStore, TlsParameters,
-};
-use lettre::transport::smtp::commands::{Data, Mail, Rcpt};
-use lettre::transport::smtp::extension::ClientId;
-use lettre::transport::smtp::response::Response;
 
 use crate::config::{SendDeadlines, Timeouts};
 use crate::errors::{Error, ErrorCode, ErrorDetails, Stage};
@@ -35,6 +29,8 @@ use crate::ports::{DeliveryFuture, DeliveryPort, DeliveryRequest};
 use crate::results::{
     AmbiguityStage, RecipientOutcome, RecipientStatus, SendOutcome, SmtpResponse,
 };
+use crate::transports::smtp::proto::response::{Reply, ReplyClass};
+use crate::transports::smtp::session::Session;
 
 /// EHLO name used when the caller does not configure one.
 const DEFAULT_HELLO_NAME: &str = "localhost";
@@ -52,7 +48,7 @@ pub enum SmtpSecurity {
 }
 
 /// Relay credentials. The values are never rendered, logged, or placed in an
-/// error; only the adapter converts them into lettre credentials.
+/// error; only the adapter converts them into an AUTH exchange.
 #[derive(Clone, PartialEq, Eq)]
 pub struct SmtpCredentials {
     username: String,
@@ -76,10 +72,6 @@ impl SmtpCredentials {
     /// Username, safe to display because it is not the secret half.
     pub fn username(&self) -> &str {
         &self.username
-    }
-
-    fn to_lettre(&self) -> Credentials {
-        Credentials::new(self.username.clone(), self.password.clone())
     }
 }
 
@@ -184,25 +176,6 @@ impl SmtpConfig {
     pub fn timeouts(&self) -> Timeouts {
         self.timeouts
     }
-
-    fn tls_parameters(&self) -> Result<TlsParameters, Error> {
-        let mut builder = TlsParameters::builder(self.host.clone())
-            .certificate_store(CertificateStore::WebpkiRoots);
-
-        for pem in &self.root_certificates {
-            let certificate = Certificate::from_pem(pem)
-                .map_err(|_| Error::new(ErrorCode::ValidationInvalidOption))?;
-            builder = builder.add_root_certificate(certificate);
-        }
-
-        builder.build().map_err(|_| {
-            Error::new(ErrorCode::TlsHandshake).with_details(
-                ErrorDetails::default()
-                    .host(self.host.clone())
-                    .port(self.port),
-            )
-        })
-    }
 }
 
 /// The single MVP delivery adapter.
@@ -229,248 +202,108 @@ impl SmtpTransport {
         let deadlines = SendDeadlines::start(config.timeouts, Instant::now());
         let envelope = Envelope::of(&request.message)?;
 
-        let tls = match config.security {
-            SmtpSecurity::ImplicitTls => Some(config.tls_parameters()?),
-            SmtpSecurity::StartTls => None,
-        };
-        let hello = ClientId::Domain(config.hello_name.clone());
-
-        let connect_budget = config
-            .timeouts
-            .connect()
-            .min(deadlines.remaining_total(Instant::now()));
-
-        let mut connection = match tokio::time::timeout(
-            connect_budget,
-            AsyncSmtpConnection::connect_tokio1(
-                (config.host.as_str(), config.port),
-                Some(config.timeouts.connect()),
-                &hello,
-                tls,
-                None,
-            ),
-        )
-        .await
-        {
-            Err(_) => return Err(connect_timeout(config, deadlines)),
-            Ok(Ok(connection)) => connection,
-            Ok(Err(error)) => {
-                return Err(session_error(
-                    &error,
-                    Stage::ConnectionSetup,
-                    config,
-                    deadlines,
-                ));
-            }
-        };
+        let mut session = Session::open(config)
+            .await
+            .map_err(|error| annotate(error, config, deadlines, Stage::ConnectionSetup))?;
 
         if config.security == SmtpSecurity::StartTls {
-            let parameters = config.tls_parameters()?;
-            if !connection.can_starttls() {
-                connection.abort().await;
-                return Err(Error::new(ErrorCode::TlsHandshake).with_details(
-                    ErrorDetails::default()
-                        .host(config.host.clone())
-                        .port(config.port)
-                        .stage(Stage::ConnectionSetup),
-                ));
-            }
-            match bounded(
-                deadlines,
-                Stage::ConnectionSetup,
-                connection.starttls(parameters, &hello),
-            )
-            .await
-            {
-                Err(failure) => {
-                    connection.abort().await;
-                    return Err(failure);
-                }
-                Ok(Ok(())) => {}
-                Ok(Err(error)) => {
-                    connection.abort().await;
-                    return Err(session_error(
-                        &error,
-                        Stage::ConnectionSetup,
-                        config,
-                        deadlines,
-                    ));
-                }
-            }
+            session
+                .starttls()
+                .await
+                .map_err(|error| annotate(error, config, deadlines, Stage::ConnectionSetup))?;
         }
 
         if let Some(credentials) = config.credentials.as_ref() {
-            let mechanisms = [Mechanism::Plain, Mechanism::Login];
-            let lettre_credentials = credentials.to_lettre();
-
-            match bounded(
-                deadlines,
-                Stage::Auth,
-                connection.auth(&mechanisms, &lettre_credentials),
-            )
-            .await?
-            {
-                Ok(response) => {
-                    let code = u16::from(response.code());
-                    if code != 235 {
-                        connection.abort().await;
-                        return Err(auth_error(ErrorCode::AuthFailed, Some(code), config));
-                    }
-                }
-                Err(error) => {
-                    let code = status_of(&error);
-                    let failure = if error.is_client() && code.is_none() {
-                        ErrorCode::AuthUnsupported
-                    } else {
-                        ErrorCode::AuthFailed
-                    };
-                    return Err(auth_error(failure, code, config));
-                }
-            }
+            session
+                .authenticate(&credentials.username, &credentials.password)
+                .await
+                .map_err(|error| annotate(error, config, deadlines, Stage::Auth))?;
         }
 
-        let mail = Mail::new(Some(envelope.from.clone()), Vec::new());
-        match bounded(deadlines, Stage::Mail, connection.command(mail)).await? {
-            Ok(response) => {
-                let code = u16::from(response.code());
-                if !is_completion(code) {
-                    connection.abort().await;
-                    return Err(unexpected_response(config, Stage::Mail, code));
-                }
-            }
-            Err(error) => {
-                connection.abort().await;
-                return match status_of(&error) {
-                    Some(code) => Ok(rejected_outcome(
+        match session.mail_from(&envelope.from).await {
+            Ok(reply) if reply.is_positive() => {}
+            Ok(reply) => {
+                return match verdict(&reply) {
+                    Verdict::Refused => Ok(rejected_outcome(
                         &envelope,
                         &vec![RecipientStatus::Rejected; envelope.recipients.len()],
-                        Some(response_of(code, error.to_string())),
+                        Some(smtp_response(&reply)),
                     )),
-                    None => Err(session_error(&error, Stage::Mail, config, deadlines)),
+                    Verdict::Invalid => {
+                        Err(unexpected_response(config, Stage::Mail, reply.value()))
+                    }
                 };
             }
+            Err(error) => return Err(annotate(error, config, deadlines, Stage::Mail)),
         }
 
         let mut statuses = vec![RecipientStatus::Rejected; envelope.recipients.len()];
         let mut accepted: Vec<usize> = Vec::new();
-        let mut session_closing = false;
+        let mut closing = false;
 
-        for (index, (_, recipient)) in envelope.recipients.iter().enumerate() {
-            if session_closing {
+        for (index, recipient) in envelope.recipients.iter().enumerate() {
+            if closing {
                 break;
             }
-            let rcpt = Rcpt::new(recipient.clone(), Vec::new());
-            match bounded(deadlines, Stage::Rcpt, connection.command(rcpt)).await? {
-                Ok(response) => {
-                    let code = u16::from(response.code());
-                    if is_completion(code) {
-                        statuses[index] = RecipientStatus::Unknown;
-                        accepted.push(index);
-                    } else {
-                        connection.abort().await;
-                        return Err(unexpected_response(config, Stage::Rcpt, code));
-                    }
+            match session.rcpt_to(recipient).await {
+                Ok(reply) if reply.is_positive() => {
+                    statuses[index] = RecipientStatus::Unknown;
+                    accepted.push(index);
                 }
-                Err(error) => match status_of(&error) {
-                    Some(421) => {
-                        // A 421 closes the transmission channel: stop the
-                        // envelope and never issue DATA.
-                        statuses[index] = RecipientStatus::Rejected;
-                        session_closing = true;
-                    }
-                    Some(_) => statuses[index] = RecipientStatus::Rejected,
-                    None => {
-                        connection.abort().await;
-                        return Err(session_error(&error, Stage::Rcpt, config, deadlines));
-                    }
-                },
+                Ok(reply) if reply.value() == 421 => {
+                    // A 421 closes the transmission channel: stop the envelope
+                    // and never issue DATA.
+                    closing = true;
+                }
+                Ok(reply) if verdict(&reply) == Verdict::Refused => {}
+                Ok(reply) => {
+                    return Err(unexpected_response(config, Stage::Rcpt, reply.value()));
+                }
+                Err(error) => return Err(annotate(error, config, deadlines, Stage::Rcpt)),
             }
         }
 
-        if session_closing {
-            connection.abort().await;
+        if closing || accepted.is_empty() {
             return Ok(rejected_outcome(&envelope, &statuses, None));
         }
 
-        if accepted.is_empty() {
-            connection.abort().await;
-            return Ok(rejected_outcome(&envelope, &statuses, None));
-        }
-
-        match bounded(deadlines, Stage::DataCommand, connection.command(Data)).await? {
-            Ok(response) => {
-                let code = u16::from(response.code());
-                if code != 354 {
-                    connection.abort().await;
-                    return Err(unexpected_response(config, Stage::DataCommand, code));
-                }
-            }
-            Err(error) => {
-                connection.abort().await;
-                return match status_of(&error) {
-                    Some(code) => Ok(rejected_outcome(
+        match session.data_command().await {
+            Ok(reply) if reply.value() == 354 => {}
+            Ok(reply) => {
+                return match verdict(&reply) {
+                    Verdict::Refused => Ok(rejected_outcome(
                         &envelope,
                         &vec![RecipientStatus::Rejected; envelope.recipients.len()],
-                        Some(response_of(code, error.to_string())),
+                        Some(smtp_response(&reply)),
                     )),
-                    None => Err(session_error(&error, Stage::DataCommand, config, deadlines)),
+                    Verdict::Complete | Verdict::Invalid => {
+                        Err(unexpected_response(config, Stage::DataCommand, reply.value()))
+                    }
                 };
             }
+            Err(error) => return Err(annotate(error, config, deadlines, Stage::DataCommand)),
         }
 
-        let now = Instant::now();
-        let body_budget = deadlines
-            .operation_deadline(now)
-            .saturating_duration_since(now)
-            .min(deadlines.remaining_total(now));
-
-        let transmitted = if body_budget.is_zero() {
-            None
-        } else {
-            Some(tokio::time::timeout(body_budget, connection.message(&request.wire)).await)
-        };
-
-        match transmitted {
-            None | Some(Err(_)) => {
-                connection.abort().await;
-                settle(&mut statuses, &accepted, RecipientStatus::Unknown);
-                Ok(SendOutcome::Unknown {
-                    recipients: outcomes(&envelope, &statuses),
-                    stage: AmbiguityStage::FinalResponse,
-                })
-            }
-            Some(Ok(Ok(response))) => {
-                let code = u16::from(response.code());
-                if is_completion(code) {
-                    let _ =
-                        tokio::time::timeout(config.timeouts.operation(), connection.quit()).await;
+        match session.data_body(&request.wire).await {
+            Ok(reply) => match verdict(&reply) {
+                Verdict::Complete => {
+                    quiet_quit(&mut session, config).await;
                     settle(&mut statuses, &accepted, RecipientStatus::Accepted);
                     Ok(SendOutcome::Accepted {
                         recipients: outcomes(&envelope, &statuses),
-                        response: Some(response_of(code, text_of(&response))),
-                    })
-                } else {
-                    connection.abort().await;
-                    settle(&mut statuses, &accepted, RecipientStatus::Unknown);
-                    Ok(SendOutcome::Unknown {
-                        recipients: outcomes(&envelope, &statuses),
-                        stage: AmbiguityStage::FinalResponse,
+                        response: Some(smtp_response(&reply)),
                     })
                 }
-            }
-            Some(Ok(Err(error))) => match status_of(&error) {
-                Some(code) => {
-                    let _ =
-                        tokio::time::timeout(config.timeouts.operation(), connection.quit()).await;
+                Verdict::Refused => {
+                    quiet_quit(&mut session, config).await;
                     settle(&mut statuses, &accepted, RecipientStatus::Rejected);
                     Ok(rejected_outcome(
                         &envelope,
                         &statuses,
-                        Some(response_of(code, error.to_string())),
+                        Some(smtp_response(&reply)),
                     ))
                 }
-                None => {
-                    connection.abort().await;
+                Verdict::Invalid => {
                     settle(&mut statuses, &accepted, RecipientStatus::Unknown);
                     Ok(SendOutcome::Unknown {
                         recipients: outcomes(&envelope, &statuses),
@@ -478,6 +311,15 @@ impl SmtpTransport {
                     })
                 }
             },
+            Err(_) => {
+                // A timeout or connection failure after the DATA terminator
+                // leaves the disposition unknown. It is never retried.
+                settle(&mut statuses, &accepted, RecipientStatus::Unknown);
+                Ok(SendOutcome::Unknown {
+                    recipients: outcomes(&envelope, &statuses),
+                    stage: AmbiguityStage::FinalResponse,
+                })
+            }
         }
     }
 }
@@ -506,72 +348,69 @@ impl SmtpTransport {
     }
 }
 
-/// The envelope addresses, parsed into lettre addresses exactly once.
+/// The envelope addresses, validated exactly once before the session opens.
 struct Envelope {
-    from: Address,
-    recipients: Vec<(String, Address)>,
+    from: String,
+    recipients: Vec<String>,
 }
 
 impl Envelope {
     fn of(message: &OutgoingMessage) -> Result<Self, Error> {
-        let from = parse_address(&message.from.address())?;
+        let from = envelope_address(message.from.address())?;
         let mut recipients = Vec::with_capacity(message.recipient_count());
         for mailbox in message.to.iter().chain(&message.cc).chain(&message.bcc) {
-            let address = mailbox.address();
-            let parsed = parse_address(&address)?;
-            recipients.push((address, parsed));
+            recipients.push(envelope_address(mailbox.address())?);
         }
         Ok(Self { from, recipients })
     }
 }
 
-fn parse_address(value: &str) -> Result<Address, Error> {
-    value
-        .parse::<Address>()
-        .map_err(|_| Error::new(ErrorCode::ValidationInvalidAddress))
-}
-
-/// Runs one SMTP step under the operation budget capped by the total budget.
-async fn bounded<F, T>(
-    deadlines: SendDeadlines,
-    stage: Stage,
-    future: F,
-) -> Result<Result<T, LettreError>, Error>
-where
-    F: Future<Output = Result<T, LettreError>>,
-{
-    let now = Instant::now();
-    let budget = deadlines
-        .operation_deadline(now)
-        .saturating_duration_since(now)
-        .min(deadlines.remaining_total(now));
-
-    if budget.is_zero() {
-        return Err(deadlines.timeout_error(now, true, stage));
+/// Re-checks the envelope address at the protocol boundary.
+///
+/// `Mailbox` already validated the value; this keeps a hand-built
+/// `OutgoingMessage` from reaching the codec, where the failure would surface
+/// as an injection error instead of an invalid address.
+fn envelope_address(address: String) -> Result<String, Error> {
+    if address.is_empty()
+        || address.len() > 320
+        || address
+            .chars()
+            .any(|c| c.is_control() || c.is_whitespace() || matches!(c, '<' | '>' | ','))
+    {
+        return Err(Error::new(ErrorCode::ValidationInvalidAddress));
     }
+    Ok(address)
+}
 
-    match tokio::time::timeout(budget, future).await {
-        Err(_) => Err(deadlines.timeout_error(Instant::now(), true, stage)),
-        Ok(outcome) => Ok(outcome),
+/// How a reply classifies for the transaction.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Verdict {
+    /// 2xx: the command completed.
+    Complete,
+    /// 4xx or 5xx: the relay refused; that is an outcome, not an error.
+    Refused,
+    /// 1xx or 3xx where a completion was required: a protocol violation.
+    Invalid,
+}
+
+fn verdict(reply: &Reply) -> Verdict {
+    match reply.code().class() {
+        ReplyClass::Positive => Verdict::Complete,
+        ReplyClass::Transient | ReplyClass::Permanent => Verdict::Refused,
+        ReplyClass::Intermediate => Verdict::Invalid,
     }
 }
 
-fn is_completion(code: u16) -> bool {
-    (200..300).contains(&code)
+/// Best-effort QUIT after the final response. Its failure never changes the
+/// outcome the relay already stated.
+async fn quiet_quit(session: &mut Session, config: &SmtpConfig) {
+    let _ = tokio::time::timeout(config.timeouts.operation(), session.quit()).await;
 }
 
-fn status_of(error: &LettreError) -> Option<u16> {
-    error.status().map(u16::from)
-}
-
-fn text_of(response: &Response) -> String {
-    response.message().collect::<Vec<_>>().join(" ")
-}
-
-fn response_of(code: u16, message: impl Into<String>) -> SmtpResponse {
+fn smtp_response(reply: &Reply) -> SmtpResponse {
     SmtpResponse {
-        code,
-        message: message.into(),
+        code: reply.value(),
+        message: reply.text(),
     }
 }
 
@@ -580,7 +419,7 @@ fn outcomes(envelope: &Envelope, statuses: &[RecipientStatus]) -> Vec<RecipientO
         .recipients
         .iter()
         .zip(statuses)
-        .map(|((address, _), status)| RecipientOutcome::new(address.clone(), *status))
+        .map(|(address, status)| RecipientOutcome::new(address.clone(), *status))
         .collect()
 }
 
@@ -603,15 +442,44 @@ fn rejected_outcome(
     }
 }
 
-fn connect_timeout(config: &SmtpConfig, deadlines: SendDeadlines) -> Error {
-    Error::new(ErrorCode::TimeoutConnect).with_details(
-        ErrorDetails::default()
-            .host(config.host.clone())
-            .port(config.port)
-            .stage(Stage::ConnectionSetup)
-            .elapsed_ms(millis(deadlines.elapsed(Instant::now())))
-            .timeout_ms(millis(config.timeouts.connect())),
-    )
+/// Adds the relay context the public error contract reports, without dropping
+/// anything the session already classified.
+fn annotate(
+    error: Error,
+    config: &SmtpConfig,
+    deadlines: SendDeadlines,
+    stage: Stage,
+) -> Error {
+    let existing = error.details();
+    let mut details = ErrorDetails::default()
+        .host(
+            existing
+                .host_name()
+                .map(str::to_owned)
+                .unwrap_or_else(|| config.host.clone()),
+        )
+        .port(existing.port_number().unwrap_or(config.port))
+        .stage(existing.operation_stage().unwrap_or(stage))
+        .elapsed_ms(
+            existing
+                .elapsed_millis()
+                .unwrap_or_else(|| millis(deadlines.elapsed(Instant::now()))),
+        );
+
+    if let Some(smtp_code) = existing.smtp_status() {
+        details = details.smtp_code(smtp_code);
+    }
+    if let Some(enhanced) = existing.smtp_enhanced() {
+        details = details.smtp_enhanced_code(enhanced);
+    }
+    if let Some(timeout_ms) = existing.timeout_millis() {
+        details = details.timeout_ms(timeout_ms);
+    }
+    if let Some(recipient) = existing.recipient_address() {
+        details = details.recipient(recipient);
+    }
+
+    Error::new(error.code()).with_details(details)
 }
 
 fn unexpected_response(config: &SmtpConfig, stage: Stage, code: u16) -> Error {
@@ -624,75 +492,6 @@ fn unexpected_response(config: &SmtpConfig, stage: Stage, code: u16) -> Error {
     )
 }
 
-fn auth_error(code: ErrorCode, smtp_code: Option<u16>, config: &SmtpConfig) -> Error {
-    let mut details = ErrorDetails::default()
-        .host(config.host.clone())
-        .port(config.port)
-        .stage(Stage::Auth);
-    if let Some(smtp_code) = smtp_code {
-        details = details.smtp_code(smtp_code);
-    }
-    Error::new(code).with_details(details)
-}
-
-/// Maps a pre-outcome session failure: TLS, timeout, or the network itself.
-fn session_error(
-    error: &LettreError,
-    stage: Stage,
-    config: &SmtpConfig,
-    deadlines: SendDeadlines,
-) -> Error {
-    // Implicit-TLS handshake failures arrive from lettre as connection errors,
-    // so the typed rustls cause decides before the generic fallbacks do.
-    let code = if error.is_timeout() {
-        ErrorCode::TimeoutOperation
-    } else if let Some(tls) = tls_code(error) {
-        tls
-    } else if error.is_tls() {
-        ErrorCode::TlsHandshake
-    } else {
-        ErrorCode::ProtocolConnectionReset
-    };
-
-    Error::new(code).with_details(
-        ErrorDetails::default()
-            .host(config.host.clone())
-            .port(config.port)
-            .stage(stage)
-            .elapsed_ms(millis(deadlines.elapsed(Instant::now()))),
-    )
-}
-
-/// Certificate failures and negotiation failures are distinct in the public
-/// contract, so the rustls error hidden in the source chain is inspected rather
-/// than guessed from a message string.
-fn tls_code(error: &LettreError) -> Option<ErrorCode> {
-    let mut source = std::error::Error::source(error);
-    while let Some(current) = source {
-        if let Some(code) = classify_rustls(current) {
-            return Some(code);
-        }
-        // rustls causes reach the chain inside an `io::Error` payload.
-        if let Some(io_error) = current.downcast_ref::<std::io::Error>()
-            && let Some(inner) = io_error.get_ref()
-            && let Some(code) = classify_rustls(inner)
-        {
-            return Some(code);
-        }
-        source = current.source();
-    }
-    None
-}
-
-fn classify_rustls(error: &(dyn std::error::Error + 'static)) -> Option<ErrorCode> {
-    error
-        .downcast_ref::<rustls::Error>()
-        .map(|error| match error {
-            rustls::Error::InvalidCertificate(_) => ErrorCode::TlsCertificate,
-            _ => ErrorCode::TlsHandshake,
-        })
-}
-
 fn millis(duration: Duration) -> u64 {
     u64::try_from(duration.as_millis()).unwrap_or(u64::MAX)
 }
@@ -700,6 +499,11 @@ fn millis(duration: Duration) -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::transports::smtp::proto::response::parse_reply;
+
+    fn reply(text: &str) -> Reply {
+        parse_reply(text.as_bytes()).expect("parsed reply").0
+    }
 
     #[test]
     fn credentials_are_redacted_and_validated() {
@@ -752,5 +556,60 @@ mod tests {
             .with_operation(Duration::from_secs(31))
             .expect_err("raised operation budget");
         assert_eq!(timeouts.code(), ErrorCode::ValidationInvalidTimeout);
+    }
+
+    #[test]
+    fn reply_classes_map_to_verdicts() {
+        assert_eq!(verdict(&reply("250 2.0.0 Ok\r\n")), Verdict::Complete);
+        assert_eq!(verdict(&reply("451 4.3.0 Later\r\n")), Verdict::Refused);
+        assert_eq!(verdict(&reply("550 5.1.1 No user\r\n")), Verdict::Refused);
+        assert_eq!(verdict(&reply("354 Send data\r\n")), Verdict::Invalid);
+        assert_eq!(verdict(&reply("334 VXNlcm5hbWU6\r\n")), Verdict::Invalid);
+    }
+
+    #[test]
+    fn envelope_rejects_addresses_the_codec_would_misread() {
+        assert_eq!(
+            envelope_address(String::new())
+                .expect_err("empty")
+                .code(),
+            ErrorCode::ValidationInvalidAddress
+        );
+        assert_eq!(
+            envelope_address("a b@example.test".to_string())
+                .expect_err("whitespace")
+                .code(),
+            ErrorCode::ValidationInvalidAddress
+        );
+        assert_eq!(
+            envelope_address("user@example.test\r\nDATA".to_string())
+                .expect_err("control")
+                .code(),
+            ErrorCode::ValidationInvalidAddress
+        );
+        assert_eq!(
+            envelope_address("bob@example.test".to_string()).expect("valid"),
+            "bob@example.test"
+        );
+    }
+
+    #[test]
+    fn annotations_add_relay_context_and_keep_the_code() {
+        let config = SmtpConfig::new("relay.example.test", 587, SmtpSecurity::StartTls)
+            .expect("valid relay");
+        let deadlines = SendDeadlines::start(config.timeouts(), Instant::now());
+
+        let error = annotate(
+            Error::new(ErrorCode::ProtocolConnectionReset),
+            &config,
+            deadlines,
+            Stage::Rcpt,
+        );
+
+        assert_eq!(error.code(), ErrorCode::ProtocolConnectionReset);
+        assert_eq!(error.details().host_name(), Some("relay.example.test"));
+        assert_eq!(error.details().port_number(), Some(587));
+        assert_eq!(error.details().operation_stage(), Some(Stage::Rcpt));
+        assert!(error.details().elapsed_millis().is_some());
     }
 }
