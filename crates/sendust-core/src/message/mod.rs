@@ -200,6 +200,11 @@ impl OutgoingMessage {
             }
             seen.push(lowered);
         }
+        // Stage 5: message content. A message must carry text, HTML, or both;
+        // an empty string is a valid body, but neither body is not a message.
+        if self.text.is_none() && self.html.is_none() {
+            return Err(Error::new(ErrorCode::ValidationInvalidOption));
+        }
         // Stages 6 and 7: attachment metadata and known byte caps.
         attachments::validate(&self.attachments, limits, filesystem_enabled)?;
         Ok(())
@@ -320,6 +325,27 @@ mod tests {
                 .code(),
             ErrorCode::ValidationMissingRecipient
         );
+    }
+
+    #[test]
+    fn requires_at_least_one_body() {
+        let mut message = message_with(1);
+        message.text = None;
+        message.html = None;
+        assert_eq!(
+            message
+                .validate(Limits::default(), false)
+                .expect_err("no body")
+                .code(),
+            ErrorCode::ValidationInvalidOption
+        );
+    }
+
+    #[test]
+    fn allows_empty_string_bodies() {
+        let mut message = message_with(1);
+        message.text = Some(String::new());
+        assert!(message.validate(Limits::default(), false).is_ok());
     }
 
     #[test]

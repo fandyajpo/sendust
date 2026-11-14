@@ -157,22 +157,22 @@ fn build_body(message: &OutgoingMessage) -> Result<Body, Error> {
     Ok(match (message.text.is_some(), message.html.is_some()) {
         (true, false) => Body::Single {
             content_type: "text/plain; charset=utf-8".to_string(),
-            bytes: text.as_bytes().to_vec(),
+            bytes: normalize_body(text),
         },
         (false, true) => Body::Single {
             content_type: "text/html; charset=utf-8".to_string(),
-            bytes: html.as_bytes().to_vec(),
+            bytes: normalize_body(html),
         },
         (true, true) => {
             let parts = vec![
                 Body::Single {
                     content_type: "text/plain; charset=utf-8".to_string(),
-                    bytes: text.as_bytes().to_vec(),
+                    bytes: normalize_body(text),
                 }
                 .as_part()?,
                 Body::Single {
                     content_type: "text/html; charset=utf-8".to_string(),
-                    bytes: html.as_bytes().to_vec(),
+                    bytes: normalize_body(html),
                 }
                 .as_part()?,
             ];
@@ -188,6 +188,30 @@ fn build_body(message: &OutgoingMessage) -> Result<Body, Error> {
             bytes: Vec::new(),
         },
     })
+}
+
+/// RFC 5322 body lines end with CRLF. CRLF, bare CR, and bare LF all normalize
+/// to CRLF; no other byte changes, and the final line keeps whatever ending the
+/// caller supplied.
+fn normalize_body(text: &str) -> Vec<u8> {
+    let mut out = Vec::with_capacity(text.len());
+    let mut characters = text.chars().peekable();
+    while let Some(character) = characters.next() {
+        match character {
+            '\r' => {
+                if characters.peek() == Some(&'\n') {
+                    characters.next();
+                }
+                out.extend_from_slice(b"\r\n");
+            }
+            '\n' => out.extend_from_slice(b"\r\n"),
+            other => {
+                let mut buffer = [0u8; 4];
+                out.extend_from_slice(other.encode_utf8(&mut buffer).as_bytes());
+            }
+        }
+    }
+    out
 }
 
 fn build_attachment_part(
@@ -524,5 +548,32 @@ mod tests {
         assert_eq!(base64(b"foob"), "Zm9vYg==");
         assert_eq!(base64(b"fooba"), "Zm9vYmE=");
         assert_eq!(base64(b"foobar"), "Zm9vYmFy");
+    }
+}
+
+
+#[cfg(test)]
+mod body_tests {
+    use super::*;
+
+    #[test]
+    fn normalizes_lf_and_bare_cr_to_crlf() {
+        assert_eq!(normalize_body("a\nb"), b"a\r\nb");
+        assert_eq!(normalize_body("a\rb"), b"a\r\nb");
+        assert_eq!(normalize_body("a\r\nb"), b"a\r\nb");
+        assert_eq!(normalize_body("a\n\nb"), b"a\r\n\r\nb");
+        assert_eq!(normalize_body("plain"), b"plain");
+    }
+
+    #[test]
+    fn leaves_the_final_line_ending_as_supplied() {
+        assert_eq!(normalize_body("a\n"), b"a\r\n");
+        assert_eq!(normalize_body("a"), b"a");
+    }
+
+    #[test]
+    fn normalization_is_idempotent() {
+        let once = normalize_body("a\nb\rc\r\nd");
+        assert_eq!(normalize_body(&String::from_utf8(once.clone()).expect("utf8")), once);
     }
 }
