@@ -1,11 +1,9 @@
 //! MIME tree composition, encoding, serialization, and wire-size accounting.
 //!
-//! P04-003 needs the final serialized bytes to enforce the 30 MiB wire cap, so
-//! this module owns a deterministic, minimal serializer now. It emits RFC 5322
-//! headers with base64 transfer encoding and RFC 2047 encoded words for
-//! non-ASCII header text. P07 owns encoding selection, RFC 2231 filenames, and
-//! conformance fixtures; it extends this module rather than replacing the
-//! wire-size contract.
+//! This module owns the RFC 5322 header order, the deterministic serializer and
+//! the 30 MiB wire cap; header encoding and folding live in `headers`, and the
+//! model and its duplicate policy live in `message`. The composed bytes are the
+//! single source of truth for transport and for the size cap.
 
 use base64::Engine as _;
 use base64::engine::general_purpose::STANDARD;
@@ -15,11 +13,14 @@ use crate::config::Limits;
 use crate::errors::{Error, ErrorCode};
 use crate::message::OutgoingMessage;
 
-/// Maximum header line length (RFC 5322).
-const MAX_LINE: usize = 998;
-/// Preferred fold width.
-const FOLD_WIDTH: usize = 78;
-const CRLF: &str = "\r\n";
+mod headers;
+
+use headers::CRLF;
+
+// Header order is owned here (ADR-0010) and is fixed: `From`, `To`, `Cc`,
+// `Reply-To`, `Subject`, then the caller's custom headers in insertion order,
+// then the composed `MIME-Version` and body headers. Adjusting the order is a
+// contract change, not a formatting choice.
 
 /// Serializes a validated message and enforces the wire-size cap.
 ///
@@ -42,7 +43,7 @@ pub fn serialize(
         return Err(Error::new(ErrorCode::ValidationInvalidAttachment));
     }
 
-    let body = build_body(message);
+    let body = build_body(message)?;
     let attachments: Vec<Vec<u8>> = message
         .attachments
         .iter()
@@ -58,36 +59,36 @@ pub fn serialize(
             )),
             Attachment::File(_) => None,
         })
-        .collect();
+        .collect::<Result<_, Error>>()?;
 
     let mut out = Vec::new();
-    push_address_header(&mut out, "From", std::slice::from_ref(&message.from));
-    push_address_header(&mut out, "To", &message.to);
+    push_address_header(&mut out, "From", std::slice::from_ref(&message.from))?;
+    push_address_header(&mut out, "To", &message.to)?;
     if !message.cc.is_empty() {
-        push_address_header(&mut out, "Cc", &message.cc);
+        push_address_header(&mut out, "Cc", &message.cc)?;
     }
     if !message.reply_to.is_empty() {
-        push_address_header(&mut out, "Reply-To", &message.reply_to);
+        push_address_header(&mut out, "Reply-To", &message.reply_to)?;
     }
-    push_header(&mut out, "Subject", &encode_header_text(&message.subject));
+    push_header(&mut out, "Subject", message.subject.trim())?;
     for header in &message.headers {
-        push_header(&mut out, header.name(), &encode_header_text(header.value()));
+        push_header(&mut out, header.name(), header.value())?;
     }
-    push_header(&mut out, "MIME-Version", "1.0");
+    push_header(&mut out, "MIME-Version", "1.0")?;
 
     if attachments.is_empty() {
-        body.push_top_headers(&mut out);
+        body.push_top_headers(&mut out)?;
         out.extend_from_slice(CRLF.as_bytes());
         body.push_content(&mut out);
     } else {
-        let mut parts = vec![body.as_part()];
+        let mut parts = vec![body.as_part()?];
         parts.extend(attachments);
         let boundary = unique_boundary(&parts);
         push_header(
             &mut out,
             "Content-Type",
             &format!("multipart/mixed; boundary=\"{boundary}\""),
-        );
+        )?;
         out.extend_from_slice(CRLF.as_bytes());
         push_multipart(&mut out, &boundary, &parts);
     }
@@ -112,11 +113,11 @@ enum Body {
 }
 
 impl Body {
-    fn push_top_headers(&self, out: &mut Vec<u8>) {
+    fn push_top_headers(&self, out: &mut Vec<u8>) -> Result<(), Error> {
         match self {
             Self::Single { content_type, .. } => {
-                push_header(out, "Content-Type", content_type);
-                push_header(out, "Content-Transfer-Encoding", "base64");
+                push_header(out, "Content-Type", content_type)?;
+                push_header(out, "Content-Transfer-Encoding", "base64")?;
             }
             Self::Multipart {
                 subtype, boundary, ..
@@ -125,9 +126,10 @@ impl Body {
                     out,
                     "Content-Type",
                     &format!("multipart/{subtype}; boundary=\"{boundary}\""),
-                );
+                )?;
             }
         }
+        Ok(())
     }
 
     fn push_content(&self, out: &mut Vec<u8>) {
@@ -139,20 +141,20 @@ impl Body {
         }
     }
 
-    fn as_part(&self) -> Vec<u8> {
+    fn as_part(&self) -> Result<Vec<u8>, Error> {
         let mut part = Vec::new();
-        self.push_top_headers(&mut part);
+        self.push_top_headers(&mut part)?;
         part.extend_from_slice(CRLF.as_bytes());
         self.push_content(&mut part);
-        part
+        Ok(part)
     }
 }
 
-fn build_body(message: &OutgoingMessage) -> Body {
+fn build_body(message: &OutgoingMessage) -> Result<Body, Error> {
     let text = message.text.as_deref().unwrap_or_default();
     let html = message.html.as_deref().unwrap_or_default();
 
-    match (message.text.is_some(), message.html.is_some()) {
+    Ok(match (message.text.is_some(), message.html.is_some()) {
         (true, false) => Body::Single {
             content_type: "text/plain; charset=utf-8".to_string(),
             bytes: text.as_bytes().to_vec(),
@@ -167,12 +169,12 @@ fn build_body(message: &OutgoingMessage) -> Body {
                     content_type: "text/plain; charset=utf-8".to_string(),
                     bytes: text.as_bytes().to_vec(),
                 }
-                .as_part(),
+                .as_part()?,
                 Body::Single {
                     content_type: "text/html; charset=utf-8".to_string(),
                     bytes: html.as_bytes().to_vec(),
                 }
-                .as_part(),
+                .as_part()?,
             ];
             let boundary = unique_boundary(&parts);
             Body::Multipart {
@@ -185,25 +187,29 @@ fn build_body(message: &OutgoingMessage) -> Body {
             content_type: "text/plain; charset=utf-8".to_string(),
             bytes: Vec::new(),
         },
-    }
+    })
 }
 
-fn build_attachment_part(filename: &str, content_type: Option<&str>, bytes: &[u8]) -> Vec<u8> {
+fn build_attachment_part(
+    filename: &str,
+    content_type: Option<&str>,
+    bytes: &[u8],
+) -> Result<Vec<u8>, Error> {
     let mut part = Vec::new();
     push_header(
         &mut part,
         "Content-Type",
         content_type.unwrap_or("application/octet-stream"),
-    );
-    push_header(&mut part, "Content-Transfer-Encoding", "base64");
+    )?;
+    push_header(&mut part, "Content-Transfer-Encoding", "base64")?;
     push_header(
         &mut part,
         "Content-Disposition",
         &format!("attachment; filename=\"{}\"", escape_quotes(filename)),
-    );
+    )?;
     part.extend_from_slice(CRLF.as_bytes());
     push_base64(&mut part, bytes);
-    part
+    Ok(part)
 }
 
 fn push_multipart(out: &mut Vec<u8>, boundary: &str, parts: &[Vec<u8>]) {
@@ -215,112 +221,18 @@ fn push_multipart(out: &mut Vec<u8>, boundary: &str, parts: &[Vec<u8>]) {
     out.extend_from_slice(format!("--{boundary}--{CRLF}").as_bytes());
 }
 
-fn push_address_header(out: &mut Vec<u8>, name: &str, addresses: &[crate::address::Mailbox]) {
-    let value = addresses
-        .iter()
-        .map(format_address)
-        .collect::<Vec<_>>()
-        .join(", ");
-    push_header(out, name, &value);
+fn push_address_header(
+    out: &mut Vec<u8>,
+    name: &str,
+    addresses: &[crate::address::Mailbox],
+) -> Result<(), Error> {
+    out.extend_from_slice(&headers::render_addresses(name, addresses)?);
+    Ok(())
 }
 
-fn format_address(mailbox: &crate::address::Mailbox) -> String {
-    match mailbox.display_name() {
-        Some(display) if display.is_ascii() => mailbox.formatted(),
-        Some(display) => format!(
-            "{} <{}>",
-            encode_header_text(&escape_quotes(display)),
-            mailbox.address()
-        ),
-        None => mailbox.address(),
-    }
-}
-
-fn push_header(out: &mut Vec<u8>, name: &str, value: &str) {
-    let folded = fold(name, value);
-    debug_assert!(
-        folded.split(CRLF).all(|line| line.len() <= MAX_LINE),
-        "header line exceeds the RFC 5322 limit"
-    );
-    out.extend_from_slice(folded.as_bytes());
-    out.extend_from_slice(CRLF.as_bytes());
-}
-
-fn fold(name: &str, value: &str) -> String {
-    let mut out = String::with_capacity(name.len() + value.len() + 8);
-    out.push_str(name);
-    out.push_str(": ");
-
-    let mut line_len = name.len() + 2;
-    for (index, word) in value.split(' ').enumerate() {
-        if word.len() > FOLD_WIDTH {
-            if line_len > 1 {
-                out.push_str(CRLF);
-                out.push(' ');
-                line_len = 1;
-            }
-            for chunk in word.as_bytes().chunks(FOLD_WIDTH - 1) {
-                if line_len > 1 {
-                    out.push_str(CRLF);
-                    out.push(' ');
-                }
-                out.push_str(std::str::from_utf8(chunk).unwrap_or_default());
-                line_len = 1 + chunk.len();
-            }
-            continue;
-        }
-
-        let addition = if index == 0 {
-            word.len()
-        } else {
-            word.len() + 1
-        };
-        if index > 0 && line_len + addition > FOLD_WIDTH {
-            out.push_str(CRLF);
-            out.push(' ');
-            out.push_str(word);
-            line_len = 1 + word.len();
-        } else {
-            if index > 0 {
-                out.push(' ');
-            }
-            out.push_str(word);
-            line_len += addition;
-        }
-    }
-    out
-}
-
-/// RFC 2047 encoded-word form for non-ASCII header text.
-fn encode_header_text(value: &str) -> String {
-    if value.is_ascii() {
-        return value.to_string();
-    }
-
-    let mut out = String::new();
-    let mut chunk = Vec::new();
-    for character in value.chars() {
-        let mut buffer = [0u8; 4];
-        let encoded = character.encode_utf8(&mut buffer).as_bytes();
-        if chunk.len() + encoded.len() > 45 {
-            push_encoded_word(&mut out, &chunk);
-            chunk.clear();
-        }
-        chunk.extend_from_slice(encoded);
-    }
-    if !chunk.is_empty() {
-        push_encoded_word(&mut out, &chunk);
-    }
-    out
-}
-
-fn push_encoded_word(out: &mut String, chunk: &[u8]) {
-    if !out.is_empty() {
-        out.push(' ');
-    }
-    out.push_str("=?UTF-8?B?");
-    out.push_str(&base64(chunk));
-    out.push_str("?=");
+fn push_header(out: &mut Vec<u8>, name: &str, value: &str) -> Result<(), Error> {
+    out.extend_from_slice(&headers::render(name, value)?);
+    Ok(())
 }
 
 fn escape_quotes(value: &str) -> String {
@@ -470,7 +382,11 @@ mod tests {
         message.text = Some("x".repeat(4000));
         let bytes = serialize(&message, Limits::default(), false).expect("serialized");
         for line in bytes.split(|byte| *byte == b'\n') {
-            assert!(line.len() <= MAX_LINE + 1, "line of {} bytes", line.len());
+            assert!(
+                line.len() <= headers::MAX_LINE + 1,
+                "line of {} bytes",
+                line.len()
+            );
         }
     }
 
@@ -550,7 +466,11 @@ mod tests {
         message.subject = "x".repeat(990);
         let bytes = serialize(&message, Limits::default(), false).expect("serialized");
         for line in bytes.split(|byte| *byte == b'\n') {
-            assert!(line.len() <= MAX_LINE + 1, "line of {} bytes", line.len());
+            assert!(
+                line.len() <= headers::MAX_LINE + 1,
+                "line of {} bytes",
+                line.len()
+            );
         }
     }
 
@@ -560,6 +480,39 @@ mod tests {
         message.text = Some("héllo".to_string());
         let wire = text(&serialize(&message, Limits::default(), false).expect("serialized"));
         assert!(wire.contains(&base64("héllo".as_bytes())));
+    }
+
+    #[test]
+    fn emits_headers_in_the_approved_order() {
+        let mut message = message();
+        message.cc = vec![mailbox("cc@example.test")];
+        message.reply_to = vec![mailbox("reply@example.test")];
+        message
+            .headers
+            .push(crate::message::Header::new("X-Trace-Id", "abc").expect("valid"));
+
+        let wire = text(&serialize(&message, Limits::default(), false).expect("serialized"));
+        let names: Vec<&str> = wire
+            .lines()
+            .filter(|line| !line.is_empty() && !line.starts_with(' '))
+            .map(|line| line.split(':').next().unwrap_or_default())
+            .collect();
+
+        let position = |name: &str| names.iter().position(|candidate| *candidate == name);
+        assert!(position("From") < position("To"));
+        assert!(position("To") < position("Cc"));
+        assert!(position("Cc") < position("Reply-To"));
+        assert!(position("Reply-To") < position("Subject"));
+        assert!(position("Subject") < position("X-Trace-Id"));
+        assert!(position("X-Trace-Id") < position("MIME-Version"));
+    }
+
+    #[test]
+    fn renders_exact_encoded_word_bytes() {
+        let mut message = message();
+        message.subject = "Grüße".to_string();
+        let wire = text(&serialize(&message, Limits::default(), false).expect("serialized"));
+        assert!(wire.contains("Subject: =?UTF-8?B?R3LDvMOfZQ==?=\r\n"));
     }
 
     #[test]

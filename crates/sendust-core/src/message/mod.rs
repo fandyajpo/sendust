@@ -136,6 +136,8 @@ const RESERVED_HEADERS: &[&str] = &[
     "date",
     "reply-to",
     "return-path",
+    "message-id",
+    "received",
     "mime-version",
     "content-type",
     "content-transfer-encoding",
@@ -183,6 +185,7 @@ impl OutgoingMessage {
         // Stage 4: headers and injection. Header values are validated at
         // construction; the subject is caller-supplied text and is checked here.
         HeaderValue::parse(&self.subject)?;
+        let mut seen: Vec<String> = Vec::with_capacity(self.headers.len());
         for header in &self.headers {
             HeaderName::parse(header.name())?;
             HeaderValue::parse(header.value())?;
@@ -190,6 +193,12 @@ impl OutgoingMessage {
             if RESERVED_HEADERS.iter().any(|reserved| *reserved == lowered) {
                 return Err(Error::new(ErrorCode::ValidationInvalidHeader));
             }
+            // One value per custom header keeps rendering deterministic and
+            // blocks a second header that shadows the first for a reader.
+            if seen.contains(&lowered) {
+                return Err(Error::new(ErrorCode::ValidationInvalidHeader));
+            }
+            seen.push(lowered);
         }
         // Stages 6 and 7: attachment metadata and known byte caps.
         attachments::validate(&self.attachments, limits, filesystem_enabled)?;
@@ -404,5 +413,76 @@ mod tests {
     fn rejects_overlong_values() {
         let long = "a".repeat(MAX_HEADER_VALUE + 1);
         assert_eq!(value_error(&long), ErrorCode::ValidationInvalidHeader);
+    }
+}
+
+
+#[cfg(test)]
+mod duplicate_policy_tests {
+    use super::*;
+    use crate::config::Limits;
+
+    fn message() -> OutgoingMessage {
+        OutgoingMessage {
+            from: crate::address::Mailbox::parse("alice@example.test").expect("valid"),
+            to: vec![crate::address::Mailbox::parse("bob@example.test").expect("valid")],
+            cc: Vec::new(),
+            bcc: Vec::new(),
+            reply_to: Vec::new(),
+            subject: "Hello".to_string(),
+            text: Some("body".to_string()),
+            html: None,
+            headers: Vec::new(),
+            attachments: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn rejects_a_duplicate_custom_header_case_insensitively() {
+        let mut message = message();
+        message
+            .headers
+            .push(Header::new("X-Trace-Id", "one").expect("valid"));
+        message
+            .headers
+            .push(Header::new("x-trace-id", "two").expect("valid"));
+
+        assert_eq!(
+            message
+                .validate(Limits::default(), false)
+                .expect_err("duplicate")
+                .code(),
+            ErrorCode::ValidationInvalidHeader
+        );
+    }
+
+    #[test]
+    fn rejects_a_custom_message_id_or_received_header() {
+        for name in ["Message-ID", "Received"] {
+            let mut message = message();
+            message
+                .headers
+                .push(Header::new(name, "value").expect("valid"));
+            assert_eq!(
+                message
+                    .validate(Limits::default(), false)
+                    .expect_err("reserved")
+                    .code(),
+                ErrorCode::ValidationInvalidHeader,
+                "{name}"
+            );
+        }
+    }
+
+    #[test]
+    fn distinct_custom_headers_are_allowed() {
+        let mut message = message();
+        message
+            .headers
+            .push(Header::new("X-A", "1").expect("valid"));
+        message
+            .headers
+            .push(Header::new("X-B", "2").expect("valid"));
+        assert!(message.validate(Limits::default(), false).is_ok());
     }
 }
