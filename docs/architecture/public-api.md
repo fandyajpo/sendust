@@ -57,7 +57,7 @@ There is no option to disable TLS verification, no plaintext SMTP mode, no pool 
 | `headers` | `Record<string,string>` | no | valid field names; reserved names rejected |
 | `attachments` | array | no | see below |
 
-Reserved header names that cannot be overridden: `From`, `To`, `Cc`, `Bcc`, `Reply-To`, `Subject`, `Date`, `Message-ID`, `MIME-Version`, `Content-Type`, `Content-Transfer-Encoding`. Attempting to set them via `headers` fails validation.
+Reserved header names that cannot be overridden: `From`, `To`, `Cc`, `Bcc`, `Reply-To`, `Subject`, `Date`, `Message-ID`, `MIME-Version`, `Content-Type`, `Content-Transfer-Encoding`. Attempting to set them via `headers` fails validation. Sendust sets `Date` (UTC) and a `Message-ID` itself for every send.
 
 If both `text` and `html` are present, the message is `multipart/alternative`; if neither is present, validation fails. Empty string bodies are allowed and produce an empty part.
 

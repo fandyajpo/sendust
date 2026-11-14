@@ -756,7 +756,6 @@ mod body_tests {
     }
 }
 
-
 #[cfg(test)]
 mod metadata_tests {
     use super::*;
@@ -784,10 +783,7 @@ mod metadata_tests {
     #[test]
     fn formats_dates_in_utc() {
         assert_eq!(format_date(UNIX_EPOCH), "Thu, 01 Jan 1970 00:00:00 +0000");
-        assert_eq!(
-            format_date(fixed()),
-            "Sun, 09 Sep 2001 01:46:40 +0000"
-        );
+        assert_eq!(format_date(fixed()), "Sun, 09 Sep 2001 01:46:40 +0000");
     }
 
     #[test]
@@ -798,7 +794,10 @@ mod metadata_tests {
         assert_eq!(first, second);
         assert!(first.starts_with("<1000000000.000000000."));
         assert!(first.ends_with("@example.test>"));
-        assert_ne!(first, message_id(fixed() + Duration::from_nanos(1), &message()));
+        assert_ne!(
+            first,
+            message_id(fixed() + Duration::from_nanos(1), &message())
+        );
     }
 
     #[test]
@@ -824,8 +823,7 @@ mod metadata_tests {
         let mut message = message();
         message.html = Some("<p>hi</p>".to_string());
 
-        let bytes =
-            serialize_at(&message, Limits::default(), false, fixed()).expect("serialized");
+        let bytes = serialize_at(&message, Limits::default(), false, fixed()).expect("serialized");
         let exact = Limits::default()
             .with_max_wire_bytes(bytes.len() as u64)
             .expect("lowering is allowed");
