@@ -175,16 +175,22 @@ mod tests {
     fn splits_long_unicode_into_encoded_words_within_the_limit() {
         let value = "ü".repeat(120);
         let header = rendered("Subject", &value);
-        let mut words = 0;
-        for word in header.trim_end_matches("\r\n").split(' ') {
-            if word.starts_with("=?") {
-                words += 1;
-                assert!(word.len() <= 75, "{word} is too long");
-                assert!(word.ends_with("?="), "{word} is malformed");
-            }
-            assert!(word.is_ascii());
+        let words: Vec<&str> = header
+            .split(|character: char| character == ' ' || character == '\r' || character == '\n')
+            .filter(|word| !word.is_empty())
+            .collect();
+        let encoded: Vec<&str> = words
+            .iter()
+            .copied()
+            .filter(|word| word.starts_with("=?"))
+            .collect();
+
+        assert!(encoded.len() > 1, "a long value must use several encoded words");
+        for word in &encoded {
+            assert!(word.len() <= 75, "{word} is too long");
+            assert!(word.ends_with("?="), "{word} is malformed");
         }
-        assert!(words > 1, "a long value must use several encoded words");
+        assert!(words.iter().all(|word| word.is_ascii()));
         assert!(header.contains("=?UTF-8?B?"));
     }
 
