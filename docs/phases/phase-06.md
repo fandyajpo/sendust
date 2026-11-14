@@ -1,6 +1,6 @@
 # Phase 06 — SMTP engine
 
-**Phase status:** NOT STARTED  
+**Phase status:** IN PROGRESS  
 **Phase dependency:** Phase 04  
 **Companion references:** [system design](../architecture/system-design.md), [ADR-0017](../architecture/decisions/0017-native-smtp-engine.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [reliability strategy](../engineering/reliability-strategy.md)
 
@@ -17,7 +17,7 @@ In scope: the SMTP protocol codec, the multiline response parser, EHLO capabilit
 ### P06-001 — Implement the SMTP command codec and response parser
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P04-005
 - **Description:** Implement Sendust-owned serialization for EHLO, STARTTLS, AUTH, MAIL, RCPT, DATA, RSET, NOOP and QUIT, and a bounded parser for single and multiline replies (code class, continuation, last line, enhanced status when present). Enforce RFC 5321 line and response caps, reject malformed replies, and represent results in Sendust types. Keep the module I/O-free so it is unit-testable without a socket. No lettre type may appear.
 - **Evidence criteria:** Unit tests cover every command's exact bytes, single and multiline replies, continuation without a final line, oversized lines and responses, invalid codes, and enhanced-status extraction. No hand-written command string exists outside the codec. Architecture check still proves lettre is confined to no module.
@@ -106,6 +106,14 @@ Gate `PHASE-06` is `APPROVED` only when P06-005 proves the full fault matrix, th
 
 All SMTP protocol interaction, TLS, AUTH, RCPT/DATA and response mapping remain inside the SMTP adapter. Delivery orchestration calls the narrow internal delivery port and must not depend on protocol types. Sendust's native client is the sole MVP SMTP implementation; no public transport plugin registry or alternate provider is introduced.
 
+## Evidence log
+
+Evidence labels follow the [AI implementation contract](../engineering/ai-implementation-contract.md).
+
+| Task | Evidence | State |
+| --- | --- | --- |
+| P06-001 | `crates/sendust-core/src/transports/smtp/proto/` — `command.rs` (EHLO, STARTTLS, AUTH PLAIN/LOGIN, MAIL, RCPT, DATA, RSET, NOOP, QUIT with injection rejection and the 512-byte cap), `response.rs` (three-digit code validation, multiline builder, 1000-byte line and 64 KiB reply caps, RFC 3463 enhanced status), `capabilities.rs` (STARTTLS, AUTH mechanisms, SIZE, 8BITMIME). 15 new unit tests; 109 core tests total, `cargo clippy -D warnings`, architecture/docs/secrets checks all pass locally. The module is I/O-free and carries a temporary `dead_code` allow until P06-002/P06-003 wire it in. | IMPLEMENTED, EXECUTED PASS locally; CI evidence pending |
+
 ## Status
 
-NOT STARTED. No native-engine code has been written.
+IN PROGRESS. P06-001 is IN REVIEW; P06-002 to P06-005 are NOT STARTED.

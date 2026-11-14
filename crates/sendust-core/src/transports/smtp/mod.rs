@@ -10,6 +10,8 @@
 //! positive final `DATA` response. A refusal at `RCPT` is a recipient outcome,
 //! not an error, and nothing is ever fanned out into per-recipient messages.
 
+mod proto;
+
 use std::fmt;
 use std::future::Future;
 use std::time::{Duration, Instant};
