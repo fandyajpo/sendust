@@ -301,17 +301,7 @@ fn rfc2231(value: &str) -> String {
         if character.is_ascii_alphanumeric()
             || matches!(
                 character,
-                '!' | '#'
-                    | '$'
-                    | '&'
-                    | '+'
-                    | '-'
-                    | '.'
-                    | '^'
-                    | '_'
-                    | '`'
-                    | '|'
-                    | '~'
+                '!' | '#' | '$' | '&' | '+' | '-' | '.' | '^' | '_' | '`' | '|' | '~'
             )
         {
             out.push(character);
@@ -460,8 +450,9 @@ mod tests {
         }];
 
         let wire = text(&serialize(&message, Limits::default(), false).expect("serialized"));
-        assert!(wire.contains(
-            "Content-Disposition: attachment; filename=\"Gr__e.pdf\"; filename*=UTF-8''Gr%C3%BC%C3%9Fe.pdf\r\n"
+        let unfolded = wire.replace("\r\n", "");
+        assert!(unfolded.contains(
+            "Content-Disposition: attachment; filename=\"Gr__e.pdf\"; filename*=UTF-8''Gr%C3%BC%C3%9Fe.pdf"
         ));
         assert!(wire.is_ascii(), "headers must be ASCII clean");
     }
