@@ -293,7 +293,11 @@ mod tests {
     #[test]
     fn accepts_a_complete_message() {
         let message = message_with(1);
-        assert!(message.validate(Limits::default(), AttachmentPolicy::Disabled).is_ok());
+        assert!(
+            message
+                .validate(Limits::default(), AttachmentPolicy::Disabled)
+                .is_ok()
+        );
     }
 
     #[test]
@@ -306,7 +310,11 @@ mod tests {
 
     #[test]
     fn recipient_cap_is_inclusive() {
-        assert!(message_with(100).validate(Limits::default(), AttachmentPolicy::Disabled).is_ok());
+        assert!(
+            message_with(100)
+                .validate(Limits::default(), AttachmentPolicy::Disabled)
+                .is_ok()
+        );
         assert_eq!(
             message_with(101)
                 .validate(Limits::default(), AttachmentPolicy::Disabled)
@@ -345,7 +353,11 @@ mod tests {
     fn allows_empty_string_bodies() {
         let mut message = message_with(1);
         message.text = Some(String::new());
-        assert!(message.validate(Limits::default(), AttachmentPolicy::Disabled).is_ok());
+        assert!(
+            message
+                .validate(Limits::default(), AttachmentPolicy::Disabled)
+                .is_ok()
+        );
     }
 
     #[test]
@@ -365,7 +377,11 @@ mod tests {
     fn empty_subject_is_allowed() {
         let mut message = message_with(1);
         message.subject.clear();
-        assert!(message.validate(Limits::default(), AttachmentPolicy::Disabled).is_ok());
+        assert!(
+            message
+                .validate(Limits::default(), AttachmentPolicy::Disabled)
+                .is_ok()
+        );
     }
 
     #[test]
@@ -392,7 +408,11 @@ mod tests {
         message
             .headers
             .push(Header::new("X-Trace-Id", "abc").expect("valid header"));
-        assert!(message.validate(Limits::default(), AttachmentPolicy::Disabled).is_ok());
+        assert!(
+            message
+                .validate(Limits::default(), AttachmentPolicy::Disabled)
+                .is_ok()
+        );
     }
 
     #[test]
@@ -508,6 +528,10 @@ mod duplicate_policy_tests {
         message
             .headers
             .push(Header::new("X-B", "2").expect("valid"));
-        assert!(message.validate(Limits::default(), AttachmentPolicy::Disabled).is_ok());
+        assert!(
+            message
+                .validate(Limits::default(), AttachmentPolicy::Disabled)
+                .is_ok()
+        );
     }
 }

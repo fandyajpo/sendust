@@ -33,7 +33,11 @@ impl AttachmentPolicy {
     }
 
     pub const fn from_flag(enabled: bool) -> Self {
-        if enabled { Self::Enabled } else { Self::Disabled }
+        if enabled {
+            Self::Enabled
+        } else {
+            Self::Disabled
+        }
     }
 }
 
@@ -414,16 +418,25 @@ mod tests {
             content_type: None,
             path: "relative/notes.txt".to_string(),
         };
-        assert_eq!(code_file(&descriptor), ErrorCode::ValidationInvalidAttachment);
+        assert_eq!(
+            code_file(&descriptor),
+            ErrorCode::ValidationInvalidAttachment
+        );
 
         descriptor.path = "  ".to_string();
-        assert_eq!(code_file(&descriptor), ErrorCode::ValidationInvalidAttachment);
+        assert_eq!(
+            code_file(&descriptor),
+            ErrorCode::ValidationInvalidAttachment
+        );
 
         descriptor.path = "/tmp/notes\r\n.txt".to_string();
         assert_eq!(code_file(&descriptor), ErrorCode::ValidationHeaderInjection);
 
         descriptor.path = format!("/tmp/{}", "a".repeat(MAX_PATH));
-        assert_eq!(code_file(&descriptor), ErrorCode::ValidationInvalidAttachment);
+        assert_eq!(
+            code_file(&descriptor),
+            ErrorCode::ValidationInvalidAttachment
+        );
 
         descriptor.path = "/tmp/notes.txt".to_string();
         assert!(

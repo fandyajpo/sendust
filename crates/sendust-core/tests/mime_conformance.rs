@@ -6,9 +6,7 @@
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use mail_parser::{MessageParser, MimeHeaders};
-use sendust_core::{
-    Attachment, AttachmentPolicy, Limits, Mailbox, OutgoingMessage, serialize_at,
-};
+use sendust_core::{Attachment, AttachmentPolicy, Limits, Mailbox, OutgoingMessage, serialize_at};
 
 const NOW: u64 = 1_700_000_000;
 
