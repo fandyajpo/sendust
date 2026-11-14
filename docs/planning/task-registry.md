@@ -7,9 +7,9 @@
 - Architecture amendment tasks: 7 (A01-001–A01-004, A02-001–A02-003)
 - Completed tasks: 30 (P00–P05)
 - In-review tasks: 0
-- In-progress tasks: 5 (P06-001–P06-005)
-- Not-started tasks: 60 (P07–P18)
-- P00–P02 tasks are `COMPLETED` with approved gate evidence. P03-001–P03-005 are `COMPLETED` with CI evidence and an approved QG-03 record; P04-001 to P04-005 are `COMPLETED` with an approved PHASE-04 record; P05-001 to P05-005 are `COMPLETED` with an approved PHASE-05 record; P06 is `IN PROGRESS`; P07–P18 are `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
+- In-progress tasks: 0
+- Not-started tasks: 65 (P06–P18)
+- P00–P02 tasks are `COMPLETED` with approved gate evidence. P03-001–P03-005 are `COMPLETED` with CI evidence and an approved QG-03 record; P04-001 to P04-005 are `COMPLETED` with an approved PHASE-04 record; P05-001 to P05-005 are `COMPLETED` with an approved PHASE-05 record; P06–P18 are `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
 - Effort is relative: S, M, L, XL. No delivery dates.
 - Gate tasks are the final task in each phase and must not be marked complete before their phase evidence exists.
 
@@ -64,11 +64,11 @@
 | [P05](../phases/phase-05.md) | Binding | [P05-003](../phases/phase-05.md) | Implement async task and lifecycle adapter | L | P05-001, P04-004 | COMPLETED |
 | [P05](../phases/phase-05.md) | Binding | [P05-004](../phases/phase-05.md) | Implement stable result/error conversion | M | P05-002, P05-003 | COMPLETED |
 | [P05](../phases/phase-05.md) | Binding | [P05-005](../phases/phase-05.md) | Binding phase gate | S | P05-001, P05-002, P05-003, P05-004 | COMPLETED |
-| [P06](../phases/phase-06.md) | SMTP | [P06-001](../phases/phase-06.md) | Configure lettre 0.11.23 relay session and envelope submission | L | P04-005, P01-001 | IN PROGRESS |
-| [P06](../phases/phase-06.md) | SMTP | [P06-002](../phases/phase-06.md) | Enforce TLS verification and authentication failure semantics | M | P06-001, P01-002 | IN PROGRESS |
-| [P06](../phases/phase-06.md) | SMTP | [P06-003](../phases/phase-06.md) | Validate and implement recipient partial-failure policy | XL | P01-003, P06-001 | IN PROGRESS |
-| [P06](../phases/phase-06.md) | SMTP | [P06-004](../phases/phase-06.md) | Normalize SMTP responses, unknown-after-DATA, and no-retry behavior | L | P06-001, P06-002 | IN PROGRESS |
-| [P06](../phases/phase-06.md) | SMTP | [P06-005](../phases/phase-06.md) | SMTP fault-matrix phase gate | M | P06-001, P06-002, P06-003, P06-004 | IN PROGRESS |
+| [P06](../phases/phase-06.md) | SMTP | [P06-001](../phases/phase-06.md) | Configure lettre 0.11.23 relay session and envelope submission | L | P04-005, P01-001 | NOT STARTED |
+| [P06](../phases/phase-06.md) | SMTP | [P06-002](../phases/phase-06.md) | Enforce TLS verification and authentication failure semantics | M | P06-001, P01-002 | NOT STARTED |
+| [P06](../phases/phase-06.md) | SMTP | [P06-003](../phases/phase-06.md) | Validate and implement recipient partial-failure policy | XL | P01-003, P06-001 | NOT STARTED |
+| [P06](../phases/phase-06.md) | SMTP | [P06-004](../phases/phase-06.md) | Normalize SMTP responses, unknown-after-DATA, and no-retry behavior | L | P06-001, P06-002 | NOT STARTED |
+| [P06](../phases/phase-06.md) | SMTP | [P06-005](../phases/phase-06.md) | SMTP fault-matrix phase gate | M | P06-001, P06-002, P06-003, P06-004 | NOT STARTED |
 | [P07](../phases/phase-07.md) | MIME | [P07-001](../phases/phase-07.md) | Implement header model and safe encoding | L | P04-002, P04-003 | NOT STARTED |
 | [P07](../phases/phase-07.md) | MIME | [P07-002](../phases/phase-07.md) | Implement plain text and HTML alternative bodies | M | P07-001 | NOT STARTED |
 | [P07](../phases/phase-07.md) | MIME | [P07-003](../phases/phase-07.md) | Implement filename and content-type handling policy | M | P07-001 | NOT STARTED |
