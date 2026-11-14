@@ -382,9 +382,9 @@ fn content_disposition(filename: &str) -> String {
         .collect();
 
     format!(
-        "attachment; filename=\"{}\"; filename*=UTF-8''{}",
-        escape_quotes(&fallback),
-        rfc2231(filename)
+        "attachment; filename*=UTF-8''{}; filename=\"{}\"",
+        rfc2231(filename),
+        escape_quotes(&fallback)
     )
 }
 
@@ -548,7 +548,7 @@ mod tests {
         let wire = text(&serialize(&message, Limits::default(), false).expect("serialized"));
         let unfolded = wire.replace("\r\n", "");
         assert!(unfolded.contains(
-            "Content-Disposition: attachment; filename=\"Gr__e.pdf\"; filename*=UTF-8''Gr%C3%BC%C3%9Fe.pdf"
+            "Content-Disposition: attachment; filename*=UTF-8''Gr%C3%BC%C3%9Fe.pdf; filename=\"Gr__e.pdf\""
         ));
         assert!(wire.is_ascii(), "headers must be ASCII clean");
     }

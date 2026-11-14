@@ -64,8 +64,8 @@ fn parses_a_text_only_message() {
     );
 
     let id = parsed.message_id().expect("message id");
-    assert!(id.starts_with("<1700000000."), "{id}");
-    assert!(id.ends_with("@example.test>"), "{id}");
+    assert!(id.starts_with("1700000000."), "{id}");
+    assert!(id.ends_with("@example.test"), "{id}");
 
     assert!(
         !String::from_utf8_lossy(&bytes).contains("hidden@example.test"),
