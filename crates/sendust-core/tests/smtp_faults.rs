@@ -272,7 +272,6 @@ async fn starttls_is_required_and_fails_closed_without_the_extension() {
     assert_eq!(server.trace().count_prefix("DATA"), 0);
 }
 
-
 #[tokio::test]
 async fn a_refused_sender_is_a_rejected_outcome() {
     let script = Script {
