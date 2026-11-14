@@ -112,13 +112,13 @@ async fn run(settings: &Settings) -> Result<(), Box<dyn std::error::Error>> {
         "SENDUST_FROM",
         "SENDUST_TO",
     ] {
-        if let Some(value) = settings.get(key) {
-            if is_placeholder(&value) {
-                return Err(format!(
-                    "{key} still contains an example placeholder; edit .env (see .env.example)"
-                )
-                .into());
-            }
+        if let Some(value) = settings.get(key)
+            && is_placeholder(&value)
+        {
+            return Err(format!(
+                "{key} still contains an example placeholder; edit .env (see .env.example)"
+            )
+            .into());
         }
     }
 
@@ -127,7 +127,9 @@ async fn run(settings: &Settings) -> Result<(), Box<dyn std::error::Error>> {
     if (security == SmtpSecurity::ImplicitTls && port == 587)
         || (security == SmtpSecurity::StartTls && port == 465)
     {
-        eprintln!("warning: port {port} is unusual for {mode}; 465 is implicit TLS, 587 is STARTTLS");
+        eprintln!(
+            "warning: port {port} is unusual for {mode}; 465 is implicit TLS, 587 is STARTTLS"
+        );
     }
 
     let mut config = SmtpConfig::new(host.clone(), port, security)?;
