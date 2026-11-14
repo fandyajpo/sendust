@@ -91,7 +91,7 @@ P05 is not complete when only Node.js passes. The full binding contract must pas
 
 ## Status
 
-IN PROGRESS. P05-001 to P05-004 are IN REVIEW; the binding, the owned-input copy, the asynchronous lifecycle, and the error/result mapping are implemented and exercised locally. P05-005 (the phase gate) is IN PROGRESS and is not self-approved.
+IN PROGRESS. P05-001 to P05-004 are IN REVIEW; the binding, the owned-input copy, the asynchronous lifecycle, and the error/result mapping are implemented, exercised locally, and proven by a real Gmail send through the Node binding. P05-005 (the phase gate) is IN PROGRESS, needs the Bun/Deno addon matrix, and is not self-approved.
 
 ## Evidence log
 
@@ -102,5 +102,5 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 | P05-001 | `crates/sendust-napi/src/lib.rs`: `Transport` class (`constructor`, `state`, `send`, `close`) plus `nativeVersion()`; `TransportOptions`, `MessageOptions`, `SendResultJs` object types; no SMTP, MIME, or validation policy in the binding | IMPLEMENTED, EXECUTED PASS locally |
 | P05-002 | Every JS value is converted to owned Rust values (`String`, `Vec<String>`, `u32`) before the first await; no Buffer is accepted yet because attachments are P08 scope | IMPLEMENTED, EXECUTED PASS locally |
 | P05-003 | `tokio::sync::Mutex` slot plus an atomic phase: one active send, immediate `TRANSPORT_BUSY` from `try_lock`, idempotent `close()` that waits for the active send under the close budget and reports `TIMEOUT_CLOSE`; no runtime is created and no finalizer closes anything | IMPLEMENTED, EXECUTED PASS locally |
-| P05-004 | `to_napi`/`to_result` map the core outcome and every error code into a stable JSON payload (`SENDUST:{...}`) consumed by `ts/src/errors.ts`; credentials and bodies never enter a payload | IMPLEMENTED, EXECUTED PASS locally |
-| P05-005 | TypeScript facade (`ts/src/{index,transport,errors,loader,types}.ts`) plus `ts/test/transport.test.ts` (invalid options, idempotent close, send-after-close, refused connection) run against the staged addon; `npm run build:native` stages it and a CI job builds it | IMPLEMENTED, EXECUTED PASS locally; runtime matrix pending |
+| P05-004 | `to_napi`/`to_result` map the core outcome and every error code into a stable JSON payload (`SENDUST:{...}`) consumed by `ts/src/errors.ts`; credentials and bodies never enter a payload. A real relay reply was mapped to `{ status: "accepted", recipients, response }` unchanged | IMPLEMENTED, EXECUTED PASS locally |
+| P05-005 | TypeScript facade (`ts/src/{index,transport,errors,loader,types}.ts`) plus `ts/test/transport.test.ts` (invalid options, idempotent close, send-after-close, refused connection) run against the staged addon. Real relay proof on Node.js 22: `node examples/send_email.mjs` against `smtp.gmail.com:465` (implicit TLS with verification, AUTH, sender and recipient redacted) returned `status: accepted` and relay `250 2.0.0 OK ... - gsmtp`. `npm run build:native` stages the addon and a CI job builds and tests it | IMPLEMENTED, EXECUTED PASS locally (Node.js 22 against a live relay); Bun and Deno native-load matrix pending |
