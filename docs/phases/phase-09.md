@@ -1,6 +1,6 @@
 # Phase 09 — Public delivery API
 
-**Phase status:** NOT STARTED  
+**Phase status:** IN PROGRESS  
 **Phase dependency:** Phase 05, Phase 06, Phase 08  
 **Companion references:** [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md)
 
@@ -17,7 +17,7 @@ In scope: TypeScript types, transport factory/options, send method, close method
 ### P09-001 — Define public TypeScript types and transport lifecycle API
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P05-005, P06-005
 - **Description:** Define the public `Transport` with open configuration, one `send` operation, and explicit `close`. Expose options for relay, TLS, auth, timeouts, attachments opt-in, and caps, with defaults matching architecture. Types must represent relay-accepted results and recipient accepted/rejected/unknown statuses. Close is required for deterministic shutdown; AbortSignal is optional and not required for MVP.
 - **Evidence criteria:** Type declarations compile and include no `any` escape for results/errors. API docs state success means relay acceptance, not delivery, and that one active send returns `BUSY`. Timeout defaults are visible: connect 10s, operation 30s, total 120s, close 125s.
@@ -56,7 +56,7 @@ In scope: TypeScript types, transport factory/options, send method, close method
 
 ## Technical implementation details
 
-The public API is in `ts/src` and calls the napi binding; it contains no SMTP logic. The call path remains `TS wrapper -> napi -> core -> lettre`. `send` means the relay accepted the message, never delivery. An explicit negative final DATA reply returns `rejected`; return `unknown` only when the final disposition cannot be established after DATA may have reached the relay. Neither is automatically retried. One active send per transport; overlap returns `BUSY` immediately with no queue. Close is explicit, idempotent, bounded by 125s, and never GC-dependent. Timeouts default to connect 10s, operation 30s, total 120s, close 125s and are finite/tunable. Attachments require explicit filesystem opt-in; no URL support. Caps are 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. Envelope local parts are ASCII, domains IDNA, display/body Unicode; SMTPUTF8 is post-MVP. AbortSignal is optional, not required.
+The public API is in `ts/src` and calls the napi binding; it contains no SMTP logic. The call path remains `TS wrapper -> napi -> core -> native SMTP engine`. `send` means the relay accepted the message, never delivery. An explicit negative final DATA reply returns `rejected`; return `unknown` only when the final disposition cannot be established after DATA may have reached the relay. Neither is automatically retried. One active send per transport; overlap returns `BUSY` immediately with no queue. Close is explicit, idempotent, bounded by 125s, and never GC-dependent. Timeouts default to connect 10s, operation 30s, total 120s, close 125s and are finite/tunable. Attachments require explicit filesystem opt-in; no URL support. Caps are 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. Envelope local parts are ASCII, domains IDNA, display/body Unicode; SMTPUTF8 is post-MVP. AbortSignal is optional, not required.
 
 ## Dependencies
 
@@ -86,6 +86,14 @@ TypeScript declarations, transport implementation, send/result mapping, error cl
 
 `PHASE-09` is approved only when P09-005 proves the public contract matches the frozen architecture with no semantic drift, no hidden queue/retry, and complete lifecycle/error coverage. Phase 10 and Phase 15 may then consume the API.
 
+## Evidence log
+
+Evidence labels follow the [AI implementation contract](../engineering/ai-implementation-contract.md).
+
+| Task | Evidence | State |
+| --- | --- | --- |
+| P09-001 | `ts/src/types.ts` documents the frozen contract: relay-accepted results, recipient statuses, `BUSY`, timeout defaults (connect 10 s, operation 30 s, total 120 s, close 125 s), cap defaults, and attachment shapes, with no `any`. `Transport` documents the `open -> closing -> closed` lifecycle, one active send, and `TIMEOUT_CLOSE`. `AuthOptions.method` (`plain`/`login`) is now honoured end to end: `SmtpCredentials::with_mechanism`, `choose_auth` in the native client (an unadvertised forced mechanism fails with `AUTH_UNSUPPORTED`), the binding mapping, and the facade. Tests: `ts/test/types.test.ts` compile-time checks (result shape, transport surface, read-only state, rejected options and URL attachments), `the_engine_prefers_plain_then_login`, `an_explicit_mechanism_must_be_advertised`, and a `check-architecture` rule that fails on any `any` in the shared TypeScript. | IN REVIEW |
+
 ## Status
 
-NOT STARTED.
+IN PROGRESS. P09-001 is IN REVIEW; P09-002 to P09-005 are NOT STARTED.
