@@ -25,7 +25,7 @@ In scope: threat-model execution, TLS verification proof, secret redaction, inpu
 ### P11-002 — Prove TLS and authentication security posture
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P11-001, P06-002
 - **Description:** Audit rustls `ring`/`webpki-roots` configuration and ensure certificate and hostname verification cannot be disabled by public or internal options. Verify authentication failures do not leak credentials and unsupported auth modes are rejected. Confirm there is no plaintext fallback or insecure toggle.
 - **Evidence criteria:** Configuration review finds no verification bypass. Self-signed, expired, wrong-host, incomplete-chain, and malformed certificates fail before DATA. Auth `535` tests show redacted errors and no credential in logs or traces. Feature review confirms no prohibited TLS backend.
@@ -93,7 +93,8 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 | Task | Evidence | State |
 | --- | --- | --- |
 | P11-001 | [`docs/security/threat-model-closure.md`](../security/threat-model-closure.md): the six trust boundaries walked with their controls, every abuse case AB-01…AB-14 mapped to implementation and test evidence, the four deferred cases assigned to P12/P14/P16, six residual risks accepted explicitly, and one medium note (no explicit panic guard in the binding) carried into P11-004. No case is unowned and no high-severity finding is open. | IN REVIEW |
+| P11-002 | [`docs/security/tls-auth-audit.md`](../security/tls-auth-audit.md): the rustls configuration, trust store, hostname checks, protocol floor, and the absence of any verification switch; the certificate failure matrix; the authentication matrix (PLAIN/LOGIN only, TLS required, forced mechanism must be advertised, `535` terminal with no `MAIL`). The architecture check now fails on any TLS bypass marker and on `native-tls`, `openssl`, or `rustls-native-certs`. `auth_failure_is_an_error_and_never_mails` renders `{error:?} {error}` and asserts neither the password nor the username appears. | IN REVIEW |
 
 ## Status
 
-IN PROGRESS. P11-001 is IN REVIEW; P11-002 to P11-005 are NOT STARTED.
+IN PROGRESS. P11-001 and P11-002 are IN REVIEW; P11-003 to P11-005 are NOT STARTED.

@@ -100,7 +100,7 @@ export interface TransportOptions {
   /** `tls` for implicit TLS (usually 465) or `starttls` (usually 587). */
   readonly secure: "tls" | "starttls";
   readonly auth?: AuthOptions;
-  /** EHLO name; defaults to the system hostname or `localhost`. */
+  /** EHLO name; defaults to `localhost`. */
   readonly ehloName?: string;
   readonly timeouts?: TimeoutOptions;
   readonly limits?: LimitOptions;

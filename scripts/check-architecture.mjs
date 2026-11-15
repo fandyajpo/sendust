@@ -23,7 +23,27 @@ const IGNORED_DIRECTORIES = new Set(["target", "node_modules", ".git", "dist"]);
 
 const EXPECTED_MANIFESTS = ["crates/sendust-core/Cargo.toml", "crates/sendust-napi/Cargo.toml"];
 const EXPECTED_PACKAGES = ["sendust-core", "sendust-napi"];
-const FORBIDDEN_IN_CORE = ["napi", "napi-derive", "napi-build", "napi-sys", "neon", "node-bindgen"];
+const FORBIDDEN_IN_CORE = [
+  "napi",
+  "napi-derive",
+  "napi-build",
+  "napi-sys",
+  "neon",
+  "node-bindgen",
+  "native-tls",
+  "openssl",
+  "rustls-native-certs",
+];
+
+/** Strings that would indicate a TLS verification bypass if they ever appear. */
+const TLS_BYPASS_MARKERS = [
+  "danger_accept_invalid_certs",
+  "danger_accept_invalid_hostnames",
+  "dangerous(",
+  "set_certificate_verifier",
+  "insecure_skip_verify",
+  "disable_verification",
+];
 
 const MODULE_LAYERS = new Map([
   ["address", "domain"],
@@ -180,6 +200,11 @@ function checkCoreModules() {
 
     if (code.includes("lettre::")) {
       fail(`sendust source must not reference lettre (ADR-0017): ${posix(path)}`);
+    }
+    for (const marker of TLS_BYPASS_MARKERS) {
+      if (code.includes(marker)) {
+        fail(`TLS verification bypass marker "${marker}": ${posix(path)}`);
+      }
     }
     if (MODULE_LAYERS.get(owner) === "domain") {
       for (const forbidden of ["crate::transports", "napi::"]) {

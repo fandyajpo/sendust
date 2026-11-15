@@ -198,7 +198,12 @@ async fn auth_failure_is_an_error_and_never_mails() {
 
     assert_eq!(error.code(), ErrorCode::AuthFailed);
     assert_eq!(error.details().smtp_status(), Some(535));
-    assert!(!error.to_string().contains("hunter2"));
+    let rendered = format!("{error:?} {error}");
+    assert!(!rendered.contains("hunter2"), "password leaked: {rendered}");
+    assert!(
+        !rendered.contains("relay-user"),
+        "username leaked: {rendered}"
+    );
     assert_eq!(server.trace().count_prefix("MAIL"), 0);
     assert_eq!(server.trace().count_prefix("DATA"), 0);
 }
