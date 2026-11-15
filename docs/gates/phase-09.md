@@ -15,11 +15,11 @@ self-approval.
 
 | Task | Status | Evidence |
 | --- | --- | --- |
-| P09-001 | IN REVIEW | `ts/src/types.ts` documents the frozen contract — relay acceptance, three statuses, `BUSY`, timeout defaults (10 s / 30 s / 120 s / 125 s), cap defaults, attachment shapes — and `Transport` documents the lifecycle. `AuthOptions.method` is honoured end to end. Unknown option keys, top-level and nested, are rejected with `VALIDATION_INVALID_OPTION`. |
-| P09-002 | IN REVIEW | `ts/src/results.ts` maps native results verbatim; attachments infer their content type from the documented extension map; validation rejects an empty subject and reports a missing From as `VALIDATION_MISSING_FROM`; a second concurrent send returns `TRANSPORT_BUSY`. |
-| P09-003 | IN REVIEW | One error class per category, all extending `SendustError`, selected by `fromNative`; all 33 stable codes walked; redaction proven with real sends (password, body marker, attachment path). |
-| P09-004 | IN REVIEW | Double close, send during and after close, concurrent `BUSY` with exactly one relay connection, close during connect, plus the core lifecycle suite (drain and `TIMEOUT_CLOSE`). |
-| P09-005 | IN REVIEW | This record, the contract checklist in section 2, the surface lock in section 3, and the executed evidence in section 5. |
+| P09-001 | COMPLETED | `ts/src/types.ts` documents the frozen contract — relay acceptance, three statuses, `BUSY`, timeout defaults (10 s / 30 s / 120 s / 125 s), cap defaults, attachment shapes — and `Transport` documents the lifecycle. `AuthOptions.method` is honoured end to end. Unknown option keys, top-level and nested, are rejected with `VALIDATION_INVALID_OPTION`. |
+| P09-002 | COMPLETED | `ts/src/results.ts` maps native results verbatim; attachments infer their content type from the documented extension map; validation rejects an empty subject and reports a missing From as `VALIDATION_MISSING_FROM`; a second concurrent send returns `TRANSPORT_BUSY`. |
+| P09-003 | COMPLETED | One error class per category, all extending `SendustError`, selected by `fromNative`; all 33 stable codes walked; redaction proven with real sends (password, body marker, attachment path). |
+| P09-004 | COMPLETED | Double close, send during and after close, concurrent `BUSY` with exactly one relay connection, close during connect, plus the core lifecycle suite (drain and `TIMEOUT_CLOSE`). |
+| P09-005 | COMPLETED | This record, the contract checklist in section 2, the surface lock in section 3, and the executed evidence in section 5. |
 
 ## 2. Contract checklist
 
