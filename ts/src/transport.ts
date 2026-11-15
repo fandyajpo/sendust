@@ -148,10 +148,13 @@ function toNativeAttachment(attachment: Attachment): Record<string, unknown> {
 
 function toNativeMessage(message: Message): Record<string, unknown> {
   const native: Record<string, unknown> = {
-    from: addressString(message.from),
-    subject: message.subject,
     headers: headerPairs(message.headers),
   };
+
+  // Omit absent required fields so the core reports its stable validation code
+  // instead of the adapter failing on a conversion.
+  if (message.from !== undefined) native.from = addressString(message.from);
+  if (message.subject !== undefined) native.subject = message.subject;
 
   const to = addressList(message.to);
   if (to) native.to = to;
