@@ -457,3 +457,54 @@ async fn total_stall_is_a_total_timeout() {
 
     assert_eq!(error.code(), ErrorCode::TimeoutTotal);
 }
+
+
+#[tokio::test]
+async fn a_421_before_any_rcpt_leaves_every_recipient_unknown() {
+    let script = Script::default().rcpt_reply(Reply::line("421 4.4.1 Closing connection"));
+    let server = serving(script);
+    let mut delivery = delivery(config(server.addr()));
+
+    let outcome = delivery
+        .send(message(&["one@example.test", "two@example.test"]))
+        .await
+        .expect("rejected outcome");
+
+    assert_eq!(outcome.status(), DeliveryStatus::Rejected);
+    assert!(
+        outcome
+            .recipients()
+            .iter()
+            .all(|recipient| recipient.status == RecipientStatus::Unknown),
+        "unattempted recipients are unknown, not rejected"
+    );
+    assert_eq!(server.trace().count_prefix("RCPT"), 1);
+    assert_eq!(server.trace().count_prefix("DATA"), 0);
+}
+
+#[tokio::test]
+async fn a_421_keeps_the_attempted_statuses_and_marks_the_rest_unknown() {
+    let script = Script::default().rcpt_replies(vec![
+        Reply::line("250 2.1.5 Recipient ok"),
+        Reply::line("550 5.1.1 No such user"),
+        Reply::line("421 4.4.1 Closing connection"),
+    ]);
+    let server = serving(script);
+    let mut delivery = delivery(config(server.addr()));
+
+    let outcome = delivery
+        .send(message(&[
+            "ok@example.test",
+            "missing@example.test",
+            "never@example.test",
+        ]))
+        .await
+        .expect("rejected outcome");
+
+    assert_eq!(outcome.status(), DeliveryStatus::Rejected);
+    assert_eq!(outcome.recipients()[0].status, RecipientStatus::Unknown);
+    assert_eq!(outcome.recipients()[1].status, RecipientStatus::Rejected);
+    assert_eq!(outcome.recipients()[2].status, RecipientStatus::Unknown);
+    assert_eq!(server.trace().count_prefix("RCPT"), 3);
+    assert_eq!(server.trace().count_prefix("DATA"), 0);
+}

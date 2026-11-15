@@ -238,7 +238,7 @@ impl SmtpTransport {
             Err(error) => return Err(annotate(error, config, deadlines, Stage::Mail)),
         }
 
-        let mut statuses = vec![RecipientStatus::Rejected; envelope.recipients.len()];
+        let mut statuses = vec![RecipientStatus::Unknown; envelope.recipients.len()];
         let mut accepted: Vec<usize> = Vec::new();
         let mut closing = false;
 
@@ -248,15 +248,17 @@ impl SmtpTransport {
             }
             match session.rcpt_to(recipient).await {
                 Ok(reply) if reply.is_positive() => {
-                    statuses[index] = RecipientStatus::Unknown;
                     accepted.push(index);
                 }
                 Ok(reply) if reply.value() == 421 => {
                     // A 421 closes the transmission channel: stop the envelope
-                    // and never issue DATA.
+                    // and never issue DATA. It is not a per-recipient refusal, so
+                    // this recipient and every unattempted one stay `unknown`.
                     closing = true;
                 }
-                Ok(reply) if verdict(&reply) == Verdict::Refused => {}
+                Ok(reply) if verdict(&reply) == Verdict::Refused => {
+                    statuses[index] = RecipientStatus::Rejected;
+                }
                 Ok(reply) => {
                     return Err(unexpected_response(config, Stage::Rcpt, reply.value()));
                 }

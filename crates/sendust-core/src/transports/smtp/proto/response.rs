@@ -165,10 +165,9 @@ impl ReplyBuilder {
             return Err(parse_error());
         }
 
-        let line = line
-            .strip_suffix(b"\r\n")
-            .or_else(|| line.strip_suffix(b"\n"))
-            .unwrap_or(line);
+        // SMTP replies on the wire are CRLF-terminated; a bare LF or bare CR is
+        // a protocol violation, not a line ending to guess at.
+        let line = line.strip_suffix(b"\r\n").ok_or_else(parse_error)?;
 
         if line.len() + 2 > MAX_LINE_BYTES {
             return Err(parse_error());
@@ -303,6 +302,15 @@ mod tests {
         line.extend_from_slice(b"\r\n");
         let error = parse_reply(&line).expect_err("overlong");
         assert_eq!(error.code(), ErrorCode::ProtocolUnexpectedResponse);
+    }
+
+    #[test]
+    fn rejects_bare_lf_and_bare_cr_lines() {
+        for input in [&b"250 ok\n"[..], &b"250 ok\r"[..], b"250 ok"] {
+            let mut builder = ReplyBuilder::new();
+            let error = builder.push_line(input).expect_err("must be rejected");
+            assert_eq!(error.code(), ErrorCode::ProtocolUnexpectedResponse);
+        }
     }
 
     #[test]

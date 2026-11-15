@@ -117,8 +117,14 @@ impl Connection {
         let transport = match config.security() {
             SmtpSecurity::ImplicitTls => {
                 let connector = TlsConnector::from(Arc::clone(&tls_config));
+                // The handshake shares the one absolute connect deadline; it must
+                // not restart a full budget after TCP already consumed part of it.
+                let tls_budget = deadlines
+                    .connect_by()
+                    .saturating_duration_since(Instant::now())
+                    .min(deadlines.remaining_total(Instant::now()));
                 let stream = tokio::time::timeout(
-                    connect_budget,
+                    tls_budget,
                     connector.connect(server_name.clone(), tcp),
                 )
                 .await
