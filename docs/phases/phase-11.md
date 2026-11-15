@@ -49,7 +49,7 @@ In scope: threat-model execution, TLS verification proof, secret redaction, inpu
 ### P11-005 — Security regression gate and remediation sign-off
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P11-001, P11-002, P11-003, P11-004
 - **Description:** Run the security regression suite, dependency/license review, secret scan, and threat-model closure. Record accepted residual risks and any post-MVP hardening. Block the phase if any high-severity finding lacks a fix or explicit rejection.
 - **Evidence criteria:** Gate report includes abuse-case closure, TLS/auth evidence, injection/attachment evidence, ownership/redaction evidence, dependency and secret scan results, and residual-risk acceptance. No high-severity finding is open. Phase 12 may begin only after approval.
@@ -96,7 +96,8 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 | P11-002 | [`docs/security/tls-auth-audit.md`](../security/tls-auth-audit.md): the rustls configuration, trust store, hostname checks, protocol floor, and the absence of any verification switch; the certificate failure matrix; the authentication matrix (PLAIN/LOGIN only, TLS required, forced mechanism must be advertised, `535` terminal with no `MAIL`). The architecture check now fails on any TLS bypass marker and on `native-tls`, `openssl`, or `rustls-native-certs`. `auth_failure_is_an_error_and_never_mails` renders `{error:?} {error}` and asserts neither the password nor the username appears. | IN REVIEW |
 | P11-003 | [`docs/security/injection-attachment-audit.md`](../security/injection-attachment-audit.md): CRLF/bare-LF/NUL/reserved-header/IDNA/overlong fixtures mapped to their codes, filename and path normalization, MIME folding and RFC 2231 encoding, the symlink/FIFO/device/directory/growth matrix, the filesystem-disabled default, and cap placement. The audit found one low defect — the facade copied buffer attachments before any size check — fixed by `ts/src/limits.ts`, which rejects over-cap buffers before the copy and is now covered by `limits.test.ts` and two facade tests. `check-architecture` gained a cap-parity check between `Limits::default()` and `DEFAULT_LIMITS`, and a URL-scheme scan over the core, the binding, and the shared TypeScript. `a_symlinked_file_never_reaches_the_port` proves a non-regular file never dials. | IN REVIEW |
 | P11-004 | [`docs/security/ownership-redaction-audit.md`](../security/ownership-redaction-audit.md): the copy-before-return and detach fixtures, the redaction matrix (errors, credentials, paths, body bytes, binding payload, no logging crate, secret scan), the concurrency/deadline/close/descriptor bounds, and the panic boundary. The P11-001 note is closed: `Transport::new` and `Transport::state` now carry `#[napi(catch_unwind)]`, and async methods are settled by the napi-rs runtime, which rejects the promise instead of unwinding across the FFI. The audit records one low deferral (no automated forced-GC test) for P12. | IN REVIEW |
+| P11-005 | [`docs/gates/phase-11.md`](../gates/phase-11.md): the PHASE-11 review package — acceptance checklist, AB-01…AB-14 closure (AB-11 now closed, AB-14 deferred by design), TLS/auth and injection/attachment and ownership evidence, a licence inventory of every direct dependency and the locked graph (no copyleft; two unlicensed local crates), the secret-scan result, the executed command set with 238 Rust and 44 facade tests, two owner decisions (licence declaration, advisory stage), and the pending approval. | IN REVIEW |
 
 ## Status
 
-IN PROGRESS. P11-001 to P11-004 are IN REVIEW; P11-005 is NOT STARTED.
+IN PROGRESS. P11-001 to P11-005 are IN REVIEW; the PHASE-11 gate is prepared and awaits project-owner approval.

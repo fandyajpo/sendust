@@ -64,6 +64,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 50 | [TLS and authentication audit](security/tls-auth-audit.md) | P11-002 configuration, certificate and auth matrix, and dependency proof |
 | 51 | [Validation, MIME, and attachment audit](security/injection-attachment-audit.md) | P11-003 injection fixtures, filename and path rules, MIME rendering, attachment reads, and cap placement |
 | 52 | [Ownership, redaction, and bounds audit](security/ownership-redaction-audit.md) | P11-004 buffer ownership, redaction matrix, concurrency/deadline bounds, and the panic guard |
+| 53 | [PHASE-11 security record](gates/phase-11.md) | P11 gate checklist, abuse-case closure, licence review, evidence, and the pending approval |
 
 ## 2. Directory map
 
@@ -94,7 +95,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition. P11 is IN PROGRESS (P11-001 to P11-004 in review); P12–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition. P11 is IN PROGRESS (P11-001 to P11-005 in review; PHASE-11 awaits project-owner approval); P12–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -122,9 +123,9 @@ P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P08-001–P08-005 | COMPLETED; PHASE-08 APPROVED (2026-11-15) |
 | P09-001–P09-005 | COMPLETED; PHASE-09 APPROVED (2026-11-15) |
 | P10-001–P10-005 | COMPLETED; PHASE-10 APPROVED (2026-11-15) |
-| P11-001–P11-004 | IN REVIEW |
-| P11-005–P18 | NOT STARTED |
-| Next task | P11-005 — security regression gate and remediation sign-off |
+| P11-001–P11-005 | IN REVIEW; PHASE-11 awaits approval |
+| P12–P18 | NOT STARTED |
+| Next step | PHASE-11 approval — review [the security record](gates/phase-11.md) |
 
 ## 5. Conventions
 
