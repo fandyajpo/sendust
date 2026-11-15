@@ -3,7 +3,13 @@ import { createServer, type Socket } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { SendustError, SendustValidationError, createTransport, version, type Attachment } from "../src/index.ts";
+import {
+  SendustError,
+  SendustValidationError,
+  createTransport,
+  version,
+  type Attachment,
+} from "../src/index.ts";
 
 let available = true;
 try {
