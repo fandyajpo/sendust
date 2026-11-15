@@ -1,8 +1,9 @@
 //! Attachment input policy, bounded buffer handling, and safe file reads.
 //!
 //! P04-003 owns descriptor validation and byte caps for in-memory attachments.
-//! Reading file attachments safely, and enforcing their byte caps at read time,
-//! belongs to P08; until then a file descriptor is policy-checked but not opened.
+//! P08-001 owns the opt-in filesystem policy; P08-002 reads a regular file
+//! safely and within the per-file cap; P08-003 adds attachment bytes to the cap
+//! accounting and P08-004 hands them to the MIME renderer.
 
 use std::fs::File;
 use std::path::Path;
