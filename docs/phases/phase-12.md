@@ -25,7 +25,7 @@ In scope: test plan and traceability, core unit/integration coverage, binding an
 ### P12-002 — Execute core and binding integration coverage
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P12-001
 - **Description:** Run Rust core unit/integration tests and napi binding tests across the full fake SMTP/TLS matrix. Assert exact command traces, results, deadlines, and cleanup. Include mixed RCPT, explicit final DATA `451` rejection, missing-final-reply-after-DATA unknown, TLS certificate failures, auth failure, resets, stalls, and limit boundaries.
 - **Evidence criteria:** Coverage report identifies tested modules and untested critical branches. All fault fixtures pass. Core tests run without Node. Binding tests show no semantic drift. Any skipped test has a named reason and owner.
@@ -97,7 +97,8 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 | Task | Evidence | State |
 | --- | --- | --- |
 | P12-001 | [`docs/qa/traceability-matrix.md`](../qa/traceability-matrix.md): every constraint C-01…C-40, functional requirement FR-001…FR-068, non-functional requirement NFR-001…NFR-014, limit, lifecycle rule, error contract, and abuse case AB-01…AB-14 mapped to a named test or an approving gate with its pass condition. Six gaps are listed with their owning phase; none is unowned. | IN REVIEW |
+| P12-002 | [`docs/qa/integration-coverage.md`](../qa/integration-coverage.md): 282 tests (238 Rust across eight suites, 44 facade) pass in two consecutive workspace runs and in the facade run; a module-to-suite map, a critical-branch table, a Node-free core run (`NO-NODE`, 238 passed) proving the C-01 boundary, the binding parity arguments, the skip inventory (20 addon-dependent tests, never skipped in CI), and the gaps that remain — no line-coverage tool is pinned, `client/tls.rs` and `session.rs` carry no unit tests, and the non-unix fallback is not executable here. | IN REVIEW |
 
 ## Status
 
-IN PROGRESS. P12-001 is IN REVIEW; P12-002 to P12-005 are NOT STARTED.
+IN PROGRESS. P12-001 and P12-002 are IN REVIEW; P12-003 to P12-005 are NOT STARTED.
