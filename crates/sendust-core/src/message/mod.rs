@@ -232,20 +232,6 @@ mod tests {
     }
 
     #[test]
-    fn rejects_an_empty_subject() {
-        let mut message = message_with(1);
-        message.subject = "   ".to_string();
-
-        assert_eq!(
-            message
-                .validate(Limits::default(), AttachmentPolicy::Disabled)
-                .expect_err("empty subject")
-                .code(),
-            ErrorCode::ValidationInvalidOption
-        );
-    }
-
-    #[test]
     fn accepts_standard_headers() {
         let header = Header::new("X-Request-Id", "abc-123").expect("valid");
         assert_eq!(header.name(), "X-Request-Id");
@@ -391,14 +377,19 @@ mod tests {
     }
 
     #[test]
-    fn empty_subject_is_allowed() {
-        let mut message = message_with(1);
-        message.subject.clear();
-        assert!(
-            message
-                .validate(Limits::default(), AttachmentPolicy::Disabled)
-                .is_ok()
-        );
+    fn rejects_an_empty_or_whitespace_only_subject() {
+        for subject in ["", "   "] {
+            let mut message = message_with(1);
+            message.subject = subject.to_string();
+            assert_eq!(
+                message
+                    .validate(Limits::default(), AttachmentPolicy::Disabled)
+                    .expect_err("empty subject")
+                    .code(),
+                ErrorCode::ValidationInvalidOption,
+                "{subject:?}"
+            );
+        }
     }
 
     #[test]
