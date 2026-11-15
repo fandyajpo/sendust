@@ -453,7 +453,9 @@ mod tests {
             deadlines.operation_deadline(now + Duration::from_secs(100)),
             now + Duration::from_secs(120)
         );
-        assert!(!deadlines.operation_expired(now + Duration::from_secs(120) - Duration::from_nanos(1)));
+        assert!(
+            !deadlines.operation_expired(now + Duration::from_secs(120) - Duration::from_nanos(1))
+        );
         assert!(deadlines.operation_expired(now + Duration::from_secs(120)));
     }
 
@@ -462,9 +464,11 @@ mod tests {
         let now = Instant::now();
         let deadlines = SendDeadlines::start(Timeouts::default(), now);
 
-        assert!(!deadlines
-            .remaining_total(deadlines.total_by() - Duration::from_nanos(1))
-            .is_zero());
+        assert!(
+            !deadlines
+                .remaining_total(deadlines.total_by() - Duration::from_nanos(1))
+                .is_zero()
+        );
         assert!(deadlines.remaining_total(deadlines.total_by()).is_zero());
     }
 }
