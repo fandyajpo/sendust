@@ -265,7 +265,7 @@ mod tests {
         let text = String::from_utf8_lossy(&bytes);
         assert!(text.contains("filename="), "{text}");
         assert!(text.contains("notes.txt"), "{text}");
-        assert!(text.contains("aGVsbG8="), "base64 body missing: {text}");
+        assert!(text.contains("YWFhYWE="), "base64 body missing: {text}");
 
         remove_temp(&path);
     }
