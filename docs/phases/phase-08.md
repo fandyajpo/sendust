@@ -41,7 +41,7 @@ In scope: attachment configuration, opt-in filesystem gate, regular-file validat
 ### P08-004 — Integrate attachment bytes with MIME and copied ownership
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P08-002, P08-003, P07-004
 - **Description:** Pass loaded bytes into the MIME renderer as owned Rust data. Ensure no JS memory is borrowed across async I/O and no file handle or buffer is retained after send completion. Free memory promptly after serialization and enforce cleanup on cancellation/close.
 - **Evidence criteria:** Tests mutate and detach source options and confirm sent bytes are unchanged. File descriptors are closed after success, validation failure, timeout, and close. Memory tests show attachment buffers are dropped after use.
@@ -88,7 +88,7 @@ Opt-in configuration, descriptor validation, safe file reader, cap enforcement, 
 
 ## Status
 
-IN PROGRESS. P08-001 to P08-003 are IN REVIEW; P08-004 and P08-005 are NOT STARTED.
+IN PROGRESS. P08-001 to P08-004 are IN REVIEW; P08-005 is NOT STARTED.
 
 ## Evidence log
 
@@ -99,3 +99,4 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 | P08-001 | `attachments/mod.rs`: `AttachmentPolicy` (`Disabled` by default, explicit `Enabled` opt-in, no ambient global), `filesystem_enabled`/`from_flag`, and descriptor path validation (absolute, non-empty, at most 1024 bytes, control-free). The policy is threaded through `Delivery`, `OutgoingMessage::validate`, `mime::serialize[_at]` and the Node-API adapter. Tests prove disabled-by-default with no open, relative/malformed path rejection, and opt-in acceptance of an absolute path. | IN REVIEW |
 | P08-002 | `attachments/mod.rs`: `read_attachment` (re-exported from the facade) inspects the path with `symlink_metadata`, opens it with `O_NOFOLLOW`/`O_NONBLOCK` on unix, re-checks the opened descriptor with `fstat`, and reads at most the per-file cap plus one probe byte. Tests cover a regular file, the inclusive cap, cap + 1, an outgrowing file, a missing path, a directory, a symlink, a FIFO (no blocking), a character device, permission denied, and path-free errors. Non-regular and unreadable inputs fail with `CONFIG_ATTACHMENT_UNREADABLE`; over-cap input fails with `LIMIT_ATTACHMENT_BYTES`. | IN REVIEW |
 | P08-003 | `attachments/mod.rs` checks every per-file cap before any aggregate check; `delivery/mod.rs` loads each file into owned `Attachment::Bytes` before composing, accumulating the raw total so the aggregate cap holds for file attachments too. Ordering is per-file, then aggregate, then wire; message validation runs before any file is opened, so identity and recipient errors keep their precedence, and every cap failure returns with zero port calls. Tests cover the inclusive per-file and aggregate limits, per-file precedence over aggregate, base64 overhead counted by the wire cap, and the no-dial guarantee. | IN REVIEW |
+| P08-004 | `sendust-napi` accepts `AttachmentOptions` (path or `Uint8Array` content), copies buffer content into Rust-owned bytes, and rejects a shape with both or neither; `ts/src` adds the `Attachment` union, `Message.attachments`, and a synchronous snapshot in `toNativeAttachment` so a caller may reuse the array as soon as `send()` returns. `Delivery` reads file attachments inside the spawned async task, never on the Node thread, and hands owned bytes to the MIME renderer. Tests: buffer snapshot survives mutation after the call, a path attachment without opt-in fails `CONFIG_FILE_ACCESS_DISABLED`, an empty attachment fails `VALIDATION_INVALID_ATTACHMENT`, and the core file-loading tests run the descriptor through load and drop. | IN REVIEW |

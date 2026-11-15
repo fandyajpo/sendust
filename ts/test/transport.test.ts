@@ -1,6 +1,6 @@
 import { createServer, type Socket } from "node:net";
 import { describe, expect, it } from "vitest";
-import { SendustError, createTransport, version } from "../src/index.ts";
+import { SendustError, createTransport, version, type Attachment } from "../src/index.ts";
 
 let available = true;
 try {
@@ -87,6 +87,73 @@ describe("sendust facade", () => {
       socket.destroy();
     }
     await new Promise<void>((resolve) => server.close(() => resolve()));
+  });
+
+  it.skipIf(!available)("rejects a path attachment without filesystem opt-in", async () => {
+    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls" });
+    let code: string | null = null;
+    try {
+      await transport.send({
+        from: "a@example.test",
+        to: ["b@example.test"],
+        subject: "x",
+        text: "y",
+        attachments: [{ path: "/tmp/notes.txt", filename: "notes.txt" }],
+      });
+    } catch (error) {
+      code = (error as SendustError).code;
+    }
+    await transport.close();
+
+    expect(code).toBe("CONFIG_FILE_ACCESS_DISABLED");
+  });
+
+  it.skipIf(!available)("copies a buffer attachment before the send returns", async () => {
+    const server = createServer();
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address();
+    const port = typeof address === "object" && address ? address.port : 1;
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+
+    const transport = createTransport({ host: "127.0.0.1", port, secure: "tls" });
+    const content = new Uint8Array([104, 101, 108, 108, 111]);
+    let code: string | null = null;
+    try {
+      const sending = transport.send({
+        from: "a@example.test",
+        to: ["b@example.test"],
+        subject: "x",
+        text: "y",
+        attachments: [{ filename: "hello.txt", content }],
+      });
+      // The facade snapshots the array synchronously, so this must not matter.
+      content.fill(0);
+      await sending;
+    } catch (error) {
+      code = (error as SendustError).code;
+    }
+    await transport.close();
+
+    expect(code).toBe("PROTOCOL_CONNECTION_RESET");
+  });
+
+  it.skipIf(!available)("rejects an attachment with neither a path nor content", async () => {
+    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls" });
+    let code: string | null = null;
+    try {
+      await transport.send({
+        from: "a@example.test",
+        to: ["b@example.test"],
+        subject: "x",
+        text: "y",
+        attachments: [{ filename: "empty.txt" } as unknown as Attachment],
+      });
+    } catch (error) {
+      code = (error as SendustError).code;
+    }
+    await transport.close();
+
+    expect(code).toBe("VALIDATION_INVALID_ATTACHMENT");
   });
 
   it.skipIf(!available)("maps a refused connection to a protocol error", async () => {

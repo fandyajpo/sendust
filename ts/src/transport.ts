@@ -7,7 +7,14 @@
 
 import { SendustError, fromNative } from "./errors.ts";
 import { loadNative, type NativeSendResult, type NativeTransport } from "./loader.ts";
-import type { Address, Message, SendResult, TransportOptions, TransportState } from "./types.ts";
+import type {
+  Address,
+  Attachment,
+  Message,
+  SendResult,
+  TransportOptions,
+  TransportState,
+} from "./types.ts";
 
 function addressString(value: Address): string {
   if (typeof value === "string") {
@@ -71,6 +78,26 @@ function toNativeOptions(options: TransportOptions): Record<string, unknown> {
   return native;
 }
 
+function toNativeAttachment(attachment: Attachment): Record<string, unknown> {
+  if ("content" in attachment) {
+    const native: Record<string, unknown> = {
+      filename: attachment.filename,
+      // Copied synchronously, before the native call can return: the caller may
+      // reuse or mutate the source array as soon as send() has been called.
+      content: new Uint8Array(attachment.content),
+    };
+    if (attachment.contentType !== undefined) {
+      native.contentType = attachment.contentType;
+    }
+    return native;
+  }
+
+  const native: Record<string, unknown> = { path: attachment.path };
+  if (attachment.filename !== undefined) native.filename = attachment.filename;
+  if (attachment.contentType !== undefined) native.contentType = attachment.contentType;
+  return native;
+}
+
 function toNativeMessage(message: Message): Record<string, unknown> {
   const native: Record<string, unknown> = {
     from: addressString(message.from),
@@ -88,6 +115,7 @@ function toNativeMessage(message: Message): Record<string, unknown> {
   if (replyTo) native.replyTo = replyTo;
   if (message.text !== undefined) native.text = message.text;
   if (message.html !== undefined) native.html = message.html;
+  if (message.attachments) native.attachments = message.attachments.map(toNativeAttachment);
 
   return native;
 }

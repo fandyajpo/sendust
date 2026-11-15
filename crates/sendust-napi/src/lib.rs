@@ -9,11 +9,11 @@ use std::sync::atomic::{AtomicU8, Ordering};
 use std::time::Duration;
 
 use napi::Status;
-use napi::bindgen_prelude::Result;
+use napi::bindgen_prelude::{Result, Uint8Array};
 use napi_derive::napi;
 use sendust_core::{
-    Delivery, Error as CoreError, ErrorCode, Header, Limits, Mailbox, OutgoingMessage, SmtpConfig,
-    SmtpCredentials, SmtpSecurity, SmtpTransport, Timeouts,
+    Attachment, Delivery, Error as CoreError, ErrorCode, FileDescriptor, Header, Limits, Mailbox,
+    OutgoingMessage, SmtpConfig, SmtpCredentials, SmtpSecurity, SmtpTransport, Timeouts,
 };
 
 const OPEN: u8 = 0;
@@ -63,6 +63,18 @@ pub struct HeaderPair {
     pub value: String,
 }
 
+/// One attachment. Exactly one of `path` or `content` must be set.
+///
+/// `content` is copied synchronously into Rust-owned memory; `path` is only
+/// opened later, inside the async task, when filesystem access is enabled.
+#[napi(object)]
+pub struct AttachmentOptions {
+    pub filename: Option<String>,
+    pub content_type: Option<String>,
+    pub path: Option<String>,
+    pub content: Option<Uint8Array>,
+}
+
 /// One outgoing message, fully copied before any async work begins.
 #[napi(object)]
 pub struct MessageOptions {
@@ -75,6 +87,7 @@ pub struct MessageOptions {
     pub text: Option<String>,
     pub html: Option<String>,
     pub headers: Option<Vec<HeaderPair>>,
+    pub attachments: Option<Vec<AttachmentOptions>>,
 }
 
 /// Per-recipient result.
@@ -365,6 +378,12 @@ fn build_message(options: MessageOptions) -> std::result::Result<OutgoingMessage
         .into_iter()
         .map(|header| Header::new(&header.name, &header.value))
         .collect::<std::result::Result<Vec<_>, _>>()?;
+    let attachments = options
+        .attachments
+        .unwrap_or_default()
+        .into_iter()
+        .map(attachment)
+        .collect::<std::result::Result<Vec<_>, _>>()?;
 
     Ok(OutgoingMessage {
         from: Mailbox::parse(&options.from)?,
@@ -376,8 +395,30 @@ fn build_message(options: MessageOptions) -> std::result::Result<OutgoingMessage
         text: options.text,
         html: options.html,
         headers,
-        attachments: Vec::new(),
+        attachments,
     })
+}
+
+/// Maps one JavaScript attachment, copying buffer content into owned memory.
+fn attachment(options: AttachmentOptions) -> std::result::Result<Attachment, CoreError> {
+    match (options.path, options.content) {
+        (Some(path), None) => Ok(Attachment::File(FileDescriptor {
+            display_name: options.filename,
+            content_type: options.content_type,
+            path,
+        })),
+        (None, Some(content)) => {
+            let filename = options
+                .filename
+                .ok_or_else(|| CoreError::new(ErrorCode::ValidationInvalidAttachment))?;
+            Ok(Attachment::Bytes {
+                filename,
+                content_type: options.content_type,
+                bytes: content.to_vec(),
+            })
+        }
+        _ => Err(CoreError::new(ErrorCode::ValidationInvalidAttachment)),
+    }
 }
 
 fn to_result(outcome: sendust_core::SendOutcome) -> SendResultJs {

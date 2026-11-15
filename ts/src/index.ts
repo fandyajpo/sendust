@@ -10,8 +10,11 @@ export { SendustError } from "./errors.ts";
 export type { ErrorCategory } from "./errors.ts";
 export type {
   Address,
+  Attachment,
   AuthOptions,
+  BufferAttachment,
   DeliveryStatus,
+  FileAttachment,
   HeaderLike,
   LimitOptions,
   MailboxLike,

@@ -66,6 +66,20 @@ export interface HeaderLike {
   readonly value: string;
 }
 
+export interface BufferAttachment {
+  readonly filename: string;
+  readonly content: Uint8Array;
+  readonly contentType?: string;
+}
+
+export interface FileAttachment {
+  readonly path: string;
+  readonly filename?: string;
+  readonly contentType?: string;
+}
+
+export type Attachment = BufferAttachment | FileAttachment;
+
 export interface Message {
   readonly from: Address;
   readonly to?: Address[];
@@ -76,6 +90,7 @@ export interface Message {
   readonly text?: string;
   readonly html?: string;
   readonly headers?: HeaderLike[] | Record<string, string>;
+  readonly attachments?: Attachment[];
 }
 
 export type TransportState = "open" | "closing" | "closed";
