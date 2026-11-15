@@ -123,15 +123,13 @@ impl Connection {
                     .connect_by()
                     .saturating_duration_since(Instant::now())
                     .min(deadlines.remaining_total(Instant::now()));
-                let stream = tokio::time::timeout(
-                    tls_budget,
-                    connector.connect(server_name.clone(), tcp),
-                )
-                .await
-                .map_err(|_| {
-                    deadlines.timeout_error(Instant::now(), false, Stage::ConnectionSetup)
-                })?
-                .map_err(tls_error)?;
+                let stream =
+                    tokio::time::timeout(tls_budget, connector.connect(server_name.clone(), tcp))
+                        .await
+                        .map_err(|_| {
+                            deadlines.timeout_error(Instant::now(), false, Stage::ConnectionSetup)
+                        })?
+                        .map_err(tls_error)?;
                 Transport::Tls(Box::new(stream))
             }
             SmtpSecurity::StartTls => Transport::Plain(tcp),

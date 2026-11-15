@@ -458,7 +458,6 @@ async fn total_stall_is_a_total_timeout() {
     assert_eq!(error.code(), ErrorCode::TimeoutTotal);
 }
 
-
 #[tokio::test]
 async fn a_421_before_any_rcpt_leaves_every_recipient_unknown() {
     let script = Script::default().rcpt_reply(Reply::line("421 4.4.1 Closing connection"));
