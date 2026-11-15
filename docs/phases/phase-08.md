@@ -33,7 +33,7 @@ In scope: attachment configuration, opt-in filesystem gate, regular-file validat
 ### P08-003 — Enforce per-file, aggregate, and wire caps with attachments
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P08-002, P04-003
 - **Description:** Integrate attachment sizes into the 10 MiB per-file, 20 MiB aggregate raw attachment, and 30 MiB final wire caps. Define check ordering so per-file failure precedes aggregate and wire failure. Ensure MIME encoding overhead is included in wire size, not just raw bytes.
 - **Evidence criteria:** Boundary tests cover 10 MiB and 10 MiB + 1; aggregate 20 MiB and 20 MiB + 1; final wire 30 MiB and 30 MiB + 1. Exact precedence is asserted. No SMTP connection is attempted after any cap failure.
@@ -88,7 +88,7 @@ Opt-in configuration, descriptor validation, safe file reader, cap enforcement, 
 
 ## Status
 
-IN PROGRESS. P08-001 and P08-002 are IN REVIEW; P08-003 to P08-005 are NOT STARTED.
+IN PROGRESS. P08-001 to P08-003 are IN REVIEW; P08-004 and P08-005 are NOT STARTED.
 
 ## Evidence log
 
@@ -98,3 +98,4 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 | --- | --- | --- |
 | P08-001 | `attachments/mod.rs`: `AttachmentPolicy` (`Disabled` by default, explicit `Enabled` opt-in, no ambient global), `filesystem_enabled`/`from_flag`, and descriptor path validation (absolute, non-empty, at most 1024 bytes, control-free). The policy is threaded through `Delivery`, `OutgoingMessage::validate`, `mime::serialize[_at]` and the Node-API adapter. Tests prove disabled-by-default with no open, relative/malformed path rejection, and opt-in acceptance of an absolute path. | IN REVIEW |
 | P08-002 | `attachments/mod.rs`: `read_attachment` (re-exported from the facade) inspects the path with `symlink_metadata`, opens it with `O_NOFOLLOW`/`O_NONBLOCK` on unix, re-checks the opened descriptor with `fstat`, and reads at most the per-file cap plus one probe byte. Tests cover a regular file, the inclusive cap, cap + 1, an outgrowing file, a missing path, a directory, a symlink, a FIFO (no blocking), a character device, permission denied, and path-free errors. Non-regular and unreadable inputs fail with `CONFIG_ATTACHMENT_UNREADABLE`; over-cap input fails with `LIMIT_ATTACHMENT_BYTES`. | IN REVIEW |
+| P08-003 | `attachments/mod.rs` checks every per-file cap before any aggregate check; `delivery/mod.rs` loads each file into owned `Attachment::Bytes` before composing, accumulating the raw total so the aggregate cap holds for file attachments too. Ordering is per-file, then aggregate, then wire; message validation runs before any file is opened, so identity and recipient errors keep their precedence, and every cap failure returns with zero port calls. Tests cover the inclusive per-file and aggregate limits, per-file precedence over aggregate, base64 overhead counted by the wire cap, and the no-dial guarantee. | IN REVIEW |

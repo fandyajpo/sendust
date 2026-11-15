@@ -85,7 +85,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition. P08 is IN PROGRESS (P08-001 and P08-002 in review); P09–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition. P08 is IN PROGRESS (P08-001 to P08-003 in review); P09–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -110,8 +110,8 @@ P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P05-001–P05-005 | COMPLETED |
 | P06-001–P06-005 | COMPLETED; PHASE-06 APPROVED (2026-11-14) |
 | P07-001–P07-005 | COMPLETED; PHASE-07 APPROVED (2026-11-14) |
-| P08–P18 | P08-001 and P08-002 IN REVIEW; the rest NOT STARTED |
-| Next task | P08-003 — enforce per-file, aggregate, and wire caps with attachments |
+| P08–P18 | P08-001 to P08-003 IN REVIEW; the rest NOT STARTED |
+| Next task | P08-004 — integrate attachment bytes with MIME and copied ownership |
 
 ## 5. Conventions
 

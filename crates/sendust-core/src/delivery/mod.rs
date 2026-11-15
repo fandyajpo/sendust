@@ -38,6 +38,9 @@ impl<P: DeliveryPort> Delivery<P> {
     /// A validation or limit failure returns before the port is called, so no
     /// connection can be attempted for an invalid message.
     pub async fn send(&mut self, message: OutgoingMessage) -> Result<SendOutcome, Error> {
+        // Message stages run before any file is opened, so the approved error
+        // precedence holds: identity and recipients outrank attachment reads.
+        message.validate(self.limits, self.attachment_policy)?;
         let message = load_attachments(message, self.limits, self.attachment_policy)?;
         let wire = mime::serialize_at(
             &message,
@@ -248,6 +251,24 @@ mod tests {
             content_type: Some("text/plain".to_string()),
             path: path.to_string_lossy().into_owned(),
         })
+    }
+
+    #[tokio::test]
+    async fn a_message_error_precedes_a_file_read_error() {
+        let path = temp_file("gone.bin", 3);
+        let missing = path.with_file_name("absent.bin");
+        let mut message = message();
+        message.to.clear();
+        message.attachments = vec![file_attachment(&missing, "absent.bin")];
+
+        let (port, calls, _) = fake(None);
+        let mut delivery = Delivery::new(port, Limits::default(), AttachmentPolicy::Enabled);
+        let error = delivery.send(message).await.expect_err("no recipient");
+
+        assert_eq!(error.code(), ErrorCode::ValidationMissingRecipient);
+        assert_eq!(calls.load(Ordering::SeqCst), 0);
+
+        remove_temp(&path);
     }
 
     #[tokio::test]
