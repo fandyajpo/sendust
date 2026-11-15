@@ -99,8 +99,15 @@ pub struct SendResultJs {
     pub response: Option<SmtpResponseJs>,
 }
 
+enum Active {
+    Idle,
+    Sending(Option<tokio::task::AbortHandle>),
+}
+
 struct Inner {
     slot: tokio::sync::Mutex<Option<SmtpTransport>>,
+    active: tokio::sync::Mutex<Active>,
+    idle: tokio::sync::Notify,
     phase: AtomicU8,
     limits: Limits,
     filesystem: bool,
@@ -187,6 +194,8 @@ impl Transport {
         Ok(Self {
             inner: Arc::new(Inner {
                 slot: tokio::sync::Mutex::new(Some(SmtpTransport::new(config))),
+                active: tokio::sync::Mutex::new(Active::Idle),
+                idle: tokio::sync::Notify::new(),
                 phase: AtomicU8::new(OPEN),
                 limits,
                 filesystem: options.allow_file_access.unwrap_or(false),
@@ -212,66 +221,135 @@ impl Transport {
             return Err(to_napi(CoreError::new(ErrorCode::TransportClosed)));
         }
 
-        let mut guard = match self.inner.slot.try_lock() {
-            Ok(guard) => guard,
-            Err(_) => return Err(to_napi(CoreError::new(ErrorCode::TransportBusy))),
+        {
+            let mut active = self.inner.active.lock().await;
+            if !matches!(*active, Active::Idle) {
+                return Err(to_napi(CoreError::new(ErrorCode::TransportBusy)));
+            }
+            *active = Active::Sending(None);
+        }
+
+        let transport = {
+            let mut slot = match self.inner.slot.try_lock() {
+                Ok(slot) => slot,
+                Err(_) => {
+                    *self.inner.active.lock().await = Active::Idle;
+                    self.inner.idle.notify_waiters();
+                    return Err(to_napi(CoreError::new(ErrorCode::TransportBusy)));
+                }
+            };
+            match slot.take() {
+                Some(transport) => transport,
+                None => {
+                    *self.inner.active.lock().await = Active::Idle;
+                    self.inner.idle.notify_waiters();
+                    return Err(to_napi(CoreError::new(ErrorCode::TransportBusy)));
+                }
+            }
         };
 
         if self.inner.phase.load(Ordering::SeqCst) != OPEN {
+            *self.inner.slot.lock().await = Some(transport);
+            *self.inner.active.lock().await = Active::Idle;
+            self.inner.idle.notify_waiters();
             return Err(to_napi(CoreError::new(ErrorCode::TransportClosed)));
         }
-
-        let Some(mut transport) = guard.take() else {
-            return Err(to_napi(CoreError::new(ErrorCode::TransportBusy)));
-        };
 
         let prepared = match build_message(message) {
             Ok(prepared) => prepared,
             Err(error) => {
-                *guard = Some(transport);
+                *self.inner.slot.lock().await = Some(transport);
+                *self.inner.active.lock().await = Active::Idle;
+                self.inner.idle.notify_waiters();
                 return Err(to_napi(error));
             }
         };
 
-        let outcome = {
+        let inner = Arc::clone(&self.inner);
+        let handle = tokio::spawn(async move {
+            let mut transport = transport;
             let mut delivery = Delivery::new(
                 transport.session(),
-                self.inner.limits,
-                sendust_core::AttachmentPolicy::from_flag(self.inner.filesystem),
+                inner.limits,
+                sendust_core::AttachmentPolicy::from_flag(inner.filesystem),
             );
-            delivery.send(prepared).await
-        };
+            let outcome = delivery.send(prepared).await;
+            (transport, outcome)
+        });
 
-        *guard = Some(transport);
+        {
+            let mut active = self.inner.active.lock().await;
+            if matches!(*active, Active::Sending(None)) {
+                *active = Active::Sending(Some(handle.abort_handle()));
+            }
+        }
+        // Wake close so it can abort this handle if it started before we stored it.
+        self.inner.idle.notify_waiters();
 
-        match outcome {
-            Ok(outcome) => Ok(to_result(outcome)),
-            Err(error) => Err(to_napi(error)),
+        if self.inner.phase.load(Ordering::SeqCst) != OPEN {
+            handle.abort();
+        }
+
+        let joined = handle.await;
+        {
+            let mut active = self.inner.active.lock().await;
+            *active = Active::Idle;
+        }
+        self.inner.idle.notify_waiters();
+
+        match joined {
+            Ok((transport, outcome)) => {
+                if self.inner.phase.load(Ordering::SeqCst) == OPEN {
+                    *self.inner.slot.lock().await = Some(transport);
+                }
+                outcome.map(to_result).map_err(to_napi)
+            }
+            Err(error) if error.is_cancelled() => {
+                Err(to_napi(CoreError::new(ErrorCode::TransportClosed)))
+            }
+            Err(_) => Err(to_napi(CoreError::new(ErrorCode::Internal))),
         }
     }
 
-    /// Idempotent, bounded close. Drain is capped at the configured close budget.
+    /// Idempotent, bounded close. Aborts any active send and waits for it to
+    /// stop within the close budget; a timeout is reported, never hidden.
     #[napi]
     pub async fn close(&self) -> Result<()> {
         let previous = self.inner.phase.swap(CLOSING, Ordering::SeqCst);
         if previous == CLOSED {
-            // Another close already finished; stay closed.
             self.inner.phase.store(CLOSED, Ordering::SeqCst);
             return Ok(());
         }
 
-        let waited = tokio::time::timeout(self.inner.close_timeout, self.inner.slot.lock()).await;
-        match waited {
-            Ok(mut slot) => {
-                *slot = None;
-                self.inner.phase.store(CLOSED, Ordering::SeqCst);
-                Ok(())
+        let deadline = tokio::time::Instant::now() + self.inner.close_timeout;
+        loop {
+            {
+                let mut active = self.inner.active.lock().await;
+                match &*active {
+                    Active::Idle => break,
+                    Active::Sending(Some(handle)) => handle.abort(),
+                    Active::Sending(None) => {}
+                }
             }
-            Err(_) => {
+
+            let notified = self.inner.idle.notified();
+            if matches!(*self.inner.active.lock().await, Active::Idle) {
+                break;
+            }
+            if tokio::time::timeout_at(deadline, notified)
+                .await
+                .is_err()
+            {
                 self.inner.phase.store(CLOSED, Ordering::SeqCst);
-                Err(to_napi(CoreError::new(ErrorCode::TimeoutClose)))
+                return Err(to_napi(CoreError::new(ErrorCode::TimeoutClose)));
             }
         }
+
+        if let Ok(mut slot) = self.inner.slot.try_lock() {
+            *slot = None;
+        }
+        self.inner.phase.store(CLOSED, Ordering::SeqCst);
+        Ok(())
     }
 }
 
