@@ -60,26 +60,23 @@ describe("sendust facade", () => {
       secure: "tls",
     });
 
-    const sending = transport.send({
-      from: "a@example.test",
-      to: ["b@example.test"],
-      subject: "x",
-      text: "y",
-    });
+    const sending = transport
+      .send({
+        from: "a@example.test",
+        to: ["b@example.test"],
+        subject: "x",
+        text: "y",
+      })
+      .catch((error: unknown) => error);
 
     // Let the delivery start and reach the handshake before close races it.
     await new Promise((resolve) => setTimeout(resolve, 100));
     await transport.close();
 
-    let code: string | null = null;
-    try {
-      await sending;
-    } catch (error) {
-      expect(error).toBeInstanceOf(SendustError);
-      code = (error as SendustError).code;
-    }
+    const error = await sending;
 
-    expect(code).toBe("TRANSPORT_CLOSED");
+    expect(error).toBeInstanceOf(SendustError);
+    expect((error as SendustError).code).toBe("TRANSPORT_CLOSED");
     expect(transport.state).toBe("closed");
 
     server.closeAllConnections();
