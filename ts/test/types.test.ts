@@ -4,10 +4,13 @@ import {
   createTransport,
   version,
   type Attachment,
+  type AuthOptions,
   type DeliveryStatus,
+  type LimitOptions,
   type Message,
   type RecipientOutcome,
   type SendResult,
+  type TimeoutOptions,
   type Transport,
   type TransportOptions,
   type TransportState,
@@ -50,6 +53,31 @@ describe("public contract types", () => {
       | "internal"
     >();
     expectTypeOf(error).toMatchTypeOf<Error>();
+  });
+
+  it("keeps the option and message surfaces exactly as documented", () => {
+    expectTypeOf<keyof TransportOptions>().toEqualTypeOf<
+      "host" | "port" | "secure" | "auth" | "ehloName" | "timeouts" | "limits" | "attachments"
+    >();
+    expectTypeOf<keyof AuthOptions>().toEqualTypeOf<"user" | "pass" | "method">();
+    expectTypeOf<keyof TimeoutOptions>().toEqualTypeOf<
+      "connectMs" | "operationMs" | "totalMs" | "closeMs"
+    >();
+    expectTypeOf<keyof LimitOptions>().toEqualTypeOf<
+      "maxRecipients" | "maxAttachmentBytes" | "maxTotalAttachmentBytes" | "maxWireBytes"
+    >();
+    expectTypeOf<keyof Message>().toEqualTypeOf<
+      | "from"
+      | "to"
+      | "cc"
+      | "bcc"
+      | "replyTo"
+      | "subject"
+      | "text"
+      | "html"
+      | "headers"
+      | "attachments"
+    >();
   });
 
   it("rejects options outside the frozen surface", () => {
