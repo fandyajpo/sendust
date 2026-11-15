@@ -336,10 +336,7 @@ impl Transport {
             if matches!(*self.inner.active.lock().await, Active::Idle) {
                 break;
             }
-            if tokio::time::timeout_at(deadline, notified)
-                .await
-                .is_err()
-            {
+            if tokio::time::timeout_at(deadline, notified).await.is_err() {
                 self.inner.phase.store(CLOSED, Ordering::SeqCst);
                 return Err(to_napi(CoreError::new(ErrorCode::TimeoutClose)));
             }
