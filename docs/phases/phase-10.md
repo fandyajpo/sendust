@@ -33,7 +33,7 @@ In scope: lifecycle races, timeout-budget interaction, close/drain guarantees, r
 ### P10-003 — Implement resource cleanup and leak prevention
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P10-001
 - **Description:** Ensure sockets, file descriptors, buffers, timers, and async tasks are released on success, validation failure, TLS failure, timeout, reset, abort/close, and process shutdown. Define cleanup ordering and avoid double-close or use-after-close. Attachment buffers must drop promptly.
 - **Evidence criteria:** Repeated success/failure loops show stable descriptor and memory counts. Tests cover failure during connect, TLS, auth, DATA, attachment read, and close. No file descriptor, timer, or task remains after each terminal path.
@@ -88,7 +88,7 @@ Hardened lifecycle, shared deadline logic, cleanup guarantees, fault-injection s
 
 ## Status
 
-IN PROGRESS. P10-001 and P10-002 are IN REVIEW; P10-003 to P10-005 are NOT STARTED.
+IN PROGRESS. P10-001 to P10-003 are IN REVIEW; P10-004 and P10-005 are NOT STARTED.
 
 ## Evidence log
 
@@ -98,3 +98,4 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 | --- | --- | --- |
 | P10-001 | `results/mod.rs` adds `DeliveryProgress`, a monotonic stage tracker that also records the recipients accepted at RCPT, and `cancelled_outcome()`; `SmtpTransport::with_progress` marks `connection_setup`, `auth`, `mail`, each `rcpt`, `data_command`, and `data_body` and records accepted recipients. The binding maps a cancelled send to an `unknown` outcome for the accepted subset once `data_body` was reached, and to `TRANSPORT_CLOSED` before that. Tests: `a_cancellation_before_data_is_not_ambiguous`, `a_cancellation_after_data_reports_unknown_for_the_accepted_subset`, `stages_never_move_backwards`, plus the existing lifecycle and facade race tests (send/send, send/close, close/send, close/close). | IN REVIEW |
 | P10-002 | `SendDeadlines` now has exact boundary tests: connect expires at exactly 10 s and not a nanosecond before, the operation deadline is exactly 30 s and capped by the total, and the total leaves zero time only at 120 s. The three fake-relay timeout tests assert a timeout never retries — a connect timeout never reaches MAIL, and the operation and total timeouts issue exactly one MAIL. The facade closes a stalled send within a 1 s close budget (measured, under 1.5 s) and ends `closed`. The close drain deadline itself is covered by `close_drain_times_out_without_the_active_send_finishing`. | IN REVIEW |
+| P10-003 | `tests/leaks.rs` probes the descriptor lifecycle with warm-up loops and `/dev/fd` counts on unix: 20 successful sends, 50 refused connections, and 20 untrusted-certificate TLS failures each leave the count stable within two descriptors, and the TLS loop also proves no `MAIL` was ever issued. Attachment handles are already covered by `the_file_handle_is_closed_after_a_read`; buffers are owned and dropped after serialization, and no socket, timer, or task outlives a send because connections are created per send and dropped with the session. | IN REVIEW |
