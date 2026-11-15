@@ -1,6 +1,6 @@
 # Phase 11 — Security
 
-**Phase status:** NOT STARTED  
+**Phase status:** IN PROGRESS  
 **Phase dependency:** Phase 10  
 **Companion references:** [security strategy](../engineering/security-strategy.md), [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [reliability strategy](../engineering/reliability-strategy.md)
 
@@ -17,7 +17,7 @@ In scope: threat-model execution, TLS verification proof, secret redaction, inpu
 ### P11-001 — Execute the threat model and trust-boundary audit
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P10-005, P00-004
 - **Description:** Walk each Phase 00 abuse case across JS caller, napi boundary, core, filesystem, TLS, and relay. Confirm mitigations exist for credential leakage, CRLF/header injection, TLS downgrade, symlink/FIFO/device access, buffer mutation/detachment, oversized envelopes, concurrency, and shutdown hangs. Record residual risks and explicit non-goals.
 - **Evidence criteria:** Abuse-case matrix maps each case to implementation and test evidence. No case is unowned. Residual risks are accepted explicitly. Any missing mitigation has a blocking remediation task or gate rejection.
@@ -56,7 +56,7 @@ In scope: threat-model execution, TLS verification proof, secret redaction, inpu
 
 ## Technical implementation details
 
-Security constraints are mandatory from Phase 00 and are proven here. The architecture uses two crates with core free of Node linkage, `TS -> napi -> core -> lettre`, and `lettre 0.11.23`. TLS uses rustls with `ring` and `webpki-roots`; verification is never disableable. Authentication failures are terminal and redacted. Envelope local parts are ASCII, domains IDNA, display/body Unicode; CRLF and NUL are rejected. Attachments require explicit filesystem opt-in, read bounded regular files only, reject symlinks/FIFOs/devices/directories, and never fetch URLs. Caps are hard: 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. JS buffers are copied before async. One active send returns `BUSY` with no queue. Timeouts are finite: connect 10s, operation 30s, total 120s, close 125s. Close is explicit and not GC-dependent. No pooling, no automatic retries, no SMTPUTF8, no delivery guarantee, and no per-recipient independent messages.
+Security constraints are mandatory from Phase 00 and are proven here. The architecture uses two crates with core free of Node linkage, `TS -> napi -> core -> native SMTP engine`. TLS uses rustls with `ring` and `webpki-roots`; verification is never disableable. Authentication failures are terminal and redacted. Envelope local parts are ASCII, domains IDNA, display/body Unicode; CRLF and NUL are rejected. Attachments require explicit filesystem opt-in, read bounded regular files only, reject symlinks/FIFOs/devices/directories, and never fetch URLs. Caps are hard: 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. JS buffers are copied before async. One active send returns `BUSY` with no queue. Timeouts are finite: connect 10s, operation 30s, total 120s, close 125s. Close is explicit and not GC-dependent. No pooling, no automatic retries, no SMTPUTF8, no delivery guarantee, and no per-recipient independent messages.
 
 ## Dependencies
 
@@ -86,6 +86,14 @@ Threat-model closure matrix, TLS/auth audit, validation/MIME/attachment audit, o
 
 `PHASE-11` is approved only when P11-005 closes all high-severity findings or explicitly rejects them with rationale, the security regression suite passes, and no convenience feature undermines the constraints. Phase 12 may begin only after this gate.
 
+## Evidence log
+
+Evidence labels follow the [AI implementation contract](../engineering/ai-implementation-contract.md).
+
+| Task | Evidence | State |
+| --- | --- | --- |
+| P11-001 | [`docs/security/threat-model-closure.md`](../security/threat-model-closure.md): the six trust boundaries walked with their controls, every abuse case AB-01…AB-14 mapped to implementation and test evidence, the four deferred cases assigned to P12/P14/P16, six residual risks accepted explicitly, and one medium note (no explicit panic guard in the binding) carried into P11-004. No case is unowned and no high-severity finding is open. | IN REVIEW |
+
 ## Status
 
-NOT STARTED.
+IN PROGRESS. P11-001 is IN REVIEW; P11-002 to P11-005 are NOT STARTED.
