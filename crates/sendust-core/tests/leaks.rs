@@ -69,9 +69,20 @@ fn open_fds() -> usize {
         .unwrap_or(0)
 }
 
+/// Descriptor counts are process-wide, so these probes must not overlap.
+#[cfg(unix)]
+async fn serial() -> tokio::sync::MutexGuard<'static, ()> {
+    static SERIAL: std::sync::OnceLock<tokio::sync::Mutex<()>> = std::sync::OnceLock::new();
+    SERIAL
+        .get_or_init(|| tokio::sync::Mutex::new(()))
+        .lock()
+        .await
+}
+
 #[cfg(unix)]
 #[tokio::test]
 async fn repeated_successful_sends_do_not_leak_descriptors() {
+    let _guard = serial().await;
     let server = serving(Script::default());
     let config = config(server.addr());
 
@@ -100,6 +111,7 @@ async fn repeated_successful_sends_do_not_leak_descriptors() {
 #[cfg(unix)]
 #[tokio::test]
 async fn repeated_failed_connections_do_not_leak_descriptors() {
+    let _guard = serial().await;
     let port = {
         let listener = TcpListener::bind(("127.0.0.1", 0)).expect("bind");
         listener.local_addr().expect("addr").port()
@@ -135,6 +147,7 @@ async fn repeated_failed_connections_do_not_leak_descriptors() {
 #[cfg(unix)]
 #[tokio::test]
 async fn mixed_stress_loop_keeps_descriptors_and_outcomes_stable() {
+    let _guard = serial().await;
     let server = serving(Script::default());
     let good = config(server.addr());
     let refused_port = {
@@ -186,6 +199,7 @@ async fn mixed_stress_loop_keeps_descriptors_and_outcomes_stable() {
 #[cfg(unix)]
 #[tokio::test]
 async fn repeated_tls_failures_do_not_leak_descriptors() {
+    let _guard = serial().await;
     let server = serving(Script::default());
     // No fixture root is trusted here, so every handshake fails closed.
     let config = SmtpConfig::new("127.0.0.1", server.addr().port(), SmtpSecurity::ImplicitTls)
