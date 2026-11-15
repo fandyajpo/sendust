@@ -1,6 +1,6 @@
 # Phase 09 — Public delivery API
 
-**Phase status:** IN PROGRESS  
+**Phase status:** COMPLETED  
 **Phase dependency:** Phase 05, Phase 06, Phase 08  
 **Companion references:** [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md)
 
@@ -17,7 +17,7 @@ In scope: TypeScript types, transport factory/options, send method, close method
 ### P09-001 — Define public TypeScript types and transport lifecycle API
 
 - **Size:** L
-- **Status:** IN REVIEW
+- **Status:** COMPLETED
 - **Prerequisites:** P05-005, P06-005
 - **Description:** Define the public `Transport` with open configuration, one `send` operation, and explicit `close`. Expose options for relay, TLS, auth, timeouts, attachments opt-in, and caps, with defaults matching architecture. Types must represent relay-accepted results and recipient accepted/rejected/unknown statuses. Close is required for deterministic shutdown; AbortSignal is optional and not required for MVP.
 - **Evidence criteria:** Type declarations compile and include no `any` escape for results/errors. API docs state success means relay acceptance, not delivery, and that one active send returns `BUSY`. Timeout defaults are visible: connect 10s, operation 30s, total 120s, close 125s.
@@ -25,7 +25,7 @@ In scope: TypeScript types, transport factory/options, send method, close method
 ### P09-002 — Implement send composition and result mapping
 
 - **Size:** L
-- **Status:** IN REVIEW
+- **Status:** COMPLETED
 - **Prerequisites:** P09-001, P06-005
 - **Description:** Implement `send` by validating public input, calling napi, and mapping results without reinterpreting core statuses. Compose message body, recipients, and attachments through the binding. Enforce no retry and no per-recipient fan-out. Surface overall `accepted`, `rejected`, `unknown`, recipient accepted/rejected/unknown, and `BUSY` exactly as defined.
 - **Evidence criteria:** Tests cover successful relay acceptance, pre-DATA rejection, mixed RCPT ADR behavior, explicit final DATA rejection and genuinely unknown post-DATA disposition, and concurrent `BUSY`. Assert only one SMTP transaction for unknown results. Result objects contain no delivery claim.
@@ -33,7 +33,7 @@ In scope: TypeScript types, transport factory/options, send method, close method
 ### P09-003 — Implement public error classes and redaction
 
 - **Size:** M
-- **Status:** IN REVIEW
+- **Status:** COMPLETED
 - **Prerequisites:** P09-001
 - **Description:** Define stable error classes/codes for validation, limits, configuration, TLS, authentication, protocol, timeout, closed, and busy. Preserve machine-readable fields while redacting credentials, body content, attachment bytes, and local paths where appropriate. Ensure errors are catchable and do not require parsing message strings.
 - **Evidence criteria:** Golden tests cover every class/code. Redaction tests search serialized errors for password, body marker, attachment marker, and absolute path; none appear. Error inheritance and `instanceof` behavior are tested.
@@ -41,7 +41,7 @@ In scope: TypeScript types, transport factory/options, send method, close method
 ### P09-004 — Implement explicit close and busy behavior at the public boundary
 
 - **Size:** M
-- **Status:** IN REVIEW
+- **Status:** COMPLETED
 - **Prerequisites:** P09-001, P09-002
 - **Description:** Expose idempotent `close()` with deadline-bounded drain and `open -> closing -> closed` observability. Calls after close fail with a stable closed error. A second concurrent send fails immediately with `BUSY` and never queues. AbortSignal may be accepted only if it maps to the same bounded close semantics; it must not be required.
 - **Evidence criteria:** Tests cover double close, send during close, send after close, concurrent send, close during connect/DATA, and close deadline. BUSY asserts no second connection. No queue exists. AbortSignal absence is a passing baseline.
@@ -49,7 +49,7 @@ In scope: TypeScript types, transport factory/options, send method, close method
 ### P09-005 — Public API contract gate and usage examples
 
 - **Size:** S
-- **Status:** IN REVIEW
+- **Status:** COMPLETED
 - **Prerequisites:** P09-001, P09-002, P09-003, P09-004
 - **Description:** Validate the public API against the frozen contract with compile-time type tests and runnable examples using the fake relay. Document relay-accepted semantics, caps, lifecycle, attachment opt-in, and no-retry behavior. Confirm no hidden feature creep.
 - **Evidence criteria:** Type tests pass; examples run locally with fake SMTP/TLS only. Contract checklist covers all statuses, errors, limits, close, BUSY, attachments, and semantics. No pooling, retry, SMTPUTF8, URL attachment, or required AbortSignal appears.
@@ -92,12 +92,12 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 
 | Task | Evidence | State |
 | --- | --- | --- |
-| P09-001 | `ts/src/types.ts` documents the frozen contract: relay-accepted results, recipient statuses, `BUSY`, timeout defaults (connect 10 s, operation 30 s, total 120 s, close 125 s), cap defaults, and attachment shapes, with no `any`. `Transport` documents the `open -> closing -> closed` lifecycle, one active send, and `TIMEOUT_CLOSE`. `AuthOptions.method` (`plain`/`login`) is now honoured end to end: `SmtpCredentials::with_mechanism`, `choose_auth` in the native client (an unadvertised forced mechanism fails with `AUTH_UNSUPPORTED`), the binding mapping, and the facade. Tests: `ts/test/types.test.ts` compile-time checks (result shape, transport surface, read-only state, rejected options and URL attachments), `the_engine_prefers_plain_then_login`, `an_explicit_mechanism_must_be_advertised`, and a `check-architecture` rule that fails on any `any` in the shared TypeScript. The facade also rejects unknown option keys, nested or top-level, with `VALIDATION_INVALID_OPTION`. | IN REVIEW |
-| P09-002 | `ts/src/results.ts` maps the native payload to `SendResult` verbatim — `accepted`/`rejected`/`unknown` pass through, recipients keep their order and status, no delivery field is added, and an undocumented status is an internal error rather than a silent pass. Attachments without `contentType` now infer it from the filename extension using the fixed map documented in the public contract (`attachments::infer_content_type`, applied by the MIME renderer). Tests: `ts/test/results.test.ts` (accepted, rejected, unknown, mixed recipients, undocumented statuses), `infers_a_content_type_from_the_extension`, `infers_an_attachment_content_type_from_the_filename`, plus facade tests for pre-connect validation and a second concurrent send returning `TRANSPORT_BUSY`. Validation also rejects an empty or whitespace-only subject and reports a missing From as `VALIDATION_MISSING_FROM` rather than an adapter conversion error. | IN REVIEW |
-| P09-003 | `ts/src/errors.ts` adds one class per category (`SendustValidationError`, `Configuration`, `Limit`, `Tls`, `Authentication`, `Protocol`, `Timeout`, `Closed`, `Busy`, `Internal`), all extending `SendustError`, with `fromNative` selecting the class from the payload category and rejecting an unknown category. Tests: `ts/test/errors.test.ts` walks all 33 stable codes through `fromNative` and asserts the class, category, and code; checks the `instanceof` hierarchy; and proves redaction end to end — a password, a body marker, and an attachment path used in real sends never appear in the serialized error. `every_code_renders_without_a_secret_marker` does the same for every core code. | IN REVIEW |
-| P09-004 | Close and busy are verified at both layers. Facade: double close returns to `closed`; send after close and send during close reject with `TRANSPORT_CLOSED`; a second concurrent send rejects with `TRANSPORT_BUSY` and the fake relay records exactly one connection; close during connect aborts the handshake and rejects the send with `TRANSPORT_CLOSED`. Core: `lifecycle` tests cover the `open -> closing -> closed` machine, idempotent close, no dial on BUSY, drain of an active send, and the `TIMEOUT_CLOSE` deadline. No queue exists and AbortSignal is absent, as the contract requires. Open item recorded for P10-001: a close that interrupts an in-flight DATA should leave the accepted subset `unknown`, but `close()` currently aborts the task and reports `TRANSPORT_CLOSED`; stage-aware cancellation needs the delivery task to report its progress. | IN REVIEW |
-| P09-005 | [QG-09 gate record](../gates/phase-09.md): the contract checklist for public-api sections 1–11, the compile-time surface lock (exact `keyof` sets for options and message, rejected pooling/plaintext/URL/mutable-state forms), the feature-creep check, and the executed evidence. Submitted, not approved. | IN REVIEW |
+| P09-001 | `ts/src/types.ts` documents the frozen contract: relay-accepted results, recipient statuses, `BUSY`, timeout defaults (connect 10 s, operation 30 s, total 120 s, close 125 s), cap defaults, and attachment shapes, with no `any`. `Transport` documents the `open -> closing -> closed` lifecycle, one active send, and `TIMEOUT_CLOSE`. `AuthOptions.method` (`plain`/`login`) is now honoured end to end: `SmtpCredentials::with_mechanism`, `choose_auth` in the native client (an unadvertised forced mechanism fails with `AUTH_UNSUPPORTED`), the binding mapping, and the facade. Tests: `ts/test/types.test.ts` compile-time checks (result shape, transport surface, read-only state, rejected options and URL attachments), `the_engine_prefers_plain_then_login`, `an_explicit_mechanism_must_be_advertised`, and a `check-architecture` rule that fails on any `any` in the shared TypeScript. The facade also rejects unknown option keys, nested or top-level, with `VALIDATION_INVALID_OPTION`. | COMPLETED |
+| P09-002 | `ts/src/results.ts` maps the native payload to `SendResult` verbatim — `accepted`/`rejected`/`unknown` pass through, recipients keep their order and status, no delivery field is added, and an undocumented status is an internal error rather than a silent pass. Attachments without `contentType` now infer it from the filename extension using the fixed map documented in the public contract (`attachments::infer_content_type`, applied by the MIME renderer). Tests: `ts/test/results.test.ts` (accepted, rejected, unknown, mixed recipients, undocumented statuses), `infers_a_content_type_from_the_extension`, `infers_an_attachment_content_type_from_the_filename`, plus facade tests for pre-connect validation and a second concurrent send returning `TRANSPORT_BUSY`. Validation also rejects an empty or whitespace-only subject and reports a missing From as `VALIDATION_MISSING_FROM` rather than an adapter conversion error. | COMPLETED |
+| P09-003 | `ts/src/errors.ts` adds one class per category (`SendustValidationError`, `Configuration`, `Limit`, `Tls`, `Authentication`, `Protocol`, `Timeout`, `Closed`, `Busy`, `Internal`), all extending `SendustError`, with `fromNative` selecting the class from the payload category and rejecting an unknown category. Tests: `ts/test/errors.test.ts` walks all 33 stable codes through `fromNative` and asserts the class, category, and code; checks the `instanceof` hierarchy; and proves redaction end to end — a password, a body marker, and an attachment path used in real sends never appear in the serialized error. `every_code_renders_without_a_secret_marker` does the same for every core code. | COMPLETED |
+| P09-004 | Close and busy are verified at both layers. Facade: double close returns to `closed`; send after close and send during close reject with `TRANSPORT_CLOSED`; a second concurrent send rejects with `TRANSPORT_BUSY` and the fake relay records exactly one connection; close during connect aborts the handshake and rejects the send with `TRANSPORT_CLOSED`. Core: `lifecycle` tests cover the `open -> closing -> closed` machine, idempotent close, no dial on BUSY, drain of an active send, and the `TIMEOUT_CLOSE` deadline. No queue exists and AbortSignal is absent, as the contract requires. Open item recorded for P10-001: a close that interrupts an in-flight DATA should leave the accepted subset `unknown`, but `close()` currently aborts the task and reports `TRANSPORT_CLOSED`; stage-aware cancellation needs the delivery task to report its progress. | COMPLETED |
+| P09-005 | [QG-09 gate record](../gates/phase-09.md): the contract checklist for public-api sections 1–11, the compile-time surface lock (exact `keyof` sets for options and message, rejected pooling/plaintext/URL/mutable-state forms), the feature-creep check, and the executed evidence. Submitted, not approved. | COMPLETED |
 
 ## Status
 
-IN PROGRESS. P09-001 to P09-005 are IN REVIEW; the PHASE-09 gate record is submitted for project owner approval.
+COMPLETED. PHASE-09 is APPROVED (project owner, 2026-11-15). The deferred items — close-during-DATA `unknown` (P10-001) and the JS fake-relay example (P12 QA) — remain recorded in the gate record.

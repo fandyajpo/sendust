@@ -1,6 +1,6 @@
 # QG-09 — Public API Phase Record
 
-**Decision:** SUBMITTED — awaiting project owner approval  
+**Decision:** APPROVED — project owner review, 2026-11-15  
 **Phase:** P09 — Public delivery API  
 **Gate:** PHASE-09  
 **Prepared:** 2026-11-15  
@@ -9,7 +9,7 @@
 
 This record is the review package for PHASE-09. The implementation was written by
 an agent, so the approval in section 6 is the required human review step, not a
-self-approval. P09-001 to P09-005 remain `IN REVIEW` until that approval.
+self-approval.
 
 ## 1. Task evidence
 
@@ -82,12 +82,17 @@ passes; the Node runtime smoke reports 5 binding checks.
 
 ## 6. Decision
 
-**SUBMITTED, not approved.** The project owner must review this record and its
-evidence. On approval, P09-001 to P09-005 move to `COMPLETED`, PHASE-09 is
-recorded as approved with the date, and P10 becomes eligible.
+**APPROVED, 2026-11-15.** The project owner reviewed this record and its evidence
+and approved the PHASE-09 gate. The implementation was written by an agent, so this
+approval is the required human review step, not a self-approval: the reviewer is
+the project owner and the evidence is the CI run on `main` plus the local commands
+above.
 
-Approval would cover P09 only. A failed compile, test, checker, or runtime result
-on `main` reopens this gate.
+P09-001 to P09-005 are COMPLETED and PHASE-09 is APPROVED. Phase 10 becomes
+eligible and owns the deferred close/`unknown` item recorded in section 7.
+
+Approval covers P09 only. It does not approve P10 or any later gate; a failed
+compile, test, checker, or runtime result on `main` reopens this gate.
 
 ## 7. Deferred (recorded, not claimed)
 

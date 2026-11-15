@@ -58,7 +58,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 44 | [PHASE-06 SMTP engine record](gates/phase-06.md) | P06 gate checklist, native engine evidence, and approved decision |
 | 45 | [PHASE-07 MIME record](gates/phase-07.md) | P07 gate checklist, conformance evidence, and approved decision |
 | 46 | [PHASE-08 attachments record](gates/phase-08.md) | P08 gate checklist, attachment fault matrix, and approved decision |
-| 47 | [PHASE-09 public API record](gates/phase-09.md) | P09 gate checklist, contract surface lock, and submitted decision |
+| 47 | [PHASE-09 public API record](gates/phase-09.md) | P09 gate checklist, contract surface lock, and approved decision |
 
 ## 2. Directory map
 
@@ -89,7 +89,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition. P09 is IN PROGRESS (P09-001 to P09-005 in review; the PHASE-09 record is submitted for owner approval); P10–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition. P09 is COMPLETED (PHASE-09 approved 2026-11-15); P10–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -115,9 +115,9 @@ P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P06-001–P06-005 | COMPLETED; PHASE-06 APPROVED (2026-11-14) |
 | P07-001–P07-005 | COMPLETED; PHASE-07 APPROVED (2026-11-14) |
 | P08-001–P08-005 | COMPLETED; PHASE-08 APPROVED (2026-11-15) |
-| P09-001–P09-005 | IN REVIEW; PHASE-09 record submitted for owner approval |
+| P09-001–P09-005 | COMPLETED; PHASE-09 APPROVED (2026-11-15) |
 | P10–P18 | NOT STARTED |
-| Next task | PHASE-09 approval — project owner review of the submitted QG-09 record |
+| Next task | P10-001 — start reliability hardening with the close/`unknown` item |
 
 ## 5. Conventions
 
