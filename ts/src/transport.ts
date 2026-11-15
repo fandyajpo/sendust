@@ -209,8 +209,7 @@ export class Transport {
     // option always reports a Sendust error even where the addon is missing.
     const native = toNativeOptions(options);
     // Snapshot the caps now; the caller's options object may be mutated later.
-    this.#perFileBytes =
-      options.limits?.maxAttachmentBytes ?? DEFAULT_LIMITS.maxAttachmentBytes;
+    this.#perFileBytes = options.limits?.maxAttachmentBytes ?? DEFAULT_LIMITS.maxAttachmentBytes;
     this.#totalBytes =
       options.limits?.maxTotalAttachmentBytes ?? DEFAULT_LIMITS.maxTotalAttachmentBytes;
     try {
