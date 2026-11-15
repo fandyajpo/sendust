@@ -5,7 +5,7 @@
  * validation, and delivery policy stay in `sendust-core`.
  */
 
-import { SendustError, fromNative } from "./errors.ts";
+import { SendustError, SendustValidationError, fromNative } from "./errors.ts";
 import { loadNative, type NativeTransport } from "./loader.ts";
 import { toSendResult } from "./results.ts";
 import type {
@@ -16,6 +16,43 @@ import type {
   TransportOptions,
   TransportState,
 } from "./types.ts";
+
+const TRANSPORT_KEYS = new Set([
+  "host",
+  "port",
+  "secure",
+  "auth",
+  "ehloName",
+  "timeouts",
+  "limits",
+  "attachments",
+]);
+const AUTH_KEYS = new Set(["user", "pass", "method"]);
+const TIMEOUT_KEYS = new Set(["connectMs", "operationMs", "totalMs", "closeMs"]);
+const LIMIT_KEYS = new Set([
+  "maxRecipients",
+  "maxAttachmentBytes",
+  "maxTotalAttachmentBytes",
+  "maxWireBytes",
+]);
+const ATTACHMENT_KEYS = new Set(["allowFileAccess"]);
+
+function invalidOption(): SendustValidationError {
+  return new SendustValidationError({
+    code: "VALIDATION_INVALID_OPTION",
+    category: "validation",
+    message: "invalid transport option",
+  });
+}
+
+/** Rejects unknown keys so a typo fails instead of being silently ignored. */
+function assertKnownKeys(value: object, allowed: Set<string>): void {
+  for (const key of Object.keys(value)) {
+    if (!allowed.has(key)) {
+      throw invalidOption();
+    }
+  }
+}
 
 function addressString(value: Address): string {
   if (typeof value === "string") {
@@ -39,6 +76,12 @@ function headerPairs(headers: Message["headers"]): Array<{ name: string; value: 
 }
 
 function toNativeOptions(options: TransportOptions): Record<string, unknown> {
+  assertKnownKeys(options, TRANSPORT_KEYS);
+  if (options.auth) assertKnownKeys(options.auth, AUTH_KEYS);
+  if (options.timeouts) assertKnownKeys(options.timeouts, TIMEOUT_KEYS);
+  if (options.limits) assertKnownKeys(options.limits, LIMIT_KEYS);
+  if (options.attachments) assertKnownKeys(options.attachments, ATTACHMENT_KEYS);
+
   const native: Record<string, unknown> = {
     host: options.host,
     port: options.port,

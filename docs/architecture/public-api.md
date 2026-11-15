@@ -27,7 +27,7 @@ No plugin registry, no transport subclasses, no streaming API, no callback API, 
 | `port` | `number` | required | integer 1–65535 |
 | `secure` | `"tls" \| "starttls"` | required | one of the two; no plaintext mode |
 | `auth` | `{ user, pass, method? }` | undefined | user non-empty; `method` `"plain"` or `"login"` |
-| `ehloName` | `string` | system hostname or `localhost` | valid hostname token; no CRLF |
+| `ehloName` | `string` | `localhost` | valid hostname token; no CRLF |
 | `timeouts.connectMs` | `number` | 10000 | integer 1000–10000; ≤ totalMs |
 | `timeouts.operationMs` | `number` | 30000 | integer 1000–30000; ≤ totalMs |
 | `timeouts.totalMs` | `number` | 120000 | integer 1000–120000; ≥ connectMs and operationMs |

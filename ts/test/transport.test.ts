@@ -3,7 +3,7 @@ import { createServer, type Socket } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { SendustError, createTransport, version, type Attachment } from "../src/index.ts";
+import { SendustError, SendustValidationError, createTransport, version, type Attachment } from "../src/index.ts";
 
 let available = true;
 try {
@@ -293,6 +293,26 @@ describe("sendust facade", () => {
     expect(code).toBe("PROTOCOL_CONNECTION_RESET");
   });
 
+  it("rejects unknown option keys before touching the relay", () => {
+    expect(() =>
+      createTransport({
+        host: "127.0.0.1",
+        port: 1,
+        secure: "tls",
+        pool: 4,
+      } as unknown as Parameters<typeof createTransport>[0]),
+    ).toThrow(SendustValidationError);
+
+    expect(() =>
+      createTransport({
+        host: "127.0.0.1",
+        port: 1,
+        secure: "tls",
+        limits: { maxWireBytes: 10, bogus: 1 },
+      } as unknown as Parameters<typeof createTransport>[0]),
+    ).toThrow(SendustValidationError);
+  });
+
   it.skipIf(!available)("validates a message before opening a connection", async () => {
     const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls" });
 
@@ -302,11 +322,25 @@ describe("sendust facade", () => {
     const withoutBody = await errorCode(
       transport.send({ from: "a@example.test", to: ["b@example.test"], subject: "x" }),
     );
+    const withoutSubject = await errorCode(
+      transport.send({ from: "a@example.test", to: ["b@example.test"], subject: "  ", text: "y" }),
+    );
     await transport.close();
 
     expect(withoutRecipient).toBe("VALIDATION_MISSING_RECIPIENT");
     expect(withoutBody).toBe("VALIDATION_INVALID_OPTION");
+    expect(withoutSubject).toBe("VALIDATION_INVALID_OPTION");
     expect(transport.state).toBe("closed");
+  });
+
+  it.skipIf(!available)("reports a missing From as VALIDATION_MISSING_FROM", async () => {
+    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls" });
+    const code = await errorCode(
+      transport.send({ to: ["b@example.test"], subject: "x", text: "y" } as never),
+    );
+    await transport.close();
+
+    expect(code).toBe("VALIDATION_MISSING_FROM");
   });
 
   it.skipIf(!available)("rejects a second concurrent send with TRANSPORT_BUSY", async () => {

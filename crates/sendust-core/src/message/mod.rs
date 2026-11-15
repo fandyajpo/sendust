@@ -174,7 +174,10 @@ impl OutgoingMessage {
     pub fn validate(&self, limits: Limits, policy: AttachmentPolicy) -> Result<(), Error> {
         // Stage 2: message identity. `from` is a typed mailbox, so a missing
         // From address is rejected where absence is representable (the binding),
-        // not here; an empty Subject is legal per RFC 5322.
+        // not here. The public contract requires a non-empty Subject.
+        if self.subject.trim().is_empty() {
+            return Err(Error::new(ErrorCode::ValidationInvalidOption));
+        }
         // Stage 3: recipient presence and count.
         if self.recipient_count() == 0 {
             return Err(Error::new(ErrorCode::ValidationMissingRecipient));
@@ -226,6 +229,20 @@ mod tests {
         HeaderValue::parse(input)
             .expect_err("must be rejected")
             .code()
+    }
+
+    #[test]
+    fn rejects_an_empty_subject() {
+        let mut message = message();
+        message.subject = "   ".to_string();
+
+        assert_eq!(
+            message
+                .validate(Limits::default(), AttachmentPolicy::Disabled)
+                .expect_err("empty subject")
+                .code(),
+            ErrorCode::ValidationInvalidOption
+        );
     }
 
     #[test]

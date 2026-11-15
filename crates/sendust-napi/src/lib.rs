@@ -80,12 +80,12 @@ pub struct AttachmentOptions {
 /// One outgoing message, fully copied before any async work begins.
 #[napi(object)]
 pub struct MessageOptions {
-    pub from: String,
+    pub from: Option<String>,
     pub to: Option<Vec<String>>,
     pub cc: Option<Vec<String>>,
     pub bcc: Option<Vec<String>>,
     pub reply_to: Option<Vec<String>>,
-    pub subject: String,
+    pub subject: Option<String>,
     pub text: Option<String>,
     pub html: Option<String>,
     pub headers: Option<Vec<HeaderPair>>,
@@ -396,14 +396,17 @@ fn build_message(options: MessageOptions) -> std::result::Result<OutgoingMessage
         .into_iter()
         .map(attachment)
         .collect::<std::result::Result<Vec<_>, _>>()?;
+    let from = options
+        .from
+        .ok_or_else(|| CoreError::new(ErrorCode::ValidationMissingFrom))?;
 
     Ok(OutgoingMessage {
-        from: Mailbox::parse(&options.from)?,
+        from: Mailbox::parse(&from)?,
         to: mailboxes(options.to)?,
         cc: mailboxes(options.cc)?,
         bcc: mailboxes(options.bcc)?,
         reply_to: mailboxes(options.reply_to)?,
-        subject: options.subject,
+        subject: options.subject.unwrap_or_default(),
         text: options.text,
         html: options.html,
         headers,
