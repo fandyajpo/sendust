@@ -715,7 +715,6 @@ mod file_reads {
 
     #[test]
     fn errors_never_carry_the_path() {
-
         let dir = TempDir::new();
         let path = dir.0.join("absent.bin");
         let error =
