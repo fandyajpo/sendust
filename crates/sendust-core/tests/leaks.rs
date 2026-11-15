@@ -9,8 +9,8 @@ use std::net::{SocketAddr, TcpListener};
 use std::path::{Path, PathBuf};
 
 use sendust_core::{
-    AttachmentPolicy, Delivery, ErrorCode, Limits, Mailbox, OutgoingMessage, SmtpConfig,
-    SmtpSecurity, SmtpTransport,
+    AttachmentPolicy, Delivery, DeliveryStatus, ErrorCode, Limits, Mailbox, OutgoingMessage,
+    SmtpConfig, SmtpSecurity, SmtpTransport,
 };
 use support::tls;
 use support::{FakeSmtp, Script};
@@ -130,6 +130,53 @@ async fn repeated_failed_connections_do_not_leak_descriptors() {
         after <= before + 2,
         "descriptor leak across refused connections: {before} -> {after}"
     );
+}
+
+#[cfg(unix)]
+#[tokio::test]
+async fn mixed_stress_loop_keeps_descriptors_and_outcomes_stable() {
+    let server = serving(Script::default());
+    let good = config(server.addr());
+    let refused_port = {
+        let listener = TcpListener::bind(("127.0.0.1", 0)).expect("bind");
+        listener.local_addr().expect("addr").port()
+    };
+    let refused = SmtpConfig::new("127.0.0.1", refused_port, SmtpSecurity::ImplicitTls)
+        .expect("valid relay")
+        .with_root_certificate_pem(ca_pem())
+        .expect("trusted fixture root");
+
+    for _ in 0..3 {
+        delivery(good.clone()).send(message()).await.expect("warm-up");
+        delivery(refused.clone())
+            .send(message())
+            .await
+            .expect_err("warm-up refused");
+    }
+    let before = open_fds();
+
+    for iteration in 0..100 {
+        if iteration % 2 == 0 {
+            let outcome = delivery(good.clone())
+                .send(message())
+                .await
+                .expect("stress send");
+            assert_eq!(outcome.status(), DeliveryStatus::Accepted);
+        } else {
+            let error = delivery(refused.clone())
+                .send(message())
+                .await
+                .expect_err("stress refusal");
+            assert_eq!(error.code(), ErrorCode::ProtocolConnectionReset);
+        }
+    }
+
+    let after = open_fds();
+    assert!(
+        after <= before + 2,
+        "descriptor leak across the stress loop: {before} -> {after}"
+    );
+    assert_eq!(server.trace().count_prefix("DATA"), 50);
 }
 
 #[cfg(unix)]
