@@ -62,6 +62,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 48 | [PHASE-10 reliability record](gates/phase-10.md) | P10 gate checklist, fault matrix, stress evidence, and approved decision |
 | 49 | [Threat-model closure](security/threat-model-closure.md) | P11-001 abuse-case matrix, boundaries, residual risks, and ownership |
 | 50 | [TLS and authentication audit](security/tls-auth-audit.md) | P11-002 configuration, certificate and auth matrix, and dependency proof |
+| 51 | [Validation, MIME, and attachment audit](security/injection-attachment-audit.md) | P11-003 injection fixtures, filename and path rules, MIME rendering, attachment reads, and cap placement |
 
 ## 2. Directory map
 
@@ -92,7 +93,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition. P11 is IN PROGRESS (P11-001 and P11-002 in review); P12–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition. P11 is IN PROGRESS (P11-001 to P11-003 in review); P12–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -120,9 +121,9 @@ P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P08-001–P08-005 | COMPLETED; PHASE-08 APPROVED (2026-11-15) |
 | P09-001–P09-005 | COMPLETED; PHASE-09 APPROVED (2026-11-15) |
 | P10-001–P10-005 | COMPLETED; PHASE-10 APPROVED (2026-11-15) |
-| P11-001–P11-002 | IN REVIEW |
-| P11-003–P18 | NOT STARTED |
-| Next task | P11-003 — audit validation, MIME, and attachment security |
+| P11-001–P11-003 | IN REVIEW |
+| P11-004–P18 | NOT STARTED |
+| Next task | P11-004 — audit memory ownership, redaction, and denial-of-service bounds |
 
 ## 5. Conventions
 

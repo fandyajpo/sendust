@@ -33,7 +33,7 @@ In scope: threat-model execution, TLS verification proof, secret redaction, inpu
 ### P11-003 — Audit validation, MIME, and attachment security
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P11-001, P07-005, P08-005
 - **Description:** Verify address parsing, IDNA, header encoding, MIME rendering, filename handling, and attachment reads against injection, path traversal, special files, TOCTOU, and resource exhaustion. Confirm filesystem access is disabled by default and URLs are impossible. Check all caps are enforced before network and before unbounded allocation.
 - **Evidence criteria:** Injection fixtures for CRLF, bare LF, NUL, header-like names, and path-like filenames fail safely. Attachment fixtures for symlink, FIFO, device, directory, growing file, and over-limit fail without partial sends. Filesystem-disabled default is proven. No URL code path exists.
@@ -94,7 +94,8 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 | --- | --- | --- |
 | P11-001 | [`docs/security/threat-model-closure.md`](../security/threat-model-closure.md): the six trust boundaries walked with their controls, every abuse case AB-01…AB-14 mapped to implementation and test evidence, the four deferred cases assigned to P12/P14/P16, six residual risks accepted explicitly, and one medium note (no explicit panic guard in the binding) carried into P11-004. No case is unowned and no high-severity finding is open. | IN REVIEW |
 | P11-002 | [`docs/security/tls-auth-audit.md`](../security/tls-auth-audit.md): the rustls configuration, trust store, hostname checks, protocol floor, and the absence of any verification switch; the certificate failure matrix; the authentication matrix (PLAIN/LOGIN only, TLS required, forced mechanism must be advertised, `535` terminal with no `MAIL`). The architecture check now fails on any TLS bypass marker and on `native-tls`, `openssl`, or `rustls-native-certs`. `auth_failure_is_an_error_and_never_mails` renders `{error:?} {error}` and asserts neither the password nor the username appears. | IN REVIEW |
+| P11-003 | [`docs/security/injection-attachment-audit.md`](../security/injection-attachment-audit.md): CRLF/bare-LF/NUL/reserved-header/IDNA/overlong fixtures mapped to their codes, filename and path normalization, MIME folding and RFC 2231 encoding, the symlink/FIFO/device/directory/growth matrix, the filesystem-disabled default, and cap placement. The audit found one low defect — the facade copied buffer attachments before any size check — fixed by `ts/src/limits.ts`, which rejects over-cap buffers before the copy and is now covered by `limits.test.ts` and two facade tests. `check-architecture` gained a cap-parity check between `Limits::default()` and `DEFAULT_LIMITS`, and a URL-scheme scan over the core, the binding, and the shared TypeScript. `a_symlinked_file_never_reaches_the_port` proves a non-regular file never dials. | IN REVIEW |
 
 ## Status
 
-IN PROGRESS. P11-001 and P11-002 are IN REVIEW; P11-003 to P11-005 are NOT STARTED.
+IN PROGRESS. P11-001 to P11-003 are IN REVIEW; P11-004 and P11-005 are NOT STARTED.
