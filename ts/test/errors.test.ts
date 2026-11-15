@@ -157,8 +157,8 @@ describe("public error classes", () => {
   it("returns null for a foreign error", () => {
     expect(fromNative(new Error("plain"))).toBeNull();
     expect(fromNative("not an error")).toBeNull();
-    expect(fromNative(nativeError({ code: "INTERNAL", category: "internal", message: "m" }))).toBeInstanceOf(
-      SendustInternalError,
-    );
+    expect(
+      fromNative(nativeError({ code: "INTERNAL", category: "internal", message: "m" })),
+    ).toBeInstanceOf(SendustInternalError);
   });
 });
