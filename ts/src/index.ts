@@ -10,7 +10,19 @@
  */
 
 export { createTransport, Transport } from "./transport.ts";
-export { SendustError } from "./errors.ts";
+export {
+  SendustAuthenticationError,
+  SendustBusyError,
+  SendustClosedError,
+  SendustConfigurationError,
+  SendustError,
+  SendustInternalError,
+  SendustLimitError,
+  SendustProtocolError,
+  SendustTimeoutError,
+  SendustTlsError,
+  SendustValidationError,
+} from "./errors.ts";
 export type { ErrorCategory } from "./errors.ts";
 export type {
   Address,

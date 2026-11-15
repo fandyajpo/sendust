@@ -368,6 +368,28 @@ mod tests {
     }
 
     #[test]
+    fn every_code_renders_without_a_secret_marker() {
+        for code in ErrorCode::ALL {
+            let error = Error::new(*code).with_details(
+                ErrorDetails::default()
+                    .host("relay.test")
+                    .port(465)
+                    .stage(Stage::Auth)
+                    .recipient("bob@example.test")
+                    .smtp_code(535)
+                    .smtp_enhanced_code("5.7.8"),
+            );
+            let rendered = format!("{error:?} {error}");
+            for marker in ["hunter2", "SECRET_BODY", "/tmp/secret"] {
+                assert!(
+                    !rendered.contains(marker),
+                    "{code:?} leaked {marker}: {rendered}"
+                );
+            }
+        }
+    }
+
+    #[test]
     fn categories_expose_stable_strings() {
         let categories = [
             ErrorCategory::Validation,

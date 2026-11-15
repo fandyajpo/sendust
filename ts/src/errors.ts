@@ -1,8 +1,10 @@
 /**
- * Public error class and stable error code re-exports.
+ * Public error classes and stable error categories.
  *
  * The native layer reports a redacted JSON payload; the message text is never a
- * contract. Branch on `code`/`category`, exactly as the error model requires.
+ * contract. Branch on `code`, on `category`, or on the class — never by parsing
+ * a message string. Every class extends `SendustError`, so a single catch can
+ * handle all of them, while a narrower `catch` can select one category.
  */
 
 export type ErrorCategory =
@@ -29,9 +31,9 @@ const PAYLOAD_PREFIX = "SENDUST:";
 /**
  * Catchable error raised by Sendust.
  *
- * Branch on `code` (a stable string) and `category`; the message is diagnostic
- * text, never a contract, and is redacted of credentials, body content,
- * attachment bytes, and local paths.
+ * Carries the stable `code`, its `category`, and the whitelisted `details`
+ * (host, port, stage, recipient, SMTP codes). Credentials, body content,
+ * attachment bytes, and absolute paths are never present.
  */
 export class SendustError extends Error {
   readonly code: string;
@@ -40,14 +42,61 @@ export class SendustError extends Error {
 
   constructor(payload: ErrorPayload) {
     super(payload.message);
-    this.name = "SendustError";
+    this.name = new.target.name;
     this.code = payload.code;
     this.category = payload.category;
     this.details = payload.details ?? {};
   }
 }
 
-/** Maps a native rejection to a `SendustError`, or returns null when foreign. */
+/** Malformed input: options, addresses, headers, message, attachments. */
+export class SendustValidationError extends SendustError {}
+
+/** Transport or attachment configuration that cannot be used as given. */
+export class SendustConfigurationError extends SendustError {}
+
+/** A hard cap was exceeded. */
+export class SendustLimitError extends SendustError {}
+
+/** Certificate, handshake, or protocol-version failure. */
+export class SendustTlsError extends SendustError {}
+
+/** The relay rejected the credentials or offered no supported mechanism. */
+export class SendustAuthenticationError extends SendustError {}
+
+/** The relay's behaviour broke the protocol. */
+export class SendustProtocolError extends SendustError {}
+
+/** A connect, operation, total, or close budget expired. */
+export class SendustTimeoutError extends SendustError {}
+
+/** The transport is closed or closing. */
+export class SendustClosedError extends SendustError {}
+
+/** Another send is already active on this transport. */
+export class SendustBusyError extends SendustError {}
+
+/** An invariant was violated; report a bug rather than retrying. */
+export class SendustInternalError extends SendustError {}
+
+const CATEGORY_CLASSES: Record<ErrorCategory, typeof SendustError> = {
+  validation: SendustValidationError,
+  configuration: SendustConfigurationError,
+  limit: SendustLimitError,
+  tls: SendustTlsError,
+  authentication: SendustAuthenticationError,
+  protocol: SendustProtocolError,
+  timeout: SendustTimeoutError,
+  closed: SendustClosedError,
+  busy: SendustBusyError,
+  internal: SendustInternalError,
+};
+
+function isErrorCategory(value: unknown): value is ErrorCategory {
+  return typeof value === "string" && Object.hasOwn(CATEGORY_CLASSES, value);
+}
+
+/** Maps a native rejection to a typed `SendustError`, or null when foreign. */
 export function fromNative(error: unknown): SendustError | null {
   if (!(error instanceof Error)) {
     return null;
@@ -58,7 +107,11 @@ export function fromNative(error: unknown): SendustError | null {
   }
   try {
     const payload = JSON.parse(error.message.slice(index + PAYLOAD_PREFIX.length)) as ErrorPayload;
-    return new SendustError(payload);
+    if (!isErrorCategory(payload.category)) {
+      return null;
+    }
+    const ErrorClass = CATEGORY_CLASSES[payload.category];
+    return new ErrorClass(payload);
   } catch {
     return null;
   }

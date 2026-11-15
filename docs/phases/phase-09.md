@@ -33,7 +33,7 @@ In scope: TypeScript types, transport factory/options, send method, close method
 ### P09-003 — Implement public error classes and redaction
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P09-001
 - **Description:** Define stable error classes/codes for validation, limits, configuration, TLS, authentication, protocol, timeout, closed, and busy. Preserve machine-readable fields while redacting credentials, body content, attachment bytes, and local paths where appropriate. Ensure errors are catchable and do not require parsing message strings.
 - **Evidence criteria:** Golden tests cover every class/code. Redaction tests search serialized errors for password, body marker, attachment marker, and absolute path; none appear. Error inheritance and `instanceof` behavior are tested.
@@ -94,7 +94,8 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 | --- | --- | --- |
 | P09-001 | `ts/src/types.ts` documents the frozen contract: relay-accepted results, recipient statuses, `BUSY`, timeout defaults (connect 10 s, operation 30 s, total 120 s, close 125 s), cap defaults, and attachment shapes, with no `any`. `Transport` documents the `open -> closing -> closed` lifecycle, one active send, and `TIMEOUT_CLOSE`. `AuthOptions.method` (`plain`/`login`) is now honoured end to end: `SmtpCredentials::with_mechanism`, `choose_auth` in the native client (an unadvertised forced mechanism fails with `AUTH_UNSUPPORTED`), the binding mapping, and the facade. Tests: `ts/test/types.test.ts` compile-time checks (result shape, transport surface, read-only state, rejected options and URL attachments), `the_engine_prefers_plain_then_login`, `an_explicit_mechanism_must_be_advertised`, and a `check-architecture` rule that fails on any `any` in the shared TypeScript. | IN REVIEW |
 | P09-002 | `ts/src/results.ts` maps the native payload to `SendResult` verbatim — `accepted`/`rejected`/`unknown` pass through, recipients keep their order and status, no delivery field is added, and an undocumented status is an internal error rather than a silent pass. Attachments without `contentType` now infer it from the filename extension using the fixed map documented in the public contract (`attachments::infer_content_type`, applied by the MIME renderer). Tests: `ts/test/results.test.ts` (accepted, rejected, unknown, mixed recipients, undocumented statuses), `infers_a_content_type_from_the_extension`, `infers_an_attachment_content_type_from_the_filename`, plus facade tests for pre-connect validation and a second concurrent send returning `TRANSPORT_BUSY`. | IN REVIEW |
+| P09-003 | `ts/src/errors.ts` adds one class per category (`SendustValidationError`, `Configuration`, `Limit`, `Tls`, `Authentication`, `Protocol`, `Timeout`, `Closed`, `Busy`, `Internal`), all extending `SendustError`, with `fromNative` selecting the class from the payload category and rejecting an unknown category. Tests: `ts/test/errors.test.ts` walks all 33 stable codes through `fromNative` and asserts the class, category, and code; checks the `instanceof` hierarchy; and proves redaction end to end — a password, a body marker, and an attachment path used in real sends never appear in the serialized error. `every_code_renders_without_a_secret_marker` does the same for every core code. | IN REVIEW |
 
 ## Status
 
-IN PROGRESS. P09-001 and P09-002 are IN REVIEW; P09-003 to P09-005 are NOT STARTED.
+IN PROGRESS. P09-001 to P09-003 are IN REVIEW; P09-004 and P09-005 are NOT STARTED.
