@@ -68,6 +68,8 @@ fn compose(
         return Err(Error::new(ErrorCode::ValidationInvalidAttachment));
     }
 
+    let cap = limits.max_wire_bytes();
+    preflight(message, cap)?;
     let body = build_body(message)?;
     let attachments: Vec<Vec<u8>> = message
         .attachments
@@ -81,6 +83,7 @@ fn compose(
                 filename,
                 content_type.as_deref(),
                 bytes,
+                cap,
             )),
             Attachment::File(_) => None,
         })
@@ -108,9 +111,9 @@ fn compose(
     if attachments.is_empty() {
         body.push_top_headers(&mut out)?;
         out.extend_from_slice(CRLF.as_bytes());
-        body.push_content(&mut out);
+        body.push_content(&mut out, cap)?;
     } else {
-        let mut parts = vec![body.as_part()?];
+        let mut parts = vec![body.as_part(cap)?];
         parts.extend(attachments);
         let boundary = unique_boundary(&parts);
         push_header(
@@ -161,20 +164,23 @@ impl Body {
         Ok(())
     }
 
-    fn push_content(&self, out: &mut Vec<u8>) {
+    fn push_content(&self, out: &mut Vec<u8>, cap: u64) -> Result<(), Error> {
         match self {
-            Self::Single { bytes, .. } => push_base64(out, bytes),
+            Self::Single { bytes, .. } => push_base64(out, bytes, cap),
             Self::Multipart {
                 boundary, parts, ..
-            } => push_multipart(out, boundary, parts),
+            } => {
+                push_multipart(out, boundary, parts);
+                Ok(())
+            }
         }
     }
 
-    fn as_part(&self) -> Result<Vec<u8>, Error> {
+    fn as_part(&self, cap: u64) -> Result<Vec<u8>, Error> {
         let mut part = Vec::new();
         self.push_top_headers(&mut part)?;
         part.extend_from_slice(CRLF.as_bytes());
-        self.push_content(&mut part);
+        self.push_content(&mut part, cap)?;
         Ok(part)
     }
 }
@@ -247,6 +253,7 @@ fn build_attachment_part(
     filename: &str,
     content_type: Option<&str>,
     bytes: &[u8],
+    cap: u64,
 ) -> Result<Vec<u8>, Error> {
     let filename = crate::attachments::normalize_filename(filename)?;
     let mut part = Vec::new();
@@ -262,7 +269,7 @@ fn build_attachment_part(
         &content_disposition(&filename),
     )?;
     part.extend_from_slice(CRLF.as_bytes());
-    push_base64(&mut part, bytes);
+    push_base64(&mut part, bytes, cap)?;
     Ok(part)
 }
 
@@ -426,13 +433,71 @@ fn contains(haystack: &[u8], needle: &[u8]) -> bool {
         .any(|window| window == needle)
 }
 
-fn push_base64(out: &mut Vec<u8>, data: &[u8]) {
-    for line in base64(data).as_bytes().chunks(76) {
-        out.extend_from_slice(line);
-        out.extend_from_slice(CRLF.as_bytes());
+/// Rejects a message whose encoded bodies alone cannot fit the wire cap, before
+/// any body is normalized or base64-encoded.
+fn preflight(message: &OutgoingMessage, cap: u64) -> Result<(), Error> {
+    let mut needed: u64 = 0;
+    for text in [message.text.as_deref(), message.html.as_deref()]
+        .into_iter()
+        .flatten()
+    {
+        needed = needed.saturating_add(base64_wire_len(normalized_len(text)));
     }
+    for attachment in &message.attachments {
+        if let Attachment::Bytes { bytes, .. } = attachment {
+            needed = needed.saturating_add(base64_wire_len(bytes.len() as u64));
+        }
+    }
+    if needed > cap {
+        return Err(Error::new(ErrorCode::LimitWireBytes));
+    }
+    Ok(())
 }
 
+/// Length of the CRLF-normalized UTF-8 form, without allocating it.
+fn normalized_len(text: &str) -> u64 {
+    let mut len: u64 = 0;
+    let mut characters = text.chars().peekable();
+    while let Some(character) = characters.next() {
+        len += match character {
+            '\r' => {
+                if characters.peek() == Some(&'\n') {
+                    characters.next();
+                }
+                2
+            }
+            '\n' => 2,
+            other => other.len_utf8() as u64,
+        };
+    }
+    len
+}
+
+/// Bytes a base64 payload occupies including 76-column wrapping and CRLF.
+fn base64_wire_len(raw: u64) -> u64 {
+    if raw == 0 {
+        return 0;
+    }
+    let encoded = raw.div_ceil(3) * 4;
+    encoded + encoded.div_ceil(76) * 2
+}
+
+fn push_base64(out: &mut Vec<u8>, data: &[u8], cap: u64) -> Result<(), Error> {
+    // 57 raw bytes encode to exactly 76 base64 characters, so each chunk is one
+    // output line and no complete encoded string is ever allocated.
+    for chunk in data.chunks(57) {
+        let line = STANDARD.encode(chunk);
+        let needed = out.len() as u64 + line.len() as u64 + 2;
+        if needed > cap {
+            return Err(Error::new(ErrorCode::LimitWireBytes));
+        }
+        out.extend_from_slice(line.as_bytes());
+        out.extend_from_slice(CRLF.as_bytes());
+    }
+    Ok(())
+}
+
+#[cfg(test)]
 fn base64(data: &[u8]) -> String {
     STANDARD.encode(data)
 }
@@ -608,6 +673,31 @@ mod tests {
                 line.len()
             );
         }
+    }
+
+    #[test]
+    fn oversized_bodies_are_rejected_by_preflight() {
+        use crate::config::MIB;
+
+        let mut message = message();
+        // Larger than the wire cap can ever hold even before headers.
+        message.text = Some("a".repeat(40 * MIB as usize));
+        assert_eq!(
+            serialize(&message, Limits::default(), AttachmentPolicy::Disabled)
+                .expect_err("over cap")
+                .code(),
+            ErrorCode::LimitWireBytes
+        );
+
+        let mut message = message();
+        message.text = Some("a".repeat((10 * MIB) as usize));
+        message.html = Some("a".repeat((10 * MIB) as usize));
+        assert_eq!(
+            serialize(&message, Limits::default(), AttachmentPolicy::Disabled)
+                .expect_err("both parts over cap")
+                .code(),
+            ErrorCode::LimitWireBytes
+        );
     }
 
     #[test]
