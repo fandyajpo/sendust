@@ -117,10 +117,10 @@ pub fn validate(
             names.push(key);
         }
 
-        if let Some(len) = attachment.known_len() {
-            if len > limits.max_attachment_bytes() {
-                return Err(Error::new(ErrorCode::LimitAttachmentBytes));
-            }
+        if let Some(len) = attachment.known_len()
+            && len > limits.max_attachment_bytes()
+        {
+            return Err(Error::new(ErrorCode::LimitAttachmentBytes));
         }
     }
 
