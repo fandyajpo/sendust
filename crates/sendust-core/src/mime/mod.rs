@@ -682,8 +682,8 @@ mod tests {
         let mut single = message();
         single.text = Some("a".repeat(1024));
         single.html = None;
-        let bytes = serialize(&single, Limits::default(), AttachmentPolicy::Disabled)
-            .expect("serialized");
+        let bytes =
+            serialize(&single, Limits::default(), AttachmentPolicy::Disabled).expect("serialized");
         let cap = Limits::default()
             .with_max_wire_bytes(bytes.len() as u64)
             .expect("lowering is allowed");
