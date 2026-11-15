@@ -49,7 +49,7 @@ In scope: test plan and traceability, core unit/integration coverage, binding an
 ### P12-005 — QA exit gate and evidence package
 
 - **Size:** S
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P12-001, P12-002, P12-003, P12-004
 - **Description:** Assemble QA evidence: traceability matrix, test reports, coverage, candidate-runtime results, fixture audit, and open-risk list. Confirm no unresolved high-severity defect and no contract deviation.
 - **Evidence criteria:** Gate package is reproducible from documented commands. Every mandatory requirement is tested. No high-severity bug is open. Phase 13 and Phase 16 may consume P12-005; Phase 14 final matrix uses it via task dependencies.
@@ -100,7 +100,8 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 | P12-002 | [`docs/qa/integration-coverage.md`](../qa/integration-coverage.md): 282 tests (238 Rust across eight suites, 44 facade) pass in two consecutive workspace runs and in the facade run; a module-to-suite map, a critical-branch table, a Node-free core run (`NO-NODE`, 238 passed) proving the C-01 boundary, the binding parity arguments, the skip inventory (20 addon-dependent tests, never skipped in CI), and the gaps that remain — no line-coverage tool is pinned, `client/tls.rs` and `session.rs` carry no unit tests, and the non-unix fallback is not executable here. | IN REVIEW |
 | P12-003 | [`docs/qa/typescript-contract-report.md`](../qa/typescript-contract-report.md): the 44 facade tests by category (7 type, 4 error, 4 result, 7 budget, 22 transport), the compile-time contract assertions that fail `npm run typecheck` on a breaking change, every status and error code mapped to its test and level, the BUSY test's one-connection assertion, the lifecycle/close matrix, the exact runtime pins with the Bun/Deno smoke scope, and four scoped gaps (no JS end-to-end status test because the API accepts no trust anchor by design, `@types/node` absent so runtime suites are not typechecked, no line coverage, Bun/Deno smoke only) each with an owner. | IN REVIEW |
 | P12-004 | [`docs/qa/fixture-audit.md`](../qa/fixture-audit.md): the full fixture checklist (success, rejection, mixed RCPT, unknown, TLS, auth, resets, stalls, close, limits, attachments, injection, buffer mutation, GC, BUSY) with the owning test for each row. Added `tests/runtime/gc.mjs` — run with `--expose-gc` in the Node.js binding CI job — closing R-05, and replaced the four facade sleeps with a connection gate, so the suite sequences on events (runtime fell from ~400 ms to ~200 ms). Two consecutive runs: 238 Rust passed, 44 facade passed, 5 GC checks passed. The JS end-to-end status fixture is reassigned to P14-004 because the public API exposes no trust anchor. | IN REVIEW |
+| P12-005 | [`docs/gates/phase-12.md`](../gates/phase-12.md): the PHASE-12 review package — acceptance checklist, suite summary (238 Rust, 44 facade, 5 GC checks), the 136-row traceability summary with 0 unowned, the runtime matrix, the executed command set with two consecutive runs, the named gaps with owners, findings (two low fixtures fixed in P12-004, one deferred to P14-004), and the pending approval. | IN REVIEW |
 
 ## Status
 
-IN PROGRESS. P12-001 to P12-004 are IN REVIEW; P12-005 is NOT STARTED.
+IN PROGRESS. P12-001 to P12-005 are IN REVIEW; the PHASE-12 gate is prepared and awaits project-owner approval.

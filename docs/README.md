@@ -69,6 +69,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 55 | [Integration coverage report](qa/integration-coverage.md) | P12-002 suite inventory, module map, critical branches, skips, and uncovered gaps |
 | 56 | [TypeScript contract report](qa/typescript-contract-report.md) | P12-003 type, error, result, lifecycle, and runtime-matrix results with their scoped gaps |
 | 57 | [Fixture completeness audit](qa/fixture-audit.md) | P12-004 fixture checklist, the forced-GC probe, sleep removal, and regression triage |
+| 58 | [PHASE-12 QA record](gates/phase-12.md) | P12 gate checklist, suite summary, traceability, runtime matrix, and the pending approval |
 
 ## 2. Directory map
 
@@ -99,7 +100,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P11 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate. P12 is IN PROGRESS (P12-001 to P12-004 in review); P13–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P11 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate. P12 is IN PROGRESS (P12-001 to P12-005 in review; PHASE-12 awaits project-owner approval); P13–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -128,9 +129,9 @@ P00–P11 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P09-001–P09-005 | COMPLETED; PHASE-09 APPROVED (2026-11-15) |
 | P10-001–P10-005 | COMPLETED; PHASE-10 APPROVED (2026-11-15) |
 | P11-001–P11-005 | COMPLETED; PHASE-11 APPROVED (2026-11-15) |
-| P12-001–P12-004 | IN REVIEW |
-| P12-005–P18 | NOT STARTED |
-| Next task | P12-005 — QA exit gate and evidence package |
+| P12-001–P12-005 | IN REVIEW; PHASE-12 awaits approval |
+| P13–P18 | NOT STARTED |
+| Next step | PHASE-12 approval — review [the QA record](gates/phase-12.md) |
 
 ## 5. Conventions
 
