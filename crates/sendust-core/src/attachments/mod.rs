@@ -417,8 +417,14 @@ mod tests {
         assert_eq!(infer_content_type("REPORT.PDF"), "application/pdf");
         assert_eq!(infer_content_type("photo.jpeg"), "image/jpeg");
         assert_eq!(infer_content_type("page.html"), "text/html");
-        assert_eq!(infer_content_type("archive.unknown"), "application/octet-stream");
-        assert_eq!(infer_content_type("no-extension"), "application/octet-stream");
+        assert_eq!(
+            infer_content_type("archive.unknown"),
+            "application/octet-stream"
+        );
+        assert_eq!(
+            infer_content_type("no-extension"),
+            "application/octet-stream"
+        );
     }
 
     #[test]

@@ -260,8 +260,7 @@ fn build_attachment_part(
     push_header(
         &mut part,
         "Content-Type",
-        content_type
-            .unwrap_or_else(|| crate::attachments::infer_content_type(&filename)),
+        content_type.unwrap_or_else(|| crate::attachments::infer_content_type(&filename)),
     )?;
     push_header(&mut part, "Content-Transfer-Encoding", "base64")?;
     push_header(
