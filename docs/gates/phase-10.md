@@ -15,7 +15,7 @@ self-approval. P10-001 to P10-005 remain `IN REVIEW` until that approval.
 
 | Task | Status | Evidence |
 | --- | --- | --- |
-| P10-001 | IN REVIEW | `DeliveryProgress` records the furthest stage and the RCPT-accepted recipients; `SmtpTransport::with_progress` marks each stage; a close that cancels after `data_body` returns `unknown` for the accepted subset and `TRANSPORT_CLOSED` before it. Race tests cover send/send, send/close, close/send, close/close. |
+| P10-001 | IN REVIEW | `DeliveryProgress` records the furthest stage and the RCPT-accepted recipients and is reset at the start of every send, so a reused transport cannot carry stale state into a later cancellation; `SmtpTransport::with_progress` marks each stage; a close that cancels after `data_body` returns `unknown` for the accepted subset and `TRANSPORT_CLOSED` before it. Race tests cover send/send, send/close, close/send, close/close. |
 | P10-002 | IN REVIEW | Exact deadline boundaries at 10 s / 30 s / 120 s with epsilon cases and total capping; timeout classification is honest per stage; timeout tests prove no retry; the facade closes a stalled send inside a 1 s budget. |
 | P10-003 | IN REVIEW | `tests/leaks.rs` proves stable descriptor counts across 20 successes, 50 refused connections, and 20 TLS failures; attachment handles are released; buffers are owned and dropped after serialization. |
 | P10-004 | IN REVIEW | 26 deterministic fault cases over the loopback fake TLS relay with results, stages, command traces, and cleanup; stalls at every stage, resets, malformed replies, mixed RCPT, final `451`, and post-DATA ambiguity included. |

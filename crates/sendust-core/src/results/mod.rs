@@ -104,6 +104,18 @@ impl DeliveryProgress {
         self.stage.fetch_max(stage_rank(stage), Ordering::SeqCst);
     }
 
+    /// Clears the state before a new send.
+    ///
+    /// A transport is reused across sends, so neither the stage nor the accepted
+    /// recipients may carry over into the next one.
+    pub fn reset(&self) {
+        self.stage.store(0, Ordering::SeqCst);
+        self.accepted
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .clear();
+    }
+
     /// Records one recipient the relay accepted at `RCPT`.
     pub fn accept_recipient(&self, address: &str) {
         self.accepted
@@ -280,6 +292,19 @@ mod tests {
                 .iter()
                 .all(|recipient| recipient.status == RecipientStatus::Unknown)
         );
+    }
+
+    #[test]
+    fn reset_clears_the_previous_send_state() {
+        let progress = DeliveryProgress::new();
+        progress.set_stage(Stage::DataBody);
+        progress.accept_recipient("bob@example.test");
+        assert!(progress.cancelled_outcome().is_some());
+
+        progress.reset();
+
+        assert!(!progress.transmission_began());
+        assert!(progress.cancelled_outcome().is_none());
     }
 
     #[test]

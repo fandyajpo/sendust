@@ -233,6 +233,12 @@ impl SmtpTransport {
         }
     }
 
+    fn reset_progress(&self) {
+        if let Some(progress) = &self.progress {
+            progress.reset();
+        }
+    }
+
     fn accept_recipient(&self, address: &str) {
         if let Some(progress) = &self.progress {
             progress.accept_recipient(address);
@@ -251,6 +257,7 @@ impl SmtpTransport {
         let config = &self.config;
         let deadlines = SendDeadlines::start(config.timeouts, Instant::now());
         let envelope = Envelope::of(&request.message)?;
+        self.reset_progress();
         self.mark(Stage::ConnectionSetup);
 
         let mut session = Session::open(config)
