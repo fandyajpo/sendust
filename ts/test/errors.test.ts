@@ -148,7 +148,10 @@ describe("public error classes", () => {
     await pathTransport.close();
 
     const rendered = `${serialize(sendError)}\n${serialize(pathError)}`;
-    expect(rendered).toContain("SENDUST");
+    expect(sendError).toBeInstanceOf(SendustProtocolError);
+    expect((sendError as SendustError).code).toBe("PROTOCOL_CONNECTION_RESET");
+    expect(pathError).toBeInstanceOf(SendustConfigurationError);
+    expect((pathError as SendustError).code).toBe("CONFIG_FILE_ACCESS_DISABLED");
     for (const marker of ["SECRET_PASS_MARKER", "SECRET_BODY_MARKER", "SECRET_PATH_MARKER"]) {
       expect(rendered).not.toContain(marker);
     }
