@@ -33,7 +33,7 @@ In scope: test plan and traceability, core unit/integration coverage, binding an
 ### P12-003 — Execute TypeScript contract, lifecycle, and error tests
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P12-001, P09-005
 - **Description:** Validate the public API with strict type tests and runtime tests: accepted/rejected/unknown recipient outcomes/BUSY, error classes and codes, redaction, close idempotence, send-after-close, concurrent send, attachment opt-in, and no-retry transaction counts. Include all exact runtime pins from the [toolchain baseline](../engineering/toolchain-baseline.md).
 - **Evidence criteria:** Type tests fail on contract-breaking changes. Runtime matrix passes for all statuses and errors. BUSY and unknown tests assert transaction counts. Redaction scans pass. Unsupported runtime candidates are documented, not silently skipped.
@@ -98,7 +98,8 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 | --- | --- | --- |
 | P12-001 | [`docs/qa/traceability-matrix.md`](../qa/traceability-matrix.md): every constraint C-01…C-40, functional requirement FR-001…FR-068, non-functional requirement NFR-001…NFR-014, limit, lifecycle rule, error contract, and abuse case AB-01…AB-14 mapped to a named test or an approving gate with its pass condition. Six gaps are listed with their owning phase; none is unowned. | IN REVIEW |
 | P12-002 | [`docs/qa/integration-coverage.md`](../qa/integration-coverage.md): 282 tests (238 Rust across eight suites, 44 facade) pass in two consecutive workspace runs and in the facade run; a module-to-suite map, a critical-branch table, a Node-free core run (`NO-NODE`, 238 passed) proving the C-01 boundary, the binding parity arguments, the skip inventory (20 addon-dependent tests, never skipped in CI), and the gaps that remain — no line-coverage tool is pinned, `client/tls.rs` and `session.rs` carry no unit tests, and the non-unix fallback is not executable here. | IN REVIEW |
+| P12-003 | [`docs/qa/typescript-contract-report.md`](../qa/typescript-contract-report.md): the 44 facade tests by category (7 type, 4 error, 4 result, 7 budget, 22 transport), the compile-time contract assertions that fail `npm run typecheck` on a breaking change, every status and error code mapped to its test and level, the BUSY test's one-connection assertion, the lifecycle/close matrix, the exact runtime pins with the Bun/Deno smoke scope, and four scoped gaps (no JS end-to-end status test because the API accepts no trust anchor by design, `@types/node` absent so runtime suites are not typechecked, no line coverage, Bun/Deno smoke only) each with an owner. | IN REVIEW |
 
 ## Status
 
-IN PROGRESS. P12-001 and P12-002 are IN REVIEW; P12-003 to P12-005 are NOT STARTED.
+IN PROGRESS. P12-001 to P12-003 are IN REVIEW; P12-004 and P12-005 are NOT STARTED.
