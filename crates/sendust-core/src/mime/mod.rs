@@ -683,13 +683,9 @@ mod tests {
         // Larger than the wire cap can ever hold even before headers.
         oversized.text = Some("a".repeat(40 * MIB as usize));
         assert_eq!(
-            serialize(
-                &oversized,
-                Limits::default(),
-                AttachmentPolicy::Disabled
-            )
-            .expect_err("over cap")
-            .code(),
+            serialize(&oversized, Limits::default(), AttachmentPolicy::Disabled)
+                .expect_err("over cap")
+                .code(),
             ErrorCode::LimitWireBytes
         );
 
@@ -697,13 +693,9 @@ mod tests {
         oversized.text = Some("a".repeat((10 * MIB) as usize));
         oversized.html = Some("a".repeat((10 * MIB) as usize));
         assert_eq!(
-            serialize(
-                &oversized,
-                Limits::default(),
-                AttachmentPolicy::Disabled
-            )
-            .expect_err("both parts over cap")
-            .code(),
+            serialize(&oversized, Limits::default(), AttachmentPolicy::Disabled)
+                .expect_err("both parts over cap")
+                .code(),
             ErrorCode::LimitWireBytes
         );
     }
