@@ -29,7 +29,8 @@ pub use crate::message::{Header, HeaderName, HeaderValue, OutgoingMessage};
 pub use crate::mime::{serialize, serialize_at};
 pub use crate::ports::{DeliveryPort, DeliveryRequest};
 pub use crate::results::{
-    AmbiguityStage, DeliveryStatus, RecipientOutcome, RecipientStatus, SendOutcome, SmtpResponse,
+    AmbiguityStage, DeliveryProgress, DeliveryStatus, RecipientOutcome, RecipientStatus, SendOutcome,
+    SmtpResponse,
 };
 pub use crate::transports::smtp::{
     AuthMechanism, SmtpConfig, SmtpCredentials, SmtpSecurity, SmtpSession, SmtpTransport,

@@ -22,6 +22,7 @@ pub mod session;
 pub use self::proto::command::AuthMechanism;
 
 use std::fmt;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use crate::config::{SendDeadlines, Timeouts};
@@ -29,7 +30,7 @@ use crate::errors::{Error, ErrorCode, ErrorDetails, Stage};
 use crate::message::OutgoingMessage;
 use crate::ports::{DeliveryFuture, DeliveryPort, DeliveryRequest};
 use crate::results::{
-    AmbiguityStage, RecipientOutcome, RecipientStatus, SendOutcome, SmtpResponse,
+    AmbiguityStage, DeliveryProgress, RecipientOutcome, RecipientStatus, SendOutcome, SmtpResponse,
 };
 use crate::transports::smtp::proto::response::{Reply, ReplyClass};
 use crate::transports::smtp::session::Session;
@@ -197,14 +198,45 @@ impl SmtpConfig {
 }
 
 /// The single MVP delivery adapter.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct SmtpTransport {
     config: SmtpConfig,
+    progress: Option<Arc<DeliveryProgress>>,
 }
+
+impl PartialEq for SmtpTransport {
+    fn eq(&self, other: &Self) -> bool {
+        self.config == other.config
+    }
+}
+
+impl Eq for SmtpTransport {}
 
 impl SmtpTransport {
     pub fn new(config: SmtpConfig) -> Self {
-        Self { config }
+        Self {
+            config,
+            progress: None,
+        }
+    }
+
+    /// Observes send progress, so a caller can tell whether a cancellation hit
+    /// before or after message transmission began.
+    pub fn with_progress(mut self, progress: Arc<DeliveryProgress>) -> Self {
+        self.progress = Some(progress);
+        self
+    }
+
+    fn mark(&self, stage: Stage) {
+        if let Some(progress) = &self.progress {
+            progress.set_stage(stage);
+        }
+    }
+
+    fn accept_recipient(&self, address: &str) {
+        if let Some(progress) = &self.progress {
+            progress.accept_recipient(address);
+        }
     }
 
     pub fn config(&self) -> &SmtpConfig {
@@ -219,6 +251,7 @@ impl SmtpTransport {
         let config = &self.config;
         let deadlines = SendDeadlines::start(config.timeouts, Instant::now());
         let envelope = Envelope::of(&request.message)?;
+        self.mark(Stage::ConnectionSetup);
 
         let mut session = Session::open(config)
             .await
@@ -232,6 +265,7 @@ impl SmtpTransport {
         }
 
         if let Some(credentials) = config.credentials.as_ref() {
+            self.mark(Stage::Auth);
             session
                 .authenticate(
                     &credentials.username,
@@ -242,6 +276,7 @@ impl SmtpTransport {
                 .map_err(|error| annotate(error, config, deadlines, Stage::Auth))?;
         }
 
+        self.mark(Stage::Mail);
         match session.mail_from(&envelope.from).await {
             Ok(reply) if reply.is_positive() => {}
             Ok(reply) => {
@@ -268,8 +303,10 @@ impl SmtpTransport {
             if closing {
                 break;
             }
+            self.mark(Stage::Rcpt);
             match session.rcpt_to(recipient).await {
                 Ok(reply) if reply.is_positive() => {
+                    self.accept_recipient(recipient);
                     accepted.push(index);
                 }
                 Ok(reply) if reply.value() == 421 => {
@@ -293,6 +330,7 @@ impl SmtpTransport {
             return Ok(rejected_outcome(&envelope, &statuses, None));
         }
 
+        self.mark(Stage::DataCommand);
         match session.data_command().await {
             Ok(reply) if reply.value() == 354 => {}
             Ok(reply) => {
@@ -312,6 +350,7 @@ impl SmtpTransport {
             Err(error) => return Err(annotate(error, config, deadlines, Stage::DataCommand)),
         }
 
+        self.mark(Stage::DataBody);
         match session.data_body(&request.wire).await {
             Ok(reply) => match verdict(&reply) {
                 Verdict::Complete => {

@@ -12,9 +12,9 @@ use napi::Status;
 use napi::bindgen_prelude::{Result, Uint8Array};
 use napi_derive::napi;
 use sendust_core::{
-    Attachment, AuthMechanism, Delivery, Error as CoreError, ErrorCode, FileDescriptor, Header,
-    Limits, Mailbox, OutgoingMessage, SmtpConfig, SmtpCredentials, SmtpSecurity, SmtpTransport,
-    Timeouts,
+    Attachment, AuthMechanism, Delivery, DeliveryProgress, Error as CoreError, ErrorCode,
+    FileDescriptor, Header, Limits, Mailbox, OutgoingMessage, SmtpConfig, SmtpCredentials,
+    SmtpSecurity, SmtpTransport, Timeouts,
 };
 
 const OPEN: u8 = 0;
@@ -127,6 +127,7 @@ struct Inner {
     limits: Limits,
     filesystem: bool,
     close_timeout: Duration,
+    progress: Arc<DeliveryProgress>,
 }
 
 /// One open transport. One active send; concurrent sends fail with BUSY.
@@ -216,15 +217,19 @@ impl Transport {
                 .map_err(to_napi)?;
         }
 
+        let progress = Arc::new(DeliveryProgress::new());
         Ok(Self {
             inner: Arc::new(Inner {
-                slot: tokio::sync::Mutex::new(Some(SmtpTransport::new(config))),
+                slot: tokio::sync::Mutex::new(Some(
+                    SmtpTransport::new(config).with_progress(Arc::clone(&progress)),
+                )),
                 active: tokio::sync::Mutex::new(Active::Idle),
                 idle: tokio::sync::Notify::new(),
                 phase: AtomicU8::new(OPEN),
                 limits,
                 filesystem: options.allow_file_access.unwrap_or(false),
                 close_timeout: timeouts.close(),
+                progress,
             }),
         })
     }
@@ -329,9 +334,12 @@ impl Transport {
                 }
                 outcome.map(to_result).map_err(to_napi)
             }
-            Err(error) if error.is_cancelled() => {
-                Err(to_napi(CoreError::new(ErrorCode::TransportClosed)))
-            }
+            Err(error) if error.is_cancelled() => match self.inner.progress.cancelled_outcome() {
+                // The body may have reached the relay before the abort, so the
+                // disposition is ambiguous rather than a definitive cancellation.
+                Some(outcome) => Ok(to_result(outcome)),
+                None => Err(to_napi(CoreError::new(ErrorCode::TransportClosed))),
+            },
             Err(_) => Err(to_napi(CoreError::new(ErrorCode::Internal))),
         }
     }
