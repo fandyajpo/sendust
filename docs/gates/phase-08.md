@@ -95,6 +95,10 @@ Result: 164 core unit tests (24 of them in `attachments`), 9 harness, 6 client, 
 MIME conformance, 6 MIME body fixtures, 20 SMTP fault, 6 session, and 13 binding
 tests pass; every checker passes; the Node runtime smoke reports 5 binding checks.
 
+CI on `main` at `6ffe2dd` passed all eight jobs: Rust workspace, Native binding
+(Node.js 22), TypeScript on Node.js 22.23.5/24.22.3/26.13.1, Bun, Deno, and the
+architecture-and-documentation job.
+
 ## 6. Decision
 
 **SUBMITTED, not approved.** The project owner must review this record and its
