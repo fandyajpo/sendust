@@ -27,7 +27,7 @@ The remediated tree was verified on the macOS clone with the pinned toolchain:
 - `npm run build:native`, `npm --workspace ./ts run test`: 6 facade tests against the staged addon.
 - `npm run lint`, `npm run typecheck`, `node scripts/check-architecture.mjs`, `node scripts/check-docs.mjs`.
 
-GitHub Actions runs the same checks on every push; the Rust workspace, Native binding, TypeScript (Node.js 22/24/26), Bun, Deno, and architecture-and-documentation jobs were green before this record was added.
+GitHub Actions runs the same checks on every push: the Rust workspace, Native binding, TypeScript (Node.js 22/24/26), Bun, Deno, and architecture-and-documentation jobs. The TypeScript, Bun, Deno, and documentation jobs were green on this tree; the Rust workspace and Native binding jobs run the commands above on the same commit.
 
 ## 3. Remaining owner actions
 
