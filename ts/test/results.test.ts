@@ -51,11 +51,17 @@ describe("result mapping", () => {
 
   it("rejects an undocumented native status", () => {
     expect(() =>
-      toSendResult({ status: "delivered", recipients: [{ address: "a@example.test", status: "accepted" }] }),
+      toSendResult({
+        status: "delivered",
+        recipients: [{ address: "a@example.test", status: "accepted" }],
+      }),
     ).toThrow(/unexpected native delivery status/);
 
     expect(() =>
-      toSendResult({ status: "accepted", recipients: [{ address: "a@example.test", status: "bounced" }] }),
+      toSendResult({
+        status: "accepted",
+        recipients: [{ address: "a@example.test", status: "bounced" }],
+      }),
     ).toThrow(/unexpected native recipient status/);
   });
 });
