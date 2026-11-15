@@ -1,6 +1,6 @@
 # Phase 10 — Reliability
 
-**Phase status:** NOT STARTED  
+**Phase status:** IN PROGRESS  
 **Phase dependency:** Phase 09  
 **Companion references:** [system design](../architecture/system-design.md), [reliability strategy](../engineering/reliability-strategy.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md)
 
@@ -17,7 +17,7 @@ In scope: lifecycle races, timeout-budget interaction, close/drain guarantees, r
 ### P10-001 — Implement lifecycle race hardening
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P09-005
 - **Description:** Audit and harden all `open -> closing -> closed` transitions under concurrent send, close, and failure. Ensure exactly one active send, immediate `BUSY` without dialing, no send after close initiation, and idempotent close. Define behavior for close arriving while connect, auth, RCPT, or DATA is in flight. No GC-dependent behavior.
 - **Evidence criteria:** Deterministic race tests cover send/send, send/close, close/send, close/close, and failure/close at each stage. BUSY tests assert zero additional SMTP connections. Every terminal state is reachable and documented.
@@ -88,4 +88,12 @@ Hardened lifecycle, shared deadline logic, cleanup guarantees, fault-injection s
 
 ## Status
 
-NOT STARTED.
+IN PROGRESS. P10-001 is IN REVIEW; P10-002 to P10-005 are NOT STARTED.
+
+## Evidence log
+
+Evidence labels follow the [AI implementation contract](../engineering/ai-implementation-contract.md).
+
+| Task | Evidence | State |
+| --- | --- | --- |
+| P10-001 | `results/mod.rs` adds `DeliveryProgress`, a monotonic stage tracker that also records the recipients accepted at RCPT, and `cancelled_outcome()`; `SmtpTransport::with_progress` marks `connection_setup`, `auth`, `mail`, each `rcpt`, `data_command`, and `data_body` and records accepted recipients. The binding maps a cancelled send to an `unknown` outcome for the accepted subset once `data_body` was reached, and to `TRANSPORT_CLOSED` before that. Tests: `a_cancellation_before_data_is_not_ambiguous`, `a_cancellation_after_data_reports_unknown_for_the_accepted_subset`, `stages_never_move_backwards`, plus the existing lifecycle and facade race tests (send/send, send/close, close/send, close/close). | IN REVIEW |

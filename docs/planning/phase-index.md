@@ -1,6 +1,6 @@
 # Phase Index
 
-Entry point to all 19 Sendust phases. P00–P09 are completed with reviewed gate evidence. Architecture Amendments A01 and A02 are approved at design level; P10–P18 remain not started. Each phase plan is the authoritative source for task detail, acceptance criteria, and gate conditions. This index routes and summarizes only.
+Entry point to all 19 Sendust phases. P00–P09 are completed with reviewed gate evidence. Architecture Amendments A01 and A02 are approved at design level; P10 is in progress and P11–P18 remain not started. Each phase plan is the authoritative source for task detail, acceptance criteria, and gate conditions. This index routes and summarizes only.
 
 ## Phase list
 
@@ -16,7 +16,7 @@ Entry point to all 19 Sendust phases. P00–P09 are completed with reviewed gate
 | [P07](../phases/phase-07.md) | MIME | Headers, alternative bodies, filenames, and deterministic serialization | P04 | 5 | P07-005 | COMPLETED |
 | [P08](../phases/phase-08.md) | Attachments | Opt-in files, safe reads, caps, and MIME integration | P07, P05 | 5 | P08-005 | COMPLETED |
 | [P09](../phases/phase-09.md) | Public API | TypeScript transport, send, close, errors, and contract gate | P05, P06, P08 | 5 | P09-005 | COMPLETED |
-| [P10](../phases/phase-10.md) | Reliability | Race hardening, timeout interaction, cleanup, and fault injection | P09 | 5 | P10-005 | NOT STARTED |
+| [P10](../phases/phase-10.md) | Reliability | Race hardening, timeout interaction, cleanup, and fault injection | P09 | 5 | P10-005 | IN PROGRESS |
 | [P11](../phases/phase-11.md) | Security | Threat model, TLS/auth proof, validation/MIME/attachment audit, redaction | P10 | 5 | P11-005 | NOT STARTED |
 | [P12](../phases/phase-12.md) | QA | Traceability, integration coverage, contract tests, and fixture completeness | P11 | 5 | P12-005 | NOT STARTED |
 | [P13](../phases/phase-13.md) | Performance | Budgets, send-path and MIME benchmarks, attachment memory, lifecycle overhead | P12 | 5 | P13-005 | NOT STARTED |
@@ -54,8 +54,8 @@ Entry point to all 19 Sendust phases. P00–P09 are completed with reviewed gate
 
 | Status | Count |
 | --- | --- |
-| NOT STARTED | 9 |
-| IN PROGRESS | 0 |
+| NOT STARTED | 8 |
+| IN PROGRESS | 1 |
 | IN REVIEW | 0 |
 | BLOCKED | 0 |
 | COMPLETED | 10 |

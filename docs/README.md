@@ -89,7 +89,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition. P09 is COMPLETED (PHASE-09 approved 2026-11-15); P10–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition. P10 is IN PROGRESS (P10-001 in review); P11–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -116,8 +116,9 @@ P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P07-001–P07-005 | COMPLETED; PHASE-07 APPROVED (2026-11-14) |
 | P08-001–P08-005 | COMPLETED; PHASE-08 APPROVED (2026-11-15) |
 | P09-001–P09-005 | COMPLETED; PHASE-09 APPROVED (2026-11-15) |
-| P10–P18 | NOT STARTED |
-| Next task | P10-001 — start reliability hardening with the close/`unknown` item |
+| P10-001 | IN REVIEW |
+| P10-002–P18 | NOT STARTED |
+| Next task | P10-002 — enforce timeout-budget interaction and bounded close drain |
 
 ## 5. Conventions
 
