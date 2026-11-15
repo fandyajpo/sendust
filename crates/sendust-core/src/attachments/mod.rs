@@ -224,10 +224,7 @@ fn validate_path(path: &str) -> Result<(), Error> {
 /// swapped in between cannot change what gets read. The read stops one byte
 /// past the cap, so a file that grows past it is rejected rather than partially
 /// returned.
-pub fn read_attachment(
-    descriptor: &FileDescriptor,
-    limits: Limits,
-) -> Result<Vec<u8>, Error> {
+pub fn read_attachment(descriptor: &FileDescriptor, limits: Limits) -> Result<Vec<u8>, Error> {
     validate_path(&descriptor.path)?;
     let path = Path::new(descriptor.path.trim());
     let file = open_regular(path)?;
@@ -534,7 +531,6 @@ mod tests {
     }
 }
 
-
 #[cfg(test)]
 mod file_reads {
     use super::*;
@@ -593,8 +589,7 @@ mod file_reads {
         let dir = TempDir::new();
         let path = dir.write("report.txt", b"hello");
 
-        let bytes =
-            read_attachment(&descriptor(&path), Limits::default()).expect("reads the file");
+        let bytes = read_attachment(&descriptor(&path), Limits::default()).expect("reads the file");
 
         assert_eq!(bytes, b"hello");
     }
@@ -693,8 +688,8 @@ mod file_reads {
     fn errors_never_carry_the_path() {
         let dir = TempDir::new();
         let path = dir.0.join("absent.bin");
-        let error = read_attachment(&descriptor(&path), Limits::default())
-            .expect_err("missing file");
+        let error =
+            read_attachment(&descriptor(&path), Limits::default()).expect_err("missing file");
 
         assert_eq!(error.code(), ErrorCode::ConfigAttachmentUnreadable);
         let rendered = format!("{error:?} {error}");
