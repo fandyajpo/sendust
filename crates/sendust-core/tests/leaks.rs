@@ -147,7 +147,10 @@ async fn mixed_stress_loop_keeps_descriptors_and_outcomes_stable() {
         .expect("trusted fixture root");
 
     for _ in 0..3 {
-        delivery(good.clone()).send(message()).await.expect("warm-up");
+        delivery(good.clone())
+            .send(message())
+            .await
+            .expect("warm-up");
         delivery(refused.clone())
             .send(message())
             .await
