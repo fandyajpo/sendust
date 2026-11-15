@@ -522,3 +522,137 @@ async fn a_421_keeps_the_attempted_statuses_and_marks_the_rest_unknown() {
     assert_eq!(server.trace().count_prefix("RCPT"), 3);
     assert_eq!(server.trace().count_prefix("DATA"), 0);
 }
+
+
+fn auth_ehlo() -> Reply {
+    Reply::lines(&["250-sendust.test", "250-AUTH PLAIN LOGIN", "250 8BITMIME"])
+}
+
+#[tokio::test]
+async fn auth_stall_is_an_operation_timeout() {
+    let script = Script {
+        ehlo: auth_ehlo(),
+        ..Script::default()
+    }
+    .delay(support::Stage::Auth, Duration::from_millis(1_500));
+    let server = serving(script);
+    let config = config(server.addr())
+        .with_credentials(SmtpCredentials::new("relay-user", "hunter2").expect("credentials"))
+        .with_timeouts(lowered(1, 1, 2, 2))
+        .expect("lowered budgets");
+    let mut delivery = delivery(config);
+
+    let error = delivery
+        .send(message(&["bob@example.test"]))
+        .await
+        .expect_err("auth stall");
+
+    assert_eq!(error.code(), ErrorCode::TimeoutOperation);
+    assert_eq!(error.details().operation_stage(), Some(Stage::Auth));
+    assert_eq!(server.trace().count_prefix("MAIL"), 0);
+}
+
+#[tokio::test]
+async fn rcpt_stall_is_an_operation_timeout() {
+    let script = Script::default().delay(support::Stage::Rcpt, Duration::from_millis(1_500));
+    let server = serving(script);
+    let mut delivery = delivery(
+        config(server.addr())
+            .with_timeouts(lowered(1, 1, 2, 2))
+            .expect("lowered budgets"),
+    );
+
+    let error = delivery
+        .send(message(&["bob@example.test"]))
+        .await
+        .expect_err("rcpt stall");
+
+    assert_eq!(error.code(), ErrorCode::TimeoutOperation);
+    assert_eq!(error.details().operation_stage(), Some(Stage::Rcpt));
+    assert_eq!(server.trace().count_prefix("DATA"), 0);
+}
+
+#[tokio::test]
+async fn data_command_stall_is_an_operation_timeout() {
+    let script = Script::default().delay(support::Stage::Data, Duration::from_millis(1_500));
+    let server = serving(script);
+    let mut delivery = delivery(
+        config(server.addr())
+            .with_timeouts(lowered(1, 1, 2, 2))
+            .expect("lowered budgets"),
+    );
+
+    let error = delivery
+        .send(message(&["bob@example.test"]))
+        .await
+        .expect_err("data stall");
+
+    assert_eq!(error.code(), ErrorCode::TimeoutOperation);
+    assert_eq!(error.details().operation_stage(), Some(Stage::DataCommand));
+    assert!(server.trace().body().is_empty(), "no body was written");
+}
+
+#[tokio::test]
+async fn final_reply_stall_after_data_is_unknown() {
+    let script = Script::default().after_body(AfterBody::Stall);
+    let server = serving(script);
+    let mut delivery = delivery(
+        config(server.addr())
+            .with_timeouts(lowered(1, 1, 2, 2))
+            .expect("lowered budgets"),
+    );
+
+    let outcome = delivery
+        .send(message(&["bob@example.test"]))
+        .await
+        .expect("stalled final reply is an outcome, not an error");
+
+    assert_eq!(outcome.status(), DeliveryStatus::Unknown);
+    assert_eq!(outcome.recipients()[0].status, RecipientStatus::Unknown);
+    assert_eq!(server.trace().count_prefix("DATA"), 1);
+    assert!(!server.trace().body().is_empty(), "the body was transmitted");
+}
+
+#[tokio::test]
+async fn auth_reset_is_a_protocol_error_at_the_auth_stage() {
+    let script = Script {
+        ehlo: auth_ehlo(),
+        ..Script::default()
+    }
+    .hangup(support::Stage::Auth);
+    let server = serving(script);
+    let config = config(server.addr())
+        .with_credentials(SmtpCredentials::new("relay-user", "hunter2").expect("credentials"));
+    let mut delivery = delivery(config);
+
+    let error = delivery
+        .send(message(&["bob@example.test"]))
+        .await
+        .expect_err("auth reset");
+
+    assert_eq!(error.code(), ErrorCode::ProtocolConnectionReset);
+    assert_eq!(error.details().operation_stage(), Some(Stage::Auth));
+    assert_eq!(server.trace().count_prefix("MAIL"), 0);
+}
+
+#[tokio::test]
+async fn a_malformed_greeting_is_a_protocol_error() {
+    let script = Script {
+        greeting: Reply::line("HELLO"),
+        ..Script::default()
+    };
+    let server = serving(script);
+    let mut delivery = delivery(config(server.addr()));
+
+    let error = delivery
+        .send(message(&["bob@example.test"]))
+        .await
+        .expect_err("malformed greeting");
+
+    assert_eq!(error.code(), ErrorCode::ProtocolUnexpectedResponse);
+    assert_eq!(
+        error.details().operation_stage(),
+        Some(Stage::ConnectionSetup)
+    );
+    assert_eq!(server.trace().count_prefix("MAIL"), 0);
+}

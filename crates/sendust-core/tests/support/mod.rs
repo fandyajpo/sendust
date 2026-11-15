@@ -67,6 +67,9 @@ pub enum AfterBody {
     /// P06's TLS/fault tests when a socket is closed with unread data; the
     /// observable contract here is identical: no final reply.
     Close,
+    /// Read the body but never answer it, holding the socket open so the client
+    /// hits its operation budget after transmission began.
+    Stall,
 }
 
 /// Scripted behavior for every connection the harness accepts.
@@ -366,6 +369,11 @@ fn serve(stream: TcpStream, script: &Script, trace: &Trace) {
                         let _ = write_reply(&mut conn, reply);
                     }
                     AfterBody::Close => {
+                        conn.shutdown();
+                        return;
+                    }
+                    AfterBody::Stall => {
+                        thread::sleep(Duration::from_secs(2));
                         conn.shutdown();
                         return;
                     }
