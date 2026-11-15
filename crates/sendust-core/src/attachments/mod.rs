@@ -715,6 +715,7 @@ mod file_reads {
 
     #[test]
     fn errors_never_carry_the_path() {
+
         let dir = TempDir::new();
         let path = dir.0.join("absent.bin");
         let error =
@@ -723,5 +724,16 @@ mod file_reads {
         assert_eq!(error.code(), ErrorCode::ConfigAttachmentUnreadable);
         let rendered = format!("{error:?} {error}");
         assert!(!rendered.contains("absent.bin"), "path leaked: {rendered}");
+    }
+
+    #[test]
+    fn the_file_handle_is_closed_after_a_read() {
+        let dir = TempDir::new();
+        let path = dir.write("transient.txt", b"payload");
+
+        read_attachment(&descriptor(&path), Limits::default()).expect("read");
+
+        // A still-open handle would keep the file undeletable on Windows.
+        std::fs::remove_file(&path).expect("the read must not retain the file handle");
     }
 }

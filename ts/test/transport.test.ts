@@ -1,4 +1,7 @@
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { createServer, type Socket } from "node:net";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { SendustError, createTransport, version, type Attachment } from "../src/index.ts";
 
@@ -8,6 +11,18 @@ try {
   loadNative();
 } catch {
   available = false;
+}
+
+/** Writes a fixture file in its own temp directory and returns its path. */
+function tempFile(name: string, len: number): string {
+  const dir = mkdtempSync(join(tmpdir(), "sendust-test-"));
+  const path = join(dir, name);
+  writeFileSync(path, new Uint8Array(len).fill(97));
+  return path;
+}
+
+function removeTemp(path: string): void {
+  rmSync(dirname(path), { recursive: true, force: true });
 }
 
 describe("sendust facade", () => {
@@ -154,6 +169,116 @@ describe("sendust facade", () => {
     await transport.close();
 
     expect(code).toBe("VALIDATION_INVALID_ATTACHMENT");
+  });
+
+  it.skipIf(!available)("sends a path attachment when filesystem access is enabled", async () => {
+    const path = tempFile("path.txt", 3);
+    const transport = createTransport({
+      host: "127.0.0.1",
+      port: 1,
+      secure: "tls",
+      attachments: { allowFileAccess: true },
+    });
+
+    let code: string | null = null;
+    try {
+      await transport.send({
+        from: "a@example.test",
+        to: ["b@example.test"],
+        subject: "x",
+        text: "y",
+        attachments: [{ path }],
+      });
+    } catch (error) {
+      code = (error as SendustError).code;
+    }
+    await transport.close();
+    removeTemp(path);
+
+    expect(code).toBe("PROTOCOL_CONNECTION_RESET");
+  });
+
+  it.skipIf(!available)("enforces the per-file cap for a path attachment", async () => {
+    const path = tempFile("big.bin", 3);
+    const transport = createTransport({
+      host: "127.0.0.1",
+      port: 1,
+      secure: "tls",
+      attachments: { allowFileAccess: true },
+      limits: { maxAttachmentBytes: 2 },
+    });
+
+    let code: string | null = null;
+    try {
+      await transport.send({
+        from: "a@example.test",
+        to: ["b@example.test"],
+        subject: "x",
+        text: "y",
+        attachments: [{ path }],
+      });
+    } catch (error) {
+      code = (error as SendustError).code;
+    }
+    await transport.close();
+    removeTemp(path);
+
+    expect(code).toBe("LIMIT_ATTACHMENT_BYTES");
+  });
+
+  it.skipIf(!available)("enforces the aggregate cap across path attachments", async () => {
+    const first = tempFile("a.bin", 3);
+    const second = tempFile("b.bin", 3);
+    const transport = createTransport({
+      host: "127.0.0.1",
+      port: 1,
+      secure: "tls",
+      attachments: { allowFileAccess: true },
+      limits: { maxTotalAttachmentBytes: 4 },
+    });
+
+    let code: string | null = null;
+    try {
+      await transport.send({
+        from: "a@example.test",
+        to: ["b@example.test"],
+        subject: "x",
+        text: "y",
+        attachments: [{ path: first }, { path: second }],
+      });
+    } catch (error) {
+      code = (error as SendustError).code;
+    }
+    await transport.close();
+    removeTemp(first);
+    removeTemp(second);
+
+    expect(code).toBe("LIMIT_ATTACHMENT_TOTAL");
+  });
+
+  it.skipIf(!available)("snapshots a buffer before the caller detaches it", async () => {
+    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls" });
+    const content = new Uint8Array([1, 2, 3]);
+    let code: string | null = null;
+    try {
+      const sending = transport.send({
+        from: "a@example.test",
+        to: ["b@example.test"],
+        subject: "x",
+        text: "y",
+        attachments: [{ filename: "detach.bin", content }],
+      });
+      // The facade copies synchronously; transferring the buffer away must not
+      // change what the send already holds.
+      structuredClone(content.buffer, { transfer: [content.buffer] });
+      expect(content.byteLength).toBe(0);
+      await sending;
+    } catch (error) {
+      code = (error as SendustError).code;
+    }
+    await transport.close();
+
+    expect(code).toBe("PROTOCOL_CONNECTION_RESET");
   });
 
   it.skipIf(!available)("maps a refused connection to a protocol error", async () => {
