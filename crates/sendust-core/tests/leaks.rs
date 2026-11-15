@@ -157,6 +157,7 @@ async fn mixed_stress_loop_keeps_descriptors_and_outcomes_stable() {
             .expect_err("warm-up refused");
     }
     let before = open_fds();
+    let data_before = server.trace().count_prefix("DATA");
 
     for iteration in 0..100 {
         if iteration % 2 == 0 {
@@ -179,7 +180,7 @@ async fn mixed_stress_loop_keeps_descriptors_and_outcomes_stable() {
         after <= before + 2,
         "descriptor leak across the stress loop: {before} -> {after}"
     );
-    assert_eq!(server.trace().count_prefix("DATA"), 50);
+    assert_eq!(server.trace().count_prefix("DATA") - data_before, 50);
 }
 
 #[cfg(unix)]
