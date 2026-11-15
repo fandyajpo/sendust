@@ -427,4 +427,44 @@ mod tests {
         let operation = deadlines.timeout_error(now + Duration::from_secs(40), true, Stage::Mail);
         assert_eq!(operation.code(), ErrorCode::TimeoutOperation);
     }
+
+    #[test]
+    fn connect_boundary_is_exact() {
+        let now = Instant::now();
+        let deadlines = SendDeadlines::start(Timeouts::default(), now);
+        let boundary = deadlines.connect_by();
+
+        assert!(!deadlines.connect_expired(boundary - Duration::from_nanos(1)));
+        assert!(deadlines.connect_expired(boundary));
+    }
+
+    #[test]
+    fn operation_boundary_is_exact_and_capped_by_the_total() {
+        let now = Instant::now();
+        let deadlines = SendDeadlines::start(Timeouts::default(), now);
+
+        // 30 s from the start while the total leaves room.
+        assert_eq!(
+            deadlines.operation_deadline(now),
+            now + Duration::from_secs(30)
+        );
+        // With 20 s left on the total, the operation is capped there.
+        assert_eq!(
+            deadlines.operation_deadline(now + Duration::from_secs(100)),
+            now + Duration::from_secs(120)
+        );
+        assert!(!deadlines.operation_expired(now + Duration::from_secs(120) - Duration::from_nanos(1)));
+        assert!(deadlines.operation_expired(now + Duration::from_secs(120)));
+    }
+
+    #[test]
+    fn total_boundary_is_exact() {
+        let now = Instant::now();
+        let deadlines = SendDeadlines::start(Timeouts::default(), now);
+
+        assert!(!deadlines
+            .remaining_total(deadlines.total_by() - Duration::from_nanos(1))
+            .is_zero());
+        assert!(deadlines.remaining_total(deadlines.total_by()).is_zero());
+    }
 }

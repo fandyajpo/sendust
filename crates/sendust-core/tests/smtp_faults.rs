@@ -417,6 +417,11 @@ async fn connect_stall_is_a_connect_timeout() {
         error.details().operation_stage(),
         Some(Stage::ConnectionSetup)
     );
+    assert_eq!(
+        server.trace().count_prefix("MAIL"),
+        0,
+        "a connect timeout must never reach MAIL"
+    );
 }
 
 #[tokio::test]
@@ -436,6 +441,11 @@ async fn command_stall_is_an_operation_timeout() {
 
     assert_eq!(error.code(), ErrorCode::TimeoutOperation);
     assert_eq!(error.details().operation_stage(), Some(Stage::Mail));
+    assert_eq!(
+        server.trace().count_prefix("MAIL"),
+        1,
+        "a timeout is never retried"
+    );
 }
 
 #[tokio::test]
@@ -456,6 +466,11 @@ async fn total_stall_is_a_total_timeout() {
         .expect_err("total stall");
 
     assert_eq!(error.code(), ErrorCode::TimeoutTotal);
+    assert_eq!(
+        server.trace().count_prefix("MAIL"),
+        1,
+        "a total timeout is never retried"
+    );
 }
 
 #[tokio::test]

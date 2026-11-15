@@ -363,6 +363,46 @@ describe("sendust facade", () => {
     expect(code).toBe("VALIDATION_MISSING_FROM");
   });
 
+  it.skipIf(!available)("closes a stalled send within the close budget", async () => {
+    const sockets = new Set<Socket>();
+    const server = createServer((socket) => {
+      sockets.add(socket);
+      socket.on("close", () => sockets.delete(socket));
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address();
+    const port = typeof address === "object" && address ? address.port : 1;
+
+    const transport = createTransport({
+      host: "127.0.0.1",
+      port,
+      secure: "tls",
+      timeouts: { connectMs: 1000, operationMs: 1000, totalMs: 1000, closeMs: 1000 },
+    });
+    const sending = transport
+      .send({
+        from: "a@example.test",
+        to: ["b@example.test"],
+        subject: "x",
+        text: "y",
+      })
+      .catch((error: unknown) => error);
+    await delay(50);
+
+    const started = Date.now();
+    await transport.close();
+    const elapsed = Date.now() - started;
+
+    expect(elapsed).toBeLessThan(1500);
+    expect(transport.state).toBe("closed");
+    expect(await sending).toBeInstanceOf(SendustError);
+
+    for (const socket of sockets) {
+      socket.destroy();
+    }
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  });
+
   it.skipIf(!available)("rejects a second concurrent send with TRANSPORT_BUSY", async () => {
     const sockets = new Set<Socket>();
     let connections = 0;
