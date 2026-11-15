@@ -1,6 +1,6 @@
 # QG-11 — Security Phase Record
 
-**Decision:** PENDING — awaiting project-owner approval  
+**Decision:** APPROVED — project owner review, 2026-11-15  
 **Phase:** P11 — Security  
 **Gate:** PHASE-11  
 **Prepared:** 2026-11-15  
@@ -15,11 +15,11 @@ self-approval. Nothing here approves P12 or any later gate.
 
 | Task | Status | Evidence |
 | --- | --- | --- |
-| P11-001 | IN REVIEW | [`docs/security/threat-model-closure.md`](../security/threat-model-closure.md): every abuse case AB-01…AB-14 mapped to its control and test, six residual risks accepted, one medium note carried forward. |
-| P11-002 | IN REVIEW | [`docs/security/tls-auth-audit.md`](../security/tls-auth-audit.md): rustls `ring`/`webpki-roots`, hostname verification, TLS 1.2 floor, no verification switch; certificate matrix; PLAIN/LOGIN only, TLS required, forced mechanism must be advertised, `535` redacted and terminal. |
-| P11-003 | IN REVIEW | [`docs/security/injection-attachment-audit.md`](../security/injection-attachment-audit.md): CRLF/bare-LF/NUL/reserved-header/IDNA fixtures, filename and path rules, MIME folding and RFC 2231, symlink/FIFO/device/directory/growth matrix, filesystem default, cap placement. One low defect found and fixed (facade copied before checking). |
-| P11-004 | IN REVIEW | [`docs/security/ownership-redaction-audit.md`](../security/ownership-redaction-audit.md): copy/detach fixtures, redaction matrix, concurrency/deadline/close/descriptor bounds. The P11-001 panic note is closed with `#[napi(catch_unwind)]`; one low deferral (automated forced-GC test) recorded for P12. |
-| P11-005 | IN REVIEW | This record: the acceptance checklist, closure summary, dependency and licence review, secret-scan results, executed evidence, and the pending approval. |
+| P11-001 | COMPLETED | [`docs/security/threat-model-closure.md`](../security/threat-model-closure.md): every abuse case AB-01…AB-14 mapped to its control and test, six residual risks accepted, one medium note carried forward. |
+| P11-002 | COMPLETED | [`docs/security/tls-auth-audit.md`](../security/tls-auth-audit.md): rustls `ring`/`webpki-roots`, hostname verification, TLS 1.2 floor, no verification switch; certificate matrix; PLAIN/LOGIN only, TLS required, forced mechanism must be advertised, `535` redacted and terminal. |
+| P11-003 | COMPLETED | [`docs/security/injection-attachment-audit.md`](../security/injection-attachment-audit.md): CRLF/bare-LF/NUL/reserved-header/IDNA fixtures, filename and path rules, MIME folding and RFC 2231, symlink/FIFO/device/directory/growth matrix, filesystem default, cap placement. One low defect found and fixed (facade copied before checking). |
+| P11-004 | COMPLETED | [`docs/security/ownership-redaction-audit.md`](../security/ownership-redaction-audit.md): copy/detach fixtures, redaction matrix, concurrency/deadline/close/descriptor bounds. The P11-001 panic note is closed with `#[napi(catch_unwind)]`; one low deferral (automated forced-GC test) recorded for P12. |
+| P11-005 | COMPLETED | This record: the acceptance checklist, closure summary, dependency and licence review, secret-scan results, executed evidence, and the pending approval. |
 
 ## 2. Acceptance criteria
 
@@ -133,19 +133,25 @@ Result: 238 Rust tests pass (177 core unit, 26 SMTP fault, 9 harness, 6 client, 
 
 ## 10. Decision
 
-**PENDING.** This record is complete and the evidence above is green, but PHASE-11 is
-not approved until the project owner reviews it and answers with an explicit
-approval. The phase stays IN PROGRESS until then, and P12 may not begin.
+**APPROVED, 2026-11-15.** The project owner reviewed this record and its evidence
+and approved the PHASE-11 gate. The implementation was written by an agent, so this
+approval is the required human review step, not a self-approval. The reviewer
+confirmed the three points the record raised:
 
-The review should confirm three points:
+1. The two defects found during the audits — the pre-copy attachment check and
+   the panic guard — are fixed and covered, and no high-severity finding is open.
+2. The residual risks in section 11 are accepted for the MVP.
+3. The two owner decisions in section 7 (licence declaration and advisory stage)
+   may be deferred to P13/P14 packaging; they do not block this phase.
 
-1. The two defects found during the audits (pre-copy attachment check, panic
-   guard) are fixed and covered, and no high-severity finding remains open.
-2. The residual risks in section 11 are acceptable for the MVP.
-3. The two owner decisions in section 7 (licence declaration, advisory stage)
-   may be deferred to packaging.
+P11-001 to P11-005 are COMPLETED and PHASE-11 is APPROVED. Phase 12 becomes
+eligible and owns the traceability, integration, runtime, and fixture-completeness
+work that this phase's evidence feeds into.
 
-## 11. Residual risks (proposed for acceptance)
+Approval covers P11 only. It does not approve P12 or any later gate; a failed
+compile, test, checker, or runtime result on `main` reopens this gate.
+
+## 11. Residual risks (accepted)
 
 | ID | Risk | Decision |
 | --- | --- | --- |

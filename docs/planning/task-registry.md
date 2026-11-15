@@ -5,11 +5,11 @@
 - Total phases: 19
 - Phase tasks: 95
 - Architecture amendment tasks: 7 (A01-001–A01-004, A02-001–A02-003)
-- Completed tasks: 55 (P00–P10)
-- In-review tasks: 5 (P11-001 to P11-005)
+- Completed tasks: 60 (P00–P11)
+- In-review tasks: 1 (P12-001)
 - In-progress tasks: 0
-- Not-started tasks: 35 (P12–P18)
-- P00–P02 tasks are `COMPLETED` with approved gate evidence. P03-001–P03-005 are `COMPLETED` with CI evidence and an approved QG-03 record; P04-001 to P04-005 are `COMPLETED` with an approved PHASE-04 record; P05-001 to P05-005 are `COMPLETED` with an approved PHASE-05 record; P06-001 to P06-005 are `COMPLETED` with the approved PHASE-06 record; P07-001 to P07-005 are `COMPLETED` with the approved PHASE-07 record; P08-001 to P08-005 are `COMPLETED` with the approved PHASE-08 record (project owner, 2026-11-15); P09-001 to P09-005 are `COMPLETED` with the approved PHASE-09 record (project owner, 2026-11-15); P11-001 to P11-005 are `IN REVIEW` (the PHASE-11 record awaits project-owner approval); P12–P18 are `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
+- Not-started tasks: 34 (P12-002 to P12-005, P13–P18)
+- P00–P02 tasks are `COMPLETED` with approved gate evidence. P03-001–P03-005 are `COMPLETED` with CI evidence and an approved QG-03 record; P04-001 to P04-005 are `COMPLETED` with an approved PHASE-04 record; P05-001 to P05-005 are `COMPLETED` with an approved PHASE-05 record; P06-001 to P06-005 are `COMPLETED` with the approved PHASE-06 record; P07-001 to P07-005 are `COMPLETED` with the approved PHASE-07 record; P08-001 to P08-005 are `COMPLETED` with the approved PHASE-08 record (project owner, 2026-11-15); P09-001 to P09-005 are `COMPLETED` with the approved PHASE-09 record (project owner, 2026-11-15); P11-001 to P11-005 are `COMPLETED` with the approved PHASE-11 record (project owner, 2026-11-15); P12-001 is `IN REVIEW` and P12-002–P18 are `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
 - Effort is relative: S, M, L, XL. No delivery dates.
 - Gate tasks are the final task in each phase and must not be marked complete before their phase evidence exists.
 
@@ -89,12 +89,12 @@
 | [P10](../phases/phase-10.md) | Reliability | [P10-003](../phases/phase-10.md) | Implement resource cleanup and leak prevention | M | P10-001 | COMPLETED |
 | [P10](../phases/phase-10.md) | Reliability | [P10-004](../phases/phase-10.md) | Build the reliability fault-injection suite | XL | P10-001, P10-002, P10-003 | COMPLETED |
 | [P10](../phases/phase-10.md) | Reliability | [P10-005](../phases/phase-10.md) | Reliability phase gate and failure-mode review | M | P10-001, P10-002, P10-003, P10-004 | COMPLETED |
-| [P11](../phases/phase-11.md) | Security | [P11-001](../phases/phase-11.md) | Execute the threat model and trust-boundary audit | L | P10-005, P00-004 | IN REVIEW |
-| [P11](../phases/phase-11.md) | Security | [P11-002](../phases/phase-11.md) | Prove TLS and authentication security posture | M | P11-001, P06-002 | IN REVIEW |
-| [P11](../phases/phase-11.md) | Security | [P11-003](../phases/phase-11.md) | Audit validation, MIME, and attachment security | L | P11-001, P07-005, P08-005 | IN REVIEW |
-| [P11](../phases/phase-11.md) | Security | [P11-004](../phases/phase-11.md) | Audit memory ownership, redaction, and denial-of-service bounds | M | P11-001, P10-003 | IN REVIEW |
-| [P11](../phases/phase-11.md) | Security | [P11-005](../phases/phase-11.md) | Security regression gate and remediation sign-off | M | P11-001, P11-002, P11-003, P11-004 | IN REVIEW |
-| [P12](../phases/phase-12.md) | QA | [P12-001](../phases/phase-12.md) | Build the requirements-to-test traceability matrix | M | P11-005 | NOT STARTED |
+| [P11](../phases/phase-11.md) | Security | [P11-001](../phases/phase-11.md) | Execute the threat model and trust-boundary audit | L | P10-005, P00-004 | COMPLETED |
+| [P11](../phases/phase-11.md) | Security | [P11-002](../phases/phase-11.md) | Prove TLS and authentication security posture | M | P11-001, P06-002 | COMPLETED |
+| [P11](../phases/phase-11.md) | Security | [P11-003](../phases/phase-11.md) | Audit validation, MIME, and attachment security | L | P11-001, P07-005, P08-005 | COMPLETED |
+| [P11](../phases/phase-11.md) | Security | [P11-004](../phases/phase-11.md) | Audit memory ownership, redaction, and denial-of-service bounds | M | P11-001, P10-003 | COMPLETED |
+| [P11](../phases/phase-11.md) | Security | [P11-005](../phases/phase-11.md) | Security regression gate and remediation sign-off | M | P11-001, P11-002, P11-003, P11-004 | COMPLETED |
+| [P12](../phases/phase-12.md) | QA | [P12-001](../phases/phase-12.md) | Build the requirements-to-test traceability matrix | M | P11-005 | IN REVIEW |
 | [P12](../phases/phase-12.md) | QA | [P12-002](../phases/phase-12.md) | Execute core and binding integration coverage | L | P12-001 | NOT STARTED |
 | [P12](../phases/phase-12.md) | QA | [P12-003](../phases/phase-12.md) | Execute TypeScript contract, lifecycle, and error tests | L | P12-001, P09-005 | NOT STARTED |
 | [P12](../phases/phase-12.md) | QA | [P12-004](../phases/phase-12.md) | Run fixture completeness and regression triage | M | P12-002, P12-003 | NOT STARTED |
