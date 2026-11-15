@@ -324,7 +324,7 @@ impl Transport {
         let deadline = tokio::time::Instant::now() + self.inner.close_timeout;
         loop {
             {
-                let mut active = self.inner.active.lock().await;
+                let active = self.inner.active.lock().await;
                 match &*active {
                     Active::Idle => break,
                     Active::Sending(Some(handle)) => handle.abort(),

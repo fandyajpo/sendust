@@ -679,23 +679,31 @@ mod tests {
     fn oversized_bodies_are_rejected_by_preflight() {
         use crate::config::MIB;
 
-        let mut message = message();
+        let mut oversized = message();
         // Larger than the wire cap can ever hold even before headers.
-        message.text = Some("a".repeat(40 * MIB as usize));
+        oversized.text = Some("a".repeat(40 * MIB as usize));
         assert_eq!(
-            serialize(&message, Limits::default(), AttachmentPolicy::Disabled)
-                .expect_err("over cap")
-                .code(),
+            serialize(
+                &oversized,
+                Limits::default(),
+                AttachmentPolicy::Disabled
+            )
+            .expect_err("over cap")
+            .code(),
             ErrorCode::LimitWireBytes
         );
 
-        let mut message = message();
-        message.text = Some("a".repeat((10 * MIB) as usize));
-        message.html = Some("a".repeat((10 * MIB) as usize));
+        let mut oversized = message();
+        oversized.text = Some("a".repeat((10 * MIB) as usize));
+        oversized.html = Some("a".repeat((10 * MIB) as usize));
         assert_eq!(
-            serialize(&message, Limits::default(), AttachmentPolicy::Disabled)
-                .expect_err("both parts over cap")
-                .code(),
+            serialize(
+                &oversized,
+                Limits::default(),
+                AttachmentPolicy::Disabled
+            )
+            .expect_err("both parts over cap")
+            .code(),
             ErrorCode::LimitWireBytes
         );
     }
