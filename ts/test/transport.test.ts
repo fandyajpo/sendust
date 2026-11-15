@@ -1,4 +1,4 @@
-import { createServer } from "node:net";
+import { createServer, type Socket } from "node:net";
 import { describe, expect, it } from "vitest";
 import { SendustError, createTransport, version } from "../src/index.ts";
 
@@ -49,7 +49,11 @@ describe("sendust facade", () => {
   it.skipIf(!available)("aborts a send in flight and rejects it as TRANSPORT_CLOSED", async () => {
     // Accept the TCP connection and stay silent: the client is left waiting in
     // the TLS handshake, which only close can interrupt.
-    const server = createServer(() => {});
+    const sockets = new Set<Socket>();
+    const server = createServer((socket) => {
+      sockets.add(socket);
+      socket.on("close", () => sockets.delete(socket));
+    });
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
     const address = server.address();
     const port = typeof address === "object" && address ? address.port : 1;
@@ -79,7 +83,9 @@ describe("sendust facade", () => {
     expect((error as SendustError).code).toBe("TRANSPORT_CLOSED");
     expect(transport.state).toBe("closed");
 
-    server.closeAllConnections();
+    for (const socket of sockets) {
+      socket.destroy();
+    }
     await new Promise<void>((resolve) => server.close(() => resolve()));
   });
 
