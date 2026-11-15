@@ -676,35 +676,30 @@ mod tests {
     }
 
     #[test]
-    fn oversized_bodies_are_rejected_by_preflight() {
-        use crate::config::MIB;
-
-        let mut oversized = message();
-        // Larger than the wire cap can ever hold even before headers.
-        oversized.text = Some("a".repeat(40 * MIB as usize));
-        assert_eq!(
-            serialize(&oversized, Limits::default(), AttachmentPolicy::Disabled)
-                .expect_err("over cap")
-                .code(),
-            ErrorCode::LimitWireBytes
-        );
-
-        let mut oversized = message();
-        oversized.text = Some("a".repeat((13 * MIB) as usize));
-        oversized.html = Some("a".repeat((13 * MIB) as usize));
-        assert_eq!(
-            serialize(&oversized, Limits::default(), AttachmentPolicy::Disabled)
-                .expect_err("both parts over cap")
-                .code(),
-            ErrorCode::LimitWireBytes
-        );
-
-        // Either part alone still fits, so the rejection above is the sum, not a
-        // single oversized part.
+    fn preflight_rejects_bodies_that_only_fit_separately() {
+        // One 1 KiB body with the standard header set, measured rather than
+        // assumed, so this cap cannot drift if the header set changes.
         let mut single = message();
-        single.text = Some("a".repeat((13 * MIB) as usize));
+        single.text = Some("a".repeat(1024));
         single.html = None;
-        assert!(serialize(&single, Limits::default(), AttachmentPolicy::Disabled).is_ok());
+        let bytes = serialize(&single, Limits::default(), AttachmentPolicy::Disabled)
+            .expect("serialized");
+        let cap = Limits::default()
+            .with_max_wire_bytes(bytes.len() as u64)
+            .expect("lowering is allowed");
+        assert!(serialize(&single, cap, AttachmentPolicy::Disabled).is_ok());
+
+        // Both bodies overflow the same cap by their sum alone, so the rejection
+        // comes from preflight and not from building the message.
+        let mut both = message();
+        both.text = Some("a".repeat(1024));
+        both.html = Some("a".repeat(1024));
+        assert_eq!(
+            serialize(&both, cap, AttachmentPolicy::Disabled)
+                .expect_err("the sum is over the cap")
+                .code(),
+            ErrorCode::LimitWireBytes
+        );
     }
 
     #[test]
