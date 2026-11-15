@@ -6,10 +6,10 @@
 - Phase tasks: 95
 - Architecture amendment tasks: 7 (A01-001–A01-004, A02-001–A02-003)
 - Completed tasks: 65 (P00–P12)
-- In-review tasks: 1 (P13-001)
+- In-review tasks: 2 (P13-001, P13-002)
 - In-progress tasks: 0
-- Not-started tasks: 29 (P13-002 to P13-005, P14–P18)
-- P00–P02 tasks are `COMPLETED` with approved gate evidence. P03-001–P03-005 are `COMPLETED` with CI evidence and an approved QG-03 record; P04-001 to P04-005 are `COMPLETED` with an approved PHASE-04 record; P05-001 to P05-005 are `COMPLETED` with an approved PHASE-05 record; P06-001 to P06-005 are `COMPLETED` with the approved PHASE-06 record; P07-001 to P07-005 are `COMPLETED` with the approved PHASE-07 record; P08-001 to P08-005 are `COMPLETED` with the approved PHASE-08 record (project owner, 2026-11-15); P09-001 to P09-005 are `COMPLETED` with the approved PHASE-09 record (project owner, 2026-11-15); P11-001 to P11-005 are `COMPLETED` with the approved PHASE-11 record (project owner, 2026-11-15); P12-001 to P12-005 are `COMPLETED` with the approved PHASE-12 record (project owner, 2026-11-15); P13-001 is `IN REVIEW` and P13-002–P18 are `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
+- Not-started tasks: 28 (P13-003 to P13-005, P14–P18)
+- P00–P02 tasks are `COMPLETED` with approved gate evidence. P03-001–P03-005 are `COMPLETED` with CI evidence and an approved QG-03 record; P04-001 to P04-005 are `COMPLETED` with an approved PHASE-04 record; P05-001 to P05-005 are `COMPLETED` with an approved PHASE-05 record; P06-001 to P06-005 are `COMPLETED` with the approved PHASE-06 record; P07-001 to P07-005 are `COMPLETED` with the approved PHASE-07 record; P08-001 to P08-005 are `COMPLETED` with the approved PHASE-08 record (project owner, 2026-11-15); P09-001 to P09-005 are `COMPLETED` with the approved PHASE-09 record (project owner, 2026-11-15); P11-001 to P11-005 are `COMPLETED` with the approved PHASE-11 record (project owner, 2026-11-15); P12-001 to P12-005 are `COMPLETED` with the approved PHASE-12 record (project owner, 2026-11-15); P13-001 and P13-002 are `IN REVIEW`; P13-003–P18 are `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
 - Effort is relative: S, M, L, XL. No delivery dates.
 - Gate tasks are the final task in each phase and must not be marked complete before their phase evidence exists.
 
@@ -100,7 +100,7 @@
 | [P12](../phases/phase-12.md) | QA | [P12-004](../phases/phase-12.md) | Run fixture completeness and regression triage | M | P12-002, P12-003 | COMPLETED |
 | [P12](../phases/phase-12.md) | QA | [P12-005](../phases/phase-12.md) | QA exit gate and evidence package | S | P12-001, P12-002, P12-003, P12-004 | COMPLETED |
 | [P13](../phases/phase-13.md) | Performance | [P13-001](../phases/phase-13.md) | Define performance budgets and measurement method | M | P12-005 | IN REVIEW |
-| [P13](../phases/phase-13.md) | Performance | [P13-002](../phases/phase-13.md) | Benchmark core send path and MIME serialization | L | P13-001 | NOT STARTED |
+| [P13](../phases/phase-13.md) | Performance | [P13-002](../phases/phase-13.md) | Benchmark core send path and MIME serialization | L | P13-001 | IN REVIEW |
 | [P13](../phases/phase-13.md) | Performance | [P13-003](../phases/phase-13.md) | Benchmark attachment reads, copying, and memory bounds | L | P13-001 | NOT STARTED |
 | [P13](../phases/phase-13.md) | Performance | [P13-004](../phases/phase-13.md) | Measure lifecycle, BUSY, timeout, and close overhead | M | P13-001, P10-005 | NOT STARTED |
 | [P13](../phases/phase-13.md) | Performance | [P13-005](../phases/phase-13.md) | Performance regression gate and final report | S | P13-001, P13-002, P13-003, P13-004 | NOT STARTED |
