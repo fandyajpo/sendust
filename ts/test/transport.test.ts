@@ -58,7 +58,6 @@ describe("sendust facade", () => {
       host: "127.0.0.1",
       port,
       secure: "tls",
-      timeouts: { connectMs: 30_000, operationMs: 30_000, totalMs: 30_000, closeMs: 5_000 },
     });
 
     const sending = transport.send({
