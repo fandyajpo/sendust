@@ -101,8 +101,7 @@ impl DeliveryProgress {
 
     /// Records a stage; stages never move backwards.
     pub fn set_stage(&self, stage: Stage) {
-        self.stage
-            .fetch_max(stage_rank(stage), Ordering::SeqCst);
+        self.stage.fetch_max(stage_rank(stage), Ordering::SeqCst);
     }
 
     /// Records one recipient the relay accepted at `RCPT`.
