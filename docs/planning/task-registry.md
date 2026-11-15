@@ -6,10 +6,10 @@
 - Phase tasks: 95
 - Architecture amendment tasks: 7 (A01-001–A01-004, A02-001–A02-003)
 - Completed tasks: 50 (P00–P09)
-- In-review tasks: 3 (P10-001 to P10-003)
+- In-review tasks: 4 (P10-001 to P10-004)
 - In-progress tasks: 0
-- Not-started tasks: 42 (P10-004 to P10-005, P11–P18)
-- P00–P02 tasks are `COMPLETED` with approved gate evidence. P03-001–P03-005 are `COMPLETED` with CI evidence and an approved QG-03 record; P04-001 to P04-005 are `COMPLETED` with an approved PHASE-04 record; P05-001 to P05-005 are `COMPLETED` with an approved PHASE-05 record; P06-001 to P06-005 are `COMPLETED` with the approved PHASE-06 record; P07-001 to P07-005 are `COMPLETED` with the approved PHASE-07 record; P08-001 to P08-005 are `COMPLETED` with the approved PHASE-08 record (project owner, 2026-11-15); P09-001 to P09-005 are `COMPLETED` with the approved PHASE-09 record (project owner, 2026-11-15); P10-001 to P10-003 are `IN REVIEW`; P10-004–P18 are `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
+- Not-started tasks: 41 (P10-005, P11–P18)
+- P00–P02 tasks are `COMPLETED` with approved gate evidence. P03-001–P03-005 are `COMPLETED` with CI evidence and an approved QG-03 record; P04-001 to P04-005 are `COMPLETED` with an approved PHASE-04 record; P05-001 to P05-005 are `COMPLETED` with an approved PHASE-05 record; P06-001 to P06-005 are `COMPLETED` with the approved PHASE-06 record; P07-001 to P07-005 are `COMPLETED` with the approved PHASE-07 record; P08-001 to P08-005 are `COMPLETED` with the approved PHASE-08 record (project owner, 2026-11-15); P09-001 to P09-005 are `COMPLETED` with the approved PHASE-09 record (project owner, 2026-11-15); P10-001 to P10-004 are `IN REVIEW`; P10-005–P18 are `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
 - Effort is relative: S, M, L, XL. No delivery dates.
 - Gate tasks are the final task in each phase and must not be marked complete before their phase evidence exists.
 
@@ -87,7 +87,7 @@
 | [P10](../phases/phase-10.md) | Reliability | [P10-001](../phases/phase-10.md) | Implement lifecycle race hardening | L | P09-005 | IN REVIEW |
 | [P10](../phases/phase-10.md) | Reliability | [P10-002](../phases/phase-10.md) | Enforce timeout-budget interaction and bounded close drain | L | P10-001 | IN REVIEW |
 | [P10](../phases/phase-10.md) | Reliability | [P10-003](../phases/phase-10.md) | Implement resource cleanup and leak prevention | M | P10-001 | IN REVIEW |
-| [P10](../phases/phase-10.md) | Reliability | [P10-004](../phases/phase-10.md) | Build the reliability fault-injection suite | XL | P10-001, P10-002, P10-003 | NOT STARTED |
+| [P10](../phases/phase-10.md) | Reliability | [P10-004](../phases/phase-10.md) | Build the reliability fault-injection suite | XL | P10-001, P10-002, P10-003 | IN REVIEW |
 | [P10](../phases/phase-10.md) | Reliability | [P10-005](../phases/phase-10.md) | Reliability phase gate and failure-mode review | M | P10-001, P10-002, P10-003, P10-004 | NOT STARTED |
 | [P11](../phases/phase-11.md) | Security | [P11-001](../phases/phase-11.md) | Execute the threat model and trust-boundary audit | L | P10-005, P00-004 | NOT STARTED |
 | [P11](../phases/phase-11.md) | Security | [P11-002](../phases/phase-11.md) | Prove TLS and authentication security posture | M | P11-001, P06-002 | NOT STARTED |

@@ -41,7 +41,7 @@ In scope: lifecycle races, timeout-budget interaction, close/drain guarantees, r
 ### P10-004 — Build the reliability fault-injection suite
 
 - **Size:** XL
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P10-001, P10-002, P10-003
 - **Description:** Create deterministic fault fixtures for connection refused, DNS failure, greeting stall, TLS handshake stall, auth stall, RCPT stall, DATA stall, final-response stall, reset at each stage, abrupt close, malformed responses, slow close, and ambiguous post-DATA outcomes. Tests must assert result classification, timing bounds, command traces, and cleanup.
 - **Evidence criteria:** Each fault fixture has an expected result, deadline, command trace, and resource-cleanup assertion. Mixed RCPT `250`/`550`, explicit final DATA `451` rejection, and missing-final-reply-after-DATA ambiguity are included. No test depends on external network or unbounded sleeps. Suite passes repeatably.
@@ -88,7 +88,7 @@ Hardened lifecycle, shared deadline logic, cleanup guarantees, fault-injection s
 
 ## Status
 
-IN PROGRESS. P10-001 to P10-003 are IN REVIEW; P10-004 and P10-005 are NOT STARTED.
+IN PROGRESS. P10-001 to P10-004 are IN REVIEW; P10-005 is NOT STARTED.
 
 ## Evidence log
 
@@ -99,3 +99,4 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 | P10-001 | `results/mod.rs` adds `DeliveryProgress`, a monotonic stage tracker that also records the recipients accepted at RCPT, and `cancelled_outcome()`; `SmtpTransport::with_progress` marks `connection_setup`, `auth`, `mail`, each `rcpt`, `data_command`, and `data_body` and records accepted recipients. The binding maps a cancelled send to an `unknown` outcome for the accepted subset once `data_body` was reached, and to `TRANSPORT_CLOSED` before that. Tests: `a_cancellation_before_data_is_not_ambiguous`, `a_cancellation_after_data_reports_unknown_for_the_accepted_subset`, `stages_never_move_backwards`, plus the existing lifecycle and facade race tests (send/send, send/close, close/send, close/close). | IN REVIEW |
 | P10-002 | `SendDeadlines` now has exact boundary tests: connect expires at exactly 10 s and not a nanosecond before, the operation deadline is exactly 30 s and capped by the total, and the total leaves zero time only at 120 s. The three fake-relay timeout tests assert a timeout never retries — a connect timeout never reaches MAIL, and the operation and total timeouts issue exactly one MAIL. The facade closes a stalled send within a 1 s close budget (measured, under 1.5 s) and ends `closed`. The close drain deadline itself is covered by `close_drain_times_out_without_the_active_send_finishing`. | IN REVIEW |
 | P10-003 | `tests/leaks.rs` probes the descriptor lifecycle with warm-up loops and `/dev/fd` counts on unix: 20 successful sends, 50 refused connections, and 20 untrusted-certificate TLS failures each leave the count stable within two descriptors, and the TLS loop also proves no `MAIL` was ever issued. Attachment handles are already covered by `the_file_handle_is_closed_after_a_read`; buffers are owned and dropped after serialization, and no socket, timer, or task outlives a send because connections are created per send and dropped with the session. | IN REVIEW |
+| P10-004 | `smtp_faults` now carries 26 deterministic cases over the loopback fake TLS relay: stalls at connect, MAIL, AUTH, RCPT, and the DATA command each time out with the honest stage and issue no further commands; a final-reply stall after DATA returns `unknown` with the body transmitted and exactly one DATA; an AUTH reset is a protocol error at the auth stage with no MAIL; a malformed greeting is a protocol error. Together with the existing certificate matrix, STARTTLS refusal, greeting/RCPT/DATA resets, `421` handling, mixed RCPT, final `451`, close-after-DATA ambiguity, and the total stall, every required stage has a result, timing bound, command trace, and leak check. `leaks.rs` supplies the cleanup evidence. | IN REVIEW |

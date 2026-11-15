@@ -89,7 +89,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition. P10 is IN PROGRESS (P10-001 to P10-003 in review); P11–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition. P10 is IN PROGRESS (P10-001 to P10-004 in review); P11–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -116,9 +116,9 @@ P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P07-001–P07-005 | COMPLETED; PHASE-07 APPROVED (2026-11-14) |
 | P08-001–P08-005 | COMPLETED; PHASE-08 APPROVED (2026-11-15) |
 | P09-001–P09-005 | COMPLETED; PHASE-09 APPROVED (2026-11-15) |
-| P10-001–P10-003 | IN REVIEW |
-| P10-004–P18 | NOT STARTED |
-| Next task | P10-004 — build the reliability fault-injection suite |
+| P10-001–P10-004 | IN REVIEW |
+| P10-005–P18 | NOT STARTED |
+| Next task | P10-005 — reliability phase gate and failure-mode review |
 
 ## 5. Conventions
 

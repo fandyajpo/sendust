@@ -523,7 +523,6 @@ async fn a_421_keeps_the_attempted_statuses_and_marks_the_rest_unknown() {
     assert_eq!(server.trace().count_prefix("DATA"), 0);
 }
 
-
 fn auth_ehlo() -> Reply {
     Reply::lines(&["250-sendust.test", "250-AUTH PLAIN LOGIN", "250 8BITMIME"])
 }
@@ -610,7 +609,10 @@ async fn final_reply_stall_after_data_is_unknown() {
     assert_eq!(outcome.status(), DeliveryStatus::Unknown);
     assert_eq!(outcome.recipients()[0].status, RecipientStatus::Unknown);
     assert_eq!(server.trace().count_prefix("DATA"), 1);
-    assert!(!server.trace().body().is_empty(), "the body was transmitted");
+    assert!(
+        !server.trace().body().is_empty(),
+        "the body was transmitted"
+    );
 }
 
 #[tokio::test]
