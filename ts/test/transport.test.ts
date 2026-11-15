@@ -319,6 +319,20 @@ describe("sendust facade", () => {
     ).toThrow(SendustValidationError);
   });
 
+  it.skipIf(!available)("rejects an unsupported auth method", async () => {
+    const code = await errorCode(
+      Promise.resolve().then(() =>
+        createTransport({
+          host: "127.0.0.1",
+          port: 1,
+          secure: "tls",
+          auth: { user: "u", pass: "p", method: "cram-md5" },
+        } as never),
+      ),
+    );
+    expect(code).toBe("VALIDATION_INVALID_OPTION");
+  });
+
   it.skipIf(!available)("validates a message before opening a connection", async () => {
     const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls" });
 

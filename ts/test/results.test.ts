@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { SendustInternalError } from "../src/index.ts";
 import { toSendResult } from "../src/results.ts";
 
 describe("result mapping", () => {
@@ -55,7 +56,7 @@ describe("result mapping", () => {
         status: "delivered",
         recipients: [{ address: "a@example.test", status: "accepted" }],
       }),
-    ).toThrow(/unexpected native delivery status/);
+    ).toThrow(SendustInternalError);
 
     expect(() =>
       toSendResult({

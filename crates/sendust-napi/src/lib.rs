@@ -159,7 +159,7 @@ impl Transport {
                     "plain" => AuthMechanism::Plain,
                     "login" => AuthMechanism::Login,
                     _ => {
-                        return Err(to_napi(CoreError::new(ErrorCode::ConfigUnsupportedAuth)));
+                        return Err(to_napi(CoreError::new(ErrorCode::ValidationInvalidOption)));
                     }
                 };
                 credentials = credentials.with_mechanism(mechanism);

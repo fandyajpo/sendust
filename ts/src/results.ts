@@ -1,21 +1,26 @@
+import { SendustInternalError } from "./errors.ts";
 import type { NativeSendResult } from "./loader.ts";
 import type { DeliveryStatus, RecipientStatus, SendResult } from "./types.ts";
 
 const DELIVERY_STATUSES: readonly DeliveryStatus[] = ["accepted", "rejected", "unknown"];
 const RECIPIENT_STATUSES: readonly RecipientStatus[] = ["accepted", "rejected", "unknown"];
 
+function internal(message: string): SendustInternalError {
+  return new SendustInternalError({ code: "INTERNAL", category: "internal", message });
+}
+
 function toDeliveryStatus(value: string): DeliveryStatus {
   if ((DELIVERY_STATUSES as readonly string[]).includes(value)) {
     return value as DeliveryStatus;
   }
-  throw new Error(`unexpected native delivery status: ${value}`);
+  throw internal(`unexpected native delivery status: ${value}`);
 }
 
 function toRecipientStatus(value: string): RecipientStatus {
   if ((RECIPIENT_STATUSES as readonly string[]).includes(value)) {
     return value as RecipientStatus;
   }
-  throw new Error(`unexpected native recipient status: ${value}`);
+  throw internal(`unexpected native recipient status: ${value}`);
 }
 
 /**
