@@ -17,6 +17,7 @@ A direct dependency may be added only through the review in section 6. Transitiv
 | `napi-build` | `=2.6.0` | build | — | on | `sendust-napi` | Binding build setup |
 | `idna` | `=1.1.0` | normal | `std`, `compiled_data` | off | `sendust-core` | IDNA/UTS #46 domain conversion for envelope addresses |
 | `base64` | `=0.23.1` | normal | default | on | `sendust-core` | MIME transfer encoding (ADR-0010) |
+| `libc` | `=0.2.191` | normal (unix targets only) | — | off | `sendust-core` | `O_NOFOLLOW`/`O_NONBLOCK` for the attachment reader (P08-002); already present transitively via `tokio` |
 | `tokio` | `=1.54.1` | normal, dev | `time`, `sync`, `net`, `io-util`; dev-only `rt`, `macros` | off | `sendust-core` | Deadline enforcement and native TCP I/O; core never builds a runtime |
 | `rustls` | `=0.23.46` | normal, dev | `std`, `tls12`, `ring` | off | `sendust-core` | Typed TLS error classification in the SMTP adapter and the TLS test harness |
 | `tokio-rustls` | `=0.26.6` | normal | `tls12` | off | `sendust-core` | Async TLS stream for the native SMTP client (ADR-0017) |
@@ -27,6 +28,8 @@ A direct dependency may be added only through the review in section 6. Transitiv
 `sendust-core` declares no build script and no binding, runtime, or Node.js dependency. `sendust-napi` depends on `sendust-core` and never the reverse. No third-party SMTP engine is declared anywhere, in any kind of dependency, after PHASE-06 (ADR-0017).
 
 `base64` and `idna` are the vetted primitives ADR-0010 requires; both are declared directly and add no new transitive weight. `idna` is declared directly so the core cannot silently drift from the resolver's choice.
+
+`libc` was already in the build graph through `tokio`, `mio`, and `socket2`; it is declared directly only so the attachment reader can pass `O_NOFOLLOW` and `O_NONBLOCK`, which the standard library does not expose. The dependency is target-gated to unix and adds no new package to the lockfile.
 
 Test-only dependencies (MIME verification, fake SMTP/TLS tooling, benchmarks) are introduced by the phase that needs them, pinned exactly at that time, recorded in this table with kind `dev`, and never enabled for published artifacts.
 
@@ -89,6 +92,7 @@ Every direct dependency must have one row. The inventory is completed before rel
 | `base64` | `0.23.1` | MIT OR Apache-2.0 | https://crates.io/crates/base64 | P04-003 |
 | `tokio` | `1.54.1` | MIT | https://crates.io/crates/tokio | P04-005 |
 | `rustls` | `0.23.46` | Apache-2.0 OR ISC OR MIT | https://crates.io/crates/rustls | P04-005 |
+| `libc` | `0.2.191` | MIT | https://crates.io/crates/libc | P08-002 (target-gated; already transitive via `tokio`) |
 | `mail-parser` | `0.11.9` | Apache-2.0 OR MIT | https://crates.io/crates/mail-parser | P07-005 (dev-only) |
 
 ## 9. npm development tool pins

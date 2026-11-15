@@ -110,6 +110,11 @@ error_codes! {
         Configuration,
         "file attachments are disabled"
     ),
+    ConfigAttachmentUnreadable => (
+        "CONFIG_ATTACHMENT_UNREADABLE",
+        Configuration,
+        "attachment file is not a readable regular file"
+    ),
     ConfigInvalidRelay => ("CONFIG_INVALID_RELAY", Configuration, "invalid relay configuration"),
     LimitRecipients => ("LIMIT_RECIPIENTS", Limit, "too many recipients"),
     LimitAttachmentBytes => ("LIMIT_ATTACHMENT_BYTES", Limit, "attachment exceeds the per-file limit"),
@@ -321,6 +326,7 @@ mod tests {
         ("CONFIG_UNSUPPORTED_SECURITY", "configuration"),
         ("CONFIG_UNSUPPORTED_AUTH", "configuration"),
         ("CONFIG_FILE_ACCESS_DISABLED", "configuration"),
+        ("CONFIG_ATTACHMENT_UNREADABLE", "configuration"),
         ("CONFIG_INVALID_RELAY", "configuration"),
         ("LIMIT_RECIPIENTS", "limit"),
         ("LIMIT_ATTACHMENT_BYTES", "limit"),

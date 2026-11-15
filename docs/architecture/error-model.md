@@ -90,6 +90,7 @@ export type ErrorCategory =
 | `CONFIG_UNSUPPORTED_SECURITY` | configuration | sync | Security mode not supported | No |
 | `CONFIG_UNSUPPORTED_AUTH` | configuration | sync | Auth mode not supported | No |
 | `CONFIG_FILE_ACCESS_DISABLED` | configuration | Promise rejection from send | File attachment used without opt-in | No |
+| `CONFIG_ATTACHMENT_UNREADABLE` | configuration | Promise rejection from send | File attachment is missing, unreadable, or not a regular file | No |
 | `CONFIG_INVALID_RELAY` | configuration | sync | Empty/invalid host or port | No |
 | `LIMIT_RECIPIENTS` | limit | Promise rejection from send | More than 100 recipients | No |
 | `LIMIT_ATTACHMENT_BYTES` | limit | Promise rejection from send | Attachment exceeds 10 MiB | No |
@@ -132,6 +133,7 @@ Codes are append-only within a major version. Removing or renaming a code is a b
 | Address parse/IDNA failure | validation | `VALIDATION_INVALID_ADDRESS` |
 | Non-ASCII local part | validation | `VALIDATION_NON_ASCII_LOCAL_PART` |
 | Header control characters | validation | `VALIDATION_HEADER_INJECTION` |
+| File attachment open, `fstat`, or type check failure | configuration | `CONFIG_ATTACHMENT_UNREADABLE` |
 | Cap exceeded | limit | `LIMIT_*` |
 | rustls certificate error | tls | `TLS_CERTIFICATE` |
 | rustls handshake/protocol error | tls | `TLS_HANDSHAKE` / `TLS_PROTOCOL` |

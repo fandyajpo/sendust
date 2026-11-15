@@ -25,7 +25,7 @@ In scope: attachment configuration, opt-in filesystem gate, regular-file validat
 ### P08-002 — Implement safe regular-file validation and bounded reads
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P08-001
 - **Description:** Open the target, verify it is a regular file via metadata, and read no more than the allowed bound. Reject symlinks, FIFOs, devices, directories, and sockets. Handle TOCTOU with an open-then-check approach and prevent unbounded growth. Read at most 10 MiB per attachment and stop immediately on over-limit. Do not follow URLs.
 - **Evidence criteria:** Tests cover regular file, symlink, FIFO, device, directory, missing path, permission denied, and file that grows during read. All non-regular and over-limit cases fail without emitting partial message bytes. No network path exists.
@@ -88,7 +88,7 @@ Opt-in configuration, descriptor validation, safe file reader, cap enforcement, 
 
 ## Status
 
-IN PROGRESS. P08-001 is IN REVIEW; P08-002 to P08-005 are NOT STARTED.
+IN PROGRESS. P08-001 and P08-002 are IN REVIEW; P08-003 to P08-005 are NOT STARTED.
 
 ## Evidence log
 
@@ -97,3 +97,4 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 | Task | Evidence | State |
 | --- | --- | --- |
 | P08-001 | `attachments/mod.rs`: `AttachmentPolicy` (`Disabled` by default, explicit `Enabled` opt-in, no ambient global), `filesystem_enabled`/`from_flag`, and descriptor path validation (absolute, non-empty, at most 1024 bytes, control-free). The policy is threaded through `Delivery`, `OutgoingMessage::validate`, `mime::serialize[_at]` and the Node-API adapter. Tests prove disabled-by-default with no open, relative/malformed path rejection, and opt-in acceptance of an absolute path. | IN REVIEW |
+| P08-002 | `attachments/mod.rs`: `read_attachment` (re-exported from the facade) inspects the path with `symlink_metadata`, opens it with `O_NOFOLLOW`/`O_NONBLOCK` on unix, re-checks the opened descriptor with `fstat`, and reads at most the per-file cap plus one probe byte. Tests cover a regular file, the inclusive cap, cap + 1, an outgrowing file, a missing path, a directory, a symlink, a FIFO (no blocking), a character device, permission denied, and path-free errors. Non-regular and unreadable inputs fail with `CONFIG_ATTACHMENT_UNREADABLE`; over-cap input fails with `LIMIT_ATTACHMENT_BYTES`. | IN REVIEW |

@@ -4,6 +4,7 @@
 //! Reading file attachments safely, and enforcing their byte caps at read time,
 //! belongs to P08; until then a file descriptor is policy-checked but not opened.
 
+use std::fs::File;
 use std::path::Path;
 
 use crate::config::Limits;
@@ -214,6 +215,73 @@ fn validate_path(path: &str) -> Result<(), Error> {
         return Err(invalid_attachment());
     }
     Ok(())
+}
+
+/// Reads one file attachment, returning at most the per-file cap in owned bytes.
+///
+/// The open is the trust boundary: on Unix it refuses to follow a symlink and
+/// never blocks on a FIFO, then the opened descriptor is inspected so a path
+/// swapped in between cannot change what gets read. The read stops one byte
+/// past the cap, so a file that grows past it is rejected rather than partially
+/// returned.
+pub fn read_attachment(
+    descriptor: &FileDescriptor,
+    limits: Limits,
+) -> Result<Vec<u8>, Error> {
+    validate_path(&descriptor.path)?;
+    let path = Path::new(descriptor.path.trim());
+    let file = open_regular(path)?;
+    read_bounded(file, limits.max_attachment_bytes())
+}
+
+fn unreadable() -> Error {
+    Error::new(ErrorCode::ConfigAttachmentUnreadable)
+}
+
+fn open_regular(path: &Path) -> Result<File, Error> {
+    // Reject the non-regular shapes before any open: opening a FIFO read-only
+    // waits for a writer, and a directory opens but can never be read.
+    let before = std::fs::symlink_metadata(path).map_err(|_| unreadable())?;
+    let kind = before.file_type();
+    if kind.is_symlink() || !kind.is_file() {
+        return Err(unreadable());
+    }
+
+    #[cfg(unix)]
+    let file = {
+        use std::os::unix::fs::OpenOptionsExt;
+
+        // O_NOFOLLOW closes the symlink race for this open, and O_NONBLOCK keeps
+        // a path swapped to a FIFO from blocking before the fstat runs.
+        std::fs::OpenOptions::new()
+            .read(true)
+            .custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK)
+            .open(path)
+            .map_err(|_| unreadable())?
+    };
+
+    #[cfg(not(unix))]
+    let file = File::open(path).map_err(|_| unreadable())?;
+
+    // Inspect the descriptor that will actually be read, not the path again.
+    let after = file.metadata().map_err(|_| unreadable())?;
+    if !after.file_type().is_file() {
+        return Err(unreadable());
+    }
+    Ok(file)
+}
+
+fn read_bounded(file: File, cap: u64) -> Result<Vec<u8>, Error> {
+    use std::io::Read;
+
+    let mut bytes = Vec::new();
+    file.take(cap.saturating_add(1))
+        .read_to_end(&mut bytes)
+        .map_err(|_| unreadable())?;
+    if bytes.len() as u64 > cap {
+        return Err(Error::new(ErrorCode::LimitAttachmentBytes));
+    }
+    Ok(bytes)
 }
 
 #[cfg(test)]
@@ -463,5 +531,173 @@ mod tests {
         validate(attachments, Limits::default(), AttachmentPolicy::Disabled)
             .expect_err("must be rejected")
             .code()
+    }
+}
+
+
+#[cfg(test)]
+mod file_reads {
+    use super::*;
+    use std::path::{Path, PathBuf};
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    struct TempDir(PathBuf);
+
+    impl TempDir {
+        fn new() -> Self {
+            static COUNTER: AtomicU64 = AtomicU64::new(0);
+            let unique = COUNTER.fetch_add(1, Ordering::Relaxed);
+            let path = std::env::temp_dir().join(format!(
+                "sendust-attachments-{}-{unique}",
+                std::process::id()
+            ));
+            std::fs::create_dir_all(&path).expect("temp dir");
+            Self(path)
+        }
+
+        fn write(&self, name: &str, bytes: &[u8]) -> PathBuf {
+            let path = self.0.join(name);
+            std::fs::write(&path, bytes).expect("write fixture");
+            path
+        }
+    }
+
+    impl Drop for TempDir {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+
+    fn descriptor(path: &Path) -> FileDescriptor {
+        FileDescriptor {
+            display_name: Some("notes.txt".to_string()),
+            content_type: None,
+            path: path.to_string_lossy().into_owned(),
+        }
+    }
+
+    fn limits_with_cap(cap: u64) -> Limits {
+        Limits::default()
+            .with_max_attachment_bytes(cap)
+            .expect("lowering is allowed")
+    }
+
+    fn code(path: &Path, cap: u64) -> ErrorCode {
+        read_attachment(&descriptor(path), limits_with_cap(cap))
+            .expect_err("must be rejected")
+            .code()
+    }
+
+    #[test]
+    fn reads_a_regular_file() {
+        let dir = TempDir::new();
+        let path = dir.write("report.txt", b"hello");
+
+        let bytes =
+            read_attachment(&descriptor(&path), Limits::default()).expect("reads the file");
+
+        assert_eq!(bytes, b"hello");
+    }
+
+    #[test]
+    fn enforces_the_per_file_cap_inclusively() {
+        let dir = TempDir::new();
+        let at_cap = dir.write("at-cap.bin", b"abcd");
+        assert_eq!(
+            read_attachment(&descriptor(&at_cap), limits_with_cap(4)).expect("at cap"),
+            b"abcd"
+        );
+
+        let over = dir.write("over.bin", b"abcde");
+        assert_eq!(code(&over, 4), ErrorCode::LimitAttachmentBytes);
+    }
+
+    #[test]
+    fn rejects_a_file_that_outgrows_the_cap() {
+        // The reader stops one byte past the cap, which is also how a file that
+        // grows after open is detected: the extra byte is never skipped.
+        let dir = TempDir::new();
+        let path = dir.write("growing.bin", b"abcdef");
+        assert_eq!(code(&path, 5), ErrorCode::LimitAttachmentBytes);
+    }
+
+    #[test]
+    fn rejects_a_missing_path() {
+        let dir = TempDir::new();
+        assert_eq!(
+            code(&dir.0.join("absent.bin"), 1024),
+            ErrorCode::ConfigAttachmentUnreadable
+        );
+    }
+
+    #[test]
+    fn rejects_a_directory() {
+        let dir = TempDir::new();
+        let path = dir.0.join("sub");
+        std::fs::create_dir(&path).expect("dir");
+        assert_eq!(code(&path, 1024), ErrorCode::ConfigAttachmentUnreadable);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn rejects_a_symlink_to_a_regular_file() {
+        use std::os::unix::fs::symlink;
+
+        let dir = TempDir::new();
+        let target = dir.write("target.txt", b"secret");
+        let link = dir.0.join("link.txt");
+        symlink(&target, &link).expect("symlink");
+        assert_eq!(code(&link, 1024), ErrorCode::ConfigAttachmentUnreadable);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn rejects_a_fifo_without_blocking() {
+        use std::ffi::CString;
+        use std::os::unix::ffi::OsStrExt;
+
+        let dir = TempDir::new();
+        let path = dir.0.join("pipe");
+        let c_path = CString::new(path.as_os_str().as_bytes()).expect("no NUL");
+        let created = unsafe { libc::mkfifo(c_path.as_ptr(), 0o600) };
+        assert_eq!(created, 0, "mkfifo failed");
+        assert_eq!(code(&path, 1024), ErrorCode::ConfigAttachmentUnreadable);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn rejects_a_character_device() {
+        assert_eq!(
+            code(Path::new("/dev/null"), 1024),
+            ErrorCode::ConfigAttachmentUnreadable
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn reports_an_unreadable_file_as_unreadable() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let dir = TempDir::new();
+        let path = dir.write("private.txt", b"secret");
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o000)).expect("chmod");
+
+        // Root ignores the mode, so only assert under an unprivileged user.
+        if std::fs::read(&path).is_ok() {
+            return;
+        }
+        assert_eq!(code(&path, 1024), ErrorCode::ConfigAttachmentUnreadable);
+    }
+
+    #[test]
+    fn errors_never_carry_the_path() {
+        let dir = TempDir::new();
+        let path = dir.0.join("absent.bin");
+        let error = read_attachment(&descriptor(&path), Limits::default())
+            .expect_err("missing file");
+
+        assert_eq!(error.code(), ErrorCode::ConfigAttachmentUnreadable);
+        let rendered = format!("{error:?} {error}");
+        assert!(!rendered.contains("absent.bin"), "path leaked: {rendered}");
     }
 }

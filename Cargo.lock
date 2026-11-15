@@ -523,6 +523,7 @@ version = "0.1.0"
 dependencies = [
  "base64",
  "idna",
+ "libc",
  "mail-parser",
  "rustls",
  "rustls-pki-types",

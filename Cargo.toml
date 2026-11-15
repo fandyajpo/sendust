@@ -47,6 +47,10 @@ napi = { version = "=3.16.2", features = ["napi8", "async"] }
 napi-derive = "=3.7.0"
 napi-build = "=2.6.0"
 
+# Open(2) flags for the attachment reader on unix (O_NOFOLLOW, O_NONBLOCK),
+# which the standard library does not expose. Already in the graph via tokio.
+libc = { version = "=0.2.191", default-features = false }
+
 [workspace.lints.clippy]
 all = "warn"
 
