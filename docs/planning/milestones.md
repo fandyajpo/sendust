@@ -25,7 +25,7 @@ Milestones are evidence checkpoints, not calendar dates. A milestone is reached 
 
 **Required gates:**
 - P00-005: discovery brief, constraint ledger, provenance, threat boundary, ADR seeds.
-- P01-005: lettre API decision, TLS feature decision, recipient policy decision, Node lifecycle decision, no-custom-SMTP confirmation.
+- P01-005: SMTP engine API decision (lettre at the time; ADR-0017 later replaced it with the native engine), TLS feature decision, recipient policy decision, Node lifecycle decision, no-custom-SMTP confirmation.
 - P02-005: two-crate boundary, status/result/error contract, lifecycle and timeout model, ownership and limits, ADR freeze, traceability matrix.
 
 **Exit criteria:**
@@ -41,7 +41,7 @@ Milestones are evidence checkpoints, not calendar dates. A milestone is reached 
 
 **Required gates:**
 - P03-005: workspace builds, lints, formats, unit tests run; fake SMTP/TLS seams exist.
-- P04-005: core errors, validation, message model, state machine, and lettre orchestration pass core tests without Node.
+- P04-005: core errors, validation, message model, state machine, and SMTP orchestration pass core tests without Node (reached with the lettre adapter; the native engine was adopted at PHASE-06 under ADR-0017).
 - P05-005: Node-API 8 binding compiles, copies buffers, maps errors, handles async send/close, and passes lifecycle tests.
 
 **Exit criteria:**

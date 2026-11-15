@@ -79,7 +79,7 @@ No queue, worker, scheduler, persistence, queue adapter, automatic retry, backof
 
 | Validation | Required proof | Gate |
 | --- | --- | --- |
-| Production dependency set | `cargo tree -e normal` shows no third-party SMTP engine; lettre is a dev-only oracle | P06-004, P06-005 |
+| Production dependency set | `cargo tree -e normal` shows no third-party SMTP engine; the dev-only lettre oracle was removed at PHASE-06 | P06-004, P06-005 |
 | SMTP protocol behavior | Scripted loopback relay for RCPT mix, DATA 354, final 250/451, dropped final reply | P03-004, P06-003, P06-004 |
 | TLS | Five negative certificate fixtures; mandatory hostname/chain verification | P06-002, P11-002 |
 | Native memory | Buffer mutation/detachment test; owned-copy audit | P05-002, P11-004 |

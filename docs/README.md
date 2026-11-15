@@ -71,6 +71,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 57 | [Fixture completeness audit](qa/fixture-audit.md) | P12-004 fixture checklist, the forced-GC probe, sleep removal, and regression triage |
 | 58 | [PHASE-12 QA record](gates/phase-12.md) | P12 gate checklist, suite summary, traceability, runtime matrix, and the approved decision |
 | 59 | [Performance budget](qa/performance-budget.md) | P13-001 budget table, measurement method, harness contract, and regression thresholds |
+| 60 | [Full repository audit](audits/2026-11-15-full-repository-audit.md) | Repository-wide audit after PHASE-12: seven documentation findings, fixes, verified claims, and open owners |
 
 ## 2. Directory map
 

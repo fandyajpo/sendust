@@ -13,7 +13,7 @@ Architectural decisions for Sendust. One decision per file. ADR-0016 defines the
 | [0007](0007-timeout-budgets.md) | Finite timeout budgets and coarse stage attribution | ACCEPTED (architecture baseline; runtime gate P10-002) | P02-003, P01-003 |
 | [0008](0008-owned-memory.md) | Copy JS buffers before async; bounded file reads | ACCEPTED (architecture baseline) | P02-004, P05-002 |
 | [0009](0009-hard-caps.md) | Hard caps for recipients, attachments, and wire size | ACCEPTED (architecture baseline) | P02-004 |
-| [0010](0010-mime-composition.md) | Compose MIME in core; use lettre message primitives where correct | ACCEPTED (architecture baseline; conformance gate P07) | P07-001–P07-004 |
+| [0010](0010-mime-composition.md) | Compose MIME in core; encoding primitives are core-owned (amended by ADR-0017) | ACCEPTED (architecture baseline; conformance gate P07) | P07-001–P07-004 |
 | [0011](0011-platform-distribution.md) | Root package plus platform optional packages via napi-rs | ACCEPTED (architecture baseline; packaging gate P14) | P14-002, P14-003 |
 | [0012](0012-module-formats.md) | Dual ESM/CJS with a single shared implementation | ACCEPTED (design baseline; packaging validation P14) | P14-002, P14-004 |
 | [0013](0013-error-taxonomy.md) | Stable codes, outcomes separate from errors | ACCEPTED (architecture baseline; implementation gates P04/P05/P09/P11) | P02-002, P09-003 |

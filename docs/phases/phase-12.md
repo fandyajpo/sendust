@@ -56,7 +56,7 @@ In scope: test plan and traceability, core unit/integration coverage, binding an
 
 ## Technical implementation details
 
-QA validates the frozen architecture without changing it: two crates, core without Node, `TS -> napi -> core -> lettre`, `lettre 0.11.23`, rustls `ring`/`webpki-roots` with verification always on. Success is relay acceptance; explicit negative final DATA replies are `rejected`; genuinely missing/indeterminate final replies after DATA are `unknown`, with no retry. One active send returns `BUSY`; no queue or pooling. Close is explicit, bounded by 125s, and not GC-dependent. Timeouts are connect 10s, operation 30s, total 120s. Caps are 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. Filesystem attachments are opt-in and regular-file only; no URLs. Buffers are copied before async. Tests use loopback fake SMTP/TLS only. Exact Node.js/Bun/Deno runtime pins are validated, not assumed.
+QA validates the frozen architecture without changing it: two crates, core without Node, `TS -> napi -> core -> native SMTP engine`, rustls `ring`/`webpki-roots` with verification always on. Success is relay acceptance; explicit negative final DATA replies are `rejected`; genuinely missing/indeterminate final replies after DATA are `unknown`, with no retry. One active send returns `BUSY`; no queue or pooling. Close is explicit, bounded by 125s, and not GC-dependent. Timeouts are connect 10s, operation 30s, total 120s. Caps are 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. Filesystem attachments are opt-in and regular-file only; no URLs. Buffers are copied before async. Tests use loopback fake SMTP/TLS only. Exact Node.js/Bun/Deno runtime pins are validated, not assumed.
 
 ## Dependencies
 
