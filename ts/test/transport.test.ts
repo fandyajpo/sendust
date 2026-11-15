@@ -25,6 +25,18 @@ function removeTemp(path: string): void {
   rmSync(dirname(path), { recursive: true, force: true });
 }
 
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Resolves with the stable error code, or null when the send succeeded. */
+async function errorCode(promise: Promise<unknown>): Promise<string | null> {
+  try {
+    await promise;
+    return null;
+  } catch (error) {
+    return error instanceof SendustError ? error.code : null;
+  }
+}
+
 describe("sendust facade", () => {
   it("exposes the package version", () => {
     expect(typeof version).toBe("string");
@@ -279,6 +291,60 @@ describe("sendust facade", () => {
     await transport.close();
 
     expect(code).toBe("PROTOCOL_CONNECTION_RESET");
+  });
+
+  it.skipIf(!available)("validates a message before opening a connection", async () => {
+    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls" });
+
+    const withoutRecipient = await errorCode(
+      transport.send({ from: "a@example.test", subject: "x", text: "y" }),
+    );
+    const withoutBody = await errorCode(
+      transport.send({ from: "a@example.test", to: ["b@example.test"], subject: "x" }),
+    );
+    await transport.close();
+
+    expect(withoutRecipient).toBe("VALIDATION_MISSING_RECIPIENT");
+    expect(withoutBody).toBe("VALIDATION_INVALID_OPTION");
+    expect(transport.state).toBe("closed");
+  });
+
+  it.skipIf(!available)("rejects a second concurrent send with TRANSPORT_BUSY", async () => {
+    const sockets = new Set<Socket>();
+    const server = createServer((socket) => {
+      sockets.add(socket);
+      socket.on("close", () => sockets.delete(socket));
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address();
+    const port = typeof address === "object" && address ? address.port : 1;
+
+    const transport = createTransport({ host: "127.0.0.1", port, secure: "tls" });
+    const first = transport.send({
+      from: "a@example.test",
+      to: ["b@example.test"],
+      subject: "x",
+      text: "y",
+    });
+    await delay(50);
+
+    const second = await errorCode(
+      transport.send({
+        from: "a@example.test",
+        to: ["b@example.test"],
+        subject: "x",
+        text: "y",
+      }),
+    );
+    expect(second).toBe("TRANSPORT_BUSY");
+
+    await transport.close();
+    await expect(first).rejects.toBeInstanceOf(SendustError);
+
+    for (const socket of sockets) {
+      socket.destroy();
+    }
+    await new Promise<void>((resolve) => server.close(() => resolve()));
   });
 
   it.skipIf(!available)("maps a refused connection to a protocol error", async () => {

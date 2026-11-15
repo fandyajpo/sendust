@@ -157,6 +157,34 @@ pub(crate) fn normalize_filename(raw: &str) -> Result<String, Error> {
     Ok(name.to_string())
 }
 
+/// Fixed, documented extension map for attachments without a content type.
+///
+/// The list is intentionally small and stable; anything else falls back to
+/// `application/octet-stream`. Matching is ASCII case-insensitive and uses only
+/// the text after the final dot.
+pub(crate) fn infer_content_type(filename: &str) -> &'static str {
+    let extension = filename
+        .rsplit_once('.')
+        .map(|(_, extension)| extension.to_ascii_lowercase())
+        .unwrap_or_default();
+    match extension.as_str() {
+        "txt" => "text/plain",
+        "html" | "htm" => "text/html",
+        "csv" => "text/csv",
+        "md" => "text/markdown",
+        "ics" => "text/calendar",
+        "json" => "application/json",
+        "pdf" => "application/pdf",
+        "zip" => "application/zip",
+        "png" => "image/png",
+        "jpg" | "jpeg" => "image/jpeg",
+        "gif" => "image/gif",
+        "webp" => "image/webp",
+        "svg" => "image/svg+xml",
+        _ => "application/octet-stream",
+    }
+}
+
 fn normalize_content_type(raw: &str) -> Result<String, Error> {
     let value = raw.trim();
     let (kind, subtype) = value.split_once('/').ok_or_else(invalid_attachment)?;
@@ -381,6 +409,16 @@ mod tests {
                 .code(),
             ErrorCode::LimitAttachmentBytes
         );
+    }
+
+    #[test]
+    fn infers_a_content_type_from_the_extension() {
+        assert_eq!(infer_content_type("notes.txt"), "text/plain");
+        assert_eq!(infer_content_type("REPORT.PDF"), "application/pdf");
+        assert_eq!(infer_content_type("photo.jpeg"), "image/jpeg");
+        assert_eq!(infer_content_type("page.html"), "text/html");
+        assert_eq!(infer_content_type("archive.unknown"), "application/octet-stream");
+        assert_eq!(infer_content_type("no-extension"), "application/octet-stream");
     }
 
     #[test]

@@ -6,7 +6,8 @@
  */
 
 import { SendustError, fromNative } from "./errors.ts";
-import { loadNative, type NativeSendResult, type NativeTransport } from "./loader.ts";
+import { loadNative, type NativeTransport } from "./loader.ts";
+import { toSendResult } from "./results.ts";
 import type {
   Address,
   Attachment,
@@ -124,20 +125,6 @@ function toNativeMessage(message: Message): Record<string, unknown> {
   return native;
 }
 
-function toResult(result: NativeSendResult): SendResult {
-  const mapped: SendResult = {
-    status: result.status as SendResult["status"],
-    recipients: result.recipients.map((recipient) => ({
-      address: recipient.address,
-      status: recipient.status as SendResult["recipients"][number]["status"],
-    })),
-  };
-  if (result.response) {
-    return { ...mapped, response: result.response };
-  }
-  return mapped;
-}
-
 function rethrow(error: unknown): never {
   const mapped = fromNative(error);
   throw mapped ?? error;
@@ -182,7 +169,7 @@ export class Transport {
    */
   async send(message: Message): Promise<SendResult> {
     try {
-      return toResult(await this.#native.send(toNativeMessage(message)));
+      return toSendResult(await this.#native.send(toNativeMessage(message)));
     } catch (error) {
       rethrow(error);
     }

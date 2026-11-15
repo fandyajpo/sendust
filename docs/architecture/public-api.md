@@ -72,7 +72,7 @@ type Attachment =
 - Buffer attachments are always allowed within caps.
 - Path attachments require `attachments.allowFileAccess: true`; otherwise `CONFIG_FILE_ACCESS_DISABLED`.
 - Path attachments read only regular files; symlinks, directories, FIFOs, devices, and sockets are rejected.
-- `contentType` must be a syntactically valid MIME type if provided; otherwise it is inferred from the filename extension using a fixed, documented map, falling back to `application/octet-stream`.
+- `contentType` must be a syntactically valid MIME type if provided; otherwise it is inferred from the filename extension using a fixed, documented map, falling back to `application/octet-stream`. The map is: `txt` → `text/plain`; `html`/`htm` → `text/html`; `csv` → `text/csv`; `md` → `text/markdown`; `ics` → `text/calendar`; `json` → `application/json`; `pdf` → `application/pdf`; `zip` → `application/zip`; `png` → `image/png`; `jpg`/`jpeg` → `image/jpeg`; `gif` → `image/gif`; `webp` → `image/webp`; `svg` → `image/svg+xml`; anything else → `application/octet-stream`. Matching is ASCII case-insensitive.
 - Filenames are encoded per RFC 2231/2047 rules; CRLF and control characters are rejected.
 - No `url`, `href`, `stream`, or remote attachment form exists.
 

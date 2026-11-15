@@ -260,7 +260,8 @@ fn build_attachment_part(
     push_header(
         &mut part,
         "Content-Type",
-        content_type.unwrap_or("application/octet-stream"),
+        content_type
+            .unwrap_or_else(|| crate::attachments::infer_content_type(&filename)),
     )?;
     push_header(&mut part, "Content-Transfer-Encoding", "base64")?;
     push_header(
@@ -699,6 +700,35 @@ mod tests {
                 .expect_err("the sum is over the cap")
                 .code(),
             ErrorCode::LimitWireBytes
+        );
+    }
+
+    #[test]
+    fn infers_an_attachment_content_type_from_the_filename() {
+        let mut message = message();
+        message.attachments = vec![Attachment::Bytes {
+            filename: "report.pdf".to_string(),
+            content_type: None,
+            bytes: vec![1, 2, 3],
+        }];
+        let wire = text(
+            &serialize(&message, Limits::default(), AttachmentPolicy::Disabled)
+                .expect("serialized"),
+        );
+        assert!(wire.contains("Content-Type: application/pdf"), "{wire}");
+
+        message.attachments[0] = Attachment::Bytes {
+            filename: "data.bin".to_string(),
+            content_type: None,
+            bytes: vec![1, 2, 3],
+        };
+        let wire = text(
+            &serialize(&message, Limits::default(), AttachmentPolicy::Disabled)
+                .expect("serialized"),
+        );
+        assert!(
+            wire.contains("Content-Type: application/octet-stream"),
+            "{wire}"
         );
     }
 

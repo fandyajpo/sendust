@@ -88,7 +88,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition. P09 is IN PROGRESS (P09-001 in review); P10–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition. P09 is IN PROGRESS (P09-001 and P09-002 in review); P10–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -114,9 +114,9 @@ P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P06-001–P06-005 | COMPLETED; PHASE-06 APPROVED (2026-11-14) |
 | P07-001–P07-005 | COMPLETED; PHASE-07 APPROVED (2026-11-14) |
 | P08-001–P08-005 | COMPLETED; PHASE-08 APPROVED (2026-11-15) |
-| P09-001 | IN REVIEW |
-| P09-002–P18 | NOT STARTED |
-| Next task | P09-002 — implement send composition and result mapping |
+| P09-001–P09-002 | IN REVIEW |
+| P09-003–P18 | NOT STARTED |
+| Next task | P09-003 — implement public error classes and redaction |
 
 ## 5. Conventions
 
