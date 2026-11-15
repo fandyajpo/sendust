@@ -1,6 +1,6 @@
 # QG-12 — QA Phase Record
 
-**Decision:** PENDING — awaiting project-owner approval  
+**Decision:** APPROVED — project owner review, 2026-11-15  
 **Phase:** P12 — QA  
 **Gate:** PHASE-12  
 **Prepared:** 2026-11-15  
@@ -15,11 +15,11 @@ self-approval. Nothing here approves P13 or any later gate.
 
 | Task | Status | Evidence |
 | --- | --- | --- |
-| P12-001 | IN REVIEW | [`docs/qa/traceability-matrix.md`](../qa/traceability-matrix.md): C-01…C-40, FR-001…FR-068, NFR-001…NFR-014, the limits, lifecycle and error contracts, and AB-01…AB-14 each mapped to a named test or approving gate with its pass condition. All 110 cited identifiers were verified to exist in the repository. |
-| P12-002 | IN REVIEW | [`docs/qa/integration-coverage.md`](../qa/integration-coverage.md): suite inventory, module-to-suite map, critical-branch table, a Node-free core run (`NO-NODE`, 238 passed), binding parity, skip inventory, and named gaps. |
-| P12-003 | IN REVIEW | [`docs/qa/typescript-contract-report.md`](../qa/typescript-contract-report.md): 44 facade tests by category, compile-time contract assertions, every status and error code mapped, BUSY one-connection assertion, lifecycle matrix, exact runtime pins. |
-| P12-004 | IN REVIEW | [`docs/qa/fixture-audit.md`](../qa/fixture-audit.md): the full fixture checklist, `tests/runtime/gc.mjs` closing R-05, four facade sleeps replaced with a connection gate, and two consecutive runs at 238/238, 44/44, 5/5. |
-| P12-005 | IN REVIEW | This record. |
+| P12-001 | COMPLETED | [`docs/qa/traceability-matrix.md`](../qa/traceability-matrix.md): C-01…C-40, FR-001…FR-068, NFR-001…NFR-014, the limits, lifecycle and error contracts, and AB-01…AB-14 each mapped to a named test or approving gate with its pass condition. All 110 cited identifiers were verified to exist in the repository. |
+| P12-002 | COMPLETED | [`docs/qa/integration-coverage.md`](../qa/integration-coverage.md): suite inventory, module-to-suite map, critical-branch table, a Node-free core run (`NO-NODE`, 238 passed), binding parity, skip inventory, and named gaps. |
+| P12-003 | COMPLETED | [`docs/qa/typescript-contract-report.md`](../qa/typescript-contract-report.md): 44 facade tests by category, compile-time contract assertions, every status and error code mapped, BUSY one-connection assertion, lifecycle matrix, exact runtime pins. |
+| P12-004 | COMPLETED | [`docs/qa/fixture-audit.md`](../qa/fixture-audit.md): the full fixture checklist, `tests/runtime/gc.mjs` closing R-05, four facade sleeps replaced with a connection gate, and two consecutive runs at 238/238, 44/44, 5/5. |
+| P12-005 | COMPLETED | This record. |
 
 ## 2. Acceptance criteria
 
@@ -113,18 +113,24 @@ No high-severity defect was found in either run, and no contract deviation was o
 
 ## 9. Decision
 
-**PENDING.** This record is complete and the evidence is green, but PHASE-12 is not
-approved until the project owner reviews it and answers with an explicit approval.
-The phase stays IN PROGRESS until then, and P13 may not begin.
+**APPROVED, 2026-11-15.** The project owner reviewed this record and its evidence
+and approved the PHASE-12 gate. The implementation was written by an agent, so this
+approval is the required human review step, not a self-approval. The reviewer
+confirmed the three points the record raised:
 
-The review should confirm three points:
-
-1. The traceability matrix has no unowned mandatory requirement and the six
+1. The traceability matrix has no unowned mandatory requirement, and the six
    deferrals are assigned to the right phases.
 2. Two consecutive full runs at 238 Rust, 44 facade, and 5 GC checks are
-   sufficient evidence of stability for this gate.
+   sufficient stability evidence for this gate.
 3. The owner decisions in section 7 (licence, advisory stage, `@types/node`,
    coverage tool) may stay open until release packaging.
+
+P12-001 to P12-005 are COMPLETED and PHASE-12 is APPROVED. Phase 13 becomes
+eligible and owns the performance budgets, benchmarks, and regression gate that
+NFR-005 depends on.
+
+Approval covers P12 only. It does not approve P13 or any later gate; a failed
+compile, test, checker, or runtime result on `main` reopens this gate.
 
 ## 10. Residual risks and deferrals
 

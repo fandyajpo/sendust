@@ -1,6 +1,6 @@
 # Phase 13 — Performance
 
-**Phase status:** NOT STARTED  
+**Phase status:** IN PROGRESS  
 **Phase dependency:** Phase 12  
 **Companion references:** [performance strategy](../engineering/performance-strategy.md), [testing strategy](../engineering/testing-strategy.md), [reliability strategy](../engineering/reliability-strategy.md), [system design](../architecture/system-design.md)
 
@@ -17,7 +17,7 @@ In scope: benchmark design, baseline measurements, memory and descriptor bounds,
 ### P13-001 — Define performance budgets and measurement method
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P12-005
 - **Description:** Define measurable budgets for single-send overhead, MIME serialization, buffer copying, attachment reads, BUSY rejection, and close drain. Specify warm-up, iterations, percentile reporting, environment capture, and tolerance for CI variance. Distinguish protocol latency from local processing cost. Do not set unverifiable real-relay throughput claims.
 - **Evidence criteria:** Budget table has metric, method, percentile, threshold, and rationale. Measurement environment is recorded. Budgets align with 10/30/120/125s deadlines and hard caps. No budget depends on pooling or retry.
@@ -86,6 +86,14 @@ Performance budget, benchmark harness specification, core/MIME results, attachme
 
 `PHASE-13` is approved only when P13-005 shows budgets met or explicitly remediated, bounded memory, fail-fast BUSY, no queue, and no deadline overrun. Phase 14 final matrix and Phase 16 may use the results after approval.
 
+## Evidence log
+
+Evidence labels follow the [AI implementation contract](../engineering/ai-implementation-contract.md).
+
+| Task | Evidence | State |
+| --- | --- | --- |
+| P13-001 | [`docs/qa/performance-budget.md`](../qa/performance-budget.md): 12 budgeted metrics with method, percentile, threshold and rationale; warm-up (3) and measured (20) iteration rules; environment capture; two-run stability with a 20% noise band; a 2× CI allowance; a harness contract for three ignored Rust suites and one Node script; alignment with the 10/30/120/125 s deadlines and the 10/20/30 MiB caps; and the explicit limits (local fixture only, no throughput claim, no pooling or retry). | IN REVIEW |
+
 ## Status
 
-NOT STARTED.
+IN PROGRESS. P13-001 is IN REVIEW; P13-002 to P13-005 are NOT STARTED.
