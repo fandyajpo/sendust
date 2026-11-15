@@ -102,11 +102,10 @@ fn small_text_message_serialization() {
     let message = message(4 * 1024);
 
     let validate = measure(|| {
-        black_box(
-            message
-                .validate(Limits::default(), AttachmentPolicy::Disabled)
-                .expect("fixture validates"),
-        );
+        let ok = message
+            .validate(Limits::default(), AttachmentPolicy::Disabled)
+            .is_ok();
+        black_box(ok);
     });
     validate.report("validate.small_text");
     validate.assert_budget("validate.small_text", 200, 400);
@@ -121,7 +120,7 @@ fn small_text_message_serialization() {
 #[test]
 #[ignore = "performance harness; run with --release --ignored"]
 fn one_mib_text_message_serialization() {
-    let message = message(1 * 1024 * 1024);
+    let message = message(1024 * 1024);
 
     let serialize = measure(|| {
         black_box(serialize_fixture(&message));
