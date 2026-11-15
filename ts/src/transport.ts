@@ -191,8 +191,11 @@ export class Transport {
   readonly #native: NativeTransport;
 
   constructor(options: TransportOptions) {
+    // Validate the caller's options before loading the addon, so an invalid
+    // option always reports a Sendust error even where the addon is missing.
+    const native = toNativeOptions(options);
     try {
-      this.#native = new (loadNative().Transport)(toNativeOptions(options));
+      this.#native = new (loadNative().Transport)(native);
     } catch (error) {
       rethrow(error);
     }
