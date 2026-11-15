@@ -351,7 +351,9 @@ describe("sendust facade", () => {
 
   it.skipIf(!available)("rejects a second concurrent send with TRANSPORT_BUSY", async () => {
     const sockets = new Set<Socket>();
+    let connections = 0;
     const server = createServer((socket) => {
+      connections += 1;
       sockets.add(socket);
       socket.on("close", () => sockets.delete(socket));
     });
@@ -379,11 +381,54 @@ describe("sendust facade", () => {
       }),
     );
     expect(second).toBe("TRANSPORT_BUSY");
+    expect(connections).toBe(1);
 
     await transport.close();
     const firstError = await first;
     expect(firstError).toBeInstanceOf(SendustError);
     expect((firstError as SendustError).code).toBe("TRANSPORT_CLOSED");
+
+    for (const socket of sockets) {
+      socket.destroy();
+    }
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  });
+
+  it.skipIf(!available)("refuses a send that starts during close", async () => {
+    const sockets = new Set<Socket>();
+    const server = createServer((socket) => {
+      sockets.add(socket);
+      socket.on("close", () => sockets.delete(socket));
+    });
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address();
+    const port = typeof address === "object" && address ? address.port : 1;
+
+    const transport = createTransport({ host: "127.0.0.1", port, secure: "tls" });
+    const first = transport
+      .send({
+        from: "a@example.test",
+        to: ["b@example.test"],
+        subject: "x",
+        text: "y",
+      })
+      .catch((error: unknown) => error);
+    await delay(50);
+
+    const closing = transport.close();
+    const during = await errorCode(
+      transport.send({
+        from: "a@example.test",
+        to: ["b@example.test"],
+        subject: "x",
+        text: "y",
+      }),
+    );
+    await closing;
+
+    expect(during).toBe("TRANSPORT_CLOSED");
+    expect(transport.state).toBe("closed");
+    expect(await first).toBeInstanceOf(SendustError);
 
     for (const socket of sockets) {
       socket.destroy();
