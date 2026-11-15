@@ -38,6 +38,55 @@ describe("sendust facade", () => {
     ).rejects.toBeInstanceOf(SendustError);
   });
 
+  it.skipIf(!available)("closes concurrently without drifting past closed", async () => {
+    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls" });
+
+    await Promise.all([transport.close(), transport.close()]);
+
+    expect(transport.state).toBe("closed");
+  });
+
+  it.skipIf(!available)("aborts a send in flight and rejects it as TRANSPORT_CLOSED", async () => {
+    // Accept the TCP connection and stay silent: the client is left waiting in
+    // the TLS handshake, which only close can interrupt.
+    const server = createServer(() => {});
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address();
+    const port = typeof address === "object" && address ? address.port : 1;
+
+    const transport = createTransport({
+      host: "127.0.0.1",
+      port,
+      secure: "tls",
+      timeouts: { connectMs: 30_000, operationMs: 30_000, totalMs: 30_000, closeMs: 5_000 },
+    });
+
+    const sending = transport.send({
+      from: "a@example.test",
+      to: ["b@example.test"],
+      subject: "x",
+      text: "y",
+    });
+
+    // Let the delivery start and reach the handshake before close races it.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    await transport.close();
+
+    let code: string | null = null;
+    try {
+      await sending;
+    } catch (error) {
+      expect(error).toBeInstanceOf(SendustError);
+      code = (error as SendustError).code;
+    }
+
+    expect(code).toBe("TRANSPORT_CLOSED");
+    expect(transport.state).toBe("closed");
+
+    server.closeAllConnections();
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  });
+
   it.skipIf(!available)("maps a refused connection to a protocol error", async () => {
     const server = createServer();
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
