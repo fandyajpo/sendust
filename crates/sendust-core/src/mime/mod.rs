@@ -690,14 +690,21 @@ mod tests {
         );
 
         let mut oversized = message();
-        oversized.text = Some("a".repeat((10 * MIB) as usize));
-        oversized.html = Some("a".repeat((10 * MIB) as usize));
+        oversized.text = Some("a".repeat((13 * MIB) as usize));
+        oversized.html = Some("a".repeat((13 * MIB) as usize));
         assert_eq!(
             serialize(&oversized, Limits::default(), AttachmentPolicy::Disabled)
                 .expect_err("both parts over cap")
                 .code(),
             ErrorCode::LimitWireBytes
         );
+
+        // Either part alone still fits, so the rejection above is the sum, not a
+        // single oversized part.
+        let mut single = message();
+        single.text = Some("a".repeat((13 * MIB) as usize));
+        single.html = None;
+        assert!(serialize(&single, Limits::default(), AttachmentPolicy::Disabled).is_ok());
     }
 
     #[test]
