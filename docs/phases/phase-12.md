@@ -1,6 +1,6 @@
 # Phase 12 — QA
 
-**Phase status:** NOT STARTED  
+**Phase status:** IN PROGRESS  
 **Phase dependency:** Phase 11  
 **Companion references:** [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [reliability strategy](../engineering/reliability-strategy.md), [performance strategy](../engineering/performance-strategy.md), [system design](../architecture/system-design.md)
 
@@ -17,7 +17,7 @@ In scope: test plan and traceability, core unit/integration coverage, binding an
 ### P12-001 — Build the requirements-to-test traceability matrix
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P11-005
 - **Description:** Map every constraint, status, error, limit, lifecycle rule, and security abuse case to an automated test and evidence artifact. Identify gaps where only manual review exists. Include the recipient ADR, unknown-after-DATA, BUSY, close deadline, buffer copy, attachment opt-in, TLS failures, and caps.
 - **Evidence criteria:** Matrix has no unowned mandatory requirement. Each row names test file, fixture, and pass condition. Gaps are closed or explicitly accepted with rationale before the gate.
@@ -90,6 +90,14 @@ Traceability matrix, core/binding/TypeScript test reports, coverage report, cand
 
 P12 must verify the ADR-0016 module ownership table, allowed dependency graph, domain isolation from lettre/SMTP/napi/runtime APIs, SMTP adapter containment, absence of public plugin registries or duplicate policy, and focused unit/integration test ownership. Any boundary violation is a release-blocking architecture defect, not a style preference.
 
+## Evidence log
+
+Evidence labels follow the [AI implementation contract](../engineering/ai-implementation-contract.md).
+
+| Task | Evidence | State |
+| --- | --- | --- |
+| P12-001 | [`docs/qa/traceability-matrix.md`](../qa/traceability-matrix.md): every constraint C-01…C-40, functional requirement FR-001…FR-068, non-functional requirement NFR-001…NFR-014, limit, lifecycle rule, error contract, and abuse case AB-01…AB-14 mapped to a named test or an approving gate with its pass condition. Six gaps are listed with their owning phase; none is unowned. | IN REVIEW |
+
 ## Status
 
-NOT STARTED.
+IN PROGRESS. P12-001 is IN REVIEW; P12-002 to P12-005 are NOT STARTED.
