@@ -1,7 +1,6 @@
 import { describe, expectTypeOf, it } from "vitest";
 import {
   SendustError,
-  Transport,
   createTransport,
   version,
   type Attachment,
@@ -9,6 +8,7 @@ import {
   type Message,
   type RecipientOutcome,
   type SendResult,
+  type Transport,
   type TransportOptions,
   type TransportState,
 } from "../src/index.ts";
@@ -53,21 +53,25 @@ describe("public contract types", () => {
   });
 
   it("rejects options outside the frozen surface", () => {
-    // @ts-expect-error pooling is not part of the MVP surface
-    createTransport({ host: "relay.test", port: 465, secure: "tls", pool: 4 });
-    // @ts-expect-error there is no plaintext security mode
-    createTransport({ host: "relay.test", port: 25, secure: "none" });
-    createTransport({
-      host: "relay.test",
-      port: 465,
-      secure: "tls",
-      auth: {
-        user: "u",
-        pass: "p",
-        // @ts-expect-error only PLAIN and LOGIN can be forced
-        method: "cram-md5",
-      },
-    });
+    // Never called: these lines exist so `tsc` checks the negative cases.
+    const invalid = () => {
+      // @ts-expect-error pooling is not part of the MVP surface
+      createTransport({ host: "relay.test", port: 465, secure: "tls", pool: 4 });
+      // @ts-expect-error there is no plaintext security mode
+      createTransport({ host: "relay.test", port: 25, secure: "none" });
+      createTransport({
+        host: "relay.test",
+        port: 465,
+        secure: "tls",
+        auth: {
+          user: "u",
+          pass: "p",
+          // @ts-expect-error only PLAIN and LOGIN can be forced
+          method: "cram-md5",
+        },
+      });
+    };
+    void invalid;
   });
 
   it("limits attachments to buffer and path shapes", () => {
