@@ -233,7 +233,7 @@ mod tests {
 
     #[test]
     fn rejects_an_empty_subject() {
-        let mut message = message();
+        let mut message = message_with(1);
         message.subject = "   ".to_string();
 
         assert_eq!(
