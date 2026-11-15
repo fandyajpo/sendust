@@ -138,7 +138,9 @@ pub struct Transport {
 
 #[napi]
 impl Transport {
-    #[napi(constructor)]
+    /// A panic in the sync boundary is caught and rethrown as a JS error rather
+    /// than unwinding across the FFI (async methods are settled by the runtime).
+    #[napi(catch_unwind, constructor)]
     pub fn new(options: TransportOptions) -> Result<Self> {
         if options.port == 0 || options.port > u32::from(u16::MAX) {
             return Err(to_napi(CoreError::new(ErrorCode::ConfigInvalidRelay)));
@@ -235,7 +237,7 @@ impl Transport {
     }
 
     /// `open`, `closing`, or `closed`.
-    #[napi]
+    #[napi(catch_unwind)]
     pub fn state(&self) -> String {
         match self.inner.phase.load(Ordering::SeqCst) {
             OPEN => "open".to_string(),
