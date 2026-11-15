@@ -70,7 +70,7 @@ fn compose(
 
     let cap = limits.max_wire_bytes();
     preflight(message, cap)?;
-    let body = build_body(message)?;
+    let body = build_body(message, cap)?;
     let attachments: Vec<Vec<u8>> = message
         .attachments
         .iter()
@@ -185,7 +185,7 @@ impl Body {
     }
 }
 
-fn build_body(message: &OutgoingMessage) -> Result<Body, Error> {
+fn build_body(message: &OutgoingMessage, cap: u64) -> Result<Body, Error> {
     let text = message.text.as_deref().unwrap_or_default();
     let html = message.html.as_deref().unwrap_or_default();
 
@@ -204,12 +204,12 @@ fn build_body(message: &OutgoingMessage) -> Result<Body, Error> {
                     content_type: "text/plain; charset=utf-8".to_string(),
                     bytes: normalize_body(text),
                 }
-                .as_part()?,
+                .as_part(cap)?,
                 Body::Single {
                     content_type: "text/html; charset=utf-8".to_string(),
                     bytes: normalize_body(html),
                 }
-                .as_part()?,
+                .as_part(cap)?,
             ];
             let boundary = unique_boundary(&parts);
             Body::Multipart {
