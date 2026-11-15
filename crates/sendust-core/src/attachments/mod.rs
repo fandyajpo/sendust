@@ -99,9 +99,10 @@ pub fn validate(
     limits: Limits,
     policy: AttachmentPolicy,
 ) -> Result<u64, Error> {
-    let mut total: u64 = 0;
     let mut names: Vec<String> = Vec::with_capacity(attachments.len());
 
+    // Per-file checks come first for every attachment, so a per-file violation
+    // is reported before any aggregate one.
     for attachment in attachments {
         validate_descriptor(attachment, policy)?;
 
@@ -120,6 +121,14 @@ pub fn validate(
             if len > limits.max_attachment_bytes() {
                 return Err(Error::new(ErrorCode::LimitAttachmentBytes));
             }
+        }
+    }
+
+    // Then the aggregate of the bytes whose size is already known. File
+    // attachments contribute as they are read.
+    let mut total: u64 = 0;
+    for attachment in attachments {
+        if let Some(len) = attachment.known_len() {
             total = total.saturating_add(len);
             if total > limits.max_total_attachment_bytes() {
                 return Err(Error::new(ErrorCode::LimitAttachmentTotal));
@@ -352,6 +361,25 @@ mod tests {
                 .expect_err("over total")
                 .code(),
             ErrorCode::LimitAttachmentTotal
+        );
+    }
+
+    #[test]
+    fn a_per_file_violation_precedes_an_aggregate_one() {
+        let limits = Limits::default()
+            .with_max_attachment_bytes(4)
+            .expect("lowering is allowed")
+            .with_max_total_attachment_bytes(6)
+            .expect("lowering is allowed");
+
+        // The total is already over after the second attachment, but the
+        // per-file violation on the third must be the reported code.
+        let attachments = vec![bytes("a.bin", 4), bytes("b.bin", 3), bytes("c.bin", 5)];
+        assert_eq!(
+            validate(&attachments, limits, AttachmentPolicy::Disabled)
+                .expect_err("over")
+                .code(),
+            ErrorCode::LimitAttachmentBytes
         );
     }
 
