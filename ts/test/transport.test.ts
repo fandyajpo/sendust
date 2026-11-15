@@ -320,12 +320,14 @@ describe("sendust facade", () => {
     const port = typeof address === "object" && address ? address.port : 1;
 
     const transport = createTransport({ host: "127.0.0.1", port, secure: "tls" });
-    const first = transport.send({
-      from: "a@example.test",
-      to: ["b@example.test"],
-      subject: "x",
-      text: "y",
-    });
+    const first = transport
+      .send({
+        from: "a@example.test",
+        to: ["b@example.test"],
+        subject: "x",
+        text: "y",
+      })
+      .catch((error: unknown) => error);
     await delay(50);
 
     const second = await errorCode(
@@ -339,7 +341,9 @@ describe("sendust facade", () => {
     expect(second).toBe("TRANSPORT_BUSY");
 
     await transport.close();
-    await expect(first).rejects.toBeInstanceOf(SendustError);
+    const firstError = await first;
+    expect(firstError).toBeInstanceOf(SendustError);
+    expect((firstError as SendustError).code).toBe("TRANSPORT_CLOSED");
 
     for (const socket of sockets) {
       socket.destroy();
