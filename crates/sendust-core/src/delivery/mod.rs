@@ -310,6 +310,31 @@ mod tests {
         remove_temp(&path);
     }
 
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn a_symlinked_file_never_reaches_the_port() {
+        use std::os::unix::fs::symlink;
+
+        let target = temp_file("target.txt", 3);
+        let link = target.with_file_name("link.txt");
+        symlink(&target, &link).expect("symlink");
+        let mut message = message();
+        message.attachments = vec![file_attachment(&link, "link.txt")];
+
+        let (port, calls, _) = fake(None);
+        let mut delivery = Delivery::new(port, Limits::default(), AttachmentPolicy::Enabled);
+        let error = delivery.send(message).await.expect_err("symlink");
+
+        assert_eq!(
+            error.code(),
+            ErrorCode::ConfigAttachmentUnreadable,
+            "a symlink is refused before any byte is read"
+        );
+        assert_eq!(calls.load(Ordering::SeqCst), 0, "no dial on a refused attachment");
+
+        remove_temp(&target);
+    }
+
     #[tokio::test]
     async fn an_aggregate_over_the_limit_never_reaches_the_port() {
         let first = temp_file("a.bin", 3);
