@@ -3,7 +3,8 @@
 **Status:** ACCEPTED (architecture baseline; lifecycle tests P04/P09/P10)  
 **Date:** 2026-11-13  
 **Deciders:** Architecture review (P02-005)  
-**Validated by:** P02-003, P04-004, P09-004, P10-001
+**Validated by:** P02-003, P04-004  
+**Pending validation:** P09-004 (BUSY contract), P10-001 (close deadline)
 
 ## Context
 

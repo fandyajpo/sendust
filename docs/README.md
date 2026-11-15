@@ -3,7 +3,7 @@
 **Sendust — Standalone Native Email Delivery Engine for Node.js, Bun, and Deno**  
 Planning baseline: 2026-11-13.
 
-This documentation set is the source of truth for product scope, requirements, approved architecture design, decisions, and execution planning. Repository-wide AI/contributor behavior is governed by [AGENTS.md](../AGENTS.md) and the [AI implementation contract](engineering/ai-implementation-contract.md). QG-00, QG-01, and QG-02 are approved. The P03 repository skeleton, dependency policy, and quality-command scripts exist; application behavior, blocking CI evidence, runtime validation, and publication have not occurred.
+This documentation set is the source of truth for product scope, requirements, approved architecture design, decisions, and execution planning. Repository-wide AI/contributor behavior is governed by [AGENTS.md](../AGENTS.md) and the [AI implementation contract](engineering/ai-implementation-contract.md). QG-00, QG-01, and QG-02 are approved. The two-crate workspace, the native SMTP engine (P06), MIME composition (P07), the Node-API binding, the runtime-neutral TypeScript facade, and blocking CI exist; attachment file policy (P08), public API validation (P09), runtime and platform support claims, and publication have not occurred.
 
 ## 1. Start here
 
@@ -49,6 +49,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 36 | [AI implementation contract](engineering/ai-implementation-contract.md) | Normative workflow, documentation synchronization, static-review and evidence rules |
 | 37 | [Toolchain baseline](engineering/toolchain-baseline.md) | Exact Rust, Node.js, Bun, Deno, npm, TypeScript, Biome, Vitest versions and canonical commands |
 | 38 | [Documentation audit](audits/2026-11-13-documentation-audit.md) | Static consistency, traceability, task graph, links, toolchain, and remaining validation owners |
+| 38a | [Engineering audit](audits/2026-11-15-engineering-audit.md) | Read-only code review findings, their remediation, and the owner actions that remain |
 | 39 | [Dependency and license policy](engineering/dependency-policy.md) | Pinned dependencies, feature admission, feature prohibitions, lockfile rules, and license review |
 | 40 | [Test harness contract](engineering/test-harness-contract.md) | Fake SMTP/TLS seams, safety rules, and the fixture catalog |
 | 41 | [QG-03 repository baseline record](gates/phase-03-repository-baseline.md) | P03 gate checklist, evidence, and approved decision |
@@ -78,13 +79,13 @@ This documentation set is the source of truth for product scope, requirements, a
     ├── phases/
     ├── engineering/
     ├── audits/
-    │   ├── ai-implementation-contract.md
-    │   └── toolchain-baseline.md
+    │   ├── 2026-11-13-documentation-audit.md
+    │   └── 2026-11-15-engineering-audit.md
     └── decisions/  (pointer to architecture/decisions)
 
 ## 3. Status model
 
-P00–P05 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine for P06. P06 is IN PROGRESS (P06-001 in review); P07–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition. P08 is IN PROGRESS (P08-001 in review); P09–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -98,8 +99,8 @@ P00–P05 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 
 | Item | State |
 | --- | --- |
-| Repository | Documentation, architecture planning, and the P03 workspace skeleton |
-| Application implementation | Core complete (errors, addresses, message model, MIME, orchestration, fault matrix); Node-API binding and TypeScript facade implemented; native SMTP engine completed in P06 and approved under PHASE-06; public API contract (P09) pending |
+| Repository | Documentation, architecture planning, and the two-crate workspace with native SMTP, MIME, Node-API binding, and TypeScript facade |
+| Application implementation | Core complete (errors, addresses, message model, MIME, orchestration, fault matrix, native SMTP engine); Node-API binding and TypeScript facade implemented; attachment file policy (P08) and public API contract (P09) pending |
 | Toolchain validation | Rust 1.100.0 and the Node.js 22.23.5/24.22.3/26.13.1 jobs pass in Sendust CI |
 | QG-00 Discovery | APPROVED |
 | QG-01 Research | APPROVED with implementation validation gates |
@@ -108,6 +109,7 @@ P00–P05 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P04-001–P04-005 | COMPLETED |
 | P05-001–P05-005 | COMPLETED |
 | P06-001–P06-005 | COMPLETED; PHASE-06 APPROVED (2026-11-14) |
+| P07-001–P07-005 | COMPLETED; PHASE-07 APPROVED (2026-11-14) |
 | P08–P18 | P08-001 IN REVIEW; the rest NOT STARTED |
 | Next task | P08-002 — implement safe regular-file validation and bounded reads |
 
@@ -119,7 +121,7 @@ P00–P05 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 - Open questions: OQ-01–OQ-07.
 - Phase IDs: P00–P18.
 - Task IDs: Pxx-00y.
-- Decision IDs: ADR-0001–ADR-0016.
+- Decision IDs: ADR-0001–ADR-0017.
 - Risk IDs: R-001–R-047.
 - Gate IDs: QG-00–QG-17, QG-03A, QG-A01, QG-A02.
 - Milestones: M0–M7.
