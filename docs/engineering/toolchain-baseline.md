@@ -71,6 +71,7 @@ All commands below run from the repository root. JavaScript lint/format/typechec
 | TypeScript typecheck | `npm --workspace ./ts run typecheck` | TypeScript exits 0 with strict settings |
 | TypeScript unit/contract tests | `npm --workspace ./ts run test` | Vitest exits 0 |
 | Node runtime smoke (P05 deliverable) | `node tests/runtime/smoke.mjs` | Native addon loads; fake-relay send and close pass |
+| Forced-GC probe (P12-004) | `node --expose-gc tests/runtime/gc.mjs` | Exit 0; the collector cannot close or destabilize a transport |
 | Bun runtime smoke (P05 deliverable) | `bun run tests/runtime/smoke.mjs` | Same observable contract |
 | Deno runtime smoke (P05 deliverable) | `deno run --allow-ffi --allow-read tests/runtime/smoke.mjs` | Same observable contract using local `node_modules` |
 

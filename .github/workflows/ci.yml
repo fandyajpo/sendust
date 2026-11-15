@@ -139,6 +139,9 @@ jobs:
       - name: Binding tests
         run: npm --workspace ./ts run test
 
+      - name: Forced-GC probe
+        run: node --expose-gc tests/runtime/gc.mjs
+
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:

@@ -31,7 +31,24 @@ function removeTemp(path: string): void {
   rmSync(dirname(path), { recursive: true, force: true });
 }
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+/**
+ * Collects accepted sockets and resolves once the relay takes its first
+ * connection, so a test can sequence on an event instead of sleeping.
+ */
+function connectionGate() {
+  const sockets = new Set<Socket>();
+  let open: (() => void) | undefined;
+  const first = new Promise<void>((resolve) => {
+    open = resolve;
+  });
+  const accept = (socket: Socket) => {
+    sockets.add(socket);
+    socket.on("close", () => sockets.delete(socket));
+    open?.();
+    open = undefined;
+  };
+  return { sockets, first, accept };
+}
 
 /** Resolves with the stable error code, or null when the send succeeded. */
 async function errorCode(promise: Promise<unknown>): Promise<string | null> {
@@ -82,11 +99,8 @@ describe("sendust facade", () => {
   it.skipIf(!available)("aborts a send in flight and rejects it as TRANSPORT_CLOSED", async () => {
     // Accept the TCP connection and stay silent: the client is left waiting in
     // the TLS handshake, which only close can interrupt.
-    const sockets = new Set<Socket>();
-    const server = createServer((socket) => {
-      sockets.add(socket);
-      socket.on("close", () => sockets.delete(socket));
-    });
+    const gate = connectionGate();
+    const server = createServer(gate.accept);
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
     const address = server.address();
     const port = typeof address === "object" && address ? address.port : 1;
@@ -106,8 +120,9 @@ describe("sendust facade", () => {
       })
       .catch((error: unknown) => error);
 
-    // Let the delivery start and reach the handshake before close races it.
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Let the delivery reach the handshake before close races it. The gate
+    // resolves on the accepted connection, so no sleep is needed.
+    await gate.first;
     await transport.close();
 
     const error = await sending;
@@ -116,7 +131,7 @@ describe("sendust facade", () => {
     expect((error as SendustError).code).toBe("TRANSPORT_CLOSED");
     expect(transport.state).toBe("closed");
 
-    for (const socket of sockets) {
+    for (const socket of gate.sockets) {
       socket.destroy();
     }
     await new Promise<void>((resolve) => server.close(() => resolve()));
@@ -364,11 +379,8 @@ describe("sendust facade", () => {
   });
 
   it.skipIf(!available)("closes a stalled send within the close budget", async () => {
-    const sockets = new Set<Socket>();
-    const server = createServer((socket) => {
-      sockets.add(socket);
-      socket.on("close", () => sockets.delete(socket));
-    });
+    const gate = connectionGate();
+    const server = createServer(gate.accept);
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
     const address = server.address();
     const port = typeof address === "object" && address ? address.port : 1;
@@ -387,7 +399,7 @@ describe("sendust facade", () => {
         text: "y",
       })
       .catch((error: unknown) => error);
-    await delay(50);
+    await gate.first;
 
     const started = Date.now();
     await transport.close();
@@ -397,19 +409,18 @@ describe("sendust facade", () => {
     expect(transport.state).toBe("closed");
     expect(await sending).toBeInstanceOf(SendustError);
 
-    for (const socket of sockets) {
+    for (const socket of gate.sockets) {
       socket.destroy();
     }
     await new Promise<void>((resolve) => server.close(() => resolve()));
   });
 
   it.skipIf(!available)("rejects a second concurrent send with TRANSPORT_BUSY", async () => {
-    const sockets = new Set<Socket>();
+    const gate = connectionGate();
     let connections = 0;
     const server = createServer((socket) => {
       connections += 1;
-      sockets.add(socket);
-      socket.on("close", () => sockets.delete(socket));
+      gate.accept(socket);
     });
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
     const address = server.address();
@@ -424,7 +435,7 @@ describe("sendust facade", () => {
         text: "y",
       })
       .catch((error: unknown) => error);
-    await delay(50);
+    await gate.first;
 
     const second = await errorCode(
       transport.send({
@@ -442,18 +453,15 @@ describe("sendust facade", () => {
     expect(firstError).toBeInstanceOf(SendustError);
     expect((firstError as SendustError).code).toBe("TRANSPORT_CLOSED");
 
-    for (const socket of sockets) {
+    for (const socket of gate.sockets) {
       socket.destroy();
     }
     await new Promise<void>((resolve) => server.close(() => resolve()));
   });
 
   it.skipIf(!available)("refuses a send that starts during close", async () => {
-    const sockets = new Set<Socket>();
-    const server = createServer((socket) => {
-      sockets.add(socket);
-      socket.on("close", () => sockets.delete(socket));
-    });
+    const gate = connectionGate();
+    const server = createServer(gate.accept);
     await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
     const address = server.address();
     const port = typeof address === "object" && address ? address.port : 1;
@@ -467,7 +475,7 @@ describe("sendust facade", () => {
         text: "y",
       })
       .catch((error: unknown) => error);
-    await delay(50);
+    await gate.first;
 
     const closing = transport.close();
     const during = await errorCode(
@@ -484,7 +492,7 @@ describe("sendust facade", () => {
     expect(transport.state).toBe("closed");
     expect(await first).toBeInstanceOf(SendustError);
 
-    for (const socket of sockets) {
+    for (const socket of gate.sockets) {
       socket.destroy();
     }
     await new Promise<void>((resolve) => server.close(() => resolve()));
