@@ -12,8 +12,9 @@ use napi::Status;
 use napi::bindgen_prelude::{Result, Uint8Array};
 use napi_derive::napi;
 use sendust_core::{
-    Attachment, Delivery, Error as CoreError, ErrorCode, FileDescriptor, Header, Limits, Mailbox,
-    OutgoingMessage, SmtpConfig, SmtpCredentials, SmtpSecurity, SmtpTransport, Timeouts,
+    Attachment, AuthMechanism, Delivery, Error as CoreError, ErrorCode, FileDescriptor, Header,
+    Limits, Mailbox, OutgoingMessage, SmtpConfig, SmtpCredentials, SmtpSecurity, SmtpTransport,
+    Timeouts,
 };
 
 const OPEN: u8 = 0;
@@ -35,6 +36,7 @@ pub fn native_version() -> String {
 pub struct AuthOptions {
     pub user: String,
     pub pass: String,
+    pub method: Option<String>,
 }
 
 /// Transport configuration. Mirrors the public contract; core validates it.
@@ -151,7 +153,17 @@ impl Transport {
         let mut config = SmtpConfig::new(options.host, port, security).map_err(to_napi)?;
 
         if let Some(auth) = options.auth {
-            let credentials = SmtpCredentials::new(auth.user, auth.pass).map_err(to_napi)?;
+            let mut credentials = SmtpCredentials::new(auth.user, auth.pass).map_err(to_napi)?;
+            if let Some(method) = auth.method {
+                let mechanism = match method.as_str() {
+                    "plain" => AuthMechanism::Plain,
+                    "login" => AuthMechanism::Login,
+                    _ => {
+                        return Err(to_napi(CoreError::new(ErrorCode::ConfigUnsupportedAuth)));
+                    }
+                };
+                credentials = credentials.with_mechanism(mechanism);
+            }
             config = config.with_credentials(credentials);
         }
 

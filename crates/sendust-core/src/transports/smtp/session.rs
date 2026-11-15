@@ -8,7 +8,7 @@ use crate::errors::{Error, Stage};
 use crate::transports::smtp::SmtpConfig;
 use crate::transports::smtp::client::connection::Connection;
 use crate::transports::smtp::proto::capabilities::Capabilities;
-use crate::transports::smtp::proto::command::Command;
+use crate::transports::smtp::proto::command::{AuthMechanism, Command};
 use crate::transports::smtp::proto::response::Reply;
 use crate::transports::smtp::proto::transcript;
 
@@ -37,8 +37,15 @@ impl Session {
         self.connection.starttls().await
     }
 
-    pub async fn authenticate(&mut self, user: &str, password: &str) -> Result<(), Error> {
-        self.connection.authenticate(user, password).await
+    pub async fn authenticate(
+        &mut self,
+        user: &str,
+        password: &str,
+        preferred: Option<AuthMechanism>,
+    ) -> Result<(), Error> {
+        self.connection
+            .authenticate(user, password, preferred)
+            .await
     }
 
     pub async fn mail_from(&mut self, address: &str) -> Result<Reply, Error> {

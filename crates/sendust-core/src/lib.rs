@@ -32,7 +32,7 @@ pub use crate::results::{
     AmbiguityStage, DeliveryStatus, RecipientOutcome, RecipientStatus, SendOutcome, SmtpResponse,
 };
 pub use crate::transports::smtp::{
-    SmtpConfig, SmtpCredentials, SmtpSecurity, SmtpSession, SmtpTransport,
+    AuthMechanism, SmtpConfig, SmtpCredentials, SmtpSecurity, SmtpSession, SmtpTransport,
 };
 pub use crate::validation::{Failures as ValidationFailures, ValidationStage, validate_in_order};
 

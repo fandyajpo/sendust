@@ -1,34 +1,73 @@
 /**
- * Public TypeScript types for transport options, messages, and results.
+ * Public Sendust contract types.
  *
- * These mirror the approved contract in docs/architecture/public-api.md. The
- * authoritative declarations are generated with the public API in P09.
+ * These mirror `docs/architecture/public-api.md`. Sendust reports **relay
+ * acceptance, never delivery**: `accepted` means the SMTP relay took
+ * responsibility for the message, not that a mailbox received it.
+ *
+ * Sendust never retries, never queues, and never sends per-recipient messages.
+ * A transport runs one send at a time; an overlapping `send()` rejects with
+ * `TRANSPORT_BUSY` immediately, without opening a second connection.
+ *
+ * Timeout defaults are connect 10 s, per-operation 30 s, total 120 s, close/drain
+ * 125 s. Each may be lowered but never raised. Attachment limits default to 100
+ * recipients, 10 MiB per attachment, 20 MiB aggregate raw attachments, and
+ * 30 MiB serialized wire message; limits may be lowered but never raised.
  */
 
+/** Overall result of one send. Never a delivery claim. */
 export type DeliveryStatus = "accepted" | "rejected" | "unknown";
-export type RecipientStatus = DeliveryStatus;
 
+/** Outcome of one recipient. `accepted` requires a positive final DATA reply. */
+export type RecipientStatus = "accepted" | "rejected" | "unknown";
+
+/** The relay's final SMTP response, when one was observed. */
 export interface SmtpResponse {
   readonly code: number;
   readonly message: string;
 }
 
+/** One recipient and the status the relay gave it. */
 export interface RecipientOutcome {
   readonly address: string;
   readonly status: RecipientStatus;
 }
 
+/**
+ * Result of `send()`.
+ *
+ * - `accepted`: the relay accepted responsibility for the message.
+ * - `rejected`: the relay explicitly refused it; nothing is retried.
+ * - `unknown`: the final disposition could not be established after DATA may
+ *   have reached the relay; do not retry automatically.
+ */
 export interface SendResult {
   readonly status: DeliveryStatus;
   readonly recipients: RecipientOutcome[];
   readonly response?: SmtpResponse;
 }
 
+/**
+ * Relay credentials. `method` forces one AUTH mechanism; omit it to let the
+ * engine prefer PLAIN and fall back to LOGIN from the relay's EHLO list. An
+ * unadvertised forced mechanism fails the send rather than falling back.
+ */
 export interface AuthOptions {
   readonly user: string;
   readonly pass: string;
+  readonly method?: "plain" | "login";
 }
 
+/**
+ * Timeout budgets in milliseconds. Defaults are also the maxima.
+ *
+ * | Field | Default | Range |
+ * | --- | --- | --- |
+ * | `connectMs` | 10000 | 1000–10000, and ≤ `totalMs` |
+ * | `operationMs` | 30000 | 1000–30000, and ≤ `totalMs` |
+ * | `totalMs` | 120000 | 1000–120000, and ≥ `connectMs` and `operationMs` |
+ * | `closeMs` | 125000 | `totalMs`–125000 |
+ */
 export interface TimeoutOptions {
   readonly connectMs?: number;
   readonly operationMs?: number;
@@ -36,6 +75,12 @@ export interface TimeoutOptions {
   readonly closeMs?: number;
 }
 
+/**
+ * Hard resource caps. Defaults are also the maxima; values may be lowered.
+ *
+ * `maxAttachmentBytes` is 10 MiB (10485760), `maxTotalAttachmentBytes` 20 MiB
+ * (20971520), and `maxWireBytes` 30 MiB (31457280) by default.
+ */
 export interface LimitOptions {
   readonly maxRecipients?: number;
   readonly maxAttachmentBytes?: number;
@@ -43,43 +88,67 @@ export interface LimitOptions {
   readonly maxWireBytes?: number;
 }
 
+/**
+ * Transport configuration. `secure` has no plaintext mode, and there is no
+ * option to disable TLS verification.
+ */
 export interface TransportOptions {
+  /** Relay hostname; non-empty, no whitespace or control characters. */
   readonly host: string;
+  /** Relay port; integer 1–65535. */
   readonly port: number;
+  /** `tls` for implicit TLS (usually 465) or `starttls` (usually 587). */
   readonly secure: "tls" | "starttls";
   readonly auth?: AuthOptions;
+  /** EHLO name; defaults to the system hostname or `localhost`. */
   readonly ehloName?: string;
   readonly timeouts?: TimeoutOptions;
   readonly limits?: LimitOptions;
+  /** Filesystem access for path attachments; disabled unless explicitly enabled. */
   readonly attachments?: { readonly allowFileAccess?: boolean };
 }
 
+/** A mailbox given as a bare address or with a display name. */
 export interface MailboxLike {
   readonly name?: string;
   readonly address: string;
 }
 
+/** Envelope address: a string, or an object with an optional display name. */
 export type Address = string | MailboxLike;
 
+/** One custom header. Reserved names cannot be overridden. */
 export interface HeaderLike {
   readonly name: string;
   readonly value: string;
 }
 
+/** An in-memory attachment; bytes are copied before the send returns. */
 export interface BufferAttachment {
   readonly filename: string;
   readonly content: Uint8Array;
   readonly contentType?: string;
 }
 
+/** A local regular file; requires `attachments.allowFileAccess: true`. */
 export interface FileAttachment {
   readonly path: string;
   readonly filename?: string;
   readonly contentType?: string;
 }
 
+/**
+ * One attachment. There is no URL, stream, or remote form.
+ *
+ * Without `contentType`, the MIME type is inferred from the filename extension
+ * or falls back to `application/octet-stream`.
+ */
 export type Attachment = BufferAttachment | FileAttachment;
 
+/**
+ * One outgoing message. A message needs at least one recipient across `to`,
+ * `cc`, and `bcc`, and at least one of `text` or `html`.
+ */
 export interface Message {
   readonly from: Address;
   readonly to?: Address[];
@@ -93,4 +162,5 @@ export interface Message {
   readonly attachments?: Attachment[];
 }
 
+/** Transport lifecycle state, observed synchronously. */
 export type TransportState = "open" | "closing" | "closed";

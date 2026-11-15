@@ -3,6 +3,10 @@
  *
  * The runtime-neutral facade over the Node-API binding: transport creation,
  * one send per call, explicit close, and stable error codes.
+ *
+ * `SendResult.status` reports relay acceptance, never delivery: `accepted`
+ * means the SMTP relay took responsibility for the message. One transport runs
+ * one send at a time; overlapping sends reject with `TRANSPORT_BUSY`.
  */
 
 export { createTransport, Transport } from "./transport.ts";

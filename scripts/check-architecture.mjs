@@ -57,6 +57,9 @@ const NODE_ONLY_PATTERNS = [
   /from\s+["'](?:fs|path|os|child_process)["']/,
 ];
 
+/** The public TypeScript surface must not fall back to `any`. */
+const ANY_ESCAPE = /(:\s*any\b|\bas\s+any\b|<any>)/;
+
 const failures = [];
 const fail = (message) => failures.push(message);
 const posix = (path) => relative(ROOT, path).split(sep).join("/");
@@ -232,6 +235,9 @@ function checkAdapterBoundaries() {
     const hits = NODE_ONLY_PATTERNS.filter((pattern) => pattern.test(code)).map(String);
     if (hits.length > 0) {
       fail(`shared TypeScript must stay runtime-neutral: ${posix(path)} uses ${hits.join(", ")}`);
+    }
+    if (ANY_ESCAPE.test(code)) {
+      fail(`public TypeScript must not use any: ${posix(path)}`);
     }
   }
 }

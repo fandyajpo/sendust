@@ -45,7 +45,11 @@ function toNativeOptions(options: TransportOptions): Record<string, unknown> {
   };
 
   if (options.auth) {
-    native.auth = { user: options.auth.user, pass: options.auth.pass };
+    native.auth = {
+      user: options.auth.user,
+      pass: options.auth.pass,
+      method: options.auth.method,
+    };
   }
   if (options.ehloName !== undefined) {
     native.ehloName = options.ehloName;
@@ -139,7 +143,17 @@ function rethrow(error: unknown): never {
   throw mapped ?? error;
 }
 
-/** One open transport; one active send; explicit bounded close. */
+/**
+ * One open transport.
+ *
+ * Lifecycle is `open -> closing -> closed`. One send may be active at a time;
+ * a second overlapping `send()` rejects with `TRANSPORT_BUSY` immediately and
+ * never opens another connection or queues work. `close()` is explicit,
+ * idempotent, and bounded by `closeMs` (125 s by default); it is never driven by
+ * garbage collection or process exit.
+ *
+ * Every result means relay acceptance only, never delivery.
+ */
 export class Transport {
   readonly #native: NativeTransport;
 
@@ -151,10 +165,21 @@ export class Transport {
     }
   }
 
+  /** Current lifecycle state, read synchronously. */
   get state(): TransportState {
     return this.#native.state() as TransportState;
   }
 
+  /**
+   * Sends one message and resolves with the relay's outcome.
+   *
+   * Resolves for `accepted`, `rejected`, and `unknown`; `accepted` means the
+   * relay took responsibility, not that a mailbox received the message. Never
+   * retries, never queues, and never sends per-recipient messages.
+   *
+   * @throws {SendustError} for validation, configuration, limit, TLS, auth,
+   * timeout, closed, busy, and internal failures.
+   */
   async send(message: Message): Promise<SendResult> {
     try {
       return toResult(await this.#native.send(toNativeMessage(message)));
@@ -163,6 +188,12 @@ export class Transport {
     }
   }
 
+  /**
+   * Closes the transport, cancelling an in-flight send within the close budget.
+   *
+   * Idempotent; after it resolves, `send()` rejects with `TRANSPORT_CLOSED`.
+   * Reports `TIMEOUT_CLOSE` if the drain budget is exceeded.
+   */
   async close(): Promise<void> {
     try {
       await this.#native.close();
@@ -172,7 +203,12 @@ export class Transport {
   }
 }
 
-/** Creates one transport. Throws `SendustError` on invalid options. */
+/**
+ * Creates one transport. Relay options are validated synchronously.
+ *
+ * @throws {SendustError} with `CONFIG_*` or `VALIDATION_*` codes for invalid
+ * options; TLS verification cannot be disabled and there is no plaintext mode.
+ */
 export function createTransport(options: TransportOptions): Transport {
   return new Transport(options);
 }

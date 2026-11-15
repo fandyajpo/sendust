@@ -348,69 +348,98 @@ fn tls_error(error: std::io::Error) -> Error {
 
 impl Connection {
     /// Authenticates after TLS with PLAIN or LOGIN, per ADR-0017.
-    pub async fn authenticate(&mut self, user: &str, password: &str) -> Result<(), Error> {
+    ///
+    /// `preferred` forces a mechanism when the caller configured one; an
+    /// unadvertised preference fails instead of silently falling back.
+    pub async fn authenticate(
+        &mut self,
+        user: &str,
+        password: &str,
+        preferred: Option<AuthMechanism>,
+    ) -> Result<(), Error> {
         if !self.encrypted {
             return Err(auth_error(ErrorCode::AuthUnsupported, None));
         }
 
-        let plain = self.capabilities.supports_auth(AuthMechanism::Plain);
-        let login = self.capabilities.supports_auth(AuthMechanism::Login);
-        if !plain && !login {
-            return Err(auth_error(ErrorCode::AuthUnsupported, None));
-        }
+        let mechanism = choose_auth(
+            self.capabilities.supports_auth(AuthMechanism::Plain),
+            self.capabilities.supports_auth(AuthMechanism::Login),
+            preferred,
+        )
+        .ok_or_else(|| auth_error(ErrorCode::AuthUnsupported, None))?;
 
-        if plain {
-            let reply = self
-                .command(
-                    Command::Auth {
-                        mechanism: AuthMechanism::Plain,
-                        initial_response: Some(auth_plain_initial(user, password)),
-                    },
-                    Stage::Auth,
-                )
-                .await?;
-            return confirm_auth(reply);
-        }
-
-        let reply = self
-            .command(
-                Command::Auth {
-                    mechanism: AuthMechanism::Login,
-                    initial_response: None,
-                },
-                Stage::Auth,
-            )
-            .await?;
-        if reply.value() != 334 {
-            return confirm_auth(reply);
-        }
-
-        let mut challenges = 0;
-        let mut reply = self
-            .command(
-                Command::AuthResponse {
-                    response: STANDARD.encode(user),
-                },
-                Stage::Auth,
-            )
-            .await?;
-
-        while reply.value() == 334 {
-            challenges += 1;
-            if challenges > 1 {
-                return Err(auth_error(ErrorCode::AuthFailed, Some(reply.value())));
+        match mechanism {
+            AuthMechanism::Plain => {
+                let reply = self
+                    .command(
+                        Command::Auth {
+                            mechanism: AuthMechanism::Plain,
+                            initial_response: Some(auth_plain_initial(user, password)),
+                        },
+                        Stage::Auth,
+                    )
+                    .await?;
+                confirm_auth(reply)
             }
-            reply = self
-                .command(
-                    Command::AuthResponse {
-                        response: STANDARD.encode(password),
-                    },
-                    Stage::Auth,
-                )
-                .await?;
-        }
+            AuthMechanism::Login => {
+                let reply = self
+                    .command(
+                        Command::Auth {
+                            mechanism: AuthMechanism::Login,
+                            initial_response: None,
+                        },
+                        Stage::Auth,
+                    )
+                    .await?;
+                if reply.value() != 334 {
+                    return confirm_auth(reply);
+                }
 
-        confirm_auth(reply)
+                let mut challenges = 0;
+                let mut reply = self
+                    .command(
+                        Command::AuthResponse {
+                            response: STANDARD.encode(user),
+                        },
+                        Stage::Auth,
+                    )
+                    .await?;
+
+                while reply.value() == 334 {
+                    challenges += 1;
+                    if challenges > 1 {
+                        return Err(auth_error(ErrorCode::AuthFailed, Some(reply.value())));
+                    }
+                    reply = self
+                        .command(
+                            Command::AuthResponse {
+                                response: STANDARD.encode(password),
+                            },
+                            Stage::Auth,
+                        )
+                        .await?;
+                }
+
+                confirm_auth(reply)
+            }
+        }
+    }
+}
+
+/// Chooses the AUTH mechanism: an explicit preference must be advertised,
+/// otherwise PLAIN is preferred over LOGIN.
+fn choose_auth(
+    plain: bool,
+    login: bool,
+    preferred: Option<AuthMechanism>,
+) -> Option<AuthMechanism> {
+    match preferred {
+        Some(AuthMechanism::Plain) if plain => Some(AuthMechanism::Plain),
+        Some(AuthMechanism::Login) if login => Some(AuthMechanism::Login),
+        Some(_) => None,
+        None if plain => Some(AuthMechanism::Plain),
+        None if login => Some(AuthMechanism::Login),
+        None => None,
     }
 }
 
@@ -434,4 +463,30 @@ fn auth_error(code: ErrorCode, smtp_code: Option<u16>) -> Error {
         details = details.smtp_code(smtp_code);
     }
     Error::new(code).with_details(details)
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_engine_prefers_plain_then_login() {
+        assert_eq!(
+            choose_auth(true, true, None),
+            Some(AuthMechanism::Plain)
+        );
+        assert_eq!(choose_auth(false, true, None), Some(AuthMechanism::Login));
+        assert_eq!(choose_auth(false, false, None), None);
+    }
+
+    #[test]
+    fn an_explicit_mechanism_must_be_advertised() {
+        assert_eq!(
+            choose_auth(true, true, Some(AuthMechanism::Login)),
+            Some(AuthMechanism::Login)
+        );
+        assert_eq!(choose_auth(true, false, Some(AuthMechanism::Login)), None);
+        assert_eq!(choose_auth(false, true, Some(AuthMechanism::Plain)), None);
+    }
 }

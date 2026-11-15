@@ -19,6 +19,8 @@ pub mod client;
 pub mod proto;
 pub mod session;
 
+pub use self::proto::command::AuthMechanism;
+
 use std::fmt;
 use std::time::{Duration, Instant};
 
@@ -53,6 +55,7 @@ pub enum SmtpSecurity {
 pub struct SmtpCredentials {
     username: String,
     password: String,
+    mechanism: Option<AuthMechanism>,
 }
 
 impl SmtpCredentials {
@@ -66,7 +69,22 @@ impl SmtpCredentials {
         {
             return Err(Error::new(ErrorCode::ValidationInvalidOption));
         }
-        Ok(Self { username, password })
+        Ok(Self {
+            username,
+            password,
+            mechanism: None,
+        })
+    }
+
+    /// Forces one AUTH mechanism; an unadvertised preference fails the send
+    /// instead of silently falling back to the other one.
+    pub fn with_mechanism(mut self, mechanism: AuthMechanism) -> Self {
+        self.mechanism = Some(mechanism);
+        self
+    }
+
+    pub fn mechanism(&self) -> Option<AuthMechanism> {
+        self.mechanism
     }
 
     /// Username, safe to display because it is not the secret half.
@@ -215,7 +233,11 @@ impl SmtpTransport {
 
         if let Some(credentials) = config.credentials.as_ref() {
             session
-                .authenticate(&credentials.username, &credentials.password)
+                .authenticate(
+                    &credentials.username,
+                    &credentials.password,
+                    credentials.mechanism(),
+                )
                 .await
                 .map_err(|error| annotate(error, config, deadlines, Stage::Auth))?;
         }

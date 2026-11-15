@@ -26,6 +26,13 @@ export interface ErrorPayload {
 
 const PAYLOAD_PREFIX = "SENDUST:";
 
+/**
+ * Catchable error raised by Sendust.
+ *
+ * Branch on `code` (a stable string) and `category`; the message is diagnostic
+ * text, never a contract, and is redacted of credentials, body content,
+ * attachment bytes, and local paths.
+ */
 export class SendustError extends Error {
   readonly code: string;
   readonly category: ErrorCategory;

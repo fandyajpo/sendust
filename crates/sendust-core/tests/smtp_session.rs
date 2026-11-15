@@ -58,7 +58,7 @@ async fn authenticates_with_plain() {
         .expect("open");
 
     session
-        .authenticate("relay-user", "hunter2")
+        .authenticate("relay-user", "hunter2", None)
         .await
         .expect("authenticated");
     assert_eq!(server.trace().count_prefix("AUTH"), 1);
@@ -81,7 +81,7 @@ async fn authenticates_with_login_challenges() {
         .expect("open");
 
     session
-        .authenticate("relay-user", "hunter2")
+        .authenticate("relay-user", "hunter2", None)
         .await
         .expect("authenticated");
     assert_eq!(server.trace().count_prefix("AUTH"), 1);
@@ -100,7 +100,7 @@ async fn auth_rejection_is_a_stable_error() {
         .expect("open");
 
     let error = session
-        .authenticate("relay-user", "hunter2")
+        .authenticate("relay-user", "hunter2", None)
         .await
         .expect_err("rejected");
     assert_eq!(error.code(), ErrorCode::AuthFailed);
@@ -116,7 +116,7 @@ async fn auth_without_a_mechanism_is_unsupported() {
         .expect("open");
 
     let error = session
-        .authenticate("relay-user", "hunter2")
+        .authenticate("relay-user", "hunter2", None)
         .await
         .expect_err("no mechanism");
     assert_eq!(error.code(), ErrorCode::AuthUnsupported);
@@ -135,7 +135,7 @@ async fn auth_before_tls_is_refused() {
     assert!(!session.is_encrypted());
 
     let error = session
-        .authenticate("relay-user", "hunter2")
+        .authenticate("relay-user", "hunter2", None)
         .await
         .expect_err("must refuse");
     assert_eq!(error.code(), ErrorCode::AuthUnsupported);
