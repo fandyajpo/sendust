@@ -1,6 +1,6 @@
 # Phase 10 — Reliability
 
-**Phase status:** IN PROGRESS  
+**Phase status:** COMPLETED  
 **Phase dependency:** Phase 09  
 **Companion references:** [system design](../architecture/system-design.md), [reliability strategy](../engineering/reliability-strategy.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md)
 
@@ -17,7 +17,7 @@ In scope: lifecycle races, timeout-budget interaction, close/drain guarantees, r
 ### P10-001 — Implement lifecycle race hardening
 
 - **Size:** L
-- **Status:** IN REVIEW
+- **Status:** COMPLETED
 - **Prerequisites:** P09-005
 - **Description:** Audit and harden all `open -> closing -> closed` transitions under concurrent send, close, and failure. Ensure exactly one active send, immediate `BUSY` without dialing, no send after close initiation, and idempotent close. Define behavior for close arriving while connect, auth, RCPT, or DATA is in flight. No GC-dependent behavior.
 - **Evidence criteria:** Deterministic race tests cover send/send, send/close, close/send, close/close, and failure/close at each stage. BUSY tests assert zero additional SMTP connections. Every terminal state is reachable and documented.
@@ -25,7 +25,7 @@ In scope: lifecycle races, timeout-budget interaction, close/drain guarantees, r
 ### P10-002 — Enforce timeout-budget interaction and bounded close drain
 
 - **Size:** L
-- **Status:** IN REVIEW
+- **Status:** COMPLETED
 - **Prerequisites:** P10-001
 - **Description:** Implement shared-deadline logic so connect 10s, operation 30s, total 120s, and close 125s cannot overrun their intended bounds. Ensure close drains in-flight work up to 125s, then reports a bounded failure without hanging the process. Timeout classification must be honest where stage attribution is observable and aggregate otherwise.
 - **Evidence criteria:** Fake-time tests assert exact boundaries for 10s, 30s, 120s, and 125s with epsilon cases. Close during each stage completes or fails by the deadline. No timeout triggers a retry. No unbounded wait or timer leak remains.
@@ -33,7 +33,7 @@ In scope: lifecycle races, timeout-budget interaction, close/drain guarantees, r
 ### P10-003 — Implement resource cleanup and leak prevention
 
 - **Size:** M
-- **Status:** IN REVIEW
+- **Status:** COMPLETED
 - **Prerequisites:** P10-001
 - **Description:** Ensure sockets, file descriptors, buffers, timers, and async tasks are released on success, validation failure, TLS failure, timeout, reset, abort/close, and process shutdown. Define cleanup ordering and avoid double-close or use-after-close. Attachment buffers must drop promptly.
 - **Evidence criteria:** Repeated success/failure loops show stable descriptor and memory counts. Tests cover failure during connect, TLS, auth, DATA, attachment read, and close. No file descriptor, timer, or task remains after each terminal path.
@@ -41,7 +41,7 @@ In scope: lifecycle races, timeout-budget interaction, close/drain guarantees, r
 ### P10-004 — Build the reliability fault-injection suite
 
 - **Size:** XL
-- **Status:** IN REVIEW
+- **Status:** COMPLETED
 - **Prerequisites:** P10-001, P10-002, P10-003
 - **Description:** Create deterministic fault fixtures for connection refused, DNS failure, greeting stall, TLS handshake stall, auth stall, RCPT stall, DATA stall, final-response stall, reset at each stage, abrupt close, malformed responses, slow close, and ambiguous post-DATA outcomes. Tests must assert result classification, timing bounds, command traces, and cleanup.
 - **Evidence criteria:** Each fault fixture has an expected result, deadline, command trace, and resource-cleanup assertion. Mixed RCPT `250`/`550`, explicit final DATA `451` rejection, and missing-final-reply-after-DATA ambiguity are included. No test depends on external network or unbounded sleeps. Suite passes repeatably.
@@ -49,7 +49,7 @@ In scope: lifecycle races, timeout-budget interaction, close/drain guarantees, r
 ### P10-005 — Reliability phase gate and failure-mode review
 
 - **Size:** M
-- **Status:** IN REVIEW
+- **Status:** COMPLETED
 - **Prerequisites:** P10-001, P10-002, P10-003, P10-004
 - **Description:** Review all failure paths against the contract: accepted only on relay acceptance, unknown after DATA, no retry, no queue, bounded close, honest timeouts, and resource cleanup. Run stress loops and document residual risks that are intentionally out of scope.
 - **Evidence criteria:** Gate report includes fault-matrix results, stress-run stability, descriptor/memory evidence, and a signed list of non-goals (no retry, no pooling, no delivery guarantee). Any leak, hang, or duplicate-send finding blocks approval.
@@ -88,7 +88,7 @@ Hardened lifecycle, shared deadline logic, cleanup guarantees, fault-injection s
 
 ## Status
 
-IN PROGRESS. P10-001 to P10-005 are IN REVIEW; the PHASE-10 gate record is submitted for project owner approval.
+COMPLETED. PHASE-10 is APPROVED (project owner, 2026-11-15). Deferred items remain recorded: the DNS-failure fixture and the JS fake-relay example (P12).
 
 ## Evidence log
 
@@ -96,8 +96,8 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 
 | Task | Evidence | State |
 | --- | --- | --- |
-| P10-001 | `results/mod.rs` adds `DeliveryProgress`, a monotonic stage tracker that also records the recipients accepted at RCPT, and `cancelled_outcome()`; `SmtpTransport::with_progress` marks `connection_setup`, `auth`, `mail`, each `rcpt`, `data_command`, and `data_body` and records accepted recipients. The binding maps a cancelled send to an `unknown` outcome for the accepted subset once `data_body` was reached, and to `TRANSPORT_CLOSED` before that. Tests: `a_cancellation_before_data_is_not_ambiguous`, `a_cancellation_after_data_reports_unknown_for_the_accepted_subset`, `reset_clears_the_previous_send_state`, `stages_never_move_backwards`, plus the existing lifecycle and facade race tests (send/send, send/close, close/send, close/close). `DeliveryProgress::reset` runs at the start of every send, so a reused transport cannot carry a previous send's stage or recipients into the next cancellation. | IN REVIEW |
-| P10-002 | `SendDeadlines` now has exact boundary tests: connect expires at exactly 10 s and not a nanosecond before, the operation deadline is exactly 30 s and capped by the total, and the total leaves zero time only at 120 s. The three fake-relay timeout tests assert a timeout never retries — a connect timeout never reaches MAIL, and the operation and total timeouts issue exactly one MAIL. The facade closes a stalled send within a 1 s close budget (measured, under 1.5 s) and ends `closed`. The close drain deadline itself is covered by `close_drain_times_out_without_the_active_send_finishing`. | IN REVIEW |
-| P10-003 | `tests/leaks.rs` probes the descriptor lifecycle with warm-up loops and `/dev/fd` counts on unix: 20 successful sends, 50 refused connections, and 20 untrusted-certificate TLS failures each leave the count stable within two descriptors, and the TLS loop also proves no `MAIL` was ever issued. Attachment handles are already covered by `the_file_handle_is_closed_after_a_read`; buffers are owned and dropped after serialization, and no socket, timer, or task outlives a send because connections are created per send and dropped with the session. | IN REVIEW |
-| P10-004 | `smtp_faults` now carries 26 deterministic cases over the loopback fake TLS relay: stalls at connect, MAIL, AUTH, RCPT, and the DATA command each time out with the honest stage and issue no further commands; a final-reply stall after DATA returns `unknown` with the body transmitted and exactly one DATA; an AUTH reset is a protocol error at the auth stage with no MAIL; a malformed greeting is a protocol error. Together with the existing certificate matrix, STARTTLS refusal, greeting/RCPT/DATA resets, `421` handling, mixed RCPT, final `451`, close-after-DATA ambiguity, and the total stall, every required stage has a result, timing bound, command trace, and leak check. `leaks.rs` supplies the cleanup evidence. | IN REVIEW |
-| P10-005 | [QG-10 gate record](../gates/phase-10.md): the failure-mode checklist (accepted only on relay acceptance, unknown after DATA, no retry, no queue, BUSY without I/O, bounded close, honest timeouts, cleanup, TLS fail-closed, redaction), the fault matrix summary, the mixed stress loop (50 successes and 50 refusals, stable descriptors, exactly 50 DATA), and the signed non-goals. Submitted, not approved. | IN REVIEW |
+| P10-001 | `results/mod.rs` adds `DeliveryProgress`, a monotonic stage tracker that also records the recipients accepted at RCPT, and `cancelled_outcome()`; `SmtpTransport::with_progress` marks `connection_setup`, `auth`, `mail`, each `rcpt`, `data_command`, and `data_body` and records accepted recipients. The binding maps a cancelled send to an `unknown` outcome for the accepted subset once `data_body` was reached, and to `TRANSPORT_CLOSED` before that. Tests: `a_cancellation_before_data_is_not_ambiguous`, `a_cancellation_after_data_reports_unknown_for_the_accepted_subset`, `reset_clears_the_previous_send_state`, `stages_never_move_backwards`, plus the existing lifecycle and facade race tests (send/send, send/close, close/send, close/close). `DeliveryProgress::reset` runs at the start of every send, so a reused transport cannot carry a previous send's stage or recipients into the next cancellation. | COMPLETED |
+| P10-002 | `SendDeadlines` now has exact boundary tests: connect expires at exactly 10 s and not a nanosecond before, the operation deadline is exactly 30 s and capped by the total, and the total leaves zero time only at 120 s. The three fake-relay timeout tests assert a timeout never retries — a connect timeout never reaches MAIL, and the operation and total timeouts issue exactly one MAIL. The facade closes a stalled send within a 1 s close budget (measured, under 1.5 s) and ends `closed`. The close drain deadline itself is covered by `close_drain_times_out_without_the_active_send_finishing`. | COMPLETED |
+| P10-003 | `tests/leaks.rs` probes the descriptor lifecycle with warm-up loops and `/dev/fd` counts on unix: 20 successful sends, 50 refused connections, and 20 untrusted-certificate TLS failures each leave the count stable within two descriptors, and the TLS loop also proves no `MAIL` was ever issued. Attachment handles are already covered by `the_file_handle_is_closed_after_a_read`; buffers are owned and dropped after serialization, and no socket, timer, or task outlives a send because connections are created per send and dropped with the session. | COMPLETED |
+| P10-004 | `smtp_faults` now carries 26 deterministic cases over the loopback fake TLS relay: stalls at connect, MAIL, AUTH, RCPT, and the DATA command each time out with the honest stage and issue no further commands; a final-reply stall after DATA returns `unknown` with the body transmitted and exactly one DATA; an AUTH reset is a protocol error at the auth stage with no MAIL; a malformed greeting is a protocol error. Together with the existing certificate matrix, STARTTLS refusal, greeting/RCPT/DATA resets, `421` handling, mixed RCPT, final `451`, close-after-DATA ambiguity, and the total stall, every required stage has a result, timing bound, command trace, and leak check. `leaks.rs` supplies the cleanup evidence. | COMPLETED |
+| P10-005 | [QG-10 gate record](../gates/phase-10.md): the failure-mode checklist (accepted only on relay acceptance, unknown after DATA, no retry, no queue, BUSY without I/O, bounded close, honest timeouts, cleanup, TLS fail-closed, redaction), the fault matrix summary, the mixed stress loop (50 successes and 50 refusals, stable descriptors, exactly 50 DATA), and the signed non-goals. Submitted, not approved. | COMPLETED |

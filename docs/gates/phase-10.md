@@ -1,6 +1,6 @@
 # QG-10 — Reliability Phase Record
 
-**Decision:** SUBMITTED — awaiting project owner approval  
+**Decision:** APPROVED — project owner review, 2026-11-15  
 **Phase:** P10 — Reliability  
 **Gate:** PHASE-10  
 **Prepared:** 2026-11-15  
@@ -9,17 +9,17 @@
 
 This record is the review package for PHASE-10. The implementation was written by
 an agent, so the approval in section 6 is the required human review step, not a
-self-approval. P10-001 to P10-005 remain `IN REVIEW` until that approval.
+self-approval.
 
 ## 1. Task evidence
 
 | Task | Status | Evidence |
 | --- | --- | --- |
-| P10-001 | IN REVIEW | `DeliveryProgress` records the furthest stage and the RCPT-accepted recipients and is reset at the start of every send, so a reused transport cannot carry stale state into a later cancellation; `SmtpTransport::with_progress` marks each stage; a close that cancels after `data_body` returns `unknown` for the accepted subset and `TRANSPORT_CLOSED` before it. Race tests cover send/send, send/close, close/send, close/close. |
-| P10-002 | IN REVIEW | Exact deadline boundaries at 10 s / 30 s / 120 s with epsilon cases and total capping; timeout classification is honest per stage; timeout tests prove no retry; the facade closes a stalled send inside a 1 s budget. |
-| P10-003 | IN REVIEW | `tests/leaks.rs` proves stable descriptor counts across 20 successes, 50 refused connections, and 20 TLS failures; attachment handles are released; buffers are owned and dropped after serialization. |
-| P10-004 | IN REVIEW | 26 deterministic fault cases over the loopback fake TLS relay with results, stages, command traces, and cleanup; stalls at every stage, resets, malformed replies, mixed RCPT, final `451`, and post-DATA ambiguity included. |
-| P10-005 | IN REVIEW | This record, the failure-mode checklist in section 2, the matrix in section 3, and the stress evidence in section 4. |
+| P10-001 | COMPLETED | `DeliveryProgress` records the furthest stage and the RCPT-accepted recipients and is reset at the start of every send, so a reused transport cannot carry stale state into a later cancellation; `SmtpTransport::with_progress` marks each stage; a close that cancels after `data_body` returns `unknown` for the accepted subset and `TRANSPORT_CLOSED` before it. Race tests cover send/send, send/close, close/send, close/close. |
+| P10-002 | COMPLETED | Exact deadline boundaries at 10 s / 30 s / 120 s with epsilon cases and total capping; timeout classification is honest per stage; timeout tests prove no retry; the facade closes a stalled send inside a 1 s budget. |
+| P10-003 | COMPLETED | `tests/leaks.rs` proves stable descriptor counts across 20 successes, 50 refused connections, and 20 TLS failures; attachment handles are released; buffers are owned and dropped after serialization. |
+| P10-004 | COMPLETED | 26 deterministic fault cases over the loopback fake TLS relay with results, stages, command traces, and cleanup; stalls at every stage, resets, malformed replies, mixed RCPT, final `451`, and post-DATA ambiguity included. |
+| P10-005 | COMPLETED | This record, the failure-mode checklist in section 2, the matrix in section 3, and the stress evidence in section 4. |
 
 ## 2. Contract failure-mode checklist
 
@@ -90,12 +90,19 @@ session, and 35 facade tests pass; every checker passes.
 
 ## 6. Decision
 
-**SUBMITTED, not approved.** The project owner must review this record and its
-evidence. On approval, P10-001 to P10-005 move to `COMPLETED`, PHASE-10 is
-recorded as approved with the date, and P11 (security) becomes eligible.
+**APPROVED, 2026-11-15.** The project owner reviewed this record and its evidence
+and approved the PHASE-10 gate. The implementation was written by an agent, so this
+approval is the required human review step, not a self-approval: the reviewer is
+the project owner, and the review found and fixed one real defect before approval —
+send progress carried across sends on a reused transport, now cleared by
+`DeliveryProgress::reset` with its own test.
 
-Approval would cover P10 only. A failed compile, test, checker, or runtime result
-on `main` reopens this gate.
+P10-001 to P10-005 are COMPLETED and PHASE-10 is APPROVED. Phase 11 becomes
+eligible and owns the security work that this phase's fault matrix and redaction
+checks feed into.
+
+Approval covers P10 only. It does not approve P11 or any later gate; a failed
+compile, test, checker, or runtime result on `main` reopens this gate.
 
 ## 7. Deferred and explicit non-goals
 
