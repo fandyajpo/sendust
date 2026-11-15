@@ -288,6 +288,21 @@ fn repeated_serialization_returns_to_baseline() {
 
 #[test]
 #[ignore = "performance harness; run with --release --ignored"]
+fn copies_ten_mib_within_budget() {
+    // The binding copies each buffer with `content.to_vec()`; this measures the
+    // same 10 MiB memcpy so the cost is known rather than assumed free.
+    let source = vec![1u8; 10 * MIB as usize];
+
+    let stats = measure(|| {
+        let copy = source.clone();
+        black_box(&copy);
+    });
+    stats.report("copy.10mib");
+    stats.assert_budget("copy.10mib", 20_000, 40_000);
+}
+
+#[test]
+#[ignore = "performance harness; run with --release --ignored"]
 fn attachment_bytes_are_read_once_by_construction() {
     // A File attachment can never reach the serializer: Delivery converts every
     // File into Bytes exactly once, and serialize refuses a File attachment.
