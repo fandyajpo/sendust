@@ -330,7 +330,11 @@ mod tests {
             ErrorCode::ConfigAttachmentUnreadable,
             "a symlink is refused before any byte is read"
         );
-        assert_eq!(calls.load(Ordering::SeqCst), 0, "no dial on a refused attachment");
+        assert_eq!(
+            calls.load(Ordering::SeqCst),
+            0,
+            "no dial on a refused attachment"
+        );
 
         remove_temp(&target);
     }
