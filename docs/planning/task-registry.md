@@ -5,11 +5,11 @@
 - Total phases: 19
 - Phase tasks: 95
 - Architecture amendment tasks: 7 (A01-001–A01-004, A02-001–A02-003)
-- Completed tasks: 40 (P00–P07)
-- In-review tasks: 5 (P08-001 to P08-005)
+- Completed tasks: 45 (P00–P08)
+- In-review tasks: 0
 - In-progress tasks: 0
-- Not-started tasks: 50 (P09–P18)
-- P00–P02 tasks are `COMPLETED` with approved gate evidence. P03-001–P03-005 are `COMPLETED` with CI evidence and an approved QG-03 record; P04-001 to P04-005 are `COMPLETED` with an approved PHASE-04 record; P05-001 to P05-005 are `COMPLETED` with an approved PHASE-05 record; P06-001 to P06-005 are `COMPLETED` with the approved PHASE-06 record; P07-001 to P07-005 are `COMPLETED` with the approved PHASE-07 record; P08-001 to P08-005 are `IN REVIEW`; P09–P18 are `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
+- Not-started tasks: 45 (P09–P18)
+- P00–P02 tasks are `COMPLETED` with approved gate evidence. P03-001–P03-005 are `COMPLETED` with CI evidence and an approved QG-03 record; P04-001 to P04-005 are `COMPLETED` with an approved PHASE-04 record; P05-001 to P05-005 are `COMPLETED` with an approved PHASE-05 record; P06-001 to P06-005 are `COMPLETED` with the approved PHASE-06 record; P07-001 to P07-005 are `COMPLETED` with the approved PHASE-07 record; P08-001 to P08-005 are `COMPLETED` with the approved PHASE-08 record (project owner, 2026-11-15); P09–P18 are `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
 - Effort is relative: S, M, L, XL. No delivery dates.
 - Gate tasks are the final task in each phase and must not be marked complete before their phase evidence exists.
 
@@ -74,11 +74,11 @@
 | [P07](../phases/phase-07.md) | MIME | [P07-003](../phases/phase-07.md) | Implement filename and content-type handling policy | M | P07-001 | COMPLETED |
 | [P07](../phases/phase-07.md) | MIME | [P07-004](../phases/phase-07.md) | Implement deterministic serialization and wire-size parity | L | P07-001, P07-002, P07-003 | COMPLETED |
 | [P07](../phases/phase-07.md) | MIME | [P07-005](../phases/phase-07.md) | MIME conformance and phase gate | M | P07-001, P07-002, P07-003, P07-004 | COMPLETED |
-| [P08](../phases/phase-08.md) | Attachments | [P08-001](../phases/phase-08.md) | Define opt-in filesystem configuration and descriptor contract | M | P07-005, P05-005 | IN REVIEW |
-| [P08](../phases/phase-08.md) | Attachments | [P08-002](../phases/phase-08.md) | Implement safe regular-file validation and bounded reads | L | P08-001 | IN REVIEW |
-| [P08](../phases/phase-08.md) | Attachments | [P08-003](../phases/phase-08.md) | Enforce per-file, aggregate, and wire caps with attachments | M | P08-002, P04-003 | IN REVIEW |
-| [P08](../phases/phase-08.md) | Attachments | [P08-004](../phases/phase-08.md) | Integrate attachment bytes with MIME and copied ownership | L | P08-002, P08-003, P07-004 | IN REVIEW |
-| [P08](../phases/phase-08.md) | Attachments | [P08-005](../phases/phase-08.md) | Attachment fault-matrix phase gate | M | P08-001, P08-002, P08-003, P08-004 | IN REVIEW |
+| [P08](../phases/phase-08.md) | Attachments | [P08-001](../phases/phase-08.md) | Define opt-in filesystem configuration and descriptor contract | M | P07-005, P05-005 | COMPLETED |
+| [P08](../phases/phase-08.md) | Attachments | [P08-002](../phases/phase-08.md) | Implement safe regular-file validation and bounded reads | L | P08-001 | COMPLETED |
+| [P08](../phases/phase-08.md) | Attachments | [P08-003](../phases/phase-08.md) | Enforce per-file, aggregate, and wire caps with attachments | M | P08-002, P04-003 | COMPLETED |
+| [P08](../phases/phase-08.md) | Attachments | [P08-004](../phases/phase-08.md) | Integrate attachment bytes with MIME and copied ownership | L | P08-002, P08-003, P07-004 | COMPLETED |
+| [P08](../phases/phase-08.md) | Attachments | [P08-005](../phases/phase-08.md) | Attachment fault-matrix phase gate | M | P08-001, P08-002, P08-003, P08-004 | COMPLETED |
 | [P09](../phases/phase-09.md) | Public delivery API | [P09-001](../phases/phase-09.md) | Define public TypeScript types and transport lifecycle API | L | P05-005, P06-005 | NOT STARTED |
 | [P09](../phases/phase-09.md) | Public delivery API | [P09-002](../phases/phase-09.md) | Implement send composition and result mapping | L | P09-001, P06-005 | NOT STARTED |
 | [P09](../phases/phase-09.md) | Public delivery API | [P09-003](../phases/phase-09.md) | Implement public error classes and redaction | M | P09-001 | NOT STARTED |

@@ -55,6 +55,9 @@ This documentation set is the source of truth for product scope, requirements, a
 | 41 | [QG-03 repository baseline record](gates/phase-03-repository-baseline.md) | P03 gate checklist, evidence, and approved decision |
 | 42 | [PHASE-04 core record](gates/phase-04-core.md) | P04 gate checklist, evidence, and approved decision |
 | 43 | [PHASE-05 binding record](gates/phase-05-binding.md) | P05 gate checklist, evidence, and approved decision |
+| 44 | [PHASE-06 SMTP engine record](gates/phase-06.md) | P06 gate checklist, native engine evidence, and approved decision |
+| 45 | [PHASE-07 MIME record](gates/phase-07.md) | P07 gate checklist, conformance evidence, and approved decision |
+| 46 | [PHASE-08 attachments record](gates/phase-08.md) | P08 gate checklist, attachment fault matrix, and approved decision |
 
 ## 2. Directory map
 
@@ -85,7 +88,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition. P08 is IN PROGRESS (P08-001 to P08-005 in review; the PHASE-08 record is submitted for owner approval); P09–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition. P08 is COMPLETED (PHASE-08 approved 2026-11-15); P09–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -110,8 +113,9 @@ P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P05-001–P05-005 | COMPLETED |
 | P06-001–P06-005 | COMPLETED; PHASE-06 APPROVED (2026-11-14) |
 | P07-001–P07-005 | COMPLETED; PHASE-07 APPROVED (2026-11-14) |
-| P08–P18 | P08-001 to P08-005 IN REVIEW; the rest NOT STARTED |
-| Next task | PHASE-08 approval — project owner review of the submitted QG-08 record |
+| P08-001–P08-005 | COMPLETED; PHASE-08 APPROVED (2026-11-15) |
+| P09–P18 | NOT STARTED |
+| Next task | P09-001 — define public TypeScript types and transport lifecycle API |
 
 ## 5. Conventions
 

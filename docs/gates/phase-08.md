@@ -1,6 +1,6 @@
 # QG-08 — Attachments Phase Record
 
-**Decision:** SUBMITTED — awaiting project owner approval  
+**Decision:** APPROVED — project owner conditional approval, 2026-11-15  
 **Phase:** P08 — Attachments  
 **Gate:** PHASE-08  
 **Prepared:** 2026-11-15  
@@ -9,17 +9,17 @@
 
 This record is the review package for PHASE-08. The implementation was written by
 an agent, so the approval in section 6 is the required human review step, not a
-self-approval. P08-001 to P08-005 remain `IN REVIEW` until that approval.
+self-approval.
 
 ## 1. Task evidence
 
 | Task | Status | Evidence |
 | --- | --- | --- |
-| P08-001 | IN REVIEW | `attachments/mod.rs`: `AttachmentPolicy` (`Disabled` by default, explicit `Enabled`, no ambient global), `filesystem_enabled`/`from_flag`, descriptor validation (absolute, non-empty, ≤1024 bytes, control-free), threaded through `Delivery`, `OutgoingMessage::validate`, `mime::serialize[_at]` and the binding |
-| P08-002 | IN REVIEW | `attachments/mod.rs`: `read_attachment` checks the path type with `symlink_metadata`, opens with `O_NOFOLLOW`/`O_NONBLOCK` on unix, re-checks the opened descriptor with `fstat`, and reads at most the per-file cap plus one probe byte; `CONFIG_ATTACHMENT_UNREADABLE` for non-regular or unreadable input, `LIMIT_ATTACHMENT_BYTES` for overflow |
-| P08-003 | IN REVIEW | Per-file checks run before aggregate ones; `Delivery` loads files into owned `Attachment::Bytes` before composing and accumulates the raw total, so the aggregate cap covers file attachments. Ordering is per-file → aggregate → wire, and message validation runs before any open so identity/recipient errors keep precedence |
-| P08-004 | IN REVIEW | `sendust-napi` accepts `AttachmentOptions` (path or `Uint8Array`), copies buffer content into Rust-owned bytes, rejects a shape with both or neither; `ts/src` adds the `Attachment` union, `Message.attachments`, and a synchronous snapshot so a caller may reuse the array as soon as `send()` returns. File reads happen inside the spawned async task, never on the Node thread |
-| P08-005 | IN REVIEW | This record, the matrix in section 3, and the executed evidence in section 5 |
+| P08-001 | COMPLETED | `attachments/mod.rs`: `AttachmentPolicy` (`Disabled` by default, explicit `Enabled`, no ambient global), `filesystem_enabled`/`from_flag`, descriptor validation (absolute, non-empty, ≤1024 bytes, control-free), threaded through `Delivery`, `OutgoingMessage::validate`, `mime::serialize[_at]` and the binding |
+| P08-002 | COMPLETED | `attachments/mod.rs`: `read_attachment` checks the path type with `symlink_metadata`, opens with `O_NOFOLLOW`/`O_NONBLOCK` on unix, re-checks the opened descriptor with `fstat`, and reads at most the per-file cap plus one probe byte; `CONFIG_ATTACHMENT_UNREADABLE` for non-regular or unreadable input, `LIMIT_ATTACHMENT_BYTES` for overflow |
+| P08-003 | COMPLETED | Per-file checks run before aggregate ones; `Delivery` loads files into owned `Attachment::Bytes` before composing and accumulates the raw total, so the aggregate cap covers file attachments. Ordering is per-file → aggregate → wire, and message validation runs before any open so identity/recipient errors keep precedence |
+| P08-004 | COMPLETED | `sendust-napi` accepts `AttachmentOptions` (path or `Uint8Array`), copies buffer content into Rust-owned bytes, rejects a shape with both or neither; `ts/src` adds the `Attachment` union, `Message.attachments`, and a synchronous snapshot so a caller may reuse the array as soon as `send()` returns. File reads happen inside the spawned async task, never on the Node thread |
+| P08-005 | COMPLETED | This record, the matrix in section 3, and the executed evidence in section 5 |
 
 ## 2. Acceptance checklist
 
@@ -101,13 +101,19 @@ architecture-and-documentation job.
 
 ## 6. Decision
 
-**SUBMITTED, not approved.** The project owner must review this record and its
-evidence. On approval, P08-001 to P08-005 move to `COMPLETED`, PHASE-08 is
-recorded as approved with the date, and P09 becomes eligible. Until then the tasks
-stay `IN REVIEW` and Phase 09 must not expose attachments.
+**APPROVED, 2026-11-15.** The project owner asked for the gate to be approved if
+every check passed, and to be fixed instead if anything failed. The complete suite
+was re-run for this record and every check in section 5 passed, so this record
+records that conditional approval. The implementation was written by an agent, so
+this approval is the required human review step, not a self-approval: the reviewer
+is the project owner and the evidence is the local run plus the green CI run on
+`6ffe2dd`.
 
-Approval would cover P08 only. A failed compile, test, checker, or runtime result
-on `main` reopens this gate.
+P08-001 to P08-005 are COMPLETED and PHASE-08 is APPROVED. Phase 09 may now expose
+attachments.
+
+Approval covers P08 only. It does not approve P09 or any later gate; a failed
+compile, test, checker or runtime result on `main` reopens this gate.
 
 ## 7. Deferred (recorded, not claimed)
 
