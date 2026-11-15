@@ -73,6 +73,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 59 | [Performance budget](qa/performance-budget.md) | P13-001 budget table, measurement method, harness contract, and regression thresholds |
 | 60 | [Full repository audit](audits/2026-11-15-full-repository-audit.md) | Repository-wide audit after PHASE-12: seven documentation findings, fixes, verified claims, and open owners |
 | 61 | [Core and MIME performance](qa/performance-core-mime.md) | P13-002 serialization results, budget comparison, linearity, and limitations |
+| 62 | [Attachment performance](qa/performance-attachments.md) | P13-003 read, copy, serialization, and peak-memory results with their bounds |
 
 ## 2. Directory map
 
@@ -103,7 +104,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P12 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA. P13 (performance) is IN PROGRESS (P13-001 and P13-002 in review); P14–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P12 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA. P13 (performance) is IN PROGRESS (P13-001 to P13-003 in review); P14–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -133,9 +134,9 @@ P00–P12 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P10-001–P10-005 | COMPLETED; PHASE-10 APPROVED (2026-11-15) |
 | P11-001–P11-005 | COMPLETED; PHASE-11 APPROVED (2026-11-15) |
 | P12-001–P12-005 | COMPLETED; PHASE-12 APPROVED (2026-11-15) |
-| P13-001–P13-002 | IN REVIEW |
-| P13-003–P18 | NOT STARTED |
-| Next task | P13-003 — benchmark attachment reads, copying, and memory bounds |
+| P13-001–P13-003 | IN REVIEW |
+| P13-004–P18 | NOT STARTED |
+| Next task | P13-004 — measure lifecycle, BUSY, timeout, and close overhead |
 
 ## 5. Conventions
 

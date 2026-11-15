@@ -33,7 +33,7 @@ In scope: benchmark design, baseline measurements, memory and descriptor bounds,
 ### P13-003 — Benchmark attachment reads, copying, and memory bounds
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P13-001
 - **Description:** Measure per-file and aggregate attachment costs at boundary sizes, including raw read, encoding, serialized wire output, and peak memory. Verify 10 MiB/20 MiB/30 MiB caps prevent unbounded allocation. Measure Buffer-copy cost at the binding boundary and cleanup after send.
 - **Evidence criteria:** Peak memory stays within documented bounds for boundary inputs. Over-limit cases fail before excessive allocation where feasible. Buffer copying is measured, not assumed free. Memory returns to baseline after repeated sends. No attachment is read twice.
@@ -94,7 +94,8 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 | --- | --- | --- |
 | P13-001 | [`docs/qa/performance-budget.md`](../qa/performance-budget.md): 12 budgeted metrics with method, percentile, threshold and rationale; warm-up (3) and measured (20) iteration rules; environment capture; two-run stability with a 20% noise band; a 2× CI allowance; a harness contract for three ignored Rust suites and one Node script; alignment with the 10/30/120/125 s deadlines and the 10/20/30 MiB caps; and the explicit limits (local fixture only, no throughput claim, no pooling or retry). | IN REVIEW |
 | P13-002 | [`docs/qa/performance-core-mime.md`](../qa/performance-core-mime.md): `tests/perf_serialize.rs` (six ignored release tests) measured on Apple M2 / rustc 1.100.0 — 4 KiB serialize 20 µs, 1 MiB 5.2 ms, 10 MiB attachment 33 ms, Unicode/long-header 324 µs, each at least 4× inside its budget; throughput 170 → 207 bytes/µs across 1 KiB → 1 MiB (linear), and the wire accounting is the returned vector, so no double serialization. Two runs agree within 5%. | IN REVIEW |
+| P13-003 | [`docs/qa/performance-attachments.md`](../qa/performance-attachments.md): `tests/perf_attachments.rs` with a counting allocator — 10 MiB file read 2.10/2.36 ms (peak 24.0 MiB), over-limit read rejected at 25.2 MiB peak without reading the file whole, 10 MiB copy 0.60 ms (the facade/binding copy cost, not assumed free), 10 MiB attachment serialization 33.9 ms (peak 61.1 MiB), 20 MiB aggregate 67.2 ms (peak 81.1 MiB, wire 27.4 MiB), and 20 repeated serializations leave 0.0 MiB live. No second read exists by construction. | IN REVIEW |
 
 ## Status
 
-IN PROGRESS. P13-001 and P13-002 are IN REVIEW; P13-003 to P13-005 are NOT STARTED.
+IN PROGRESS. P13-001 to P13-003 are IN REVIEW; P13-004 and P13-005 are NOT STARTED.
