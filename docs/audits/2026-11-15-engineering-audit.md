@@ -43,3 +43,21 @@ GitHub Actions runs the same checks on every push: the Rust workspace, Native bi
 - Reviewed the core, binding, and facade source, their tests, the CI workflow, and the documents that describe them.
 - The review was static; every claim in section 1 was then verified by running the commands in section 2 and by CI, not by inspection alone.
 - Not reviewed: anything P08–P18 owns (attachment file policy, public API contract, reliability hardening, security proof, distribution, release). Findings in those areas are recorded in their phase plans, not here.
+
+
+## 5. P09 public-contract audit (2026-11-15)
+
+The public API was compared line by line with
+[public-api.md](../architecture/public-api.md) and [error-model.md](../architecture/error-model.md)
+while P09-001 to P09-003 were implemented. Findings and resolutions:
+
+| Finding | Resolution |
+| --- | --- |
+| The contract promises unknown option keys are rejected, but the facade forwarded them and the adapter ignored them. | `toNativeOptions` now rejects unknown keys, top-level and inside `auth`, `timeouts`, `limits`, and `attachments`, with `VALIDATION_INVALID_OPTION`. |
+| The contract requires a non-empty subject, but the core accepted an empty one. | `OutgoingMessage::validate` rejects an empty or whitespace-only subject with `VALIDATION_INVALID_OPTION`. |
+| A missing `from` produced an adapter `TypeError`, not a stable error. | The binding reports `VALIDATION_MISSING_FROM`, and the facade omits an absent field instead of stringifying `undefined`. |
+| The contract documents `auth.method`, but only PLAIN was ever attempted (LOGIN as fallback with no way to force it). | Implemented end to end: `with_mechanism`, a `choose_auth` policy that fails an unadvertised forced mechanism, binding mapping, and facade option. |
+| The contract promises content-type inference from the filename, but every attachment without an explicit type was `application/octet-stream`. | Added the fixed, documented extension map and applied it in the MIME renderer. |
+| The contract exposes error classes, but only a single `SendustError` existed. | One class per category, all extending `SendustError`, selected by `fromNative`. |
+| `ehloName` was documented as defaulting to the system hostname or `localhost`, while the implementation always uses `localhost`. | Documentation aligned to the deterministic `localhost` default. |
+| Still open: the contract says a close that interrupts an in-flight DATA may leave the accepted subset `unknown`, while `close()` currently aborts the send and rejects it as `TRANSPORT_CLOSED`. | Recorded for P09-004/P10-001: stage-aware cancellation needs the delivery task to report how far it got before the abort. |
