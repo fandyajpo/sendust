@@ -59,10 +59,7 @@ struct TempDir(PathBuf);
 
 impl TempDir {
     fn new(name: &str) -> Self {
-        let path = std::env::temp_dir().join(format!(
-            "sendust-perf-{}-{name}",
-            std::process::id()
-        ));
+        let path = std::env::temp_dir().join(format!("sendust-perf-{}-{name}", std::process::id()));
         std::fs::create_dir_all(&path).expect("temp dir");
         Self(path)
     }
@@ -95,10 +92,7 @@ struct Stats {
 
 impl Stats {
     fn report(&self, metric: &str) {
-        println!(
-            "{metric}, {}, {}, {ITERATIONS}",
-            self.p50, self.p95
-        );
+        println!("{metric}, {}, {}, {ITERATIONS}", self.p50, self.p95);
     }
 
     fn assert_budget(&self, metric: &str, p50: u128, p95: u128) {
@@ -175,7 +169,10 @@ fn reads_a_ten_mib_file_within_budget() {
 
     stats.report("read.10mib_file");
     stats.assert_budget("read.10mib_file", 30_000, 60_000);
-    println!("read.10mib_file.peak_mib, {:.1}", peak as f64 / (MIB as f64));
+    println!(
+        "read.10mib_file.peak_mib, {:.1}",
+        peak as f64 / (MIB as f64)
+    );
     assert!(
         peak <= 32 * MIB as usize,
         "read peak {peak} bytes exceeds 32 MiB"
@@ -194,7 +191,10 @@ fn rejects_a_file_over_the_cap_without_overallocating() {
     let peak = peak_growth(base);
 
     assert_eq!(error.code(), ErrorCode::LimitAttachmentBytes);
-    println!("read.over_limit.peak_mib, {:.1}", peak as f64 / (MIB as f64));
+    println!(
+        "read.over_limit.peak_mib, {:.1}",
+        peak as f64 / (MIB as f64)
+    );
     // The reader stops one byte past the cap instead of reading the file whole,
     // so the bound is a small multiple of the cap and independent of the file size.
     assert!(
@@ -210,8 +210,8 @@ fn serializes_a_ten_mib_attachment_within_memory_bounds() {
 
     let base = reset_peak();
     let stats = measure(|| {
-        let bytes = serialize(&message, Limits::default(), AttachmentPolicy::Disabled)
-            .expect("serializes");
+        let bytes =
+            serialize(&message, Limits::default(), AttachmentPolicy::Disabled).expect("serializes");
         black_box(&bytes.len());
     });
     let peak = peak_growth(base);
@@ -272,14 +272,17 @@ fn repeated_serialization_returns_to_baseline() {
     let base = reset_peak();
 
     for _ in 0..20 {
-        let bytes = serialize(&message, Limits::default(), AttachmentPolicy::Disabled)
-            .expect("serializes");
+        let bytes =
+            serialize(&message, Limits::default(), AttachmentPolicy::Disabled).expect("serializes");
         black_box(&bytes.len());
         drop(bytes);
     }
 
     let live = LIVE.load(Ordering::Relaxed).saturating_sub(base);
-    println!("repeat.20x10mib.residual_mib, {:.1}", live as f64 / (MIB as f64));
+    println!(
+        "repeat.20x10mib.residual_mib, {:.1}",
+        live as f64 / (MIB as f64)
+    );
     assert!(
         live <= 4 * MIB as usize,
         "live bytes grew by {live} across 20 serializations"
