@@ -465,17 +465,13 @@ fn auth_error(code: ErrorCode, smtp_code: Option<u16>) -> Error {
     Error::new(code).with_details(details)
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn the_engine_prefers_plain_then_login() {
-        assert_eq!(
-            choose_auth(true, true, None),
-            Some(AuthMechanism::Plain)
-        );
+        assert_eq!(choose_auth(true, true, None), Some(AuthMechanism::Plain));
         assert_eq!(choose_auth(false, true, None), Some(AuthMechanism::Login));
         assert_eq!(choose_auth(false, false, None), None);
     }
