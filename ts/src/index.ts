@@ -10,6 +10,7 @@
  */
 
 export { createTransport, Transport } from "./transport.ts";
+export { DEFAULT_LIMITS, MIB } from "./limits.ts";
 export {
   SendustAuthenticationError,
   SendustBusyError,

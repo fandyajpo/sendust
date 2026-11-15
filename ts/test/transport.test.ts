@@ -513,4 +513,47 @@ describe("sendust facade", () => {
 
     expect(code).toBe("PROTOCOL_CONNECTION_RESET");
   });
+
+  it.skipIf(!available)("rejects an oversize attachment before copying it", async () => {
+    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls" });
+    // Only `byteLength` is real. Copying this would produce an empty buffer, so
+    // a limit rejection proves the size was checked before the copy and not by
+    // the native layer afterwards.
+    const oversize = { byteLength: 10 * 1024 * 1024 + 1 } as unknown as Uint8Array;
+
+    const code = await errorCode(
+      transport.send({
+        from: "a@example.test",
+        to: ["b@example.test"],
+        subject: "x",
+        text: "y",
+        attachments: [{ filename: "big.bin", content: oversize }],
+      }),
+    );
+    await transport.close();
+
+    expect(code).toBe("LIMIT_ATTACHMENT_BYTES");
+  });
+
+  it.skipIf(!available)("honours a lowered attachment cap in the facade", async () => {
+    const transport = createTransport({
+      host: "127.0.0.1",
+      port: 1,
+      secure: "tls",
+      limits: { maxAttachmentBytes: 4 },
+    });
+
+    const code = await errorCode(
+      transport.send({
+        from: "a@example.test",
+        to: ["b@example.test"],
+        subject: "x",
+        text: "y",
+        attachments: [{ filename: "five.bin", content: new Uint8Array(5) }],
+      }),
+    );
+    await transport.close();
+
+    expect(code).toBe("LIMIT_ATTACHMENT_BYTES");
+  });
 });

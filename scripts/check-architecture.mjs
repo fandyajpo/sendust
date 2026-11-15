@@ -45,6 +45,12 @@ const TLS_BYPASS_MARKERS = [
   "disable_verification",
 ];
 
+/**
+ * A URL would mean a remote fetch path in a library that only reads bytes the
+ * caller supplied or a local file it opened itself (ADR-0014).
+ */
+const URL_MARKER = /https?:\/\//;
+
 const MODULE_LAYERS = new Map([
   ["address", "domain"],
   ["attachments", "domain"],
@@ -206,6 +212,9 @@ function checkCoreModules() {
         fail(`TLS verification bypass marker "${marker}": ${posix(path)}`);
       }
     }
+    if (URL_MARKER.test(code)) {
+      fail(`sendust-core must not contain a URL fetch path: ${posix(path)}`);
+    }
     if (MODULE_LAYERS.get(owner) === "domain") {
       for (const forbidden of ["crate::transports", "napi::"]) {
         if (code.includes(forbidden)) {
@@ -252,6 +261,9 @@ function checkAdapterBoundaries() {
     if (code.includes("lettre::") || code.includes("crate::transports")) {
       fail(`the NAPI adapter must not contain SMTP or transport policy: ${posix(path)}`);
     }
+    if (URL_MARKER.test(code)) {
+      fail(`the NAPI adapter must not contain a URL fetch path: ${posix(path)}`);
+    }
   }
 
   for (const path of walk(TS_SRC).filter((file) => file.endsWith(".ts"))) {
@@ -263,6 +275,48 @@ function checkAdapterBoundaries() {
     }
     if (ANY_ESCAPE.test(code)) {
       fail(`public TypeScript must not use any: ${posix(path)}`);
+    }
+    if (URL_MARKER.test(code)) {
+      fail(`shared TypeScript must not contain a URL fetch path: ${posix(path)}`);
+    }
+  }
+}
+
+/**
+ * The facade keeps the approved caps for its pre-flight size check. These
+ * numbers must equal `sendust_core::Limits`, so the architecture check reads
+ * both sources and fails on any drift.
+ */
+function checkLimitParity() {
+  const rust = readFileSync(join(CORE_SRC, "config/mod.rs"), "utf8");
+  const ts = readFileSync(join(TS_SRC, "limits.ts"), "utf8");
+
+  const rustDefaults = {
+    maxRecipients: /^\s*max_recipients:\s*(\d+),/m.exec(rust),
+    maxAttachmentBytes: /^\s*max_attachment_bytes:\s*(\d+)\s*\*\s*MIB,/m.exec(rust),
+    maxTotalAttachmentBytes: /^\s*max_total_attachment_bytes:\s*(\d+)\s*\*\s*MIB,/m.exec(rust),
+    maxWireBytes: /^\s*max_wire_bytes:\s*(\d+)\s*\*\s*MIB,/m.exec(rust),
+  };
+  const tsDefaults = {
+    maxRecipients: /^\s*maxRecipients:\s*(\d+),/m.exec(ts),
+    maxAttachmentBytes: /^\s*maxAttachmentBytes:\s*(\d+)\s*\*\s*MIB,/m.exec(ts),
+    maxTotalAttachmentBytes: /^\s*maxTotalAttachmentBytes:\s*(\d+)\s*\*\s*MIB,/m.exec(ts),
+    maxWireBytes: /^\s*maxWireBytes:\s*(\d+)\s*\*\s*MIB,/m.exec(ts),
+  };
+
+  for (const key of Object.keys(rustDefaults)) {
+    const core = rustDefaults[key];
+    const facade = tsDefaults[key];
+    if (!core) {
+      fail(`cannot read the sendust-core default for ${key}`);
+      continue;
+    }
+    if (!facade) {
+      fail(`cannot read the facade default for ${key}`);
+      continue;
+    }
+    if (core[1] !== facade[1]) {
+      fail(`facade ${key} ${facade[1]} does not match the core default ${core[1]}`);
     }
   }
 }
@@ -330,6 +384,7 @@ function checkTestHarness() {
 checkWorkspaceShape();
 checkCoreModules();
 checkAdapterBoundaries();
+checkLimitParity();
 checkTestHarness();
 
 if (failures.length > 0) {

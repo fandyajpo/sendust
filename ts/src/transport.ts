@@ -6,6 +6,7 @@
  */
 
 import { SendustError, SendustValidationError, fromNative } from "./errors.ts";
+import { DEFAULT_LIMITS, assertAttachmentBudget } from "./limits.ts";
 import { loadNative, type NativeTransport } from "./loader.ts";
 import { toSendResult } from "./results.ts";
 import type {
@@ -146,7 +147,16 @@ function toNativeAttachment(attachment: Attachment): Record<string, unknown> {
   return native;
 }
 
-function toNativeMessage(message: Message): Record<string, unknown> {
+function toNativeMessage(
+  message: Message,
+  perFileBytes: number,
+  totalBytes: number,
+): Record<string, unknown> {
+  // Sizes are checked before any buffer is copied. `send()` copies every
+  // buffer synchronously, so an oversize payload must be rejected here rather
+  // than after the whole of it has been duplicated in the JS heap.
+  assertAttachmentBudget(message.attachments, perFileBytes, totalBytes);
+
   const native: Record<string, unknown> = {
     headers: headerPairs(message.headers),
   };
@@ -189,11 +199,20 @@ function rethrow(error: unknown): never {
  */
 export class Transport {
   readonly #native: NativeTransport;
+  /** Effective per-attachment cap: the caller's lowered value or the default. */
+  readonly #perFileBytes: number;
+  /** Effective aggregate attachment cap: the caller's lowered value or the default. */
+  readonly #totalBytes: number;
 
   constructor(options: TransportOptions) {
     // Validate the caller's options before loading the addon, so an invalid
     // option always reports a Sendust error even where the addon is missing.
     const native = toNativeOptions(options);
+    // Snapshot the caps now; the caller's options object may be mutated later.
+    this.#perFileBytes =
+      options.limits?.maxAttachmentBytes ?? DEFAULT_LIMITS.maxAttachmentBytes;
+    this.#totalBytes =
+      options.limits?.maxTotalAttachmentBytes ?? DEFAULT_LIMITS.maxTotalAttachmentBytes;
     try {
       this.#native = new (loadNative().Transport)(native);
     } catch (error) {
@@ -218,7 +237,9 @@ export class Transport {
    */
   async send(message: Message): Promise<SendResult> {
     try {
-      return toSendResult(await this.#native.send(toNativeMessage(message)));
+      return toSendResult(
+        await this.#native.send(toNativeMessage(message, this.#perFileBytes, this.#totalBytes)),
+      );
     } catch (error) {
       rethrow(error);
     }
