@@ -85,7 +85,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition. P08 is IN PROGRESS (P08-001 to P08-004 in review); P09–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition. P08 is IN PROGRESS (P08-001 to P08-005 in review; the PHASE-08 record is submitted for owner approval); P09–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -110,8 +110,8 @@ P00–P07 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P05-001–P05-005 | COMPLETED |
 | P06-001–P06-005 | COMPLETED; PHASE-06 APPROVED (2026-11-14) |
 | P07-001–P07-005 | COMPLETED; PHASE-07 APPROVED (2026-11-14) |
-| P08–P18 | P08-001 to P08-004 IN REVIEW; the rest NOT STARTED |
-| Next task | P08-005 — run the attachment fault-matrix phase gate |
+| P08–P18 | P08-001 to P08-005 IN REVIEW; the rest NOT STARTED |
+| Next task | PHASE-08 approval — project owner review of the submitted QG-08 record |
 
 ## 5. Conventions
 

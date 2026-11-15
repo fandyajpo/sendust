@@ -49,7 +49,7 @@ In scope: attachment configuration, opt-in filesystem gate, regular-file validat
 ### P08-005 — Attachment fault-matrix phase gate
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P08-001, P08-002, P08-003, P08-004
 - **Description:** Run all attachment security, boundary, and cleanup tests, including napi-path tests. Confirm filesystem access is disabled by default, no URL path exists, and all caps are hard. Review MIME output for filename safety and byte fidelity.
 - **Evidence criteria:** Gate includes regular, missing, permission-denied, symlink, FIFO, device, directory, growing file, per-file over-limit, aggregate over-limit, wire over-limit, disabled opt-in, mutation/detachment, and post-close cleanup cases. Phase 09 may expose attachments only when this gate passes.
@@ -88,7 +88,7 @@ Opt-in configuration, descriptor validation, safe file reader, cap enforcement, 
 
 ## Status
 
-IN PROGRESS. P08-001 to P08-004 are IN REVIEW; P08-005 is NOT STARTED.
+IN PROGRESS. P08-001 to P08-005 are IN REVIEW; the PHASE-08 gate record is submitted for project owner approval.
 
 ## Evidence log
 
@@ -100,3 +100,4 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 | P08-002 | `attachments/mod.rs`: `read_attachment` (re-exported from the facade) inspects the path with `symlink_metadata`, opens it with `O_NOFOLLOW`/`O_NONBLOCK` on unix, re-checks the opened descriptor with `fstat`, and reads at most the per-file cap plus one probe byte. Tests cover a regular file, the inclusive cap, cap + 1, an outgrowing file, a missing path, a directory, a symlink, a FIFO (no blocking), a character device, permission denied, and path-free errors. Non-regular and unreadable inputs fail with `CONFIG_ATTACHMENT_UNREADABLE`; over-cap input fails with `LIMIT_ATTACHMENT_BYTES`. | IN REVIEW |
 | P08-003 | `attachments/mod.rs` checks every per-file cap before any aggregate check; `delivery/mod.rs` loads each file into owned `Attachment::Bytes` before composing, accumulating the raw total so the aggregate cap holds for file attachments too. Ordering is per-file, then aggregate, then wire; message validation runs before any file is opened, so identity and recipient errors keep their precedence, and every cap failure returns with zero port calls. Tests cover the inclusive per-file and aggregate limits, per-file precedence over aggregate, base64 overhead counted by the wire cap, and the no-dial guarantee. | IN REVIEW |
 | P08-004 | `sendust-napi` accepts `AttachmentOptions` (path or `Uint8Array` content), copies buffer content into Rust-owned bytes, and rejects a shape with both or neither; `ts/src` adds the `Attachment` union, `Message.attachments`, and a synchronous snapshot in `toNativeAttachment` so a caller may reuse the array as soon as `send()` returns. `Delivery` reads file attachments inside the spawned async task, never on the Node thread, and hands owned bytes to the MIME renderer. Tests: buffer snapshot survives mutation after the call, a path attachment without opt-in fails `CONFIG_FILE_ACCESS_DISABLED`, an empty attachment fails `VALIDATION_INVALID_ATTACHMENT`, and the core file-loading tests run the descriptor through load and drop. | IN REVIEW |
+| P08-005 | [QG-08 gate record](../gates/phase-08.md): the full attachment matrix (regular, missing, permission denied, symlink, FIFO, device, directory, growing file, per-file/aggregate/wire caps, disabled opt-in, buffer mutation and detach, descriptor release) across the core and the binding, the acceptance checklist, and the executed evidence. Submitted, not approved. | IN REVIEW |
