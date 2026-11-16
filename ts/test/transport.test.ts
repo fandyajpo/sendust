@@ -80,6 +80,7 @@ async function fakeTlsRelay(): Promise<{ port: number; close: () => Promise<void
       sockets.add(socket);
       socket.on("close", () => sockets.delete(socket));
       socket.setEncoding("utf8");
+      socket.write("220 sendust.test ESMTP ready\r\n");
       let buffer = "";
       let inData = false;
       socket.on("data", (chunk: string) => {
