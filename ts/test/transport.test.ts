@@ -1,7 +1,9 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer, type Socket } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { createServer as createTlsServer } from "node:tls";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   SendustError,
@@ -58,6 +60,73 @@ async function errorCode(promise: Promise<unknown>): Promise<string | null> {
   } catch (error) {
     return error instanceof SendustError ? error.code : null;
   }
+}
+
+/** Reads one committed TLS fixture relative to the repository root. */
+function tlsFixture(name: string): string {
+  const path = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "tests", "fixtures", "tls");
+  return readFileSync(join(path, name), "utf8");
+}
+
+/**
+ * A loopback SMTP relay over TLS using the committed valid fixture, so a test
+ * with the test CA as an added root can observe an accepted send (ADR-0018).
+ */
+async function fakeTlsRelay(): Promise<{ port: number; close: () => Promise<void> }> {
+  const sockets = new Set<Socket>();
+  const server = createTlsServer(
+    { key: tlsFixture("valid-server.key"), cert: tlsFixture("valid-server.crt") },
+    (socket) => {
+      sockets.add(socket);
+      socket.on("close", () => sockets.delete(socket));
+      socket.setEncoding("utf8");
+      let buffer = "";
+      let inData = false;
+      socket.on("data", (chunk: string) => {
+        buffer += chunk;
+        for (;;) {
+          const index = buffer.indexOf("\r\n");
+          if (index === -1) {
+            return;
+          }
+          const line = buffer.slice(0, index);
+          buffer = buffer.slice(index + 2);
+          if (inData) {
+            if (line === ".") {
+              inData = false;
+              socket.write("250 2.0.0 accepted\r\n");
+            }
+            continue;
+          }
+          if (line.startsWith("EHLO")) {
+            socket.write("250-sendust.test\r\n250 8BITMIME\r\n");
+          } else if (line.startsWith("MAIL")) {
+            socket.write("250 2.1.0 ok\r\n");
+          } else if (line.startsWith("RCPT")) {
+            socket.write("250 2.1.5 ok\r\n");
+          } else if (line === "DATA") {
+            inData = true;
+            socket.write("354 go\r\n");
+          } else if (line.startsWith("QUIT")) {
+            socket.write("221 2.0.0 bye\r\n");
+            socket.end();
+          }
+        }
+      });
+    },
+  );
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address();
+  const port = typeof address === "object" && address ? address.port : 1;
+  return {
+    port,
+    close: async () => {
+      for (const socket of sockets) {
+        socket.destroy();
+      }
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    },
+  };
 }
 
 describe("sendust facade", () => {
@@ -563,5 +632,63 @@ describe("sendust facade", () => {
     await transport.close();
 
     expect(code).toBe("LIMIT_ATTACHMENT_BYTES");
+  });
+
+  it.skipIf(!available)("trusts an added root and accepts a fake-relay send", async () => {
+    const relay = await fakeTlsRelay();
+    const transport = createTransport({
+      host: "127.0.0.1",
+      port: relay.port,
+      secure: "tls",
+      tlsRootCertificate: tlsFixture("ca.crt"),
+    });
+
+    try {
+      const result = await transport.send({
+        from: "a@example.test",
+        to: ["b@example.test"],
+        subject: "x",
+        text: "y",
+      });
+      expect(result.status).toBe("accepted");
+      expect(result.recipients).toEqual([{ address: "b@example.test", status: "accepted" }]);
+    } finally {
+      await transport.close();
+      await relay.close();
+    }
+  });
+
+  it.skipIf(!available)("fails closed without the added root", async () => {
+    const relay = await fakeTlsRelay();
+    const transport = createTransport({ host: "127.0.0.1", port: relay.port, secure: "tls" });
+
+    try {
+      const code = await errorCode(
+        transport.send({
+          from: "a@example.test",
+          to: ["b@example.test"],
+          subject: "x",
+          text: "y",
+        }),
+      );
+      expect(code).toBe("TLS_CERTIFICATE");
+    } finally {
+      await transport.close();
+      await relay.close();
+    }
+  });
+
+  it.skipIf(!available)("rejects a malformed trust anchor", () => {
+    expect.assertions(1);
+    try {
+      createTransport({
+        host: "127.0.0.1",
+        port: 465,
+        secure: "tls",
+        tlsRootCertificate: "not a pem",
+      });
+    } catch (error) {
+      expect((error as SendustError).code).toBe("VALIDATION_INVALID_OPTION");
+    }
   });
 });

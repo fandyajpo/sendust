@@ -56,6 +56,8 @@ pub struct TransportOptions {
     pub max_total_attachment_bytes: Option<u32>,
     pub max_wire_bytes: Option<u32>,
     pub allow_file_access: Option<bool>,
+    /// Additive PEM trust anchor; verification stays on (ADR-0018).
+    pub tls_root_certificate: Option<String>,
 }
 
 /// One custom header.
@@ -154,6 +156,10 @@ impl Transport {
         };
 
         let mut config = SmtpConfig::new(options.host, port, security).map_err(to_napi)?;
+
+        if let Some(pem) = options.tls_root_certificate {
+            config = config.with_root_certificate_pem(pem).map_err(to_napi)?;
+        }
 
         if let Some(auth) = options.auth {
             let mut credentials = SmtpCredentials::new(auth.user, auth.pass).map_err(to_napi)?;

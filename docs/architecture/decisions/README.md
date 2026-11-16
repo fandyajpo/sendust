@@ -21,6 +21,7 @@ Architectural decisions for Sendust. One decision per file. ADR-0016 defines the
 | [0015](0015-multi-runtime-support.md) | Multi-runtime Node-API support and server platform policy | ACCEPTED (design amendment A01; runtime evidence P05/P14) | A01-001–A01-004, P05, P14 |
 | [0016](0016-modular-monolith.md) | Modular monolith and internal module boundaries | ACCEPTED (design amendment A02; implementation evidence P03/P04/P06/P12) | A02-001–A02-003, P03, P04, P06, P12 |
 | [0017](0017-native-smtp-engine.md) | Own the SMTP engine on trusted TLS/I/O primitives; lettre superseded | ACCEPTED (supersedes ADR-0002; implementation gate P06-005) | P06-001–P06-005 |
+| [0018](0018-public-trust-anchor.md) | Add an additive public TLS trust anchor; verification stays on | ACCEPTED (P14-001; cannot disable verification) | P14-001 |
 
 ## ADR format
 

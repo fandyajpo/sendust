@@ -27,6 +27,7 @@ const TRANSPORT_KEYS = new Set([
   "timeouts",
   "limits",
   "attachments",
+  "tlsRootCertificate",
 ]);
 const AUTH_KEYS = new Set(["user", "pass", "method"]);
 const TIMEOUT_KEYS = new Set(["connectMs", "operationMs", "totalMs", "closeMs"]);
@@ -98,6 +99,9 @@ function toNativeOptions(options: TransportOptions): Record<string, unknown> {
   }
   if (options.ehloName !== undefined) {
     native.ehloName = options.ehloName;
+  }
+  if (options.tlsRootCertificate !== undefined) {
+    native.tlsRootCertificate = options.tlsRootCertificate;
   }
 
   const timeouts = options.timeouts;

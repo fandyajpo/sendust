@@ -104,6 +104,13 @@ export interface TransportOptions {
   readonly ehloName?: string;
   readonly timeouts?: TimeoutOptions;
   readonly limits?: LimitOptions;
+  /**
+   * Optional PEM trust anchor added on top of the bundled WebPKI roots.
+   *
+   * Verification is never disabled: an unknown relay still fails closed, and a
+   * malformed anchor is rejected as `VALIDATION_INVALID_OPTION`.
+   */
+  readonly tlsRootCertificate?: string;
   /** Filesystem access for path attachments; disabled unless explicitly enabled. */
   readonly attachments?: { readonly allowFileAccess?: boolean };
 }

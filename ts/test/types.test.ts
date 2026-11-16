@@ -57,7 +57,15 @@ describe("public contract types", () => {
 
   it("keeps the option and message surfaces exactly as documented", () => {
     expectTypeOf<keyof TransportOptions>().toEqualTypeOf<
-      "host" | "port" | "secure" | "auth" | "ehloName" | "timeouts" | "limits" | "attachments"
+      | "host"
+      | "port"
+      | "secure"
+      | "auth"
+      | "ehloName"
+      | "timeouts"
+      | "limits"
+      | "attachments"
+      | "tlsRootCertificate"
     >();
     expectTypeOf<keyof AuthOptions>().toEqualTypeOf<"user" | "pass" | "method">();
     expectTypeOf<keyof TimeoutOptions>().toEqualTypeOf<
