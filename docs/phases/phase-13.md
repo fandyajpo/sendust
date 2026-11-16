@@ -41,7 +41,7 @@ In scope: benchmark design, baseline measurements, memory and descriptor bounds,
 ### P13-004 — Measure lifecycle, BUSY, timeout, and close overhead
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW
 - **Prerequisites:** P13-001, P10-005
 - **Description:** Measure immediate BUSY rejection with no dial, close during idle and during send, deadline overhead, and repeated open/close cycles. Confirm no queue growth and no timer accumulation. Validate that one active send remains a hard invariant under load.
 - **Evidence criteria:** BUSY latency and connection count prove fail-fast behavior. Repeated close cycles show stable descriptors, timers, and memory. Deadline tests show no early expiry or late overrun. No queue exists under concurrent load.
@@ -95,7 +95,8 @@ Evidence labels follow the [AI implementation contract](../engineering/ai-implem
 | P13-001 | [`docs/qa/performance-budget.md`](../qa/performance-budget.md): 12 budgeted metrics with method, percentile, threshold and rationale; warm-up (3) and measured (20) iteration rules; environment capture; two-run stability with a 20% noise band; a 2× CI allowance; a harness contract for three ignored Rust suites and one Node script; alignment with the 10/30/120/125 s deadlines and the 10/20/30 MiB caps; and the explicit limits (local fixture only, no throughput claim, no pooling or retry). | IN REVIEW |
 | P13-002 | [`docs/qa/performance-core-mime.md`](../qa/performance-core-mime.md): `tests/perf_serialize.rs` (six ignored release tests) measured on Apple M2 / rustc 1.100.0 — 4 KiB serialize 20 µs, 1 MiB 5.2 ms, 10 MiB attachment 33 ms, Unicode/long-header 324 µs, each at least 4× inside its budget; throughput 170 → 207 bytes/µs across 1 KiB → 1 MiB (linear), and the wire accounting is the returned vector, so no double serialization. Two runs agree within 5%. | IN REVIEW |
 | P13-003 | [`docs/qa/performance-attachments.md`](../qa/performance-attachments.md): `tests/perf_attachments.rs` with a counting allocator — 10 MiB file read 2.10/2.36 ms (peak 24.0 MiB), over-limit read rejected at 25.2 MiB peak without reading the file whole, 10 MiB copy 0.60 ms (the facade/binding copy cost, not assumed free), 10 MiB attachment serialization 33.9 ms (peak 61.1 MiB), 20 MiB aggregate 67.2 ms (peak 81.1 MiB, wire 27.4 MiB), and 20 repeated serializations leave 0.0 MiB live. No second read exists by construction. | IN REVIEW |
+| P13-004 | [`docs/qa/performance-lifecycle.md`](../qa/performance-lifecycle.md): `tests/perf/lifecycle.mjs` through the addon — BUSY rejection 24.2/93.8 µs with zero extra connections, 50 concurrent sends all `TRANSPORT_BUSY` and exactly one connection, idle close 11.1 µs (p95 26.6 µs), close during a stalled send 24.7 µs against a 1 s budget, and 1 000 open/close cycles with a descriptor delta of 0. Every budget asserted in the probe. | IN REVIEW |
 
 ## Status
 
-IN PROGRESS. P13-001 to P13-003 are IN REVIEW; P13-004 and P13-005 are NOT STARTED.
+IN PROGRESS. P13-001 to P13-004 are IN REVIEW; P13-005 is NOT STARTED.
