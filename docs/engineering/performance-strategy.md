@@ -73,7 +73,7 @@ Peak memory is approximately:
 owned inputs (strings + buffers)
 + file attachment bytes read into memory
 + serialized wire bytes
-+ lettre encoding buffers
++ MIME encoding buffers
 + fixed overhead
 ```
 

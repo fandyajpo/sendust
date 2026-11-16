@@ -20,7 +20,7 @@ Trust transitions:
 1. Consumer → wrapper: untrusted input shape.
 2. Wrapper → binding: untrusted values crossing FFI.
 3. Binding → core: owned Rust values; still untrusted content.
-4. Core → lettre: validated envelope and serialized message.
+4. Core → relay: validated envelope and serialized message.
 5. Core → filesystem: only with explicit opt-in and regular-file checks.
 6. Core ↔ relay: untrusted network; TLS mandatory.
 7. Core → error/result → wrapper → consumer: redacted output.

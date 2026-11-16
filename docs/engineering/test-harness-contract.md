@@ -17,7 +17,7 @@ This contract defines the deterministic, network-free harness that every Sendust
 
 ## 3. Fake SMTP interface
 
-Location: `crates/sendust-core/tests/support/mod.rs`, included by integration tests as `mod support;`. It uses only `std`; no Tokio, no lettre, no TLS yet.
+Location: `crates/sendust-core/tests/support/mod.rs`, included by integration tests as `mod support;`. It uses `std` threads and, for the TLS fixtures, `rustls`; it has no Tokio and no third-party SMTP engine.
 
 - `FakeSmtp::start(Script) -> io::Result<FakeSmtp>` binds an ephemeral loopback port and serves every connection with the same script.
 - `FakeSmtp::addr() -> SocketAddr` is the address a test dials.
