@@ -1,6 +1,6 @@
 # ADR-0011 — Root package plus platform optional packages via napi-rs
 
-**Status:** ACCEPTED (architecture baseline; packaging validation P14)  
+**Status:** ACCEPTED (architecture baseline); the packaging shape below is PARTIALLY SUPERSEDED by [ADR-0019](0019-installable-typescript-package.md), which makes the installable artifact the separate `@sendust/ts` package with the addon bundled. The no-postinstall, no-compiler-at-install and no-silent-fallback rules in this record still stand. Platform-binary policy for multiple targets is still open and is decided in P14-003.  
 **Date:** 2026-11-13  
 **Deciders:** Architecture review (P02-005), release review (P16-005)  
 **Validated by:** P14-002, P14-003, P14-004

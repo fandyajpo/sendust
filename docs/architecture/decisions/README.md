@@ -14,7 +14,7 @@ Architectural decisions for Sendust. One decision per file. ADR-0016 defines the
 | [0008](0008-owned-memory.md) | Copy JS buffers before async; bounded file reads | ACCEPTED (architecture baseline) | P02-004, P05-002 |
 | [0009](0009-hard-caps.md) | Hard caps for recipients, attachments, and wire size | ACCEPTED (architecture baseline) | P02-004 |
 | [0010](0010-mime-composition.md) | Compose MIME in core; encoding primitives are core-owned (amended by ADR-0017) | ACCEPTED (architecture baseline; conformance gate P07) | P07-001–P07-004 |
-| [0011](0011-platform-distribution.md) | Root package plus platform optional packages via napi-rs | ACCEPTED (architecture baseline; packaging gate P14) | P14-002, P14-003 |
+| [0011](0011-platform-distribution.md) | Root package plus platform optional packages via napi-rs; packaging shape SUPERSEDED by ADR-0019, the no-postinstall and no-silent-fallback rules still stand | PARTIALLY SUPERSEDED by ADR-0019 | P14-002, P14-003 |
 | [0012](0012-module-formats.md) | Dual ESM/CJS with a single shared implementation | ACCEPTED (design baseline; packaging validation P14) | P14-002, P14-004 |
 | [0013](0013-error-taxonomy.md) | Stable codes, outcomes separate from errors | ACCEPTED (architecture baseline; implementation gates P04/P05/P09/P11) | P02-002, P09-003 |
 | [0014](0014-attachment-filesystem-policy.md) | Filesystem attachments opt-in, regular files only, no URLs | ACCEPTED (architecture baseline; safety gates P08/P11) | P08-001, P08-002 |
@@ -22,6 +22,7 @@ Architectural decisions for Sendust. One decision per file. ADR-0016 defines the
 | [0016](0016-modular-monolith.md) | Modular monolith and internal module boundaries | ACCEPTED (design amendment A02; implementation evidence P03/P04/P06/P12) | A02-001–A02-003, P03, P04, P06, P12 |
 | [0017](0017-native-smtp-engine.md) | Own the SMTP engine on trusted TLS/I/O primitives; lettre superseded | ACCEPTED (supersedes ADR-0002; implementation gate P06-005) | P06-001–P06-005 |
 | [0018](0018-public-trust-anchor.md) | Add an additive public TLS trust anchor; verification stays on | ACCEPTED (P14-001; cannot disable verification) | P14-001 |
+| [0019](0019-installable-typescript-package.md) | Installable `@sendust/ts` package with the addon bundled; supersedes ADR-0011's packaging shape | ACCEPTED (project owner decision; packaging evidence P14-001 onward) | P14-001, P14-002 |
 
 ## ADR format
 
