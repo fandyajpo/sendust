@@ -47,7 +47,7 @@ gates in [the PHASE-11 record](../gates/phase-11.md).
 | R-01 | `webpki-roots` does not trust private enterprise roots installed only in the OS | Accepted MVP trade-off; documented in the threat model and public API guidance |
 | R-02 | A close that interrupts DATA reports `unknown` conservatively — the stage is marked just before the body write, so an abort in that instant still reports `unknown` | Accepted; errs toward ambiguity, never toward a false `accepted` or `rejected` |
 | R-03 | DNS failure has no deterministic fixture (needs a live resolver) | Accepted; resolver failures surface through the covered connect deadline and reset paths (P10 record) |
-| R-04 | No JS-level fake-TLS relay example | Reassigned to P14-004: the public API accepts no trust anchor by design (C-07), so a loopback relay cannot be trusted. Transaction faults are covered by the Rust harness and status mapping by the facade tests |
+| R-04 | No JS-level fake-TLS relay example | CLOSED by ADR-0018: `tlsRootCertificate` lets a loopback relay be trusted. `ts/test/transport.test.ts` observes `accepted` through "trusts an added root and accepts a fake-relay send", and `TLS_CERTIFICATE` through "fails closed without the added root". The runtime matrix stays with P14-004 |
 | R-05 | No automated forced-GC test | Closed by P12-004: `tests/runtime/gc.mjs` runs with `--expose-gc` in the Node.js binding CI job |
 | R-06 | Big-endian, musl, and Windows-on-ARM targets are untested | Owned by P14-003; no support claim is made |
 
@@ -60,7 +60,7 @@ napi-rs runtime. AB-11 is closed with no residual.
 
 ## 5. Ownership
 
-Every abuse case above is owned: AB-14 by P14/P16, R-04 by P14-004, and the
+Every abuse case above is owned: AB-14 by P14/P16, and the
 rest by the implemented control and its test. No case is unowned. P11-002…P11-004
 deepened the TLS/auth, validation/attachment, and ownership/redaction rows, and
 P11-005 gates them in the [PHASE-11 record](../gates/phase-11.md).

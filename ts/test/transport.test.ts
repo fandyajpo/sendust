@@ -64,7 +64,14 @@ async function errorCode(promise: Promise<unknown>): Promise<string | null> {
 
 /** Reads one committed TLS fixture relative to the repository root. */
 function tlsFixture(name: string): string {
-  const path = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "tests", "fixtures", "tls");
+  const path = join(
+    dirname(fileURLToPath(import.meta.url)),
+    "..",
+    "..",
+    "tests",
+    "fixtures",
+    "tls",
+  );
   return readFileSync(join(path, name), "utf8");
 }
 

@@ -18,7 +18,7 @@
 
 **Public surface**: `secure` accepts only `tls` and `starttls` — there is no plaintext mode; the transport options expose no verification flag.
 
-- The Node product surface adds **one additive trust anchor**: `tlsRootCertificate` (a PEM string) was added in [ADR-0018](../architecture/decisions/0018-public-trust-anchor.md) for private-CA and loopback test relays. It cannot empty or replace the bundled roots, has no companion way to disable verification, and a malformed anchor is `VALIDATION_INVALID_OPTION`. `TransportOptions` in `ts/src/types.ts` otherwise carries only `host`, `port`, `secure`, `helloName`, `auth`, `timeouts`, `limits`, `attachments`, and that anchor.
+- The Node product surface adds **one additive trust anchor**: `tlsRootCertificate` (a PEM string) was added in [ADR-0018](../architecture/decisions/0018-public-trust-anchor.md) for private-CA and loopback test relays. It cannot empty or replace the bundled roots, has no companion way to disable verification, and a malformed anchor is `VALIDATION_INVALID_OPTION`. `TransportOptions` in `ts/src/types.ts` otherwise carries only `host`, `port`, `secure`, `auth`, `ehloName`, `timeouts`, `limits`, `attachments`, and that anchor.
 - The Rust core API does expose `SmtpConfig::with_root_certificate_pem` (re-exported with `SmtpConfig` from `lib.rs`). It is additive by construction: `client_config` seeds the bundled WebPKI roots first and then appends caller anchors, and `RootCertStore::add` rejects a malformed anchor. No argument can empty or replace the store, and there is no companion method that removes verification. The Rust example and the test harness use it for a local CA; the signing keys are not in the repository.
 
 **STARTTLS**: a configured `starttls` that the relay does not advertise fails with `TLS_HANDSHAKE` before `MAIL`; there is no opportunistic downgrade path.
@@ -32,7 +32,7 @@
 | Wrong host | `TLS_CERTIFICATE`, no `MAIL` |
 | Incomplete chain | `TLS_CERTIFICATE`, no `MAIL` |
 | Untrusted root | `TLS_CERTIFICATE`, no `MAIL` |
-| Malformed anchor | `TLS_HANDSHAKE` when configuring |
+| Malformed anchor | `VALIDATION_INVALID_OPTION` when configuring |
 | Malformed server certificate | handshake failure, `TLS_HANDSHAKE` |
 
 Evidence: `every_bad_certificate_fixture_fails_before_mail`, `an_untrusted_certificate_fails_closed`, `fails_closed_for_each_bad_certificate_fixture`, `rejects_a_malformed_trust_anchor`, and the repeated-failure leak probe.
@@ -63,7 +63,7 @@ Evidence: `every_bad_certificate_fixture_fails_before_mail`, `an_untrusted_certi
 | Risk | Decision |
 | --- | --- |
 | Private enterprise roots installed only in the OS are not trusted | Accepted MVP trade-off (threat-model R-01); callers with a private CA use the core anchor path or a relay with a public certificate |
-| The core anchor API (`with_root_certificate_pem`) adds trust by design | Accepted; not exposed through the binding or the facade |
+| The core anchor API (`with_root_certificate_pem`) adds trust by design | Accepted. The binding and facade expose only the additive `tlsRootCertificate` (ADR-0018), which cannot disable verification |
 | A compromised host process can patch the binary | Out of scope; the library is not a sandbox |
 
 ## 6. Findings

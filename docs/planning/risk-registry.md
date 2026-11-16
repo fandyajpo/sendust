@@ -22,13 +22,12 @@ Likelihood: Low / Medium / High. Impact: Low / Medium / High / Critical.
 | R-012 | Wire-size accounting diverges from actual serialized bytes | Medium | High | Compose, serialize, then measure exact bytes; reject before DATA; parity tests | P07, P08 | PLANNED |
 | R-013 | Attachment read follows a symlink or opens a special file | Medium | High | Opt-in FS; no-follow open; fstat regular check; reject others | P08, P11 | PLANNED |
 | R-014 | Attachment file grows during read and exceeds caps | Medium | Medium | Read cap + 1 byte; reject overflow; never trust pre-read metadata | P08 | PLANNED |
-| R-015 | Peak memory exceeds expectations because inputs are copied and serialized | Medium | Medium | Enforce caps before large copies; measure peak; document worst case | P08, P13 | OPEN |
+| R-015 | Peak memory exceeds expectations because inputs are copied and serialized | Medium | Medium | Enforce caps before large copies; measure peak; document worst case | P08, P13 | MITIGATED: P13-003 measured peaks with a counting allocator and documented the worst case (20 MiB aggregate, 81 MiB peak) |
 | R-016 | Native loader selects wrong architecture or libc binary | Medium | High | Explicit resolution order; missing/wrong-binary errors; per-target install tests | P14 | PLANNED |
 | R-017 | Partial npm publication leaves root package referencing missing platform packages | Medium | Critical | Artifact-completeness gate; exact version sync; documented recovery; post-publication verification | P16, P17 | PLANNED |
 | R-018 | Non-atomic npm publication cannot be rolled back | High | High | Treat as production change; immutable versions; deprecate rather than replace; recovery procedure | P16, P17 | PLANNED |
 | R-019 | Support matrix overpromises Node or platform compatibility | Medium | High | Declare only CI-tested targets and versions; explicit unsupported list; docs accuracy gate | P14, P15 | PLANNED |
 | R-020 | Enterprise users need OS private CAs, but `webpki-roots` ignores them | Medium | Medium | Document limitation; evaluate platform verifier post-MVP | P01, P18 | OPEN |
-
 | R-046 | Module boundaries erode and domain code imports SMTP/runtime implementation details | Medium | High | Explicit module ownership, narrow facade/ports, static dependency checks at P03/P04 and audit at P12 | P03, P04, P12 | PLANNED |
 | R-047 | Premature generic transport/plugin abstraction adds complexity without a second MVP adapter | Medium | Medium | Keep one internal delivery port only where justified; SMTP sole MVP adapter; prohibit public registry | P04, P06 | PLANNED |
 
@@ -44,7 +43,7 @@ Likelihood: Low / Medium / High. Impact: Low / Medium / High / Critical.
 | R-026 | Dependency supply-chain compromise or unpatched advisory | Medium | High | Pin versions; license/advisory review; SBOM; minimal dependency set | P03, P11, P16 | PLANNED |
 | R-027 | SSRF or network access through URL attachments | Low | High | No URL attachment type; no fetch code; negative test | P08, P11 | PLANNED |
 | R-028 | Denial of service via oversized inputs or unbounded close | Medium | Medium | Hard caps; finite timeouts; bounded close drain; memory measurement | P08, P10, P13 | PLANNED |
-| R-029 | `catch_unwind` does not cover all panic paths | Medium | High | Keep recoverable failures in `Result`; test panic behavior; document limits | P04, P05, P11 | OPEN |
+| R-029 | `catch_unwind` does not cover all panic paths | Medium | High | Keep recoverable failures in `Result`; test panic behavior; document limits | P04, P05, P11 | MITIGATED: P11-004 guards the synchronous binding entry points; async tasks settle through `JoinError` (threat-model AB-11) |
 | R-030 | Tests contact a real relay or use real credentials | Low | High | Fake SMTP/TLS only; network-denial test; secret scan | P03, P12 | PLANNED |
 
 ## Compatibility and product risks
@@ -59,6 +58,7 @@ Likelihood: Low / Medium / High. Impact: Low / Medium / High / Critical.
 | R-036 | TypeScript wrapper and Rust core drift in status/error semantics | Medium | High | Single mapping source; golden tests; no wrapper reinterpretation | P09, P12 | PLANNED |
 | R-037 | Dual ESM/CJS packaging creates duplicate class identities or native loads | Low | Medium | Single shared implementation; mixed-format test; loader cache | P14 | PLANNED |
 | R-038 | Premature optimization destabilizes correctness | Medium | Medium | Budgets before measurement; optimize only measured hotspots; re-run QA | P13 | PLANNED |
+| R-049 | Performance budgets are checked only when someone runs the ignored harness, so a regression can merge unnoticed | Medium | Medium | Run `cargo test --release -- --ignored` and `tests/perf/lifecycle.mjs` in a CI job, or keep them as an explicit release gate; owner decision on shared-runner noise | P13, P14 | OPEN |
 | R-039 | New implementation workspace lacks source conventions, leading to inconsistent structure | Low | Medium | Phase 03 establishes workspace, Rust MSRV, dependency pins, and policies before implementation | P03 | PLANNED |
 | R-040 | A phase is marked complete without evidence | Medium | High | Definition of done; gate records; registry status sync | All gates | PLANNED |
 | R-041 | Bun Node-API implementation differs from Node in async/lifecycle behavior | Medium | High | Sendust-owned blocking native addon and lifecycle tests on pinned Bun versions | P05, P14 | OPEN |
@@ -66,7 +66,8 @@ Likelihood: Low / Medium / High. Impact: Low / Medium / High / Critical.
 | R-043 | TypeScript wrapper assumes Node-only globals or module resolution | Medium | High | Runtime-neutral wrapper audit and identical API contract tests | P03, P05, P09 | OPEN |
 | R-044 | Runtime × OS × CPU × libc matrix is only partially tested | High | High | Publish only combinations with blocking CI, clean install and behavioral evidence | P14, P15, P17 | OPEN |
 | R-045 | Native loader generated by tooling is not portable across all three runtimes | Medium | High | Audit generated loader; isolate minimal runtime-specific dispatch if required | P03, P05, P14 | OPEN |
-| R-048 | Sendust-owned SMTP parser defect: reply smuggling, truncation, oversized lines, or STARTTLS downgrade | Medium | High | Bounded line/response caps, rejection of malformed replies, explicit downgrade tests, parser security review at P06-005 and P11 | P06 | OPEN |
+| R-048 | Sendust-owned SMTP parser defect: reply smuggling, truncation, oversized lines, or STARTTLS downgrade | Medium | High | Bounded line/response caps, rejection of malformed replies, explicit downgrade tests, parser security review at P06-005 and P11 | P06 | MITIGATED: reply line and total caps, bare LF/CR and mismatched-code rejection, and STARTTLS refusal of pre-upgrade buffered bytes are in place. Residual: no fuzz or property testing of the parser yet |
+| R-050 | A caller-supplied `tlsRootCertificate` trusts a broader CA than the application intended | Low | High | Additive only and never disables verification (ADR-0018); no default anchor; the application makes the trust decision | P14 | ACCEPTED: the trust input is the caller's explicit choice, and the public API cannot widen trust silently |
 
 ## Top risks to watch
 

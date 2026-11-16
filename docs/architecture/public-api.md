@@ -27,7 +27,8 @@ No plugin registry, no transport subclasses, no streaming API, no callback API, 
 | `port` | `number` | required | integer 1–65535 |
 | `secure` | `"tls" \| "starttls"` | required | one of the two; no plaintext mode |
 | `auth` | `{ user, pass, method? }` | undefined | user non-empty; `method` `"plain"` or `"login"` |
-| `ehloName` | `string` | `localhost` | valid hostname token; no CRLF |
+| `ehloName` | `string` | `localhost` | one printable ASCII token: 1–255 bytes, no space, control or non-ASCII character |
+| `tlsRootCertificate` | `string` | none | one PEM bundle of trust anchors added on top of the bundled roots; never replaces them and never disables verification; a malformed PEM is `VALIDATION_INVALID_OPTION` (ADR-0018) |
 | `timeouts.connectMs` | `number` | 10000 | integer 1000–10000; ≤ totalMs |
 | `timeouts.operationMs` | `number` | 30000 | integer 1000–30000; ≤ totalMs |
 | `timeouts.totalMs` | `number` | 120000 | integer 1000–120000; ≥ connectMs and operationMs |
@@ -40,7 +41,7 @@ No plugin registry, no transport subclasses, no streaming API, no callback API, 
 
 Timeout values may be lowered but not raised above the documented maxima. Limits may be lowered but not raised. A caller cannot configure a value above the documented hard cap. Unknown option keys are rejected with `VALIDATION_INVALID_OPTION` to catch typos.
 
-There is no option to disable TLS verification, no plaintext SMTP mode, no pool size, no retry count, and no proxy configuration in MVP.
+There is no option to disable TLS verification, no plaintext SMTP mode, no pool size, no retry count, and no proxy configuration in MVP. The only trust input is the additive `tlsRootCertificate` (ADR-0018).
 
 ## 3. Message shape
 
@@ -51,7 +52,7 @@ There is no option to disable TLS verification, no plaintext SMTP mode, no pool 
 | `cc` | array | no | same |
 | `bcc` | array | no | same; never written to headers |
 | `replyTo` | array | no | same |
-| `subject` | string | yes | may be empty? No: non-empty, Unicode allowed, no CRLF |
+| `subject` | string | yes | non-empty and not whitespace-only; Unicode allowed; no control characters |
 | `text` | string | one of text/html | Unicode allowed |
 | `html` | string | one of text/html | Unicode allowed |
 | `headers` | `Record<string,string>` | no | valid field names; reserved names rejected |

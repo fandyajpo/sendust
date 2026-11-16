@@ -141,7 +141,12 @@ impl SmtpConfig {
 
     pub fn with_hello_name(mut self, hello_name: impl Into<String>) -> Result<Self, Error> {
         let hello_name = hello_name.into();
-        if hello_name.trim().is_empty() || hello_name.chars().any(char::is_control) {
+        // EHLO takes one token: printable ASCII only, with no space, control or
+        // non-ASCII character, and at most the 255 bytes the command accepts.
+        if hello_name.is_empty()
+            || hello_name.len() > 255
+            || !hello_name.chars().all(|c| c.is_ascii_graphic())
+        {
             return Err(Error::new(ErrorCode::ValidationInvalidOption));
         }
         self.hello_name = hello_name;
@@ -617,6 +622,19 @@ mod tests {
                 .code(),
             ErrorCode::ValidationInvalidOption
         );
+    }
+
+    #[test]
+    fn hello_name_is_one_ascii_token() {
+        let relay = || SmtpConfig::new("relay.test", 587, SmtpSecurity::StartTls).expect("valid");
+        for name in ["localhost", "client.example.test", "[127.0.0.1]"] {
+            assert!(relay().with_hello_name(name).is_ok(), "{name} should be accepted");
+        }
+        let long = "a".repeat(256);
+        for name in ["", "bad name", "tab\tname", "line\r\nname", "héllo", long.as_str()] {
+            let error = relay().with_hello_name(name).expect_err("must be rejected");
+            assert_eq!(error.code(), ErrorCode::ValidationInvalidOption, "{name:?}");
+        }
     }
 
     #[test]

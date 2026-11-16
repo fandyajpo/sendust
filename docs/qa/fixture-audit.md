@@ -45,7 +45,7 @@ No failure occurred in either run, so no defect needed a disposition. No test is
 
 | Gap | Disposition |
 | --- | --- |
-| No JS end-to-end `accepted`/`rejected`/`unknown` fixture | The public API accepts no trust anchor (C-07), so a loopback TLS relay cannot be trusted. Mapping and core semantics are covered separately. Reassigned from P12 QA to P14-004, where an anchor policy or a public-CA sandbox can be decided; the threat-model residual R-04 is updated accordingly |
+| No JS end-to-end `rejected`/`unknown` fixture | `accepted` and `TLS_CERTIFICATE` are now observed through the addon, because ADR-0018 lets a loopback relay be trusted. Mapping and core semantics cover `rejected` and `unknown`; a JS relay fixture for them is owned by P14-004 |
 | Line coverage | Not collected; no coverage tool is pinned (P12-002 record) |
 | Forced GC on Bun/Deno | Those runtimes have no `--expose-gc` equivalent in the pinned CLI; the Node.js binding job owns the probe |
 

@@ -44,7 +44,7 @@ These are compile-time assertions checked by `tsc`, so a contract-breaking chang
 | Foreign error | "returns null for a foreign error" | Mapping |
 | Redaction | "redacts credentials, bodies, and paths from every error" | Every class, both markers |
 
-End-to-end status coverage through a live relay is proven in Rust (`accepts_a_single_recipient_transaction`, `explicit_final_data_rejection_is_a_rejected_outcome`, `missing_final_reply_after_data_is_unknown`). The facade cannot reproduce that locally, because the public API accepts no trust anchor by design (C-07) and a loopback certificate is therefore untrusted; the gap and its owner are recorded in section 5.
+End-to-end status coverage through a live relay is proven in Rust (`accepts_a_single_recipient_transaction`, `explicit_final_data_rejection_is_a_rejected_outcome`, `missing_final_reply_after_data_is_unknown`). The facade now reproduces the `accepted` leg as well: since ADR-0018 the `tlsRootCertificate` option lets the loopback relay be trusted, and "trusts an added root and accepts a fake-relay send" observes `accepted` through the addon. The `rejected` and `unknown` legs in JS are still open; section 6 records them.
 
 ## 4. Lifecycle, BUSY, and error behaviour through the addon
 
@@ -88,7 +88,7 @@ The baseline deliberately keeps Vitest out of Bun and Deno ("runtime compatibili
 
 | Gap | Why | Owner / disposition |
 | --- | --- | --- |
-| No end-to-end `accepted`/`rejected`/`unknown` in the JS suite | The public API accepts no trust anchor by design, so a loopback TLS relay is untrusted; mapping and core semantics are both proven, but not in one JS test | P12-004 fixture work / R-04; accepted until the JS relay question is settled |
+| No end-to-end `rejected`/`unknown` in the JS suite (`accepted` is now covered) | A relay reply that yields `rejected` or `unknown` has no JS fixture yet; mapping and core semantics are both proven | R-04's accepted path is closed by ADR-0018; the remaining JS fixture is owned by P14-004 |
 | `typecheck` covers `src` and the two contract test files only | `@types/node` is not a pinned dev dependency, so the runtime suites (which import `node:net`, `node:fs`) are transpiled by Vitest, not typechecked | Owner decision: adding `@types/node` would let `tsc` cover every test file. Not introduced here (dependency policy) |
 | No line coverage | No coverage tool is pinned | Recorded in the P12-002 report; owner decision |
 | Bun/Deno run the smoke entry point only | Baseline rule above | P14-004 owns the full matrix |
