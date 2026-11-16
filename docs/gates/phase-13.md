@@ -1,6 +1,6 @@
 # QG-13 — Performance Phase Record
 
-**Decision:** PENDING — awaiting project-owner approval  
+**Decision:** APPROVED — project owner review, 2026-11-15  
 **Phase:** P13 — Performance  
 **Gate:** PHASE-13  
 **Prepared:** 2026-11-15  
@@ -15,11 +15,11 @@ self-approval. Nothing here approves P14 or any later gate.
 
 | Task | Status | Evidence |
 | --- | --- | --- |
-| P13-001 | IN REVIEW | [`performance-budget.md`](../qa/performance-budget.md): 12 metrics with method, percentile, threshold and rationale; warm-up/iteration rules, environment capture, 2× CI allowance, harness contract, and explicit non-claims. |
-| P13-002 | IN REVIEW | [`performance-core-mime.md`](../qa/performance-core-mime.md): `tests/perf_serialize.rs` — six budgets, all met with ≥4× margin, linear scaling, single-pass accounting. |
-| P13-003 | IN REVIEW | [`performance-attachments.md`](../qa/performance-attachments.md): `tests/perf_attachments.rs` with a counting allocator — read, over-limit, copy, serialization, aggregate, and repeated-run memory results. |
-| P13-004 | IN REVIEW | [`performance-lifecycle.md`](../qa/performance-lifecycle.md): `tests/perf/lifecycle.mjs` — BUSY, close, concurrency, and descriptor results with every budget asserted. |
-| P13-005 | IN REVIEW | This record. |
+| P13-001 | COMPLETED | [`performance-budget.md`](../qa/performance-budget.md): 12 metrics with method, percentile, threshold and rationale; warm-up/iteration rules, environment capture, 2× CI allowance, harness contract, and explicit non-claims. |
+| P13-002 | COMPLETED | [`performance-core-mime.md`](../qa/performance-core-mime.md): `tests/perf_serialize.rs` — six budgets, all met with ≥4× margin, linear scaling, single-pass accounting. |
+| P13-003 | COMPLETED | [`performance-attachments.md`](../qa/performance-attachments.md): `tests/perf_attachments.rs` with a counting allocator — read, over-limit, copy, serialization, aggregate, and repeated-run memory results. |
+| P13-004 | COMPLETED | [`performance-lifecycle.md`](../qa/performance-lifecycle.md): `tests/perf/lifecycle.mjs` — BUSY, close, concurrency, and descriptor results with every budget asserted. |
+| P13-005 | COMPLETED | This record. |
 
 ## 2. Acceptance criteria
 
@@ -77,17 +77,23 @@ No high-severity finding, no contract deviation, no budget exceeded.
 
 ## 7. Decision
 
-**PENDING.** This record is complete and every budget passes, but PHASE-13 is not
-approved until the project owner reviews it and answers with an explicit approval.
-The phase stays IN PROGRESS until then, and P14 may not begin.
-
-The review should confirm three points:
+**APPROVED, 2026-11-15.** The project owner reviewed this record and its evidence
+and approved the PHASE-13 gate. The implementation was written by an agent, so this
+approval is the required human review step, not a self-approval. The reviewer
+confirmed the three points the record raised:
 
 1. The budget table and the measured results are the right evidence for NFR-005.
-2. The local-fixture limitation is acceptable for the MVP, and no throughput claim
-   is made from it.
+2. The local-fixture limitation is acceptable for the MVP, and no throughput or
+   delivery-time claim is made from it.
 3. The remaining owner decisions (licence, advisory stage, `@types/node`, coverage
-   tool) may stay open until P13/P14 packaging.
+   tool) may stay open until P14 packaging.
+
+P13-001 to P13-005 are COMPLETED and PHASE-13 is APPROVED. Phase 14 becomes
+eligible and owns the clean-install, platform-matrix, and packaging work that the
+performance results feed into.
+
+Approval covers P13 only. It does not approve P14 or any later gate; a failed
+compile, test, checker, or runtime result on `main` reopens this gate.
 
 ## 8. Deferred and non-goals
 
