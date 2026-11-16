@@ -628,10 +628,20 @@ mod tests {
     fn hello_name_is_one_ascii_token() {
         let relay = || SmtpConfig::new("relay.test", 587, SmtpSecurity::StartTls).expect("valid");
         for name in ["localhost", "client.example.test", "[127.0.0.1]"] {
-            assert!(relay().with_hello_name(name).is_ok(), "{name} should be accepted");
+            assert!(
+                relay().with_hello_name(name).is_ok(),
+                "{name} should be accepted"
+            );
         }
         let long = "a".repeat(256);
-        for name in ["", "bad name", "tab\tname", "line\r\nname", "héllo", long.as_str()] {
+        for name in [
+            "",
+            "bad name",
+            "tab\tname",
+            "line\r\nname",
+            "héllo",
+            long.as_str(),
+        ] {
             let error = relay().with_hello_name(name).expect_err("must be rejected");
             assert_eq!(error.code(), ErrorCode::ValidationInvalidOption, "{name:?}");
         }
