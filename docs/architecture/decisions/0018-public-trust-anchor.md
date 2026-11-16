@@ -3,7 +3,7 @@
 **Status:** ACCEPTED (implements the P14-001 decision; verification is never disabled)  
 **Date:** 2026-11-15  
 **Supersedes:** nothing  
-**Related:** [C-07](../product/requirements.md), [ADR-0003](0003-tls-rustls-ring-webpki.md), [P11-002 TLS audit](../../security/tls-auth-audit.md)
+**Related:** [C-07](../../product/requirements.md), [ADR-0003](0003-tls-rustls-ring-webpki.md), [P11-002 TLS audit](../../security/tls-auth-audit.md)
 
 ## Context
 
