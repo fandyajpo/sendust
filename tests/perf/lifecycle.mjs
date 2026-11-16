@@ -103,7 +103,7 @@ await silentServer(async ({ port, connections, waitForConnection }) => {
       host: "127.0.0.1",
       port,
       secure: "tls",
-      closeMs: 1000,
+      timeouts: { connectMs: 1000, operationMs: 1000, totalMs: 1000, closeMs: 1000 },
     });
     const inFlight = transport.send(message).catch((error) => error);
     await waitForConnection();
