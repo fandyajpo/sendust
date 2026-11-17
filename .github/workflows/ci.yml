@@ -276,6 +276,17 @@ jobs:
       - name: Runtime smoke (Deno)
         run: deno run --allow-ffi --allow-read --allow-net tests/runtime/smoke.mjs
 
+      # The facade, not just a direct require, must reach the addon through
+      # `src/loader.ts` on every claimed runtime (P14-004).
+      - name: Facade smoke (Node.js)
+        run: node tests/runtime/facade.mjs
+
+      - name: Facade smoke (Bun)
+        run: bun tests/runtime/facade.mjs
+
+      - name: Facade smoke (Deno)
+        run: deno run --allow-ffi --allow-read --allow-net tests/runtime/facade.mjs
+
       - uses: actions/upload-artifact@v4
         with:
           name: sendust-${{ matrix.target }}
