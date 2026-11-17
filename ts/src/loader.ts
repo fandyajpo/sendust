@@ -6,6 +6,8 @@
  * is lazy and free of static `node:` imports.
  */
 
+import { moduleUrl } from "./module-context.ts";
+
 export interface NativeSendResult {
   status: string;
   recipients: Array<{ address: string; status: string }>;
@@ -49,7 +51,6 @@ export function loadNative(): NativeBinding {
     return cached;
   }
 
-  const meta = import.meta as { url: string };
   const processRef = (globalThis as unknown as { process?: ProcessLike }).process;
   const createRequire = processRef?.getBuiltinModule?.("node:module")?.createRequire;
 
@@ -57,7 +58,7 @@ export function loadNative(): NativeBinding {
     throw unavailable("no require bridge on this runtime");
   }
 
-  const require = createRequire(meta.url);
+  const require = createRequire(moduleUrl);
   let binding: unknown;
   try {
     // Bundled at the package root by the package build.

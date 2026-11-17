@@ -10,7 +10,14 @@
  * Only `dist/` and `sendust.node` are written. Test files are not compiled.
  */
 
-import { copyFileSync, existsSync, mkdirSync, rmSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { execFileSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -54,6 +61,52 @@ execFileSync(
   { cwd: packageRoot, stdio: "inherit" },
 );
 
+// CommonJS twin, so `require()` resolves the same surface (C-22, ADR-0012). The
+// shared source has no `import.meta`, so the same files compile for both; only
+// the module-context placeholder differs.
+execFileSync(
+  join(repoRoot, "node_modules", ".bin", "tsc"),
+  [
+    "src/index.ts",
+    "src/types.ts",
+    "--ignoreConfig",
+    "--target",
+    "ES2022",
+    "--module",
+    "commonjs",
+    "--moduleResolution",
+    "node10",
+    "--strict",
+    "--rewriteRelativeImportExtensions",
+    "--allowImportingTsExtensions",
+    "--declaration",
+    "--skipLibCheck",
+    "--outDir",
+    join(dist, "cjs"),
+  ],
+  { cwd: packageRoot, stdio: "inherit" },
+);
+
+// Swap the module URL placeholder: `import.meta.url` is only legal in the ESM
+// output, and `__filename` only in the CommonJS output.
+rewriteModuleUrl(join(dist, "module-context.js"), "import.meta.url");
+rewriteModuleUrl(
+  join(dist, "cjs", "module-context.js"),
+  'require("node:url").pathToFileURL(__filename).href',
+);
+
 mkdirSync(packageRoot, { recursive: true });
 copyFileSync(stagedSource, staged);
-console.log(`built ${dist} and bundled ${staged}`);
+console.log(`built ${dist} (ESM and CommonJS) and bundled ${staged}`);
+
+/** Replaces the placeholder exactly once and fails loudly otherwise. */
+function rewriteModuleUrl(file, replacement) {
+  const source = readFileSync(file, "utf8");
+  const marker = '"SENDUST_MODULE_URL_PLACEHOLDER"';
+  const occurrences = source.split(marker).length - 1;
+  if (occurrences !== 1) {
+    console.error(`${file}: expected one module URL placeholder, found ${occurrences}`);
+    process.exit(1);
+  }
+  writeFileSync(file, source.replace(marker, replacement));
+}
