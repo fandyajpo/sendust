@@ -1,5 +1,11 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { platformPackageName, resolveNative, type NativeBinding } from "../src/loader.ts";
+import {
+  PLATFORM_PACKAGES,
+  platformPackageName,
+  resolveNative,
+  type NativeBinding,
+} from "../src/loader.ts";
 
 type RequireLike = (id: string) => unknown;
 
@@ -139,5 +145,25 @@ describe("native resolution failures", () => {
     );
 
     expect(error).toBe(broken);
+  });
+});
+
+describe("package manifest", () => {
+  const manifest = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as {
+    version: string;
+    optionalDependencies?: Record<string, string>;
+  };
+
+  it("declares exactly the platform packages the loader can resolve", () => {
+    const declared = Object.keys(manifest.optionalDependencies ?? {}).sort();
+    const loadable = Object.values(PLATFORM_PACKAGES).sort();
+
+    expect(declared).toEqual(loadable);
+  });
+
+  it("pins every platform package to the facade version", () => {
+    for (const version of Object.values(manifest.optionalDependencies ?? {})) {
+      expect(version).toBe(manifest.version);
+    }
   });
 });

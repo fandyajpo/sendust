@@ -36,7 +36,7 @@ interface ProcessLike {
 }
 
 /** Platform key to its optional native package (ADR-0020). */
-const PLATFORM_PACKAGES: Record<string, string> = {
+export const PLATFORM_PACKAGES: Record<string, string> = {
   "linux-x64-gnu": "@sendust/ts-linux-x64-gnu",
   "linux-arm64-gnu": "@sendust/ts-linux-arm64-gnu",
   "macos-x64": "@sendust/ts-macos-x64",
