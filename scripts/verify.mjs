@@ -27,6 +27,7 @@ function step(name, command, args, cwd = root) {
 
 step("native addon", "node", ["scripts/build-addon.mjs"]);
 step("package build", npm, ["run", "build"], join(root, "ts"));
+step("publish manifest", "node", ["scripts/prepare-publish.mjs"]);
 step("typescript tests", npm, ["test"], join(root, "ts"));
 step("facade runtime smoke", "node", ["tests/runtime/facade.mjs"]);
 step("behaviour harness", "node", ["tests/runtime/behaviour.mjs"]);

@@ -37,7 +37,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
@@ -45,7 +45,6 @@ const shell = process.platform === "win32";
 
 const OS = { "linux-x64-gnu": "linux", "linux-arm64-gnu": "linux", "macos-x64": "darwin", "macos-arm64": "darwin", "windows-x64": "win32" };
 const CPU = { x64: "x64", arm64: "arm64" };
-const PLATFORM_KEYS = Object.keys(OS);
 
 const FACADE_CHECK = `
 import { createTransport } from '@sendust/ts';
@@ -116,6 +115,13 @@ if (!existsSync(join(root, "ts", "dist", "index.js"))) {
   console.error("verify-platform: built package missing; run `npm run build` in ts/ first");
   process.exit(1);
 }
+
+// The loader's map is the single source of truth for the platform packages, so
+// this check cannot drift from what the package can actually resolve.
+const { PLATFORM_PACKAGES } = await import(
+  pathToFileURL(join(root, "ts", "dist", "loader.js")).href
+);
+const PLATFORM_KEYS = Object.keys(PLATFORM_PACKAGES);
 
 const baseManifest = JSON.parse(readFileSync(join(root, "ts", "package.json"), "utf8"));
 

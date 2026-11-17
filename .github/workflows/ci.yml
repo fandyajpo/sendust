@@ -247,6 +247,11 @@ jobs:
       - name: Build the facade package
         run: npm --workspace ./ts run build
 
+      # The published tarball must declare the platform packages, which cannot
+      # live in the repo manifest because npm needs lock entries for them.
+      - name: Publish manifest
+        run: node scripts/prepare-publish.mjs
+
       # The behaviour suite runs once per target, so accepted send, BUSY, close
       # and the limit negatives are proven on each platform rather than only on
       # Linux x64 (P14-004).

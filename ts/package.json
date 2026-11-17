@@ -27,13 +27,6 @@
   "engines": {
     "node": ">=22.23.5"
   },
-  "optionalDependencies": {
-    "@sendust/ts-linux-arm64-gnu": "0.1.0",
-    "@sendust/ts-linux-x64-gnu": "0.1.0",
-    "@sendust/ts-macos-arm64": "0.1.0",
-    "@sendust/ts-macos-x64": "0.1.0",
-    "@sendust/ts-windows-x64": "0.1.0"
-  },
   "scripts": {
     "build": "node scripts/build-package.mjs",
     "lint": "biome lint src test scripts",

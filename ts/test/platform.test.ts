@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   PLATFORM_PACKAGES,
@@ -148,22 +147,16 @@ describe("native resolution failures", () => {
   });
 });
 
-describe("package manifest", () => {
-  const manifest = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as {
-    version: string;
-    optionalDependencies?: Record<string, string>;
-  };
+describe("platform package names", () => {
+  it("uses one scoped package per supported target", () => {
+    const names = Object.values(PLATFORM_PACKAGES);
 
-  it("declares exactly the platform packages the loader can resolve", () => {
-    const declared = Object.keys(manifest.optionalDependencies ?? {}).sort();
-    const loadable = Object.values(PLATFORM_PACKAGES).sort();
-
-    expect(declared).toEqual(loadable);
-  });
-
-  it("pins every platform package to the facade version", () => {
-    for (const version of Object.values(manifest.optionalDependencies ?? {})) {
-      expect(version).toBe(manifest.version);
-    }
+    expect(names.sort()).toEqual([
+      "@sendust/ts-linux-arm64-gnu",
+      "@sendust/ts-linux-x64-gnu",
+      "@sendust/ts-macos-arm64",
+      "@sendust/ts-macos-x64",
+      "@sendust/ts-windows-x64",
+    ]);
   });
 });
