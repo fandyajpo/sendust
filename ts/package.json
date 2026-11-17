@@ -23,9 +23,9 @@
   },
   "scripts": {
     "build": "node scripts/build-package.mjs",
-    "lint": "biome lint .",
-    "format": "biome format --write .",
-    "format:check": "biome format .",
+    "lint": "biome lint src test scripts",
+    "format": "biome format --write src test scripts",
+    "format:check": "biome format src test scripts",
     "typecheck": "tsc --project tsconfig.json",
     "test": "vitest run --passWithNoTests",
     "pack:check": "node scripts/check-pack.mjs"

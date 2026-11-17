@@ -19,7 +19,8 @@ import { fileURLToPath } from "node:url";
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 const built =
-  existsSync(join(packageRoot, "dist", "index.js")) && existsSync(join(packageRoot, "sendust.node"));
+  existsSync(join(packageRoot, "dist", "index.js")) &&
+  existsSync(join(packageRoot, "sendust.node"));
 if (!built) {
   console.error("dist/ or sendust.node is missing; run `npm run build` first");
   process.exit(1);
