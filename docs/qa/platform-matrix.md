@@ -21,15 +21,15 @@ Artifact naming: `sendust-<os>-<arch>[-<libc>].node`
 
 | OS | Arch | Libc/ABI | Runner | Build target | Artifact | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| macOS | arm64 | Darwin | `macos-14` | `aarch64-apple-darwin` | `sendust-macos-arm64.node` | NOT BUILT |
-| macOS | x64 | Darwin | `macos-13` | `x86_64-apple-darwin` | `sendust-macos-x64.node` | NOT BUILT |
-| Linux | x64 | glibc | `ubuntu-24.04` | `x86_64-unknown-linux-gnu` | `sendust-linux-x64-gnu.node` | NOT BUILT |
-| Linux | arm64 | glibc | `ubuntu-24.04-arm` | `aarch64-unknown-linux-gnu` | `sendust-linux-arm64-gnu.node` | NOT BUILT |
-| Windows | x64 | MSVC | `windows-2022` | `x86_64-pc-windows-msvc` | `sendust-windows-x64.node` | NOT BUILT |
+| macOS | arm64 | Darwin | `macos-15` | `aarch64-apple-darwin` | `sendust-macos-arm64.node` | CI BUILD + LOAD: PASS |
+| macOS | x64 | Darwin | none available | `x86_64-apple-darwin` | `sendust-macos-x64.node` | NOT BUILT — no Intel runner in this repository |
+| Linux | x64 | glibc | `ubuntu-24.04` | `x86_64-unknown-linux-gnu` | `sendust-linux-x64-gnu.node` | CI BUILD + LOAD: PASS |
+| Linux | arm64 | glibc | `ubuntu-24.04-arm` | `aarch64-unknown-linux-gnu` | `sendust-linux-arm64-gnu.node` | CI BUILD + LOAD: PASS |
+| Windows | x64 | MSVC | `windows-2022` | `x86_64-pc-windows-msvc` | `sendust-windows-x64.node` | CI BUILD + LOAD: PASS |
 
 Every row builds with the pinned Rust 1.100.0 toolchain on a native runner via `npm run build:artifact`, which compiles `sendust-napi` and stages `sendust-<os>-<arch>[-<libc>].node` under `artifacts/`. The same runner then loads the artifact to prove it is the target it claims to be — no cross-compiled, unloaded binary counts. The feature set is identical everywhere: Node-API 8 (`napi8`, `async`), `rustls` with the `ring` provider and `webpki-roots`, no `native-tls`, no alternate verifier. The architecture check enforces those rules for every build, so no target can weaken TLS.
 
-The CI job `Native artifact (<target>)` runs the build and the load check on each runner and uploads the artifact. Until that run is green for a row, its status stays **CI BUILD PENDING**; the table's `NOT BUILT` marks are replaced only by observed results.
+The CI job `Native artifact (<target>)` runs the build and the load check on each runner and uploads the artifact. The four rows marked PASS were observed on `373dda6`…`5467c3a`; `npm run verify:platform` additionally installs the facade plus the platform package in a clean consumer and loads it through `@sendust/ts`. macOS x64 has no Intel runner in this repository — its job stayed queued and was removed, so that row stays NOT BUILT rather than being advertised.
 
 ## 3. Build recipe
 

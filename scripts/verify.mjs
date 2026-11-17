@@ -24,6 +24,7 @@ step("native addon", "node", ["scripts/build-addon.mjs"]);
 step("package build", npm, ["run", "build"], join(root, "ts"));
 step("typescript tests", npm, ["test"], join(root, "ts"));
 step("platform artifact", "node", ["scripts/build-artifact.mjs"]);
+step("per-platform resolution", "node", ["scripts/verify-platform.mjs"]);
 
 const artifacts = join(root, "artifacts");
 const artifact = readdirSync(artifacts).find((name) => name.endsWith(".node"));
