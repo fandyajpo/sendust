@@ -66,7 +66,8 @@ export function loadNative(): NativeBinding {
   // the source tree (tests, examples) keeps the placeholder, so resolve against
   // the current package directory instead.
   let base = moduleUrl;
-  if (base.includes("MODULE_URL_PLACEHOLDER")) {
+  const fromSourceTree = base.includes("MODULE_URL_PLACEHOLDER");
+  if (fromSourceTree) {
     const nodeUrl = processRef?.getBuiltinModule?.("node:url") as
       | { pathToFileURL(path: string): { href: string } }
       | undefined;
@@ -83,8 +84,9 @@ export function loadNative(): NativeBinding {
   const require = createRequire(base);
   let binding: unknown;
   try {
-    // Bundled at the package root by the package build.
-    binding = require("../sendust.node");
+    // Bundled at the package root by the package build; when running from the
+    // source tree the base is the package directory itself.
+    binding = require(fromSourceTree ? "./sendust.node" : "../sendust.node");
   } catch (error) {
     // Only a missing addon file is a packaging fault. Anything else (a broken
     // module, a wrong ABI) is rethrown untouched so it is not misdiagnosed.
