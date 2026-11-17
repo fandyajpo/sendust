@@ -253,15 +253,8 @@ jobs:
       - name: Per-target behaviour suite
         run: npm --workspace ./ts run test
 
-      # Installs the artifact as a per-platform package beside the facade in a
-      # fresh consumer, so the loader's fallback path (ADR-0020) is exercised on
-      # this runner's OS and arch instead of the bundled addon. The facade copy
-      # has no addon of its own, which is the published layout.
-      - name: Resolve the artifact through the published layout
-        run: node scripts/verify-platform.mjs
-
-      # The same addon must load and keep the async lifecycle on Bun and Deno
-      # for this target too (R-041, R-042), not only on Node.js.
+      # Installed before the consumer check so the packed tarball is exercised
+      # on Bun and Deno as well as Node.js for this target (R-041, R-042).
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -271,6 +264,13 @@ jobs:
         uses: denoland/setup-deno@v2
         with:
           deno-version: 2.9.8
+
+      # Installs the artifact as a per-platform package beside the packed facade
+      # in a fresh consumer, so the loader's fallback path (ADR-0020) is
+      # exercised on this runner's OS and arch instead of the bundled addon. The
+      # tarball has no addon of its own, which is the published layout.
+      - name: Resolve the artifact through the published layout
+        run: node scripts/verify-platform.mjs
 
       - name: Runtime smoke (Bun)
         run: bun tests/runtime/smoke.mjs
