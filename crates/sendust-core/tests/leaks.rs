@@ -79,6 +79,27 @@ async fn serial() -> tokio::sync::MutexGuard<'static, ()> {
         .await
 }
 
+/// The probe fails only if descriptors stay above the bound.
+///
+/// Closing a socket is asynchronous in the kernel and the runtime may open a
+/// bookkeeping descriptor late, so a count taken immediately after the loop can
+/// see a few descriptors that disappear milliseconds later. A bounded grace
+/// period keeps the bound strict without turning that into a flake.
+#[cfg(unix)]
+async fn assert_descriptors_settled(before: usize, limit: usize, label: &str) {
+    let deadline = tokio::time::Instant::now() + std::time::Duration::from_millis(500);
+    loop {
+        let after = open_fds();
+        if after <= before + limit {
+            return;
+        }
+        if tokio::time::Instant::now() >= deadline {
+            panic!("{label}: {before} -> {after}");
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+    }
+}
+
 #[cfg(unix)]
 #[tokio::test]
 async fn repeated_successful_sends_do_not_leak_descriptors() {
@@ -101,11 +122,7 @@ async fn repeated_successful_sends_do_not_leak_descriptors() {
             .expect("send");
     }
 
-    let after = open_fds();
-    assert!(
-        after <= before + 2,
-        "descriptor leak across successes: {before} -> {after}"
-    );
+    assert_descriptors_settled(before, 2, "descriptor leak across successes").await;
 }
 
 #[cfg(unix)]
@@ -137,11 +154,7 @@ async fn repeated_failed_connections_do_not_leak_descriptors() {
         assert_eq!(error.code(), ErrorCode::ProtocolConnectionReset);
     }
 
-    let after = open_fds();
-    assert!(
-        after <= before + 2,
-        "descriptor leak across refused connections: {before} -> {after}"
-    );
+    assert_descriptors_settled(before, 2, "descriptor leak across refused connections").await;
 }
 
 #[cfg(unix)]
@@ -188,11 +201,7 @@ async fn mixed_stress_loop_keeps_descriptors_and_outcomes_stable() {
         }
     }
 
-    let after = open_fds();
-    assert!(
-        after <= before + 2,
-        "descriptor leak across the stress loop: {before} -> {after}"
-    );
+    assert_descriptors_settled(before, 2, "descriptor leak across the stress loop").await;
     assert_eq!(server.trace().count_prefix("DATA") - data_before, 50);
 }
 
@@ -221,10 +230,6 @@ async fn repeated_tls_failures_do_not_leak_descriptors() {
         assert_eq!(error.code(), ErrorCode::TlsCertificate);
     }
 
-    let after = open_fds();
-    assert!(
-        after <= before + 2,
-        "descriptor leak across TLS failures: {before} -> {after}"
-    );
+    assert_descriptors_settled(before, 2, "descriptor leak across TLS failures").await;
     assert_eq!(server.trace().count_prefix("MAIL"), 0);
 }
