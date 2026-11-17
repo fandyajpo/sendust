@@ -33,7 +33,7 @@ In scope: package metadata, native artifact layout, clean-install smoke, platfor
 ### P14-003 — Specify cross-platform build and prebuilt artifact matrix
 
 - **Size:** L
-- **Status:** IN REVIEW — [platform matrix](../qa/platform-matrix.md); publication layout open
+- **Status:** COMPLETED — [platform matrix](../qa/platform-matrix.md); per-platform packages (ADR-0020)
 - **Prerequisites:** P14-002
 - **Description:** Define target platforms and architectures, build toolchain requirements, and prebuilt artifact naming. Cover macOS, Linux, and Windows where supported, including arm64/x64 variants. Specify how rustls `ring`/`webpki-roots` and Node-API 8 are built consistently. Validate the runtime × OS × CPU × ABI matrix, including Deno local node_modules and --allow-ffi. Record unsupported targets explicitly and prevent accidental “best effort” publication.
 - **Evidence criteria:** Matrix lists OS, arch, libc where relevant, Node-API level, artifact name, and support status. Each target has a build recipe and validation owner. Unsupported targets are absent from publication inputs. No target weakens TLS verification or changes core behavior.
@@ -92,5 +92,5 @@ P14 must test the intersection of each claimed runtime and platform target. Requ
 
 ## Status
 
-IN PROGRESS. P14-001 and P14-002 are COMPLETED; P14-003 is IN REVIEW with the
-[platform matrix](../qa/platform-matrix.md); P14-004 and P14-005 are NOT STARTED.
+IN PROGRESS. P14-001, P14-002, and P14-003 are COMPLETED; P14-004 and P14-005 are
+NOT STARTED.

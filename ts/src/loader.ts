@@ -30,6 +30,45 @@ type RequireLike = (id: string) => unknown;
 interface ProcessLike {
   cwd?(): string;
   getBuiltinModule?(id: string): unknown;
+  platform?: string;
+  arch?: string;
+  report?: { getReport?(): { header?: { glibcVersionRuntime?: string } } };
+}
+
+/** Platform key to its optional native package (ADR-0020). */
+const PLATFORM_PACKAGES: Record<string, string> = {
+  "linux-x64-gnu": "@sendust/ts-linux-x64-gnu",
+  "linux-arm64-gnu": "@sendust/ts-linux-arm64-gnu",
+  "macos-x64": "@sendust/ts-macos-x64",
+  "macos-arm64": "@sendust/ts-macos-arm64",
+  "windows-x64": "@sendust/ts-windows-x64",
+};
+
+/**
+ * The optional package for this platform, or `undefined` when the platform has
+ * no build. `libc` only matters on Linux.
+ */
+export function platformPackageName(
+  platform: string,
+  arch: string,
+  libc: "gnu" | "musl" = "gnu",
+): string | undefined {
+  const key =
+    platform === "linux" ? `linux-${arch}-${libc}` : `${platform === "darwin" ? "macos" : platform}-${arch}`;
+  return PLATFORM_PACKAGES[key];
+}
+
+/** glibc vs musl on Linux; every other platform is treated as gnu-agnostic. */
+function linuxLibc(processRef: ProcessLike | undefined): "gnu" | "musl" {
+  if (processRef?.platform !== "linux") {
+    return "gnu";
+  }
+  try {
+    const header = processRef.report?.getReport?.().header;
+    return header?.glibcVersionRuntime ? "gnu" : "musl";
+  } catch {
+    return "gnu";
+  }
 }
 
 let cached: NativeBinding | undefined;
@@ -82,21 +121,40 @@ export function loadNative(): NativeBinding {
   }
 
   const require = createRequire(base);
+  const platform = processRef?.platform ?? "unknown";
+  const arch = processRef?.arch ?? "unknown";
+  const packageName = platformPackageName(platform, arch, linuxLibc(processRef));
+
   let binding: unknown;
   try {
     // Bundled at the package root by the package build; when running from the
     // source tree the base is the package directory itself.
     binding = require(fromSourceTree ? "./sendust.node" : "../sendust.node");
   } catch (error) {
-    // Only a missing addon file is a packaging fault. Anything else (a broken
-    // module, a wrong ABI) is rethrown untouched so it is not misdiagnosed.
-    const code = (error as { code?: unknown } | null)?.code;
-    if (code === "MODULE_NOT_FOUND") {
-      throw unavailable("sendust.node not found for this platform");
+    if (!isMissingModule(error)) {
+      // A broken module or a wrong ABI is rethrown untouched so it is not
+      // misdiagnosed as a packaging fault.
+      throw error;
     }
-    throw error;
+
+    // Optional per-platform package (ADR-0020).
+    if (!packageName) {
+      throw unavailable(`no native build for ${platform}-${arch}`);
+    }
+    try {
+      binding = require(packageName);
+    } catch (fallback) {
+      if (isMissingModule(fallback)) {
+        throw unavailable(`${packageName} is not installed for ${platform}-${arch}`);
+      }
+      throw fallback;
+    }
   }
 
   cached = binding as NativeBinding;
   return cached;
+}
+
+function isMissingModule(error: unknown): boolean {
+  return (error as { code?: unknown } | null)?.code === "MODULE_NOT_FOUND";
 }

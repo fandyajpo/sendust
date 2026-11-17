@@ -4,16 +4,16 @@
 **Date:** 2026-11-16
 **Owner:** P14-004 for validation; the project owner for publication layout
 
-## 1. Current state
+## 1. Publication layout
 
-The package ships **one** bundled `sendust.node`, built on the machine that runs `npm run build`. That is enough for the smoke (P14-001) but not a publication layout: one tarball cannot carry binaries for every platform.
+**Decided (ADR-0020): per-platform packages.**
 
-Two layouts are possible and **this decision is open**:
+- `@sendust/ts` stays the facade and bundles a `sendust.node` only for local builds.
+- Each target publishes `@sendust/ts-<platform>-<arch>[-<libc>]` holding just its addon: `linux-x64-gnu`, `linux-arm64-gnu`, `macos-x64`, `macos-arm64`, `windows-x64`.
+- The facade declares them as `optionalDependencies`; npm skips the ones that do not match the platform.
+- The loader tries the bundled addon first (source tree, local build), then the mapped optional package, then fails with `CONFIG_NATIVE_UNAVAILABLE` naming the expected package. Unsupported platforms get the same stable code with a "no native build" message.
 
-1. **Per-platform packages** — `@sendust/ts` depends on optional `@sendust/ts-linux-x64-gnu` style packages, each holding its own `sendust.node`. The loader picks the one that resolves.
-2. **One package, all binaries** — every target's addon inside the tarball, with an arch/libc-aware filename, and the loader selecting at run time.
-
-P14-002's contract states one bundled addon. P14-004 cannot validate a matrix until the layout is chosen, because the loader must know how to resolve per-platform artifacts. Until then, no platform is advertised.
+Until a target is validated by P14-004 and published, the platform has no binary and no support claim.
 
 ## 2. Candidate matrix
 

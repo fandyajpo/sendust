@@ -34,9 +34,8 @@ None of these is a support claim: support is the intersection of an exact runtim
 
 ## 3. Native artifact layout
 
-- **Name and place:** one file, `sendust.node` at the package root, next to `dist/`.
-- **Producer:** `scripts/build-package.mjs` compiles `src` to `dist/` and copies the staged addon from `ts/sendust.node`.
-- **No optional platform packages** in the MVP: a platform without a matching build gets a clear load error, never a silent fallback (ADR-0011's rule, retained).
+- **Local build:** one `sendust.node` at the package root, next to `dist/`, produced by `scripts/build-package.mjs`. The loader tries it first, which covers the source tree and the local tarball.
+- **Published layout (ADR-0020):** per-platform packages `@sendust/ts-<platform>-<arch>[-<libc>]`, each containing only its addon, declared as `optionalDependencies` on `@sendust/ts`.
 - **No postinstall, no download, no compiler at install time.**
 
 ## 4. Loader resolution order
@@ -44,11 +43,12 @@ None of these is a support claim: support is the intersection of an exact runtim
 `src/loader.ts` resolves the addon in this order:
 
 1. Return the cached binding if one was already loaded.
-2. Obtain `createRequire` from `process.getBuiltinModule("node:module")`; if the runtime has no such bridge, fail with `CONFIG_NATIVE_UNAVAILABLE`.
-3. `require("../sendust.node")` relative to the module URL, so the addon next to `dist/` is found wherever the package is installed.
-4. If the require fails with `MODULE_NOT_FOUND`, throw the typed `SendustConfigurationError` with code `CONFIG_NATIVE_UNAVAILABLE`; any other failure (broken binary, wrong ABI) is rethrown untouched so it is not misdiagnosed.
+2. Obtain `createRequire` from `process.getBuiltinModule("node:module")`; without that bridge, fail with `CONFIG_NATIVE_UNAVAILABLE`.
+3. Try the bundled `sendust.node` relative to the module (or the package directory when running from source).
+4. On `MODULE_NOT_FOUND`, map `process.platform`, `process.arch`, and glibc/musl (Linux) to the optional package and require it.
+5. If that package is absent or the platform is unmapped, throw the typed `SendustConfigurationError` with `CONFIG_NATIVE_UNAVAILABLE` and a message naming the expected package. Any other load failure (broken binary, wrong ABI) is rethrown untouched so it is not misdiagnosed.
 
-The missing-binary path is exercised in [the clean-consumer smoke](clean-consumer-smoke.md): the installed package without `sendust.node` yields the typed error, not a raw `MODULE_NOT_FOUND` naming `dist/loader.js`.
+The missing-binary path is exercised in [the clean-consumer smoke](clean-consumer-smoke.md): the installed package without an addon yields the typed error, not a raw `MODULE_NOT_FOUND` naming `dist/loader.js`.
 
 ## 5. Package contents
 
