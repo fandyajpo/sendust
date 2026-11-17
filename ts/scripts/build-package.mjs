@@ -74,8 +74,6 @@ execFileSync(
     "ES2022",
     "--module",
     "commonjs",
-    "--moduleResolution",
-    "node10",
     "--strict",
     "--rewriteRelativeImportExtensions",
     "--allowImportingTsExtensions",
