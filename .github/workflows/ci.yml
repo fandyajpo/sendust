@@ -258,6 +258,24 @@ jobs:
       - name: Resolve the artifact through the published layout
         run: node scripts/verify-platform.mjs
 
+      # The same addon must load and keep the async lifecycle on Bun and Deno
+      # for this target too (R-041, R-042), not only on Node.js.
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.9.8
+
+      - name: Runtime smoke (Bun)
+        run: bun tests/runtime/smoke.mjs
+
+      - name: Runtime smoke (Deno)
+        run: deno run --allow-ffi --allow-read --allow-net tests/runtime/smoke.mjs
+
       - uses: actions/upload-artifact@v4
         with:
           name: sendust-${{ matrix.target }}
