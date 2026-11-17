@@ -78,8 +78,12 @@ function tlsFixture(name: string): string {
 /**
  * A loopback SMTP relay over TLS using the committed valid fixture, so a test
  * with the test CA as an added root can observe an accepted send (ADR-0018).
+ * `rejected` answers the body terminator with a 451; `drop` closes without a
+ * final reply, which the contract reports as `unknown`.
  */
-async function fakeTlsRelay(): Promise<{ port: number; close: () => Promise<void> }> {
+async function fakeTlsRelay(
+  final: "accepted" | "rejected" | "drop" = "accepted",
+): Promise<{ port: number; close: () => Promise<void> }> {
   const sockets = new Set<Socket>();
   const server = createTlsServer(
     { key: tlsFixture("valid-server.key"), cert: tlsFixture("valid-server.crt") },
@@ -102,7 +106,13 @@ async function fakeTlsRelay(): Promise<{ port: number; close: () => Promise<void
           if (inData) {
             if (line === ".") {
               inData = false;
-              socket.write("250 2.0.0 accepted\r\n");
+              if (final === "drop") {
+                socket.destroy();
+                return;
+              }
+              socket.write(
+                final === "rejected" ? "451 4.3.0 try again later\r\n" : "250 2.0.0 accepted\r\n",
+              );
             }
             continue;
           }
@@ -660,6 +670,56 @@ describe("sendust facade", () => {
       });
       expect(result.status).toBe("accepted");
       expect(result.recipients).toEqual([{ address: "b@example.test", status: "accepted" }]);
+    } finally {
+      await transport.close();
+      await relay.close();
+    }
+  });
+
+  it.skipIf(!available)("classifies a final reply rejection as rejected", async () => {
+    const relay = await fakeTlsRelay("rejected");
+    const transport = createTransport({
+      host: "127.0.0.1",
+      port: relay.port,
+      secure: "tls",
+      tlsRootCertificate: tlsFixture("ca.crt"),
+    });
+
+    try {
+      const result = await transport.send({
+        from: "a@example.test",
+        to: ["b@example.test"],
+        subject: "x",
+        text: "y",
+      });
+      expect(result.status).toBe("rejected");
+      expect(result.recipients).toEqual([{ address: "b@example.test", status: "rejected" }]);
+      expect(result.response).toEqual({ code: 451, message: "4.3.0 try again later" });
+    } finally {
+      await transport.close();
+      await relay.close();
+    }
+  });
+
+  it.skipIf(!available)("classifies a missing final reply as unknown", async () => {
+    const relay = await fakeTlsRelay("drop");
+    const transport = createTransport({
+      host: "127.0.0.1",
+      port: relay.port,
+      secure: "tls",
+      tlsRootCertificate: tlsFixture("ca.crt"),
+    });
+
+    try {
+      const result = await transport.send({
+        from: "a@example.test",
+        to: ["b@example.test"],
+        subject: "x",
+        text: "y",
+      });
+      expect(result.status).toBe("unknown");
+      expect(result.recipients).toEqual([{ address: "b@example.test", status: "unknown" }]);
+      expect(result.response).toBeUndefined();
     } finally {
       await transport.close();
       await relay.close();
