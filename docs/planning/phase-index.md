@@ -1,6 +1,6 @@
 # Phase Index
 
-Entry point to all 19 Sendust phases. P00–P12 are completed with reviewed gate evidence. Architecture Amendments A01 and A02 are approved at design level; P13 is next and P14–P18 remain not started. Each phase plan is the authoritative source for task detail, acceptance criteria, and gate conditions. This index routes and summarizes only.
+Entry point to all 19 Sendust phases. P00–P13 are completed with reviewed gate evidence. Architecture Amendments A01 and A02 are approved at design level; P14 is in progress with its gate in review, and P15–P18 remain not started. Each phase plan is the authoritative source for task detail, acceptance criteria, and gate conditions. This index routes and summarizes only.
 
 ## Phase list
 
