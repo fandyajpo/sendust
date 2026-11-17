@@ -75,7 +75,8 @@ This documentation set is the source of truth for product scope, requirements, a
 | 61 | [Core and MIME performance](qa/performance-core-mime.md) | P13-002 serialization results, budget comparison, linearity, and limitations |
 | 62 | [Attachment performance](qa/performance-attachments.md) | P13-003 read, copy, serialization, and peak-memory results with their bounds |
 | 63 | [Lifecycle performance](qa/performance-lifecycle.md) | P13-004 BUSY, close, concurrency, and descriptor results |
-| 64 | [PHASE-13 performance record](gates/phase-13.md) | P13 gate checklist, consolidated budget results, regression thresholds, and the pending approval |
+| 64 | [PHASE-13 performance record](gates/phase-13.md) | P13 gate checklist, consolidated budget results, regression thresholds, and the approved decision |
+| 65 | [Package metadata contract](qa/package-metadata-contract.md) | P14-002 fields, exports, native layout, loader order, and the open CommonJS item |
 
 ## 2. Directory map
 
@@ -106,7 +107,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P13 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance. P14 (distribution) is in progress; P15–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P13 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance. P14 (distribution) is IN PROGRESS (P14-002 in review); P15–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -137,8 +138,10 @@ P00–P13 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P11-001–P11-005 | COMPLETED; PHASE-11 APPROVED (2026-11-15) |
 | P12-001–P12-005 | COMPLETED; PHASE-12 APPROVED (2026-11-15) |
 | P13-001–P13-005 | COMPLETED; PHASE-13 APPROVED (2026-11-15) |
-| P14–P18 | NOT STARTED |
-| Next task | P14-001 — early distribution smoke from a clean consumer |
+| P14-001 | COMPLETED — clean-consumer smoke |
+| P14-002 | IN REVIEW — metadata contract; CommonJS open |
+| P14-003–P18 | NOT STARTED |
+| Next task | P14-003 — cross-platform build and prebuilt artifact matrix |
 
 ## 5. Conventions
 
