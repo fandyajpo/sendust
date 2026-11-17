@@ -85,10 +85,13 @@ for (const file of files) {
   const consumer = mkdtempSync(join(tmpdir(), "sendust-consumer-"));
   try {
     writeFileSync(join(consumer, "package.json"), JSON.stringify({ name: "consumer", private: true }));
-    execFileSync(npm, ["install", "--silent", "--no-audit", "--no-fund", facadeDir, platformDir], {
-      cwd: consumer,
-      stdio: "inherit",
-    });
+    execFileSync(
+      npm,
+      // --install-links copies the folders instead of symlinking them, so the
+      // facade resolves the platform package from the consumer's node_modules.
+      ["install", "--silent", "--no-audit", "--no-fund", "--install-links", facadeDir, platformDir],
+      { cwd: consumer, stdio: "inherit" },
+    );
     const script = [
       "const s = require('@sendust/ts');",
       "const t = s.createTransport({ host: '127.0.0.1', port: 1, secure: 'tls' });",
