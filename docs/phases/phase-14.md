@@ -1,6 +1,6 @@
 # Phase 14 — Distribution
 
-**Phase status:** NOT STARTED  
+**Phase status:** IN PROGRESS (P14-001 completed)  
 **Phase dependency:** Phase 05, Phase 03 (early smoke); final matrix consumes Phase 12 and Phase 13 through task dependencies  
 **Companion references:** [release strategy](../engineering/release-strategy.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [performance strategy](../engineering/performance-strategy.md), [system design](../architecture/system-design.md)
 
@@ -17,7 +17,7 @@ In scope: package metadata, native artifact layout, clean-install smoke, platfor
 ### P14-001 — Early distribution smoke from a clean consumer
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** COMPLETED — [clean-consumer smoke](../qa/clean-consumer-smoke.md)
 - **Prerequisites:** P05-005, P03-005
 - **Description:** Define an early smoke that builds the napi binding and TypeScript package from the workspace, installs the resulting local artifact into a clean temporary consumer, imports it, sends one message to a loopback fake relay, and closes explicitly. This is a structural smoke, not the final compatibility matrix. Verify no source-tree path leakage and no reliance on workspace-only resolution.
 - **Evidence criteria:** Smoke record shows clean import, one accepted fake-relay send, explicit close, and no external network. Package resolves from the installed artifact, not the workspace. Failure diagnostics identify missing native binary versus TypeScript resolution issues.
@@ -92,4 +92,5 @@ P14 must test the intersection of each claimed runtime and platform target. Requ
 
 ## Status
 
-NOT STARTED.
+IN PROGRESS. P14-001 is COMPLETED with the [clean-consumer smoke](../qa/clean-consumer-smoke.md);
+P14-002 to P14-005 are NOT STARTED.

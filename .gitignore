@@ -9,6 +9,10 @@
 
 # Staged native addon from `npm run build:native`
 ts/sendust.node
+
+# Built package output from `npm run build` (and the packed tarball)
+ts/dist/
+ts/*.tgz
 node_modules/
 
 # macOS Finder metadata
