@@ -15,6 +15,7 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
+  readdirSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -93,6 +94,19 @@ rewriteModuleUrl(
   'require("node:url").pathToFileURL(__filename).href',
 );
 
+// The package is `"type": "module"`, so CommonJS output must use `.cjs` or Node
+// would treat it as ESM. Rename and fix the relative require specifiers.
+for (const file of listFiles(join(dist, "cjs"))) {
+  if (!file.endsWith(".js")) continue;
+  const source = readFileSync(file, "utf8").replace(
+    /require\("(\.[^"]+)\.js"\)/g,
+    'require("$1.cjs")',
+  );
+  const target = file.replace(/\.js$/, ".cjs");
+  writeFileSync(target, source);
+  rmSync(file);
+}
+
 mkdirSync(packageRoot, { recursive: true });
 copyFileSync(stagedSource, staged);
 console.log(`built ${dist} (ESM and CommonJS) and bundled ${staged}`);
@@ -107,4 +121,12 @@ function rewriteModuleUrl(file, replacement) {
     process.exit(1);
   }
   writeFileSync(file, source.replace(marker, replacement));
+}
+
+/** Every file below `directory`, recursively. */
+function listFiles(directory) {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(directory, entry.name);
+    return entry.isDirectory() ? listFiles(path) : [path];
+  });
 }
