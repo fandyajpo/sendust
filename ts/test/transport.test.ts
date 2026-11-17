@@ -565,6 +565,9 @@ describe("sendust facade", () => {
     await gate.first;
 
     const closing = transport.close();
+    // The facade commits to `closing` before the native call is polled, so the
+    // classification cannot depend on that scheduling.
+    expect(transport.state).toBe("closing");
     const during = await errorCode(
       transport.send({
         from: "a@example.test",

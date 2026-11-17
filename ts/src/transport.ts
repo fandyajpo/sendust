@@ -5,7 +5,7 @@
  * validation, and delivery policy stay in `sendust-core`.
  */
 
-import { SendustError, SendustValidationError, fromNative } from "./errors.ts";
+import { SendustClosedError, SendustError, SendustValidationError, fromNative } from "./errors.ts";
 import { DEFAULT_LIMITS, assertAttachmentBudget } from "./limits.ts";
 import { loadNative, type NativeTransport } from "./loader.ts";
 import { toSendResult } from "./results.ts";
@@ -190,6 +190,14 @@ function rethrow(error: unknown): never {
   throw mapped ?? error;
 }
 
+function closedError(): SendustClosedError {
+  return new SendustClosedError({
+    code: "TRANSPORT_CLOSED",
+    category: "closed",
+    message: "transport is closed",
+  });
+}
+
 /**
  * One open transport.
  *
@@ -207,6 +215,12 @@ export class Transport {
   readonly #perFileBytes: number;
   /** Effective aggregate attachment cap: the caller's lowered value or the default. */
   readonly #totalBytes: number;
+  /**
+   * State this facade has committed to. The native state answers while it is
+   * `open`; `close()` moves it to `closing` before the native call is polled, so
+   * a send that races close reports `TRANSPORT_CLOSED`, never `TRANSPORT_BUSY`.
+   */
+  #state: TransportState = "open";
 
   constructor(options: TransportOptions) {
     // Validate the caller's options before loading the addon, so an invalid
@@ -225,6 +239,9 @@ export class Transport {
 
   /** Current lifecycle state, read synchronously. */
   get state(): TransportState {
+    if (this.#state !== "open") {
+      return this.#state;
+    }
     return this.#native.state() as TransportState;
   }
 
@@ -239,6 +256,11 @@ export class Transport {
    * timeout, closed, busy, and internal failures.
    */
   async send(message: Message): Promise<SendResult> {
+    // Refused synchronously once close has been requested, so the race between
+    // `close()` and a send cannot depend on when the native call is polled.
+    if (this.#state !== "open") {
+      throw closedError();
+    }
     try {
       return toSendResult(
         await this.#native.send(toNativeMessage(message, this.#perFileBytes, this.#totalBytes)),
@@ -255,9 +277,18 @@ export class Transport {
    * Reports `TIMEOUT_CLOSE` if the drain budget is exceeded.
    */
   async close(): Promise<void> {
+    if (this.#state === "closed") {
+      return;
+    }
+    // Committed before the native call can be polled: a send that starts now is
+    // refused as CLOSED, not BUSY against the send this close is aborting.
+    this.#state = "closing";
     try {
       await this.#native.close();
+      this.#state = "closed";
     } catch (error) {
+      // The transport is closed either way; the error reports the drain result.
+      this.#state = "closed";
       rethrow(error);
     }
   }
