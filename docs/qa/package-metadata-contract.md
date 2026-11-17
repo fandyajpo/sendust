@@ -1,6 +1,6 @@
 # Package Metadata Contract (P14-002)
 
-**Status:** defined — one open item (CommonJS entry)
+**Status:** complete — ESM and CommonJS both ship
 **Date:** 2026-11-16
 **Package:** `@sendust/ts`, built and packed from `ts/` ([ADR-0019](../architecture/decisions/0019-installable-typescript-package.md))
 
@@ -56,10 +56,14 @@ The missing-binary path is exercised in [the clean-consumer smoke](clean-consume
 
 Excluded by construction: the repository `.env`, `docs/`, `crates/`, tests, TypeScript sources, source maps and caches. A root-level `npm pack` is not a release path; ADR-0019 makes `ts/` the only packaged unit.
 
-## 6. Open item — CommonJS entry
+## 6. CommonJS entry
 
-C-22 and ADR-0012 require the package to support both ESM `import` and CommonJS `require` with identical behaviour. **This is not satisfied yet:** the shipped build is ESM-only.
+C-22 and ADR-0012 require both ESM `import` and CommonJS `require` with identical behaviour. Both ship:
 
-Why it is not a rename: `src/loader.ts` uses `import.meta.url`, which cannot be emitted into CommonJS. A second build needs a CJS-safe module base (for example a generated `module-context` module that exports `import.meta.url` in ESM and `pathToFileURL(__filename).href` in CJS), a `require` condition in `exports`, and a clean-consumer `require()` smoke.
+- The build compiles `src` twice: ESM into `dist/`, CommonJS into `dist/cjs/`.
+- The CommonJS files are emitted as `.cjs`, because the package is `"type": "module"` and Node would otherwise treat `dist/cjs/*.js` as ESM.
+- One shared source file, `src/module-context.ts`, holds a placeholder that the build rewrites: `import.meta.url` in the ESM output, a `pathToFileURL(__filename)` URL in the CommonJS output. The loader therefore has no format-specific code.
+- `exports["."].require` points at `dist/cjs/index.cjs` with its own declarations; `exports["."].import` points at `dist/index.js`.
+- Relative `require` specifiers are rewritten to `.cjs` during the CommonJS pass, and the addon resolves one level higher (`../../sendust.node`) because the CommonJS output is one directory deeper.
 
-Owner: P14-002. This contract is not complete until that entry ships and the CJS smoke passes.
+Verified from the packed tarball in a clean consumer on Node 22.23.5: `require("@sendust/ts")` and `import { createTransport } from "@sendust/ts"` both construct a transport (`open`) and close it (`closed`).

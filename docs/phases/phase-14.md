@@ -25,7 +25,7 @@ In scope: package metadata, native artifact layout, clean-install smoke, platfor
 ### P14-002 — Define package metadata, exports, and native artifact layout
 
 - **Size:** M
-- **Status:** IN REVIEW — [package metadata contract](../qa/package-metadata-contract.md); CommonJS entry still open
+- **Status:** COMPLETED — [package metadata contract](../qa/package-metadata-contract.md), ESM and CommonJS
 - **Prerequisites:** P14-001
 - **Description:** Specify package name, version source, `main`/`types`/`exports`, engine ranges, optional platform packages, native binary naming, and loader resolution order. Document exact tested Node.js, Bun, and Deno versions; none is a support claim until blocking tests pass. Define behavior when the platform binary is absent: a clear load error, never a silent fallback to an unsupported build.
 - **Evidence criteria:** Metadata contract lists every field and resolution order. Engine range wording is honest. Missing-binary fixture produces a stable error. Exports do not expose internal core or napi paths. Package contents exclude tests, source maps, and secrets.
@@ -93,5 +93,5 @@ P14 must test the intersection of each claimed runtime and platform target. Requ
 ## Status
 
 IN PROGRESS. P14-001 is COMPLETED with the [clean-consumer smoke](../qa/clean-consumer-smoke.md);
-P14-002 is IN REVIEW with the [package metadata contract](../qa/package-metadata-contract.md);
-P14-003 to P14-005 are NOT STARTED.
+P14-002 is COMPLETED with the [package metadata contract](../qa/package-metadata-contract.md)
+(ESM and CommonJS); P14-003 to P14-005 are NOT STARTED.

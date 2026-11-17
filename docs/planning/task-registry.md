@@ -5,11 +5,11 @@
 - Total phases: 19
 - Phase tasks: 95
 - Architecture amendment tasks: 7 (A01-001–A01-004, A02-001–A02-003)
-- Completed tasks: 71 (P00–P13, P14-001)
-- In-review tasks: 1 (P14-002)
+- Completed tasks: 72 (P00–P13, P14-001, P14-002)
+- In-review tasks: 0
 - In-progress tasks: 0
-- Not-started tasks: 23 (P14-003 to P14-005, P15–P18)
-- P00–P02 tasks are `COMPLETED` with approved gate evidence. P03-001–P03-005 are `COMPLETED` with CI evidence and an approved QG-03 record; P04-001 to P04-005 are `COMPLETED` with an approved PHASE-04 record; P05-001 to P05-005 are `COMPLETED` with an approved PHASE-05 record; P06-001 to P06-005 are `COMPLETED` with the approved PHASE-06 record; P07-001 to P07-005 are `COMPLETED` with the approved PHASE-07 record; P08-001 to P08-005 are `COMPLETED` with the approved PHASE-08 record (project owner, 2026-11-15); P09-001 to P09-005 are `COMPLETED` with the approved PHASE-09 record (project owner, 2026-11-15); P11-001 to P11-005 are `COMPLETED` with the approved PHASE-11 record (project owner, 2026-11-15); P12-001 to P12-005 are `COMPLETED` with the approved PHASE-12 record (project owner, 2026-11-15); P13-001 to P13-005 are `COMPLETED` with the approved PHASE-13 record (project owner, 2026-11-15); P14-001 is `COMPLETED` with the [clean-consumer smoke](../qa/clean-consumer-smoke.md) under [ADR-0019](../architecture/decisions/0019-installable-typescript-package.md); P14-002 is `IN REVIEW` with the [package metadata contract](../qa/package-metadata-contract.md); P14-003–P18 are `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
+- Not-started tasks: 22 (P14-003 to P14-005, P15–P18)
+- P00–P02 tasks are `COMPLETED` with approved gate evidence. P03-001–P03-005 are `COMPLETED` with CI evidence and an approved QG-03 record; P04-001 to P04-005 are `COMPLETED` with an approved PHASE-04 record; P05-001 to P05-005 are `COMPLETED` with an approved PHASE-05 record; P06-001 to P06-005 are `COMPLETED` with the approved PHASE-06 record; P07-001 to P07-005 are `COMPLETED` with the approved PHASE-07 record; P08-001 to P08-005 are `COMPLETED` with the approved PHASE-08 record (project owner, 2026-11-15); P09-001 to P09-005 are `COMPLETED` with the approved PHASE-09 record (project owner, 2026-11-15); P11-001 to P11-005 are `COMPLETED` with the approved PHASE-11 record (project owner, 2026-11-15); P12-001 to P12-005 are `COMPLETED` with the approved PHASE-12 record (project owner, 2026-11-15); P13-001 to P13-005 are `COMPLETED` with the approved PHASE-13 record (project owner, 2026-11-15); P14-001 is `COMPLETED` with the [clean-consumer smoke](../qa/clean-consumer-smoke.md) under [ADR-0019](../architecture/decisions/0019-installable-typescript-package.md); P14-002 is `COMPLETED` with the [package metadata contract](../qa/package-metadata-contract.md); P14-003–P18 are `NOT STARTED`. A01-001–A01-004 and A02-001–A02-003 are completed as documentation/design work; runtime and modular implementation validation remains pending.
 - Effort is relative: S, M, L, XL. No delivery dates.
 - Gate tasks are the final task in each phase and must not be marked complete before their phase evidence exists.
 
@@ -105,7 +105,7 @@
 | [P13](../phases/phase-13.md) | Performance | [P13-004](../phases/phase-13.md) | Measure lifecycle, BUSY, timeout, and close overhead | M | P13-001, P10-005 | COMPLETED |
 | [P13](../phases/phase-13.md) | Performance | [P13-005](../phases/phase-13.md) | Performance regression gate and final report | S | P13-001, P13-002, P13-003, P13-004 | COMPLETED |
 | [P14](../phases/phase-14.md) | Distribution | [P14-001](../phases/phase-14.md) | Early distribution smoke from a clean consumer | M | P05-005, P03-005 | NOT STARTED |
-| [P14](../phases/phase-14.md) | Distribution | [P14-002](../phases/phase-14.md) | Define package metadata, exports, and native artifact layout | M | P14-001 | IN REVIEW |
+| [P14](../phases/phase-14.md) | Distribution | [P14-002](../phases/phase-14.md) | Define package metadata, exports, and native artifact layout | M | P14-001 | COMPLETED |
 | [P14](../phases/phase-14.md) | Distribution | [P14-003](../phases/phase-14.md) | Specify cross-platform build and prebuilt artifact matrix | L | P14-002 | NOT STARTED |
 | [P14](../phases/phase-14.md) | Distribution | [P14-004](../phases/phase-14.md) | Validate clean installs and runtime loading across the matrix | L | P14-003 | NOT STARTED |
 | [P14](../phases/phase-14.md) | Distribution | [P14-005](../phases/phase-14.md) | Final distribution gate using QA and performance evidence | M | P14-004, P12-005, P13-005 | NOT STARTED |
