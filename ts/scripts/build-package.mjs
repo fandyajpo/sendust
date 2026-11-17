@@ -28,6 +28,9 @@ const repoRoot = join(packageRoot, "..");
 const staged = join(packageRoot, "sendust.node");
 const stagedSource = join(repoRoot, "ts", "sendust.node");
 const dist = join(packageRoot, "dist");
+// Started through Node: npm does not create the extensionless `tsc` shim on
+// Windows, so spawning `node_modules/.bin/tsc` fails there.
+const compiler = join(repoRoot, "node_modules", "typescript", "bin", "tsc");
 
 if (!existsSync(stagedSource)) {
   console.error("sendust.node is not staged; run `npm run build:native` first");
@@ -39,8 +42,9 @@ rmSync(dist, { recursive: true, force: true });
 // Flags match the emit verified with TypeScript 7.0.2 (ESM output, .js
 // specifiers, declarations). Passing files explicitly needs --ignoreConfig.
 execFileSync(
-  join(repoRoot, "node_modules", ".bin", "tsc"),
+  process.execPath,
   [
+    compiler,
     "src/index.ts",
     "src/types.ts",
     "--ignoreConfig",
@@ -66,8 +70,9 @@ execFileSync(
 // shared source has no `import.meta`, so the same files compile for both; only
 // the module-context placeholder differs.
 execFileSync(
-  join(repoRoot, "node_modules", ".bin", "tsc"),
+  process.execPath,
   [
+    compiler,
     "src/index.ts",
     "src/types.ts",
     "--ignoreConfig",
