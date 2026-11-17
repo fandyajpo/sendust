@@ -27,8 +27,15 @@ export interface NativeBinding {
 
 type RequireLike = (id: string) => unknown;
 
+interface BuiltinModules {
+  createRequire?(url: string): RequireLike;
+  pathToFileURL?(path: string): { href: string };
+  join?(...parts: string[]): string;
+}
+
 interface ProcessLike {
-  getBuiltinModule?(id: string): { createRequire(url: string): RequireLike };
+  cwd?(): string;
+  getBuiltinModule?(id: string): unknown;
 }
 
 let cached: NativeBinding | undefined;
@@ -52,13 +59,28 @@ export function loadNative(): NativeBinding {
   }
 
   const processRef = (globalThis as unknown as { process?: ProcessLike }).process;
-  const createRequire = processRef?.getBuiltinModule?.("node:module")?.createRequire;
+  const builtin = (id: string) => processRef?.getBuiltinModule?.(id) as BuiltinModules | undefined;
 
+  const createRequire = builtin("node:module")?.createRequire;
   if (!createRequire) {
     throw unavailable("no require bridge on this runtime");
   }
 
-  const require = createRequire(moduleUrl);
+  // The package build rewrites the placeholder to the module URL. Running from
+  // the source tree (tests, examples) keeps the placeholder, so resolve against
+  // the current package directory instead.
+  let base = moduleUrl;
+  if (base.includes("MODULE_URL_PLACEHOLDER")) {
+    const url = builtin("node:url")?.pathToFileURL;
+    const path = builtin("node:path")?.join;
+    const cwd = processRef?.cwd?.();
+    if (!url || !path || !cwd) {
+      throw unavailable("no module URL and no working directory to derive one from");
+    }
+    base = url(path(cwd(), "package.json")).href;
+  }
+
+  const require = createRequire(base);
   let binding: unknown;
   try {
     // Bundled at the package root by the package build.
