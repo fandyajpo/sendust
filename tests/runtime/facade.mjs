@@ -61,30 +61,31 @@ try {
   check("send after close", codeOf(error), "TRANSPORT_CLOSED");
 }
 
-// 5. The async send path reaches the core: a closed port fails as a protocol
-// error rather than hanging or surfacing an internal error.
-const server = createServer();
+// 5. The async send path reaches the core: a relay that accepts and drops the
+// socket fails the handshake with a typed error rather than hanging. This is
+// deterministic on every runtime, unlike a closed port, whose refusal timing is
+// OS-specific.
+const server = createServer((socket) => socket.destroy());
 await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
 const address = server.address();
 const port = typeof address === "object" && address ? address.port : 1;
-await new Promise((resolve) => server.close(() => resolve()));
 
 const live = createTransport({
   host: "127.0.0.1",
   port,
   secure: "tls",
-  // Low budgets, in the shape the suite already validates: the port is closed,
-  // so this must fail fast on every runtime instead of waiting out the
-  // production connect deadline.
+  // Low budgets, in the shape the suite already validates, so a stall fails the
+  // smoke instead of waiting out the production deadlines.
   timeouts: { connectMs: 1_000, operationMs: 1_000, totalMs: 1_000, closeMs: 1_000 },
 });
 try {
   await live.send({ from: "a@example.test", to: ["b@example.test"], subject: "x", text: "y" });
-  check("send to closed port", "no error", "PROTOCOL_CONNECTION_RESET");
+  check("send to a dropped relay", "no error", "TLS_HANDSHAKE");
 } catch (error) {
-  check("send to closed port", codeOf(error), "PROTOCOL_CONNECTION_RESET");
+  check("send to a dropped relay", codeOf(error), "TLS_HANDSHAKE");
 }
 await live.close();
+await new Promise((resolve) => server.close(() => resolve()));
 
 const failed = checks.filter((entry) => !entry.ok);
 if (failed.length > 0) {

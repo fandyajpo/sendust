@@ -60,7 +60,7 @@ Both cover the same four expectations:
 | Construct with an empty host | `CONFIG_INVALID_RELAY` |
 | Open, close twice, read state | `open` → `closed` |
 | Send after close | `TRANSPORT_CLOSED` |
-| Send to a closed loopback port | `PROTOCOL_CONNECTION_RESET` |
+| Send to a connection-dropping relay | `TLS_HANDSHAKE` |
 
 | Target | Node.js 22.23.5 | Bun 1.4.4 | Deno 2.9.8 |
 | --- | --- | --- | --- |
