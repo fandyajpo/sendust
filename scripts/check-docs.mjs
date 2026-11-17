@@ -24,6 +24,8 @@ const REQUIRED_FILES = [
   "rust-toolchain.toml",
   "package.json",
   "ts/package.json",
+  "LICENSE-MIT",
+  "LICENSE-APACHE",
   "docs/README.md",
   "docs/engineering/toolchain-baseline.md",
   "docs/engineering/ai-implementation-contract.md",

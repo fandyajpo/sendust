@@ -73,7 +73,7 @@ for (const file of files) {
         cpu: [arch],
         main: "sendust.node",
         files: ["sendust.node"],
-        license: "UNLICENSED",
+        license: "MIT OR Apache-2.0",
         private: true,
       },
       null,

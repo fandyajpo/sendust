@@ -59,3 +59,12 @@ the staged addon.
 ## Project status
 
 The repository contains the planning and architecture documentation, the completed P03 repository baseline (two-crate workspace, pinned toolchain, quality checks, CI), and the first core behavior of P04: error taxonomy, deterministic validation, address/IDNA handling, the message model, attachment caps, and deterministic MIME composition with wire-size accounting. The SMTP send path, its core fault matrix, the Node-API binding, and the runtime-neutral TypeScript facade now exist and pass locally and in CI. ADR-0017 selects a Sendust-owned SMTP engine: the adapter delivers through the native session, PHASE-06 is approved, and lettre has been removed from the tree entirely. No npm package is published yet. The modular architecture is approved, its module boundaries are enforced by static architecture checks, and runtime behavior is validated on the pinned Node.js, Bun, and Deno versions; platform packaging and the full runtime × platform matrix remain pending (P14). Architecture Amendment A01 adds Node.js, Bun, and Deno runtime targets. Architecture Amendment A02 adopts a modular monolith inside the existing two-crate workspace. Discovery (P00), source/API research (P01), and architecture design approval (P02) are complete. QG-02 approves the design baseline, while fake SMTP/TLS behavior, native binding, and runtime support remain mandatory downstream gates. P03 is COMPLETED with an approved QG-03 record and passing CI; P04 to P10 are COMPLETED with approved gate records; P11 (security), P12 (QA), and P13 (performance) are COMPLETED with the approved PHASE-11, PHASE-12, and PHASE-13 records; P14 (distribution) is in progress. See the [architecture approval matrix](docs/architecture/approval-matrix.md) and [QG-02 record](docs/gates/phase-02-architecture-approval.md). Phase/task completion must be backed by evidence under [the definition of done](docs/planning/definition-of-done.md).
+
+## License
+
+Dual licensed under either of:
+
+- Apache License, Version 2.0 — [LICENSE-APACHE](LICENSE-APACHE)
+- MIT license — [LICENSE-MIT](LICENSE-MIT)
+
+at your option. Contributions are accepted under the same terms.

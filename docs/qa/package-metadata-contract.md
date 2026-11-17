@@ -11,7 +11,7 @@
 | `name` | `@sendust/ts` | Scoped, one package; no per-platform package names in the MVP |
 | `version` | `0.1.0` | Single source: `ts/package.json`. The root workspace inherits nothing and publishes nothing |
 | `description` | one line, names the bundled Node-API addon | Must not claim delivery guarantees |
-| `license` | `UNLICENSED` today | Publication is blocked until the owner declares a licence; recorded as an open decision |
+| `license` | `MIT OR Apache-2.0` | Dual licence; `LICENSE-MIT` and `LICENSE-APACHE` at the repository root (owner decision, 2026-11-16). Publishing still needs the owner's go-ahead |
 | `private` | `true` today | Set to `false` only when publishing is approved |
 | `type` | `module` | ESM-first package |
 | `main` | `./dist/index.js` | ESM entry |
