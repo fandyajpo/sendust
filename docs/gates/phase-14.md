@@ -25,9 +25,9 @@ self-approval. Nothing here approves P15 or any later gate.
 
 | Phase-14 criterion | Result | Evidence |
 | --- | --- | --- |
-| A clean consumer can install and import the package from local artifacts on every supported target | PASS | Four targets install the facade plus their platform package in a fresh consumer and construct a transport (`open`) |
-| Native binary selection is correct; missing/wrong artifacts fail clearly | PASS | Bundled path first, then `@sendust/ts-<platform>-<arch>`; missing and corrupt addons both yield `CONFIG_NATIVE_UNAVAILABLE` with the package named and no dlopen path |
-| Node.js, Bun, and Deno support is validated and honestly declared per exact platform combination | PASS | Node.js 22.23.5 runs the full behaviour suite per target; Bun 1.4.4 and Deno 2.9.8 run both the binding smoke and the facade smoke through the loader on every target (section 3) |
+| A clean consumer can install and import the package from local artifacts on every supported target | PASS | Four targets install the packed facade tarball plus their platform package in a fresh consumer and run it under Node.js (ESM and CommonJS), Bun, and Deno |
+| Native binary selection is correct; missing/wrong artifacts fail clearly | PASS | Bundled path first, then `@sendust/ts-<platform>-<arch>`; a facade with no platform package, a missing addon, and a corrupt addon all yield `CONFIG_NATIVE_UNAVAILABLE` with the package named and no dlopen path |
+| Node.js, Bun, and Deno support is validated and honestly declared per exact platform combination | PASS | Node.js 22.23.5 runs the full behaviour suite per target; Bun 1.4.4 and Deno 2.9.8 run the installed tarball, the facade smoke through the loader, and the binding smoke on every target (section 3) |
 | No install-time network, secret, or feature-contract violation exists | PASS | Every check installs from local folders; no postinstall, download, or compiler; no new public surface beyond `tlsRootCertificate` (ADR-0018) |
 | Early smoke and final matrix are reconciled | PASS | The early smoke's one-platform, Node-only, ESM-only notes now point at P14-004 and P14-002 rather than standing as gaps |
 
@@ -49,9 +49,9 @@ This is what Sendust may claim after this gate, and nothing more.
 
 ## 4. Consolidated evidence
 
-- **Clean install and load:** `scripts/verify-platform.mjs` writes the per-platform package, copies the built facade without an addon, installs both in a fresh consumer with `--install-links`, and constructs and closes a transport — on each runner, for its own artifact.
+- **Clean install and load:** `scripts/verify-platform.mjs` writes the per-platform package, packs the facade with `npm pack`, installs both in a fresh consumer, and runs the installed tarball under Node.js (ESM and CommonJS), Bun, and Deno — on each runner, for its own artifact.
 - **Behaviour:** the facade suite (59 tests) runs on each runner against that runner's addon as the bundled path: accepted, `451` rejection, lost final reply (`unknown`), BUSY, close races, limits, TLS trust and fail-closed, and attachment policy.
-- **Negatives:** the installed addon is deleted (missing) and then replaced by a four-byte file (corrupt); both produce `CONFIG_NATIVE_UNAVAILABLE` with the expected text and no path leakage.
+- **Negatives:** a facade installed without its platform package, the installed addon deleted, and a four-byte addon each produce `CONFIG_NATIVE_UNAVAILABLE` with the expected text and no path leakage.
 - **Runtimes:** Bun and Deno run `tests/runtime/smoke.mjs` (the addon directly) and `tests/runtime/facade.mjs` (through `src/loader.ts` and `process.getBuiltinModule`) per target; Node.js 22.23.5 is the gated runtime for the full suite.
 - **Performance and QA:** the P13 budgets still pass (no distribution change touches them), and the P12 traceability and fixture audits remain the correctness evidence behind the behaviour suite.
 
@@ -59,7 +59,7 @@ This is what Sendust may claim after this gate, and nothing more.
 
 - macOS x64 has no binary and no claim until an Intel runner exists or a cross-build is proven loadable on the target.
 - Bun and Deno are proven by the two smokes, not by the full behaviour suite: Vitest does not run inside them by baseline rule, so contract breadth on those runtimes is smoke-level, which is what section 3 declares.
-- Clean-consumer installs were validated with Node.js. The Bun and Deno facade smokes run the same built package and staged addon from the repository, not from a fresh consumer install.
+- Clean-consumer installs run the packed tarball on all three runtimes, but the manifest still lists no `optionalDependencies`, so npm does not yet select the platform package for the user.
 - `@sendust/ts` does not yet declare the platform packages as `optionalDependencies`; that manifest change belongs to the publish-prepare step in P16.
 - The relay in every check is a loopback fake, so these runs prove packaging, loading and plumbing, not deliverability.
 - Install-time paths were validated from local folders, not from a registry, because publication is P17.
@@ -73,6 +73,7 @@ This is what Sendust may claim after this gate, and nothing more.
 | Medium | `verify-platform` spawned `npm.cmd` without a shell on Windows, which Node refuses (CVE-2024-27910) | FIXED: `shell: true` on Windows |
 | Medium | A wrong-architecture platform package surfaced a raw dlopen message carrying absolute paths | FIXED: the typed error keeps only the code (P14-004) |
 | Low | R-04's `rejected` and `unknown` were never observed from JavaScript | FIXED: loopback relay legs for a `451` terminator and a dropped final reply |
+| Medium | The clean-consumer check copied the built folder and ran only under Node.js, so the tarball, the CommonJS entry, and Bun/Deno installs were unproven | FIXED: the check installs the `npm pack` tarball and runs Node ESM, Node CommonJS, Bun, and Deno, plus a facade-only install |
 | Medium | A send that raced `close()` could report `TRANSPORT_BUSY` instead of `TRANSPORT_CLOSED`, depending on when the native close was polled (seen once on linux-arm64) | FIXED: the facade commits to `closing` synchronously, so the classification is deterministic |
 | Medium | The runtime evidence required the addon directly, so the facade's loader was never exercised on Bun or Deno; the owner held the gate on it | FIXED: `tests/runtime/facade.mjs` runs per target with Node.js, Bun and Deno, and the loader's `process.getBuiltinModule` assumption holds on all three |
 | Low | macOS x64 artifact job queued indefinitely | REMOVED rather than cross-compiling an unloadable binary; the row is NOT BUILT |

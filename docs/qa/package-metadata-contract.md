@@ -48,7 +48,7 @@ None of these is a support claim: support is the intersection of an exact runtim
 4. On `MODULE_NOT_FOUND`, map `process.platform`, `process.arch`, and glibc/musl (Linux) to the optional package and require it.
 5. If that package is missing, the platform is unmapped, or the package fails to load (wrong architecture, corrupted binary), throw the typed `SendustConfigurationError` with `CONFIG_NATIVE_UNAVAILABLE` naming the expected package; a failed load appends only the error code, never the dlopen text, which carries absolute paths. A failure of the *bundled* addon that is not `MODULE_NOT_FOUND` is rethrown untouched so it is not misdiagnosed.
 
-The missing-binary path is exercised in [the clean-consumer smoke](clean-consumer-smoke.md): the installed package without an addon yields the typed error, not a raw `MODULE_NOT_FOUND` naming `dist/loader.js`.
+The missing-binary path is exercised per target by `scripts/verify-platform.mjs`: a facade installed without its platform package, and an installed package without its addon, both yield the typed error rather than a raw `MODULE_NOT_FOUND` naming `dist/loader.js`.
 
 ## 5. Package contents
 
@@ -66,4 +66,4 @@ C-22 and ADR-0012 require both ESM `import` and CommonJS `require` with identica
 - `exports["."].require` points at `dist/cjs/index.cjs` with its own declarations; `exports["."].import` points at `dist/index.js`.
 - Relative `require` specifiers are rewritten to `.cjs` during the CommonJS pass, and the addon resolves one level higher (`../../sendust.node`) because the CommonJS output is one directory deeper.
 
-Verified from the packed tarball in a clean consumer on Node 22.23.5: `require("@sendust/ts")` and `import { createTransport } from "@sendust/ts"` both construct a transport (`open`) and close it (`closed`).
+Verified from the packed tarball in a clean consumer: `require("@sendust/ts")` and `import { createTransport } from "@sendust/ts"` both construct a transport (`open`), close it (`closed`), and refuse a send after close with `TRANSPORT_CLOSED`. P14-004 runs this for every built target under Node.js 22.23.5, Bun 1.4.4, and Deno 2.9.8.
