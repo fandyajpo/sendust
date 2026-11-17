@@ -1,15 +1,34 @@
 {
   "name": "@sendust/ts",
   "version": "0.1.0",
+  "description": "Standalone native email delivery engine for Node.js, Bun, and Deno: a narrow TypeScript facade over a bundled Node-API addon",
+  "license": "UNLICENSED",
   "private": true,
   "type": "module",
-  "description": "Sendust runtime-neutral TypeScript facade workspace",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/",
+    "sendust.node",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22.23.5"
+  },
   "scripts": {
+    "build": "node scripts/build-package.mjs",
     "lint": "biome lint .",
     "format": "biome format --write .",
     "format:check": "biome format .",
     "typecheck": "tsc --project tsconfig.json",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "pack:check": "node scripts/check-pack.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.7",
