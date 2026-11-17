@@ -98,10 +98,11 @@ rewriteModuleUrl(
 // would treat it as ESM. Rename and fix the relative require specifiers.
 for (const file of listFiles(join(dist, "cjs"))) {
   if (!file.endsWith(".js")) continue;
-  const source = readFileSync(file, "utf8").replace(
-    /require\("(\.[^"]+)\.js"\)/g,
-    'require("$1.cjs")',
-  );
+  const source = readFileSync(file, "utf8")
+    .replace(/require\("(\.[^"]+)\.js"\)/g, 'require("$1.cjs")')
+    // The CommonJS output sits one level deeper, so the addon at the package
+    // root is one more directory up.
+    .replace('require("../sendust.node")', 'require("../../sendust.node")');
   const target = file.replace(/\.js$/, ".cjs");
   writeFileSync(target, source);
   rmSync(file);
