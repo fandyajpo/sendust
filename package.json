@@ -15,6 +15,7 @@
     "typecheck": "npm --workspace ./ts run typecheck",
     "test": "npm --workspace ./ts run test",
     "build:native": "node scripts/build-addon.mjs",
-    "build:artifact": "node scripts/build-artifact.mjs"
+    "build:artifact": "node scripts/build-artifact.mjs",
+    "verify": "node scripts/verify.mjs"
   }
 }
