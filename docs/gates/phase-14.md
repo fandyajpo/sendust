@@ -76,6 +76,7 @@ This is what Sendust may claim after this gate, and nothing more.
 | Medium | The clean-consumer check copied the built folder and ran only under Node.js, so the tarball, the CommonJS entry, and Bun/Deno installs were unproven | FIXED: the check installs the `npm pack` tarball and runs Node ESM, Node CommonJS, Bun, and Deno, plus a facade-only install |
 | Medium | A send that raced `close()` could report `TRANSPORT_BUSY` instead of `TRANSPORT_CLOSED`, depending on when the native close was polled (seen once on linux-arm64) | FIXED: the facade commits to `closing` synchronously, so the classification is deterministic |
 | Medium | The runtime evidence required the addon directly, so the facade's loader was never exercised on Bun or Deno; the owner held the gate on it | FIXED: `tests/runtime/facade.mjs` runs per target with Node.js, Bun and Deno, and the loader's `process.getBuiltinModule` assumption holds on all three |
+| Low | The facade smoke's closed-port case depended on how fast an OS refuses a connection; Windows reported `TIMEOUT_CONNECT` | FIXED: the relay accepts and drops the socket and the smoke expects `TLS_HANDSHAKE`, identical on all three runtimes |
 | Low | macOS x64 artifact job queued indefinitely | REMOVED rather than cross-compiling an unloadable binary; the row is NOT BUILT |
 
 No high-severity finding is open. No contract, security, or performance regression was introduced.
