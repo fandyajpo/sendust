@@ -85,6 +85,51 @@ function unavailable(detail: string): Error {
   return error;
 }
 
+/** Everything resolution needs, gathered from the runtime by `loadNative`. */
+export interface NativeResolution {
+  require: RequireLike;
+  /** Specifier of the bundled addon, relative to the resolution base. */
+  bundled: string;
+  platform: string;
+  arch: string;
+  libc: "gnu" | "musl";
+}
+
+/**
+ * Resolves the binding from the bundled addon, then from the optional platform
+ * package (ADR-0020). Exported so the failure paths are covered without a real
+ * addon; `loadNative` is its only caller in the facade.
+ */
+export function resolveNative(input: NativeResolution): NativeBinding {
+  const { require, bundled, platform, arch, libc } = input;
+
+  try {
+    return require(bundled) as NativeBinding;
+  } catch (error) {
+    if (!isMissingModule(error)) {
+      // A broken module or a wrong ABI is rethrown untouched so it is not
+      // misdiagnosed as a packaging fault.
+      throw error;
+    }
+  }
+
+  const packageName = platformPackageName(platform, arch, libc);
+  if (!packageName) {
+    throw unavailable(`no native build for ${platform}-${arch}`);
+  }
+
+  try {
+    return require(packageName) as NativeBinding;
+  } catch (error) {
+    if (isMissingModule(error)) {
+      throw unavailable(`${packageName} is not installed for ${platform}-${arch}`);
+    }
+    // A wrong-architecture or corrupt binary is a packaging fault too, but the
+    // raw dlopen message carries absolute paths, so only its code is exposed.
+    throw unavailable(`${packageName} failed to load (${failureCode(error)})`);
+  }
+}
+
 /** Loads the addon that `npm run build:native` stages next to this package. */
 export function loadNative(): NativeBinding {
   if (cached) {
@@ -123,38 +168,25 @@ export function loadNative(): NativeBinding {
   const require = createRequire(base);
   const platform = processRef?.platform ?? "unknown";
   const arch = processRef?.arch ?? "unknown";
-  const packageName = platformPackageName(platform, arch, linuxLibc(processRef));
 
-  let binding: unknown;
-  try {
-    // Bundled at the package root by the package build; when running from the
-    // source tree the base is the package directory itself.
-    binding = require(fromSourceTree ? "./sendust.node" : "../sendust.node");
-  } catch (error) {
-    if (!isMissingModule(error)) {
-      // A broken module or a wrong ABI is rethrown untouched so it is not
-      // misdiagnosed as a packaging fault.
-      throw error;
-    }
-
-    // Optional per-platform package (ADR-0020).
-    if (!packageName) {
-      throw unavailable(`no native build for ${platform}-${arch}`);
-    }
-    try {
-      binding = require(packageName);
-    } catch (fallback) {
-      if (isMissingModule(fallback)) {
-        throw unavailable(`${packageName} is not installed for ${platform}-${arch}`);
-      }
-      throw fallback;
-    }
-  }
-
-  cached = binding as NativeBinding;
+  // Bundled at the package root by the package build; when running from the
+  // source tree the package root is the require base itself.
+  cached = resolveNative({
+    require,
+    bundled: fromSourceTree ? "./sendust.node" : "../sendust.node",
+    platform,
+    arch,
+    libc: linuxLibc(processRef),
+  });
   return cached;
 }
 
 function isMissingModule(error: unknown): boolean {
   return (error as { code?: unknown } | null)?.code === "MODULE_NOT_FOUND";
+}
+
+/** The stable code of a load failure, never its message, which may hold paths. */
+function failureCode(error: unknown): string {
+  const code = (error as { code?: unknown } | null)?.code;
+  return typeof code === "string" && code.length > 0 ? code : "unknown";
 }

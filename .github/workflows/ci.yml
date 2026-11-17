@@ -228,6 +228,28 @@ jobs:
             console.log('loaded', file);
           "
 
+      - name: Install workspace dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build the facade package
+        run: npm --workspace ./ts run build
+
+      # The behaviour suite runs once per target against this runner's own
+      # binary, so accepted send, BUSY, close and the limit negatives are proven
+      # on each platform rather than only on Linux x64 (P14-004).
+      - name: Stage the artifact as the bundled addon
+        shell: bash
+        run: cp artifacts/*.node ts/sendust.node
+
+      - name: Per-target behaviour suite
+        run: npm --workspace ./ts run test
+
+      # Installs the artifact as a per-platform package beside the facade in a
+      # fresh consumer, so the loader's fallback path (ADR-0020) is exercised on
+      # this runner's OS and arch instead of the bundled addon.
+      - name: Resolve the artifact through the published layout
+        run: node scripts/verify-platform.mjs
+
       - uses: actions/upload-artifact@v4
         with:
           name: sendust-${{ matrix.target }}
