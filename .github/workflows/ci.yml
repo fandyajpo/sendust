@@ -207,6 +207,8 @@ jobs:
           - runner: windows-2022
             target: windows-x64
     runs-on: ${{ matrix.runner }}
+    # A hung smoke must fail the matrix row instead of stalling the workflow.
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 

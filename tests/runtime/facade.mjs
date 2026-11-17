@@ -69,7 +69,14 @@ const address = server.address();
 const port = typeof address === "object" && address ? address.port : 1;
 await new Promise((resolve) => server.close(() => resolve()));
 
-const live = createTransport({ host: "127.0.0.1", port, secure: "tls" });
+const live = createTransport({
+  host: "127.0.0.1",
+  port,
+  secure: "tls",
+  // Low budgets: the port is closed, so this must fail fast on every runtime
+  // instead of waiting out the production connect deadline.
+  timeouts: { connectMs: 2_000, operationMs: 2_000, totalMs: 4_000, closeMs: 2_000 },
+});
 try {
   await live.send({ from: "a@example.test", to: ["b@example.test"], subject: "x", text: "y" });
   check("send to closed port", "no error", "PROTOCOL_CONNECTION_RESET");
