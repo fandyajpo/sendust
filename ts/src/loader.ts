@@ -27,12 +27,6 @@ export interface NativeBinding {
 
 type RequireLike = (id: string) => unknown;
 
-interface BuiltinModules {
-  createRequire?(url: string): RequireLike;
-  pathToFileURL?(path: string): { href: string };
-  join?(...parts: string[]): string;
-}
-
 interface ProcessLike {
   cwd?(): string;
   getBuiltinModule?(id: string): unknown;
@@ -59,9 +53,11 @@ export function loadNative(): NativeBinding {
   }
 
   const processRef = (globalThis as unknown as { process?: ProcessLike }).process;
-  const builtin = (id: string) => processRef?.getBuiltinModule?.(id) as BuiltinModules | undefined;
+  const nodeModule = processRef?.getBuiltinModule?.("node:module") as
+    | { createRequire(url: string): RequireLike }
+    | undefined;
+  const createRequire = nodeModule?.createRequire;
 
-  const createRequire = builtin("node:module")?.createRequire;
   if (!createRequire) {
     throw unavailable("no require bridge on this runtime");
   }
@@ -71,13 +67,17 @@ export function loadNative(): NativeBinding {
   // the current package directory instead.
   let base = moduleUrl;
   if (base.includes("MODULE_URL_PLACEHOLDER")) {
-    const url = builtin("node:url")?.pathToFileURL;
-    const path = builtin("node:path")?.join;
+    const nodeUrl = processRef?.getBuiltinModule?.("node:url") as
+      | { pathToFileURL(path: string): { href: string } }
+      | undefined;
+    const nodePath = processRef?.getBuiltinModule?.("node:path") as
+      | { join(...parts: string[]): string }
+      | undefined;
     const cwd = processRef?.cwd?.();
-    if (!url || !path || !cwd) {
+    if (!nodeUrl || !nodePath || !cwd) {
       throw unavailable("no module URL and no working directory to derive one from");
     }
-    base = url(path(cwd(), "package.json")).href;
+    base = nodeUrl.pathToFileURL(nodePath.join(cwd, "package.json")).href;
   }
 
   const require = createRequire(base);
