@@ -80,6 +80,7 @@ All commands below run from the repository root. JavaScript lint/format/typechec
 | Node behaviour harness (P14-004) | `node tests/runtime/behaviour.mjs` | Accepted, rejected, unknown, BUSY, close, attachment cap, and TLS fail-closed |
 | Bun behaviour harness (P14-004) | `bun tests/runtime/behaviour.mjs` | Same outcome contract through Bun |
 | Deno behaviour harness (P14-004) | `deno run --allow-ffi --allow-read --allow-net tests/runtime/behaviour.mjs` | Same outcome contract through Deno |
+| Publish manifest (P14-004) | `npm run prepare:publish` | Stages `dist/` plus a manifest with the five platform `optionalDependencies`, and packs it |
 
 P05-001 to P05-004 deliver the native binding and the TypeScript facade; `npm run build:native` stages the addon. `tests/runtime/smoke.mjs` loads the addon directly and `tests/runtime/facade.mjs` reaches it through the package's own loader; the binding CI job runs both on all three pinned runtimes, and the artifact jobs run both per target. P14 owns the runtime × OS × CPU × ABI distribution matrix.
 

@@ -2,7 +2,7 @@
 
 **Status:** complete — every built target passes install, load, send, BUSY, close, and both negative load paths
 **Date:** 2026-11-17
-**Commit:** `00914ad` (CI: per-target tarball install, ESM/CJS, Bun and Deno, and the runtime smokes and behaviour harness) and the local macOS arm64 runs
+**Commit:** `97df964` (CI: tarball install with platform selection, ESM/CJS, Bun and Deno, the runtime smokes, and the behaviour harness) and the local macOS arm64 runs
 **Owner:** P14-004; final matrix consolidation is P14-005
 
 ## 1. What is validated
@@ -12,7 +12,8 @@ Every target that the matrix builds is checked on its own runner, against its ow
 | Check | Where | Proves |
 | --- | --- | --- |
 | Artifact build and load | `Native artifact (<target>)` job, `scripts/build-artifact.mjs` + load step | The runner produced a `.node` this OS and CPU can load, with a `Transport` export |
-| Packed-facade install | `scripts/verify-platform.mjs` | The `npm pack` tarball of the facade plus the per-platform package installs into a fresh consumer, without the workspace or a compiler |
+| Packed-facade install | `scripts/verify-platform.mjs` | The `npm pack` tarball of the facade installs into a fresh consumer, without the workspace or a compiler |
+| Platform package selection | same | With the five packages declared as `optionalDependencies`, npm installs only `@sendust/ts-<platform>-<arch>` for this OS and CPU, and none of the other four |
 | Facade on three runtimes | same | The installed tarball creates a transport, closes it, and refuses a send after close under Node.js (ESM and CommonJS), Bun, and Deno |
 | Binary selection | same | The loader falls back from the absent bundled addon to `@sendust/ts-<platform>-<arch>` and constructs a transport (`open`) |
 | Accepted send | `npm test` in `ts/` on that runner | A loopback TLS relay replies `250` and the facade resolves `accepted` |
@@ -27,20 +28,20 @@ Every target that the matrix builds is checked on its own runner, against its ow
 
 CI run on `6d6c709`/`dc23dee`, `Native artifact (<target>)` jobs, Node.js 22.23.5, Rust 1.100.0:
 
-| Target | Runner | Install (tarball) | Node ESM | Node CJS | Bun | Deno | Accepted send | BUSY | Missing / corrupt |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `linux-x64-gnu` | `ubuntu-24.04` | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS (typed) |
-| `linux-arm64-gnu` | `ubuntu-24.04-arm` | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS (typed) |
-| `macos-arm64` | `macos-15` | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS (typed) |
-| `windows-x64` | `windows-2022` | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS (typed) |
-| `macos-x64` | none available | NOT BUILT | — | — | — | — | — | — | — |
+| Target | Runner | Install (tarball) | Selection | Node ESM | Node CJS | Bun | Deno | Accepted send | BUSY | Missing / corrupt |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `linux-x64-gnu` | `ubuntu-24.04` | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS (typed) |
+| `linux-arm64-gnu` | `ubuntu-24.04-arm` | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS (typed) |
+| `macos-arm64` | `macos-15` | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS (typed) |
+| `windows-x64` | `windows-2022` | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS (typed) |
+| `macos-x64` | none available | NOT BUILT | — | — | — | — | — | — | — | — |
 
 Local confirmation on macOS 15 / Apple M2, Node.js 22.23.5, Bun 1.3.14, Deno 2.9.8, the same source:
 
 | Command | Result |
 | --- | --- |
 | `npm run verify` | `verify: OK — sendust-macos-arm64.node loads` |
-| `npm run verify:platform` | `node esm: ok`, `node cjs: ok`, `bun: ok`, `deno: ok`, `no platform package: typed CONFIG_NATIVE_UNAVAILABLE`, `missing addon: typed`, `corrupt addon: typed` |
+| `npm run verify:platform` | `selection: installed only @sendust/ts-macos-arm64`, `node esm: ok`, `node cjs: ok`, `bun: ok`, `deno: ok`, `missing addon: typed`, `corrupt addon: typed`, `no platform package: typed` |
 | `npm test` in `ts/` | 59 passed in 6 files (57 before the R-04 legs) |
 | `cargo test --workspace --locked` | all suites pass; the six performance probes stay `ignored` as designed |
 
@@ -104,7 +105,7 @@ A bundled addon that fails for any reason other than a missing module is still r
 - **Per-target behaviour runs on Node.js 22.23.5.** Node.js 24.22.3 and 26.13.1 run lint, format, typecheck and the TypeScript suite on Linux x64 only; they do not load a native addon against another OS.
 - **Bun and Deno run the packed tarball, the smokes, and the behaviour harness.** The consumer installs and loads under both, and the behaviour harness asserts accepted, rejected, unknown, BUSY, close, and the attachment cap on each. The Vitest suite stays on Node.js because Vitest does not run inside them; the harness is the runtime-neutral coverage of the same contract.
 - **musl and Windows arm64 are unsupported.** They are absent from the matrix and from publication inputs.
-- **The facade does not yet declare `optionalDependencies`.** `verify-platform` installs the facade and the platform package side by side, which is the published layout but not yet the published manifest; adding the dependency list belongs to the publish-prepare step in P16.
+- **The publish manifest is generated, not committed.** `optionalDependencies` cannot be in `ts/package.json` because npm needs a lock entry per declared dependency and the platform packages exist only after publication; `npm run prepare:publish` adds them from the loader's map at pack time. The selection test substitutes local folders for the published version ranges, so the ranges themselves are exercised at publication (P17).
 - **No install-time network, compiler, or postinstall step is involved.** Every check installs from local folders.
 
 ## 5. Reproduction
