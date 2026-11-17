@@ -5,7 +5,7 @@
 **Gate:** PHASE-14
 **Prepared:** 2026-11-17
 **Branch:** `main`
-**Evidence:** [platform matrix](../qa/platform-matrix.md), [platform validation](../qa/platform-validation.md), [clean-consumer smoke](../qa/clean-consumer-smoke.md), [package metadata contract](../qa/package-metadata-contract.md), and CI on `4606cf0`.
+**Evidence:** [platform matrix](../qa/platform-matrix.md), [platform validation](../qa/platform-validation.md), [clean-consumer smoke](../qa/clean-consumer-smoke.md), [package metadata contract](../qa/package-metadata-contract.md), and CI on `4f69744`.
 
 This record is the review package for PHASE-14. The implementation was written by an
 agent, so the approval in section 7 is the required human review step, not a

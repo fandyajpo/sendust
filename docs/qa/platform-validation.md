@@ -2,7 +2,7 @@
 
 **Status:** complete — every built target passes install, load, send, BUSY, close, and both negative load paths
 **Date:** 2026-11-17
-**Commit:** `97df964` (CI: tarball install with platform selection, ESM/CJS, Bun and Deno, the runtime smokes, and the behaviour harness) and the local macOS arm64 runs
+**Commit:** `4f69744` (CI: tarball install with platform selection, ESM/CJS, Bun and Deno, the runtime smokes, the behaviour harness, and the publish manifest) and the local macOS arm64 runs
 **Owner:** P14-004; final matrix consolidation is P14-005
 
 ## 1. What is validated
