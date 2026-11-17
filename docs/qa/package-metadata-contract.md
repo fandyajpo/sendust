@@ -46,7 +46,7 @@ None of these is a support claim: support is the intersection of an exact runtim
 2. Obtain `createRequire` from `process.getBuiltinModule("node:module")`; without that bridge, fail with `CONFIG_NATIVE_UNAVAILABLE`.
 3. Try the bundled `sendust.node` relative to the module (or the package directory when running from source).
 4. On `MODULE_NOT_FOUND`, map `process.platform`, `process.arch`, and glibc/musl (Linux) to the optional package and require it.
-5. If that package is absent or the platform is unmapped, throw the typed `SendustConfigurationError` with `CONFIG_NATIVE_UNAVAILABLE` and a message naming the expected package. Any other load failure (broken binary, wrong ABI) is rethrown untouched so it is not misdiagnosed.
+5. If that package is missing, the platform is unmapped, or the package fails to load (wrong architecture, corrupted binary), throw the typed `SendustConfigurationError` with `CONFIG_NATIVE_UNAVAILABLE` naming the expected package; a failed load appends only the error code, never the dlopen text, which carries absolute paths. A failure of the *bundled* addon that is not `MODULE_NOT_FOUND` is rethrown untouched so it is not misdiagnosed.
 
 The missing-binary path is exercised in [the clean-consumer smoke](clean-consumer-smoke.md): the installed package without an addon yields the typed error, not a raw `MODULE_NOT_FOUND` naming `dist/loader.js`.
 
