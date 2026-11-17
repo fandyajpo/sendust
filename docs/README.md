@@ -79,7 +79,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 65 | [Package metadata contract](qa/package-metadata-contract.md) | P14-002 fields, exports, native layout, loader order, and the dual-format build |
 | 66 | [Platform matrix](qa/platform-matrix.md) | P14-003 target matrix, per-platform package layout, build recipes, and unsupported set |
 | 67 | [Platform validation](qa/platform-validation.md) | P14-004 clean-install, load, send, BUSY, close, and negative results per target |
-| 68 | [PHASE-14 distribution record](gates/phase-14.md) | QG-14 checklist, support declaration, runtime matrix, findings, and the pending decision |
+| 68 | [PHASE-14 distribution record](gates/phase-14.md) | QG-14 checklist, support declaration, runtime matrix, findings, and the approved decision |
 
 ## 2. Directory map
 
@@ -110,7 +110,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P13 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance. P14 (distribution) is IN PROGRESS (P14-001 to P14-004 completed, P14-005 in review); P15–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P14 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance; PHASE-14 records distribution on five native targets. P15–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -141,13 +141,13 @@ P00–P13 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P11-001–P11-005 | COMPLETED; PHASE-11 APPROVED (2026-11-15) |
 | P12-001–P12-005 | COMPLETED; PHASE-12 APPROVED (2026-11-15) |
 | P13-001–P13-005 | COMPLETED; PHASE-13 APPROVED (2026-11-15) |
-| P14-001 | COMPLETED — clean-consumer smoke |
-| P14-002 | COMPLETED — metadata contract, ESM and CommonJS |
-| P14-003 | COMPLETED — platform matrix; per-platform packages |
-| P14-004 | COMPLETED — platform validation per target |
-| P14-005 | IN REVIEW — PHASE-14 gate awaiting approval |
+| P14-001 | COMPLETED — early clean-consumer smoke |
+| P14-002 | COMPLETED — metadata, ESM/CJS entry, publish layout |
+| P14-003 | COMPLETED — five-target matrix |
+| P14-004 | COMPLETED — per-target install, runtime and behaviour validation |
+| P14-005 | COMPLETED — PHASE-14 approved 2026-11-17 |
 | P15–P18 | NOT STARTED |
-| Next step | Project owner approval of PHASE-14 |
+| Next task | P15-001 — quick start and semantic contract |
 
 ## 5. Conventions
 

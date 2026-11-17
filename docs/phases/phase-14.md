@@ -1,6 +1,6 @@
 # Phase 14 — Distribution
 
-**Phase status:** IN PROGRESS (P14-001 completed)  
+**Phase status:** COMPLETED (PHASE-14 approved, 2026-11-17)  
 **Phase dependency:** Phase 05, Phase 03 (early smoke); final matrix consumes Phase 12 and Phase 13 through task dependencies  
 **Companion references:** [release strategy](../engineering/release-strategy.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [performance strategy](../engineering/performance-strategy.md), [system design](../architecture/system-design.md)
 
@@ -49,7 +49,7 @@ In scope: package metadata, native artifact layout, clean-install smoke, platfor
 ### P14-005 — Final distribution gate using QA and performance evidence
 
 - **Size:** M
-- **Status:** IN REVIEW — [PHASE-14 gate record](../gates/phase-14.md), approval pending
+- **Status:** COMPLETED — [PHASE-14 gate record](../gates/phase-14.md), approved 2026-11-17
 - **Prerequisites:** P14-004, P12-005, P13-005
 - **Description:** Run the final distribution matrix after QA and performance gates. Confirm clean installs, native loading, accepted/unknown/BUSY/close behavior, bounded resource use, and honest support declarations. Reconcile the early smoke with the final matrix and document any target dropped.
 - **Evidence criteria:** Gate package includes per-target install/load/send evidence, runtime results, negative tests, performance limitations, and support matrix. No unsupported target is advertised. No install-time secret or external network dependency exists. Phase 16 may consume P14-005.
@@ -92,6 +92,6 @@ P14 must test the intersection of each claimed runtime and platform target. Requ
 
 ## Status
 
-IN PROGRESS. P14-001, P14-002, P14-003, and P14-004 are COMPLETED; P14-005 is IN
-REVIEW, with the [PHASE-14 gate record](../gates/phase-14.md) awaiting the
-project owner's approval.
+COMPLETED. P14-001 to P14-005 are COMPLETED and PHASE-14 was approved by the
+project owner on 2026-11-17 ([gate record](../gates/phase-14.md)). P15 is
+eligible.
