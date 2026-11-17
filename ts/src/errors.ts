@@ -101,6 +101,23 @@ export function fromNative(error: unknown): SendustError | null {
   if (!(error instanceof Error)) {
     return null;
   }
+
+  // A facade-tagged error (for example the loader's CONFIG_NATIVE_UNAVAILABLE)
+  // carries its stable code and category directly instead of a native payload.
+  const tagged = error as { code?: unknown; sendustCategory?: unknown };
+  if (
+    typeof tagged.code === "string" &&
+    isErrorCategory(tagged.sendustCategory) &&
+    error.constructor === Error
+  ) {
+    const ErrorClass = CATEGORY_CLASSES[tagged.sendustCategory];
+    return new ErrorClass({
+      code: tagged.code,
+      category: tagged.sendustCategory,
+      message: error.message,
+    });
+  }
+
   const index = error.message.indexOf(PAYLOAD_PREFIX);
   if (index === -1) {
     return null;

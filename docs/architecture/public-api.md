@@ -97,7 +97,7 @@ Behavior:
 - `SendResult.recipients` records each explicit RCPT outcome. A recipient is `accepted` only after final DATA 2xx; RCPT refusals remain `rejected` even when the accepted subset succeeds.
 - Mixed RCPT results produce one DATA transaction for the accepted subset, never one message per recipient.
 - A missing/indeterminate final DATA disposition after message transmission begins produces `unknown` for the RCPT-accepted subset.
-- Rejects with a `SendustError` subclass for validation, configuration, limit, TLS, auth, timeout, closed, busy, and internal failures. The classes are `SendustValidationError`, `SendustConfigurationError`, `SendustLimitError`, `SendustTlsError`, `SendustAuthenticationError`, `SendustProtocolError`, `SendustTimeoutError`, `SendustClosedError`, `SendustBusyError`, and `SendustInternalError`; all extend `SendustError` and carry the stable `code`, `category`, and whitelisted `details`.
+- Rejects with a `SendustError` subclass for validation, configuration, limit, TLS, auth, timeout, closed, busy, and internal failures. The classes are `SendustValidationError`, `SendustConfigurationError`, `SendustLimitError`, `SendustTlsError`, `SendustAuthenticationError`, `SendustProtocolError`, `SendustTimeoutError`, `SendustClosedError`, `SendustBusyError`, and `SendustInternalError`; all extend `SendustError` and carry the stable `code`, `category`, and whitelisted `details`. A missing or unloadable bundled native addon rejects synchronously at `createTransport` with `CONFIG_NATIVE_UNAVAILABLE`, and no fallback build is used.
 - Never resolves with a delivery claim.
 - Never retries.
 - Never queues.

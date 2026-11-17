@@ -31,6 +31,18 @@ interface ProcessLike {
 
 let cached: NativeBinding | undefined;
 
+/** The bundled addon is missing or cannot be loaded on this platform. */
+function unavailable(detail: string): Error {
+  const error = new Error(
+    `Sendust native addon is unavailable (${detail}). Install the package build for this platform; no fallback build is used.`,
+  );
+  // Tag the stable code without importing the public error class, which would
+  // make the shared loader depend on the facade's error module.
+  Object.defineProperty(error, "code", { value: "CONFIG_NATIVE_UNAVAILABLE", enumerable: true });
+  Object.defineProperty(error, "sendustCategory", { value: "configuration", enumerable: true });
+  return error;
+}
+
 /** Loads the addon that `npm run build:native` stages next to this package. */
 export function loadNative(): NativeBinding {
   if (cached) {
@@ -42,13 +54,24 @@ export function loadNative(): NativeBinding {
   const createRequire = processRef?.getBuiltinModule?.("node:module")?.createRequire;
 
   if (!createRequire) {
-    throw new Error(
-      "Sendust requires Node.js 22+ or another runtime that provides process.getBuiltinModule",
-    );
+    throw unavailable("no require bridge on this runtime");
   }
 
   const require = createRequire(meta.url);
-  // Staged at the package root by `npm run build:native`.
-  cached = require("../sendust.node") as NativeBinding;
+  let binding: unknown;
+  try {
+    // Bundled at the package root by the package build.
+    binding = require("../sendust.node");
+  } catch (error) {
+    // Only a missing addon file is a packaging fault. Anything else (a broken
+    // module, a wrong ABI) is rethrown untouched so it is not misdiagnosed.
+    const code = (error as { code?: unknown } | null)?.code;
+    if (code === "MODULE_NOT_FOUND") {
+      throw unavailable("sendust.node not found for this platform");
+    }
+    throw error;
+  }
+
+  cached = binding as NativeBinding;
   return cached;
 }

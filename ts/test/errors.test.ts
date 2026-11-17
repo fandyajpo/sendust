@@ -46,6 +46,7 @@ const CODES: Array<[string, ErrorCategory]> = [
   ["CONFIG_FILE_ACCESS_DISABLED", "configuration"],
   ["CONFIG_ATTACHMENT_UNREADABLE", "configuration"],
   ["CONFIG_INVALID_RELAY", "configuration"],
+  ["CONFIG_NATIVE_UNAVAILABLE", "configuration"],
   ["LIMIT_RECIPIENTS", "limit"],
   ["LIMIT_ATTACHMENT_BYTES", "limit"],
   ["LIMIT_ATTACHMENT_TOTAL", "limit"],
@@ -89,7 +90,7 @@ try {
 
 describe("public error classes", () => {
   it("covers every stable code with its category and class", () => {
-    expect(CODES).toHaveLength(33);
+    expect(CODES).toHaveLength(34);
     for (const [code, category] of CODES) {
       const error = fromNative(nativeError({ code, category, message: "diagnostic" }));
       expect(error).toBeInstanceOf(CLASSES[category]);
@@ -98,6 +99,22 @@ describe("public error classes", () => {
       expect(error?.code).toBe(code);
       expect(error?.category).toBe(category);
     }
+  });
+
+  it("maps a facade-tagged native-unavailable error to a configuration error", () => {
+    const tagged = new Error("Sendust native addon is unavailable (sendust.node not found)");
+    Object.defineProperty(tagged, "code", { value: "CONFIG_NATIVE_UNAVAILABLE" });
+    Object.defineProperty(tagged, "sendustCategory", { value: "configuration" });
+
+    const error = fromNative(tagged);
+    expect(error).toBeInstanceOf(SendustConfigurationError);
+    expect(error?.code).toBe("CONFIG_NATIVE_UNAVAILABLE");
+    expect(error?.category).toBe("configuration");
+  });
+
+  it("leaves an ordinary error untouched", () => {
+    const plain = new Error("something else");
+    expect(fromNative(plain)).toBeNull();
   });
 
   it("keeps the class hierarchy narrow enough to catch one category", () => {
