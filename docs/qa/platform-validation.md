@@ -26,15 +26,15 @@ Every target that the matrix builds is checked on its own runner, against its ow
 
 ## 2. Results
 
-CI run on `6d6c709`/`dc23dee`, `Native artifact (<target>)` jobs, Node.js 22.23.5, Rust 1.100.0:
+CI run on `c0005e0`, `Native artifact (<target>)` jobs, Node.js 22.23.5, Rust 1.100.0:
 
 | Target | Runner | Install (tarball) | Selection | Node ESM | Node CJS | Bun | Deno | Accepted send | BUSY | Missing / corrupt |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `linux-x64-gnu` | `ubuntu-24.04` | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS (typed) |
 | `linux-arm64-gnu` | `ubuntu-24.04-arm` | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS (typed) |
 | `macos-arm64` | `macos-15` | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS (typed) |
+| `macos-x64` | `macos-15-intel` | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS (typed) |
 | `windows-x64` | `windows-2022` | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS (typed) |
-| `macos-x64` | none available | NOT BUILT | — | — | — | — | — | — | — | — |
 
 Local confirmation on macOS 15 / Apple M2, Node.js 22.23.5, Bun 1.3.14, Deno 2.9.8, the same source:
 
@@ -82,6 +82,7 @@ The behaviour harness adds the relay outcomes and limits (16 checks per runtime)
 | `linux-x64-gnu` | PASS — smokes + behaviour | PASS — smokes + behaviour | PASS — smokes + behaviour |
 | `linux-arm64-gnu` | PASS — smokes + behaviour | PASS — smokes + behaviour | PASS — smokes + behaviour |
 | `macos-arm64` | PASS — smokes + behaviour | PASS — smokes + behaviour | PASS — smokes + behaviour |
+| `macos-x64` | PASS — smokes + behaviour | PASS — smokes + behaviour | PASS — smokes + behaviour |
 | `windows-x64` | PASS — smokes + behaviour | PASS — smokes + behaviour | PASS — smokes + behaviour |
 
 Locally on macOS arm64 with Node 22.23.5, Bun 1.3.14 and Deno 2.9.8, each runtime reports `16 behaviour checks passed`.
@@ -101,8 +102,7 @@ A bundled addon that fails for any reason other than a missing module is still r
 
 ## 4. Scope limits
 
-- **macOS x64 is not built.** No Intel runner is available in this repository; the job stayed queued and was removed rather than cross-compiling an unloadable binary. There is no support claim for it, and it stays out of publication inputs.
-- **Per-target behaviour runs on Node.js 22.23.5.** Node.js 24.22.3 and 26.13.1 run lint, format, typecheck and the TypeScript suite on Linux x64 only; they do not load a native addon against another OS.
+- **Per-target behaviour runs on Node.js 22.23.5.** Node.js 24.22.3 and 26.13.1 run lint, typecheck and the suite on Linux x64 only; they do not load a native addon for another target.
 - **Bun and Deno run the packed tarball, the smokes, and the behaviour harness.** The consumer installs and loads under both, and the behaviour harness asserts accepted, rejected, unknown, BUSY, close, and the attachment cap on each. The Vitest suite stays on Node.js because Vitest does not run inside them; the harness is the runtime-neutral coverage of the same contract.
 - **musl and Windows arm64 are unsupported.** They are absent from the matrix and from publication inputs.
 - **The publish manifest is generated, not committed.** `optionalDependencies` cannot be in `ts/package.json` because npm needs a lock entry per declared dependency and the platform packages exist only after publication; `npm run prepare:publish` adds them from the loader's map at pack time. The selection test substitutes local folders for the published version ranges, so the ranges themselves are exercised at publication (P17).
@@ -121,4 +121,4 @@ CI runs the same three steps on each matrix runner, after staging that runner's 
 
 ## 6. Verdict
 
-P14-004 is complete. Every built target installs from local artifacts, loads its own binary through the published layout, sends to a loopback relay, rejects a concurrent send as BUSY, closes bounded, and reports both failure paths with the typed code. The native addon and the TypeScript facade both load and keep the public error contract on Node.js, Bun, and Deno for every target. The one matrix row that cannot be built is marked unsupported, and no target claims support beyond what these runs observed. P14-005 consolidates this with the QA and performance evidence for the phase gate.
+P14-004 is complete. Every target — linux-x64-gnu, linux-arm64-gnu, macos-arm64, macos-x64 and windows-x64 — installs from local artifacts, loads its own binary through the published layout, sends to a loopback relay, rejects a concurrent send as BUSY, closes bounded, and reports both failure paths with the typed code. The native addon and the TypeScript facade both load and keep the public error contract on Node.js, Bun, and Deno for every target. Unsupported combinations are absent from the matrix, and no target claims support beyond what these runs observed. P14-005 consolidates this with the QA and performance evidence for the phase gate.
