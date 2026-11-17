@@ -17,7 +17,12 @@ const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 
 function step(name, command, args, cwd = root) {
   console.log(`\n== ${name}`);
-  execFileSync(command, args, { cwd, stdio: "inherit" });
+  // Node refuses to spawn a `.cmd` without a shell on Windows (CVE-2024-27910).
+  execFileSync(command, args, {
+    cwd,
+    stdio: "inherit",
+    shell: process.platform === "win32",
+  });
 }
 
 step("native addon", "node", ["scripts/build-addon.mjs"]);

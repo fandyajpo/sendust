@@ -142,7 +142,8 @@ for (const file of files) {
       // --install-links copies the folders instead of symlinking them, so the
       // facade resolves the platform package from the consumer's node_modules.
       ["install", "--silent", "--no-audit", "--no-fund", "--install-links", facadeDir, platformDir],
-      { cwd: consumer, stdio: "inherit" },
+      // Node refuses to spawn a `.cmd` without a shell on Windows (CVE-2024-27910).
+      { cwd: consumer, stdio: "inherit", shell: process.platform === "win32" },
     );
 
     console.log(`${key} load: ${check(consumer, ["ok", "", "load"])}`);
