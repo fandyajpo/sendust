@@ -61,7 +61,7 @@ P14-004 validated every built row against its own artifact at Node.js 22.23.5: c
 Still open, and owned outside this task:
 
 - macOS x64 has no runner, so it has no binary and no claim. Publishing it needs an Intel runner or a documented cross-build with a load check.
-- Bun and Deno run a binding smoke and a facade smoke per target, not the full Vitest suite; that breadth is Node.js evidence and the smokes are what section 3 of the gate record claims.
+- Bun and Deno install the packed facade in a fresh consumer and run it, plus a binding and a facade smoke per target; the full Vitest suite stays on Node.js, so that breadth is Node.js evidence.
 - The facade does not yet declare the platform packages as `optionalDependencies`; that manifest change belongs to the publish-prepare step in P16.
 
 P14-005 consolidates this matrix with the QA and performance evidence for the phase gate; no row may be advertised beyond what it records.
