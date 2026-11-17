@@ -53,8 +53,8 @@ export function platformPackageName(
   arch: string,
   libc: "gnu" | "musl" = "gnu",
 ): string | undefined {
-  const key =
-    platform === "linux" ? `linux-${arch}-${libc}` : `${platform === "darwin" ? "macos" : platform}-${arch}`;
+  const os = platform === "darwin" ? "macos" : platform === "win32" ? "windows" : platform;
+  const key = platform === "linux" ? `linux-${arch}-${libc}` : `${os}-${arch}`;
   return PLATFORM_PACKAGES[key];
 }
 
