@@ -27,7 +27,7 @@ self-approval. Nothing here approves P15 or any later gate.
 | --- | --- | --- |
 | A clean consumer can install and import the package from local artifacts on every supported target | PASS | Four targets install the packed facade tarball plus their platform package in a fresh consumer and run it under Node.js (ESM and CommonJS), Bun, and Deno |
 | Native binary selection is correct; missing/wrong artifacts fail clearly | PASS | Bundled path first, then `@sendust/ts-<platform>-<arch>`; a facade with no platform package, a missing addon, and a corrupt addon all yield `CONFIG_NATIVE_UNAVAILABLE` with the package named and no dlopen path |
-| Node.js, Bun, and Deno support is validated and honestly declared per exact platform combination | PASS | Node.js 22.23.5 runs the full behaviour suite per target; Bun 1.4.4 and Deno 2.9.8 run the installed tarball, the facade smoke through the loader, and the binding smoke on every target (section 3) |
+| Node.js, Bun, and Deno support is validated and honestly declared per exact platform combination | PASS | Node.js 22.23.5 runs the full Vitest suite per target; Bun 1.4.4 and Deno 2.9.8 run the installed tarball, the smokes, and the 16-check behaviour harness (accepted, rejected, unknown, BUSY, close, attachment cap, TLS fail-closed) on every target (section 3) |
 | No install-time network, secret, or feature-contract violation exists | PASS | Every check installs from local folders; no postinstall, download, or compiler; no new public surface beyond `tlsRootCertificate` (ADR-0018) |
 | Early smoke and final matrix are reconciled | PASS | The early smoke's one-platform, Node-only, ESM-only notes now point at P14-004 and P14-002 rather than standing as gaps |
 
@@ -42,8 +42,8 @@ This is what Sendust may claim after this gate, and nothing more.
 | Node.js 22.23.5 | `macos-arm64` | SUPPORTED | Same, plus the local `npm run verify` run |
 | Node.js 22.23.5 | `windows-x64` | SUPPORTED | Same |
 | Node.js 24.22.3, 26.13.1 | Linux x64 | TESTED, NOT GATED | Lint, format, typecheck, facade suite; no native addon on another OS |
-| Bun 1.4.4 | All four targets | SUPPORTED (smoke) | Binding and facade smokes: load through the loader, lifecycle, error mapping |
-| Deno 2.9.8 | All four targets | SUPPORTED (smoke) | Same, with `--allow-ffi --allow-read --allow-net` |
+| Bun 1.4.4 | All four targets | SUPPORTED (smoke + behaviour) | Tarball install, loader path, and the 16-check outcome harness: accepted, rejected, unknown, BUSY, close, attachment cap, TLS fail-closed |
+| Deno 2.9.8 | All four targets | SUPPORTED (smoke + behaviour) | Same, with `--allow-ffi --allow-read --allow-net` |
 | Any runtime | `macos-x64` | NOT SUPPORTED — NOT BUILT | No Intel runner in this repository |
 | Any runtime | musl, Windows arm64, big-endian, WASM/edge | NOT SUPPORTED | Absent from the matrix and from publication inputs |
 
@@ -52,13 +52,13 @@ This is what Sendust may claim after this gate, and nothing more.
 - **Clean install and load:** `scripts/verify-platform.mjs` writes the per-platform package, packs the facade with `npm pack`, installs both in a fresh consumer, and runs the installed tarball under Node.js (ESM and CommonJS), Bun, and Deno — on each runner, for its own artifact.
 - **Behaviour:** the facade suite (59 tests) runs on each runner against that runner's addon as the bundled path: accepted, `451` rejection, lost final reply (`unknown`), BUSY, close races, limits, TLS trust and fail-closed, and attachment policy.
 - **Negatives:** a facade installed without its platform package, the installed addon deleted, and a four-byte addon each produce `CONFIG_NATIVE_UNAVAILABLE` with the expected text and no path leakage.
-- **Runtimes:** Bun and Deno run `tests/runtime/smoke.mjs` (the addon directly) and `tests/runtime/facade.mjs` (through `src/loader.ts` and `process.getBuiltinModule`) per target; Node.js 22.23.5 is the gated runtime for the full suite.
+- **Runtimes:** Bun and Deno run `tests/runtime/behaviour.mjs` (accepted, rejected, unknown, BUSY, close, attachment cap, TLS fail-closed), `tests/runtime/smoke.mjs` (the addon directly), and `tests/runtime/facade.mjs` (through `src/loader.ts`) per target; Node.js 22.23.5 is the gated runtime for the full Vitest suite.
 - **Performance and QA:** the P13 budgets still pass (no distribution change touches them), and the P12 traceability and fixture audits remain the correctness evidence behind the behaviour suite.
 
 ## 5. Limitations
 
 - macOS x64 has no binary and no claim until an Intel runner exists or a cross-build is proven loadable on the target.
-- Bun and Deno are proven by the two smokes, not by the full behaviour suite: Vitest does not run inside them by baseline rule, so contract breadth on those runtimes is smoke-level, which is what section 3 declares.
+- Bun and Deno are proven by the behaviour harness and the smokes, not by the Vitest suite: Vitest does not run inside them by baseline rule, so those runtimes cover the outcome contract, lifecycle, limits, and TLS fail-closed rather than every unit-level case.
 - Clean-consumer installs run the packed tarball on all three runtimes, but the manifest still lists no `optionalDependencies`, so npm does not yet select the platform package for the user.
 - `@sendust/ts` does not yet declare the platform packages as `optionalDependencies`; that manifest change belongs to the publish-prepare step in P16.
 - The relay in every check is a loopback fake, so these runs prove packaging, loading and plumbing, not deliverability.

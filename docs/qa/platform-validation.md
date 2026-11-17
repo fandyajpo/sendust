@@ -2,7 +2,7 @@
 
 **Status:** complete — every built target passes install, load, send, BUSY, close, and both negative load paths
 **Date:** 2026-11-17
-**Commit:** `dc23dee` (CI: per-target tarball install, ESM/CJS, Bun and Deno, and the binding/facade smokes) and the local macOS arm64 runs
+**Commit:** `00914ad` (CI: per-target tarball install, ESM/CJS, Bun and Deno, and the runtime smokes and behaviour harness) and the local macOS arm64 runs
 **Owner:** P14-004; final matrix consolidation is P14-005
 
 ## 1. What is validated
@@ -48,12 +48,13 @@ The rest of the CI run is green as well: Rust workspace, native binding, TypeScr
 
 ### 2.1 Runtime matrix (Bun 1.4.4, Deno 2.9.8)
 
-Each matrix runner runs two smokes against its own staged addon:
+Each matrix runner runs three scripts against its own staged addon:
 
 - `tests/runtime/smoke.mjs` requires the addon directly and checks the native surface.
 - `tests/runtime/facade.mjs` imports the built `ts/dist`, so the addon is reached through `src/loader.ts` and `process.getBuiltinModule`, and the typed facade error is checked too.
+- `tests/runtime/behaviour.mjs` runs the outcome contract against loopback relays.
 
-Both cover the same four expectations:
+The two smokes cover the same four expectations:
 
 | Check | Expectation |
 | --- | --- |
@@ -62,16 +63,29 @@ Both cover the same four expectations:
 | Send after close | `TRANSPORT_CLOSED` |
 | Send to a connection-dropping relay | `TLS_HANDSHAKE` |
 
+The behaviour harness adds the relay outcomes and limits (16 checks per runtime):
+
+| Check | Expectation |
+| --- | --- |
+| Relay replies `250` | `accepted`, recipient `accepted` |
+| Relay replies `451` at the terminator | `rejected`, recipient `rejected`, response code 451 |
+| Relay drops the final reply | `unknown`, recipient `unknown`, no response |
+| Second send while one is in flight | `TRANSPORT_BUSY`, exactly one connection |
+| Close during that send | it rejects `TRANSPORT_CLOSED`, state `closed` |
+| Send after close / double close | `TRANSPORT_CLOSED`, idempotent close |
+| 5-byte attachment against a 4-byte cap | `LIMIT_ATTACHMENT_BYTES`, before any I/O |
+| Relay without the added root | `TLS_CERTIFICATE` (verification cannot be relaxed) |
+
 | Target | Node.js 22.23.5 | Bun 1.4.4 | Deno 2.9.8 |
 | --- | --- | --- | --- |
-| `linux-x64-gnu` | PASS — binding + facade | PASS — binding + facade | PASS — binding + facade |
-| `linux-arm64-gnu` | PASS — binding + facade | PASS — binding + facade | PASS — binding + facade |
-| `macos-arm64` | PASS — binding + facade | PASS — binding + facade | PASS — binding + facade |
-| `windows-x64` | PASS — binding + facade | PASS — binding + facade | PASS — binding + facade |
+| `linux-x64-gnu` | PASS — smokes + behaviour | PASS — smokes + behaviour | PASS — smokes + behaviour |
+| `linux-arm64-gnu` | PASS — smokes + behaviour | PASS — smokes + behaviour | PASS — smokes + behaviour |
+| `macos-arm64` | PASS — smokes + behaviour | PASS — smokes + behaviour | PASS — smokes + behaviour |
+| `windows-x64` | PASS — smokes + behaviour | PASS — smokes + behaviour | PASS — smokes + behaviour |
 
-Observed on `ca4e1ea` and `6140d72`; locally on macOS arm64 with Node 22.23.5, Bun 1.3.14 and Deno 2.9.8.
+Locally on macOS arm64 with Node 22.23.5, Bun 1.3.14 and Deno 2.9.8, each runtime reports `16 behaviour checks passed`.
 
-The facade smoke is what proves the loader's runtime assumption: `process.getBuiltinModule` exists and returns `createRequire` on all three runtimes, so the bundled addon loads without a static `node:` import. The full Vitest behaviour suite still runs on Node.js only, because Vitest does not run inside Bun or Deno by baseline rule.
+The facade smoke is what proves the loader's runtime assumption: `process.getBuiltinModule` exists and returns `createRequire` on all three runtimes, so the bundled addon loads without a static `node:` import. The Vitest suite still runs on Node.js only, because Vitest does not run inside Bun or Deno by baseline rule; the behaviour harness is the runtime-neutral equivalent for the contract that matters.
 
 ## 3. Negative diagnostics
 
@@ -88,7 +102,7 @@ A bundled addon that fails for any reason other than a missing module is still r
 
 - **macOS x64 is not built.** No Intel runner is available in this repository; the job stayed queued and was removed rather than cross-compiling an unloadable binary. There is no support claim for it, and it stays out of publication inputs.
 - **Per-target behaviour runs on Node.js 22.23.5.** Node.js 24.22.3 and 26.13.1 run lint, format, typecheck and the TypeScript suite on Linux x64 only; they do not load a native addon against another OS.
-- **Bun and Deno run the packed tarball as well as the in-repo smokes.** The consumer installs and loads under both, and the binding and facade smokes cover the lifecycle through the repository's own build (section 2.1). The full behaviour suite stays on Node.js because Vitest does not run inside them, so contract breadth there is Node.js evidence, not a per-runtime claim.
+- **Bun and Deno run the packed tarball, the smokes, and the behaviour harness.** The consumer installs and loads under both, and the behaviour harness asserts accepted, rejected, unknown, BUSY, close, and the attachment cap on each. The Vitest suite stays on Node.js because Vitest does not run inside them; the harness is the runtime-neutral coverage of the same contract.
 - **musl and Windows arm64 are unsupported.** They are absent from the matrix and from publication inputs.
 - **The facade does not yet declare `optionalDependencies`.** `verify-platform` installs the facade and the platform package side by side, which is the published layout but not yet the published manifest; adding the dependency list belongs to the publish-prepare step in P16.
 - **No install-time network, compiler, or postinstall step is involved.** Every check installs from local folders.
