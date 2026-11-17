@@ -34,14 +34,14 @@ message to a loopback TLS relay, and closes. Nothing resolves from the repositor
 
 | Defect | Cause | Fix |
 | --- | --- | --- |
-| A missing addon surfaced as a raw Node `MODULE_NOT_FOUND` whose message named `dist/loader.js` | The loader let the require failure escape | `loader.ts` maps only `MODULE_NOT_FOUND` to `CONFIG_NATIVE_UNAVAILABLE`; every other load failure is rethrown untouched. `fromNative` maps the tagged error to `SendustConfigurationError` |
+| A missing addon surfaced as a raw Node `MODULE_NOT_FOUND` whose message named `dist/loader.js` | The loader let the require failure escape | `loader.ts` maps a missing module to `CONFIG_NATIVE_UNAVAILABLE`; a platform-package load failure keeps the code only (P14-004), and a bundled failure that is not `MODULE_NOT_FOUND` is rethrown untouched. `fromNative` maps the tagged error to `SendustConfigurationError` |
 | The format and lint gates scanned the generated `dist/` output | The package scripts ran `biome ... .` | The scripts name `src test scripts` explicitly |
 
 ## 5. Limits of this evidence
 
-- One platform only: macOS arm64. The rest of the matrix is P14-003/P14-004.
-- Node.js only. Bun and Deno loading are P14-004.
-- ESM only. The package declares no CommonJS entry, so ADR-0012's dual-format requirement is not yet met. That is recorded as an open item for P14-002, not claimed here.
+- One platform only: macOS arm64. The rest of the matrix was validated by P14-004 ([platform validation](platform-validation.md)).
+- Node.js only here. Bun and Deno are exercised per target by P14-004's runtime smoke.
+- ESM only in this early smoke. The dual-format gap it recorded was closed by P14-002: the package now ships ESM and CommonJS entries ([package metadata contract](package-metadata-contract.md)).
 - The relay is a loopback fake, so this shows packaging and plumbing, not deliverability.
 
 ## 6. Next
