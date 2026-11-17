@@ -186,3 +186,49 @@ jobs:
         run: deno check --node-modules-dir=manual ts/src/index.ts
       - name: Run shared TypeScript entry point
         run: deno run --allow-ffi --node-modules-dir=manual ts/src/index.ts
+
+  artifacts:
+    name: Native artifact (${{ matrix.target }})
+    # Each runner builds and loads its own target: no cross-compilation
+    # (ADR-0020). A missing binary here means the platform is not supported.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: linux-x64
+          - runner: ubuntu-24.04-arm
+            target: linux-arm64
+          - runner: macos-14
+            target: macos-arm64
+          - runner: macos-13
+            target: macos-x64
+          - runner: windows-2022
+            target: windows-x64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify pinned Rust toolchain
+        run: rustup show
+
+      - name: Build the native artifact
+        run: node scripts/build-artifact.mjs
+
+      - name: Load the artifact
+        shell: bash
+        run: |
+          node -e "
+            const { readdirSync } = require('node:fs');
+            const file = readdirSync('artifacts').find((name) => name.endsWith('.node'));
+            if (!file) throw new Error('no artifact produced');
+            const addon = require('./artifacts/' + file);
+            if (!addon.Transport) throw new Error('no Transport export in ' + file);
+            console.log('loaded', file);
+          "
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sendust-${{ matrix.target }}
+          path: artifacts/*.node
+          if-no-files-found: error

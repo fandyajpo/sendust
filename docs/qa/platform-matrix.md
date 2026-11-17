@@ -27,7 +27,9 @@ Artifact naming: `sendust-<os>-<arch>[-<libc>].node`
 | Linux | arm64 | glibc | `ubuntu-24.04-arm` | `aarch64-unknown-linux-gnu` | `sendust-linux-arm64-gnu.node` | NOT BUILT |
 | Windows | x64 | MSVC | `windows-2022` | `x86_64-pc-windows-msvc` | `sendust-windows-x64.node` | NOT BUILT |
 
-Every row builds with the pinned Rust 1.100.0 toolchain, `cargo build -p sendust-napi --release` (optionally `--target <target>`), and the same feature set: Node-API 8 (`napi8`, `async`), `rustls` with the `ring` provider and `webpki-roots`, no `native-tls`, no alternate verifier. The architecture check enforces those rules for every build, so no target can weaken TLS.
+Every row builds with the pinned Rust 1.100.0 toolchain on a native runner via `npm run build:artifact`, which compiles `sendust-napi` and stages `sendust-<os>-<arch>[-<libc>].node` under `artifacts/`. The same runner then loads the artifact to prove it is the target it claims to be — no cross-compiled, unloaded binary counts. The feature set is identical everywhere: Node-API 8 (`napi8`, `async`), `rustls` with the `ring` provider and `webpki-roots`, no `native-tls`, no alternate verifier. The architecture check enforces those rules for every build, so no target can weaken TLS.
+
+The CI job `Native artifact (<target>)` runs the build and the load check on each runner and uploads the artifact. Until that run is green for a row, its status stays **CI BUILD PENDING**; the table's `NOT BUILT` marks are replaced only by observed results.
 
 ## 3. Build recipe
 
