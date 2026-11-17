@@ -289,6 +289,17 @@ jobs:
       - name: Facade smoke (Deno)
         run: deno run --allow-ffi --allow-read --allow-net tests/runtime/facade.mjs
 
+      # The full outcome contract per runtime: accepted, rejected, unknown, BUSY,
+      # close, the attachment cap, and TLS failing closed.
+      - name: Behaviour harness (Node.js)
+        run: node tests/runtime/behaviour.mjs
+
+      - name: Behaviour harness (Bun)
+        run: bun tests/runtime/behaviour.mjs
+
+      - name: Behaviour harness (Deno)
+        run: deno run --allow-ffi --allow-read --allow-net tests/runtime/behaviour.mjs
+
       - uses: actions/upload-artifact@v4
         with:
           name: sendust-${{ matrix.target }}

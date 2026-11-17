@@ -29,6 +29,7 @@ step("native addon", "node", ["scripts/build-addon.mjs"]);
 step("package build", npm, ["run", "build"], join(root, "ts"));
 step("typescript tests", npm, ["test"], join(root, "ts"));
 step("facade runtime smoke", "node", ["tests/runtime/facade.mjs"]);
+step("behaviour harness", "node", ["tests/runtime/behaviour.mjs"]);
 step("platform artifact", "node", ["scripts/build-artifact.mjs"]);
 step("per-platform resolution", "node", ["scripts/verify-platform.mjs"]);
 
