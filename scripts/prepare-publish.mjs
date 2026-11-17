@@ -16,10 +16,10 @@
 import { execFileSync } from "node:child_process";
 import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const root = join(fileURLToPath(import.meta.url), "..", "..");
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 const dist = join(root, "ts", "dist");
 const staging = join(root, "artifacts", "publish");
@@ -37,6 +37,9 @@ if (platformPackages.length === 0) {
 }
 
 const manifest = JSON.parse(await readFile(join(root, "ts", "package.json"), "utf8"));
+// The source manifest stays private so a stray `npm publish` cannot ship it;
+// the staged candidate is publishable.
+manifest.private = false;
 manifest.optionalDependencies = Object.fromEntries(
   platformPackages.map((name) => [name, manifest.version]),
 );
