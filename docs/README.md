@@ -76,7 +76,8 @@ This documentation set is the source of truth for product scope, requirements, a
 | 62 | [Attachment performance](qa/performance-attachments.md) | P13-003 read, copy, serialization, and peak-memory results with their bounds |
 | 63 | [Lifecycle performance](qa/performance-lifecycle.md) | P13-004 BUSY, close, concurrency, and descriptor results |
 | 64 | [PHASE-13 performance record](gates/phase-13.md) | P13 gate checklist, consolidated budget results, regression thresholds, and the approved decision |
-| 65 | [Package metadata contract](qa/package-metadata-contract.md) | P14-002 fields, exports, native layout, loader order, and the open CommonJS item |
+| 65 | [Package metadata contract](qa/package-metadata-contract.md) | P14-002 fields, exports, native layout, loader order, and the dual-format build |
+| 66 | [Platform matrix](qa/platform-matrix.md) | P14-003 candidate targets, artifact naming, build recipes, and unsupported set |
 
 ## 2. Directory map
 
@@ -140,8 +141,9 @@ P00–P13 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P13-001–P13-005 | COMPLETED; PHASE-13 APPROVED (2026-11-15) |
 | P14-001 | COMPLETED — clean-consumer smoke |
 | P14-002 | COMPLETED — metadata contract, ESM and CommonJS |
-| P14-003–P18 | NOT STARTED |
-| Next task | P14-003 — cross-platform build and prebuilt artifact matrix |
+| P14-003 | IN REVIEW — platform matrix; publication layout open |
+| P14-004–P18 | NOT STARTED |
+| Next task | P14-004 — clean installs and runtime loading across the matrix |
 
 ## 5. Conventions
 
