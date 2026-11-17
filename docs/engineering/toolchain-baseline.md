@@ -73,9 +73,12 @@ All commands below run from the repository root. JavaScript lint/format/typechec
 | Node runtime smoke (P05 deliverable) | `node tests/runtime/smoke.mjs` | Native addon loads; fake-relay send and close pass |
 | Forced-GC probe (P12-004) | `node --expose-gc tests/runtime/gc.mjs` | Exit 0; the collector cannot close or destabilize a transport |
 | Bun runtime smoke (P05 deliverable) | `bun run tests/runtime/smoke.mjs` | Same observable contract |
-| Deno runtime smoke (P05 deliverable) | `deno run --allow-ffi --allow-read tests/runtime/smoke.mjs` | Same observable contract using local `node_modules` |
+| Deno runtime smoke (P05 deliverable) | `deno run --allow-ffi --allow-read --allow-net tests/runtime/smoke.mjs` | Same observable contract using local `node_modules` |
+| Node facade smoke (P14-004) | `node tests/runtime/facade.mjs` | Built package loads the addon through `src/loader.ts` and keeps the typed contract |
+| Bun facade smoke (P14-004) | `bun tests/runtime/facade.mjs` | Same, through Bun |
+| Deno facade smoke (P14-004) | `deno run --allow-ffi --allow-read --allow-net tests/runtime/facade.mjs` | Same, through Deno |
 
-P05-001 to P05-004 deliver the native binding and the TypeScript facade; `npm run build:native` stages the addon. `tests/runtime/smoke.mjs` is the single runtime smoke entry point for Node.js, Bun, and Deno; the Native binding CI job builds the addon and runs it on all three pinned runtimes. P14 still owns the runtime × OS × CPU × ABI distribution matrix.
+P05-001 to P05-004 deliver the native binding and the TypeScript facade; `npm run build:native` stages the addon. `tests/runtime/smoke.mjs` loads the addon directly and `tests/runtime/facade.mjs` reaches it through the package's own loader; the binding CI job runs both on all three pinned runtimes, and the artifact jobs run both per target. P14 owns the runtime × OS × CPU × ABI distribution matrix.
 
 P03-003 must create the npm workspace scripts, `scripts/check-architecture.mjs`, and `scripts/check-docs.mjs` that make these commands real. The documentation checker must validate Markdown links, duplicate/missing requirement/task/ADR/gate IDs, phase/task counts, registry-to-phase task title/prerequisite parity, gate-index coverage, and runtime/toolchain claims against this file. If a command cannot be implemented as written, P03-003 must propose a precise replacement and update this file, phase plan, and CI contract in the same change. Never silently substitute commands.
 

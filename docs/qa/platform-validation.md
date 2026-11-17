@@ -2,7 +2,7 @@
 
 **Status:** complete — every built target passes install, load, send, BUSY, close, and both negative load paths
 **Date:** 2026-11-16
-**Commit:** `4606cf0` (CI, including the Bun and Deno legs) and the local macOS arm64 runs on `4882e93`…`b1cbd5c`
+**Commit:** `6f3f2b8` (CI, including the binding and facade smokes on every runtime) and the local macOS arm64 runs on `4882e93`…`6f3f2b8`
 **Owner:** P14-004; final matrix consolidation is P14-005
 
 ## 1. What is validated
@@ -46,9 +46,14 @@ The rest of the CI run is green as well: Rust workspace, native binding, TypeScr
 
 ### 2.1 Runtime matrix (Bun 1.4.4, Deno 2.9.8)
 
-Each matrix runner also runs `tests/runtime/smoke.mjs` with Bun and Deno against its own staged addon, on the commit `4606cf0`:
+Each matrix runner runs two smokes against its own staged addon:
 
-| Check in the smoke | Expectation |
+- `tests/runtime/smoke.mjs` requires the addon directly and checks the native surface.
+- `tests/runtime/facade.mjs` imports the built `ts/dist`, so the addon is reached through `src/loader.ts` and `process.getBuiltinModule`, and the typed facade error is checked too.
+
+Both cover the same four expectations:
+
+| Check | Expectation |
 | --- | --- |
 | Construct with an empty host | `CONFIG_INVALID_RELAY` |
 | Open, close twice, read state | `open` → `closed` |
@@ -57,12 +62,14 @@ Each matrix runner also runs `tests/runtime/smoke.mjs` with Bun and Deno against
 
 | Target | Node.js 22.23.5 | Bun 1.4.4 | Deno 2.9.8 |
 | --- | --- | --- | --- |
-| `linux-x64-gnu` | PASS | PASS | PASS |
-| `linux-arm64-gnu` | PASS | PASS | PASS |
-| `macos-arm64` | PASS | PASS | PASS |
-| `windows-x64` | PASS | PASS | PASS |
+| `linux-x64-gnu` | PASS — binding + facade | PASS — binding + facade | PASS — binding + facade |
+| `linux-arm64-gnu` | PASS — binding + facade | PASS — binding + facade | PASS — binding + facade |
+| `macos-arm64` | PASS — binding + facade | PASS — binding + facade | PASS — binding + facade |
+| `windows-x64` | PASS — binding + facade | PASS — binding + facade | PASS — binding + facade |
 
-Honest scope: the smoke loads the addon directly and exercises the async boundary, lifecycle, and error mapping. The TypeScript facade's loader calls `process.getBuiltinModule`, which is validated on Node.js only, so facade-level loading on Bun and Deno is **not** claimed and stays open (R-041, R-042).
+Observed on `ca4e1ea` and `6140d72`; locally on macOS arm64 with Node 22.23.5, Bun 1.3.14 and Deno 2.9.8.
+
+The facade smoke is what proves the loader's runtime assumption: `process.getBuiltinModule` exists and returns `createRequire` on all three runtimes, so the bundled addon loads without a static `node:` import. The full Vitest behaviour suite still runs on Node.js only, because Vitest does not run inside Bun or Deno by baseline rule.
 
 ## 3. Negative diagnostics
 
@@ -79,8 +86,9 @@ A bundled addon that fails for any reason other than a missing module is still r
 
 - **macOS x64 is not built.** No Intel runner is available in this repository; the job stayed queued and was removed rather than cross-compiling an unloadable binary. There is no support claim for it, and it stays out of publication inputs.
 - **Per-target behaviour runs on Node.js 22.23.5.** Node.js 24.22.3 and 26.13.1 run lint, format, typecheck and the TypeScript suite on Linux x64 only; they do not load a native addon against another OS.
-- **Bun and Deno load the addon on every built target**, proven by the binding smoke (section 2.1). The TypeScript facade's native path on those runtimes is not validated, because its loader depends on `process.getBuiltinModule`; that remains open (R-041, R-042).
+- **Bun and Deno run both smokes on every built target** — the binding smoke and the facade smoke through the loader (section 2.1). The full behaviour suite stays on Node.js because Vitest does not run inside them, so contract breadth there is Node.js evidence, not a per-runtime claim.
 - **musl and Windows arm64 are unsupported.** They are absent from the matrix and from publication inputs.
+- **Clean-consumer installs run on Node.js.** Bun and Deno run the facade smoke against the repository's built package and staged addon, which is the same artifact that ships but not a fresh install.
 - **The facade does not yet declare `optionalDependencies`.** `verify-platform` installs the facade and the platform package side by side, which is the published layout but not yet the published manifest; adding the dependency list belongs to the publish-prepare step in P16.
 - **No install-time network, compiler, or postinstall step is involved.** Every check installs from local folders.
 
@@ -88,7 +96,7 @@ A bundled addon that fails for any reason other than a missing module is still r
 
 ```text
 export PATH="$HOME/.nvm/versions/node/v22.23.5/bin:$PATH"
-npm run verify            # addon, package, 59 tests, artifact, per-platform checks
+npm run verify            # addon, package, 59 tests, facade smoke, artifact, per-platform checks
 npm run verify:platform   # clean-consumer install and the two negative paths
 (cd ts && npm test)       # facade behaviour suite against the staged addon
 ```
@@ -97,4 +105,4 @@ CI runs the same three steps on each matrix runner, after staging that runner's 
 
 ## 6. Verdict
 
-P14-004 is complete. Every built target installs from local artifacts, loads its own binary through the published layout, sends to a loopback relay, rejects a concurrent send as BUSY, closes bounded, and reports both failure paths with the typed code. The native addon also loads and keeps the lifecycle on Bun and Deno on every target, while the facade-level Bun and Deno path is named as open rather than assumed. The one matrix row that cannot be built is marked unsupported, and no target claims support beyond what these runs observed. P14-005 consolidates this with the QA and performance evidence for the phase gate.
+P14-004 is complete. Every built target installs from local artifacts, loads its own binary through the published layout, sends to a loopback relay, rejects a concurrent send as BUSY, closes bounded, and reports both failure paths with the typed code. The native addon and the TypeScript facade both load and keep the public error contract on Node.js, Bun, and Deno for every target. The one matrix row that cannot be built is marked unsupported, and no target claims support beyond what these runs observed. P14-005 consolidates this with the QA and performance evidence for the phase gate.

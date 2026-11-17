@@ -91,6 +91,6 @@ The baseline deliberately keeps Vitest out of Bun and Deno ("runtime compatibili
 | No end-to-end `rejected`/`unknown` in the JS suite (`accepted` is now covered) | A relay reply that yields `rejected` or `unknown` has no JS fixture yet; mapping and core semantics are both proven | CLOSED by P14-004: `ts/test/transport.test.ts` resolves `rejected` from a `451` terminator and `unknown` from a dropped final reply |
 | `typecheck` covers `src` and the two contract test files only | `@types/node` is not a pinned dev dependency, so the runtime suites (which import `node:net`, `node:fs`) are transpiled by Vitest, not typechecked | Owner decision: adding `@types/node` would let `tsc` cover every test file. Not introduced here (dependency policy) |
 | No line coverage | No coverage tool is pinned | Recorded in the P12-002 report; owner decision |
-| Bun/Deno run the smoke entry point only | Baseline rule above | Native loading per runtime stays open (R-041, R-042); P14-005 records it as a limitation, not a claim |
+| Bun/Deno run the smoke entry point only | Baseline rule above | Native loading and the facade path are smoke-validated per target by P14-004; the full behaviour suite stays on Node.js |
 
 No contract deviation and no high-severity defect was found. The four gaps are scoped, assigned, and do not change the public contract.
