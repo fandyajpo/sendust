@@ -201,9 +201,10 @@ jobs:
             target: linux-arm64
           - runner: macos-15
             target: macos-arm64
-          # macos-x64 has no Intel runner available in this repository: the
-          # job stayed queued indefinitely and was removed. macOS x64 stays
-          # NOT BUILT until a runner exists (platform matrix, P14-004).
+          # An Intel runner, so macos-x64 is built and loaded natively rather
+          # than cross-compiled (no cross-built binary counts).
+          - runner: macos-15-intel
+            target: macos-x64
           - runner: windows-2022
             target: windows-x64
     runs-on: ${{ matrix.runner }}
