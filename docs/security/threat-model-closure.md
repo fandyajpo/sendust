@@ -47,7 +47,7 @@ gates in [the PHASE-11 record](../gates/phase-11.md).
 | R-01 | `webpki-roots` does not trust private enterprise roots installed only in the OS | Accepted MVP trade-off; documented in the threat model and public API guidance |
 | R-02 | A close that interrupts DATA reports `unknown` conservatively — the stage is marked just before the body write, so an abort in that instant still reports `unknown` | Accepted; errs toward ambiguity, never toward a false `accepted` or `rejected` |
 | R-03 | DNS failure has no deterministic fixture (needs a live resolver) | Accepted; resolver failures surface through the covered connect deadline and reset paths (P10 record) |
-| R-04 | No JS-level fake-TLS relay example | CLOSED by ADR-0018: `tlsRootCertificate` lets a loopback relay be trusted. `ts/test/transport.test.ts` observes `accepted` through "trusts an added root and accepts a fake-relay send", and `TLS_CERTIFICATE` through "fails closed without the added root". The runtime matrix stays with P14-004 |
+| R-04 | No JS-level fake-TLS relay example | CLOSED by ADR-0018 and P14-004: `tlsRootCertificate` lets a loopback relay be trusted, and `ts/test/transport.test.ts` observes `accepted`, `rejected` (a `451` terminator), `unknown` (a dropped final reply), and `TLS_CERTIFICATE` (no added root) |
 | R-05 | No automated forced-GC test | Closed by P12-004: `tests/runtime/gc.mjs` runs with `--expose-gc` in the Node.js binding CI job |
 | R-06 | Big-endian, musl, and Windows-on-ARM targets are untested | Owned by P14-003; no support claim is made |
 

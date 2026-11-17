@@ -78,6 +78,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 64 | [PHASE-13 performance record](gates/phase-13.md) | P13 gate checklist, consolidated budget results, regression thresholds, and the approved decision |
 | 65 | [Package metadata contract](qa/package-metadata-contract.md) | P14-002 fields, exports, native layout, loader order, and the dual-format build |
 | 66 | [Platform matrix](qa/platform-matrix.md) | P14-003 target matrix, per-platform package layout, build recipes, and unsupported set |
+| 67 | [Platform validation](qa/platform-validation.md) | P14-004 clean-install, load, send, BUSY, close, and negative results per target |
 
 ## 2. Directory map
 
@@ -108,7 +109,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P13 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance. P14 (distribution) is IN PROGRESS (P14-001 to P14-003 completed); P15–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P13 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance. P14 (distribution) is IN PROGRESS (P14-001 to P14-004 completed); P15–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -142,8 +143,9 @@ P00–P13 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P14-001 | COMPLETED — clean-consumer smoke |
 | P14-002 | COMPLETED — metadata contract, ESM and CommonJS |
 | P14-003 | COMPLETED — platform matrix; per-platform packages |
-| P14-004–P18 | NOT STARTED |
-| Next task | P14-004 — clean installs and runtime loading across the matrix |
+| P14-004 | COMPLETED — platform validation per target |
+| P14-005–P18 | NOT STARTED |
+| Next task | P14-005 — final distribution gate |
 
 ## 5. Conventions
 

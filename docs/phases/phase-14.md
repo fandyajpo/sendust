@@ -41,7 +41,7 @@ In scope: package metadata, native artifact layout, clean-install smoke, platfor
 ### P14-004 — Validate clean installs and runtime loading across the matrix
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** COMPLETED — [platform validation](../qa/platform-validation.md)
 - **Prerequisites:** P14-003
 - **Description:** Define clean-environment tests for each supported target and exact pinned runtime version: install from local artifacts, import, verify native binary selection, run a fake-relay accepted send, exercise BUSY, run close, and confirm no post-close work. Include missing-binary and wrong-architecture negative tests.
 - **Evidence criteria:** Matrix records pass/fail/unsupported per runtime version, OS, and arch. Negative tests produce actionable errors. Loaded binary path and version are recorded. No test contacts a real relay or requires a compiler at consumer install time unless explicitly documented.
@@ -92,5 +92,5 @@ P14 must test the intersection of each claimed runtime and platform target. Requ
 
 ## Status
 
-IN PROGRESS. P14-001, P14-002, and P14-003 are COMPLETED; P14-004 and P14-005 are
+IN PROGRESS. P14-001, P14-002, P14-003, and P14-004 are COMPLETED; P14-005 is
 NOT STARTED.

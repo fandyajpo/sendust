@@ -1,8 +1,8 @@
 # Cross-Platform Build and Artifact Matrix (P14-003)
 
-**Status:** specified — no target is built or supported yet
+**Status:** validated for four targets (P14-004); macOS x64 is not built
 **Date:** 2026-11-16
-**Owner:** P14-004 for validation; the project owner for publication layout
+**Owner:** P14-004 for validation; P14-005 for the phase gate; the project owner for publication layout
 
 ## 1. Publication layout
 
@@ -29,7 +29,7 @@ Artifact naming: `sendust-<os>-<arch>[-<libc>].node`
 
 Every row builds with the pinned Rust 1.100.0 toolchain on a native runner via `npm run build:artifact`, which compiles `sendust-napi` and stages `sendust-<os>-<arch>[-<libc>].node` under `artifacts/`. The same runner then loads the artifact to prove it is the target it claims to be — no cross-compiled, unloaded binary counts. The feature set is identical everywhere: Node-API 8 (`napi8`, `async`), `rustls` with the `ring` provider and `webpki-roots`, no `native-tls`, no alternate verifier. The architecture check enforces those rules for every build, so no target can weaken TLS.
 
-The CI job `Native artifact (<target>)` runs the build and the load check on each runner and uploads the artifact. The four rows marked PASS were observed on `373dda6`…`5467c3a`; `npm run verify:platform` additionally installs the facade plus the platform package in a clean consumer and loads it through `@sendust/ts`. macOS x64 has no Intel runner in this repository — its job stayed queued and was removed, so that row stays NOT BUILT rather than being advertised.
+The CI job `Native artifact (<target>)` builds and loads the artifact on each runner, runs the facade behaviour suite against that artifact as the bundled addon, and installs the facade plus the platform package in a clean consumer through `npm run verify:platform`. Every row marked PASS was observed on `373dda6`…`b1cbd5c`, including the missing-binary and corrupt-binary negatives; the details are in [platform validation](platform-validation.md). macOS x64 has no Intel runner in this repository — its job stayed queued and was removed, so that row stays NOT BUILT rather than being advertised.
 
 ## 3. Build recipe
 
@@ -54,8 +54,14 @@ These must not appear in publication inputs:
 
 No “best effort” build may be published: a target is either in the matrix above with passing P14-004 evidence, or absent.
 
-## 5. Validation owner and next step
+## 5. Validation result and next step
 
-P14-004 owns clean install, load, binary selection, accepted send, BUSY, close and the missing/wrong-binary negatives **per row** once the publication layout is decided. Until then this document is a specification only: nothing here is a support claim (C-06, C-35), and the current package remains macOS arm64 from the local build.
+P14-004 validated every built row against its own artifact at Node.js 22.23.5: clean-consumer install, load and binary selection, accepted send, BUSY, close, and the missing/wrong-binary negatives. The four PASS rows therefore carry support claims for Node.js on those exact OS/arch pairs; results and method are in [platform validation](platform-validation.md).
 
-Open decision for the project owner: choose layout 1 or 2 above. Both keep the single addon per platform and the no-postinstall rule; they differ only in how artifacts are distributed.
+Still open, and owned outside this task:
+
+- macOS x64 has no runner, so it has no binary and no claim. Publishing it needs an Intel runner or a documented cross-build with a load check.
+- Native loading on Bun and Deno per target is not validated yet (R-041, R-042); their CI jobs prove the runtime-neutral entry point only.
+- The facade does not yet declare the platform packages as `optionalDependencies`; that manifest change belongs to the publish-prepare step in P16.
+
+P14-005 consolidates this matrix with the QA and performance evidence for the phase gate; no row may be advertised beyond what it records.
