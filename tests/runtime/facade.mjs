@@ -73,9 +73,10 @@ const live = createTransport({
   host: "127.0.0.1",
   port,
   secure: "tls",
-  // Low budgets: the port is closed, so this must fail fast on every runtime
-  // instead of waiting out the production connect deadline.
-  timeouts: { connectMs: 2_000, operationMs: 2_000, totalMs: 4_000, closeMs: 2_000 },
+  // Low budgets, in the shape the suite already validates: the port is closed,
+  // so this must fail fast on every runtime instead of waiting out the
+  // production connect deadline.
+  timeouts: { connectMs: 1_000, operationMs: 1_000, totalMs: 1_000, closeMs: 1_000 },
 });
 try {
   await live.send({ from: "a@example.test", to: ["b@example.test"], subject: "x", text: "y" });
