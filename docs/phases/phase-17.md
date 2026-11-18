@@ -1,6 +1,6 @@
 # Phase 17 — RC and MVP approval/publication
 
-**Phase status:** IN PROGRESS (P17-001 and P17-002 completed; P17-003 in review)  
+**Phase status:** IN PROGRESS (P17-001 to P17-003 completed; P17-004 blocked on the npm organization and token)  
 **Phase dependency:** Phase 16  
 **Companion references:** [release strategy](../engineering/release-strategy.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [system design](../architecture/system-design.md)
 
@@ -33,7 +33,7 @@ In scope: RC verification, approval review, publication checklist, publication e
 ### P17-003 — Execute the publication checklist and release authorization
 
 - **Size:** M
-- **Status:** IN REVIEW — [publication checklist and authorization](../engineering/publication-checklist.md); authorization pending
+- **Status:** COMPLETED — [publication checklist and authorization](../engineering/publication-checklist.md), approved by the project owner 2026-11-18
 - **Prerequisites:** P17-002
 - **Description:** Prepare publication inputs: package version, registry target, artifact set, checksums, release notes, license/SBOM, support matrix, and rollback contacts. Define who authorizes publication and require recorded approval. Confirm no secrets, no test artifacts, and no unsupported platform binaries are included.
 - **Evidence criteria:** Checklist is complete and signed. Authorization record exists before any publish command. Artifact set matches Phase 16 hashes. Secret scan and license/SBOM checks pass. Unsupported platforms and non-goals are absent from publication metadata.
@@ -41,7 +41,7 @@ In scope: RC verification, approval review, publication checklist, publication e
 ### P17-004 — Publish the approved MVP and run post-publication verification
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** BLOCKED — needs the `sendust` npm organization and the `NPM_TOKEN` repository secret; the CI `publish` job and `scripts/publish-release.mjs` are ready
 - **Prerequisites:** P17-003
 - **Description:** Publish only the approved artifacts, then verify from a clean consumer environment: install, import, native binary resolution, accepted fake-relay send, BUSY, close, and documentation availability. Do not use production relays or real credentials. Record publication URLs, timestamps, and checksums.
 - **Evidence criteria:** Post-publication smoke passes from the registry artifact, not the workspace. Installed artifact hash matches approval. Release notes and support matrix are visible. No post-publication test contacts external SMTP. Any failure triggers the rollback path rather than ad hoc patching.
@@ -88,8 +88,9 @@ RC verification record, MVP acceptance matrix, publication checklist and authori
 
 ## Status
 
-IN PROGRESS. P17-001 is COMPLETED with the [RC verification record](../qa/rc-verification.md);
-P17-002 is COMPLETED with the [MVP acceptance matrix](../qa/mvp-acceptance.md),
-approved by the project owner. P17-003 is IN REVIEW, waiting on the publication
-authorization. P17-004 and P17-005 are NOT STARTED, and no publication has
-happened.
+IN PROGRESS. P17-001 to P17-003 are COMPLETED — the [RC verification record](../qa/rc-verification.md),
+the owner-approved [MVP acceptance matrix](../qa/mvp-acceptance.md), and the
+[publication checklist](../engineering/publication-checklist.md) signed for the
+six `@sendust` packages at `0.1.0-rc.1` with the `next` dist-tag. P17-004 is
+BLOCKED on the npm organization and the `NPM_TOKEN` secret, and P17-005 is NOT
+STARTED. Nothing has been published.

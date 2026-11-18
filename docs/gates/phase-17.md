@@ -1,7 +1,7 @@
 # QG-17 — RC and MVP approval record
 
-**Decision:** P17-002 APPROVED — MVP acceptance accepted by the project owner,
-2026-11-18; publication (P17-003) not authorized
+**Decision:** P17-002 and P17-003 APPROVED by the project owner, 2026-11-18;
+publication (P17-004) blocked on the npm organization and token, nothing published
 **Phase:** P17 — RC and MVP approval/publication
 **Gate:** PHASE-17
 **Prepared:** 2026-11-18
@@ -9,10 +9,9 @@
 **Branch:** `main`
 
 This record is the approval package for PHASE-17. No publish command has run and
-no artifact has been sent to a registry. The two remaining decisions — accepting
-the MVP against the authoritative constraints (P17-002) and authorizing
-publication (P17-003) — are the project owner's, and section 6 is empty until
-they are recorded.
+no artifact has been sent to a registry. The project owner accepted the MVP
+(P17-002) and authorized publication (P17-003); execution needs two owner-side
+prerequisites, recorded in section 6.
 
 ## 1. Candidate identity
 
@@ -34,8 +33,8 @@ Verified in the [RC verification record](../qa/rc-verification.md).
 | --- | --- | --- |
 | P17-001 | COMPLETED | [RC verification](../qa/rc-verification.md): identity, contents, evidence completeness, critical smokes from the candidate artifacts, and no mismatch |
 | P17-002 | COMPLETED | [MVP acceptance matrix](../qa/mvp-acceptance.md): all 17 acceptance items and all 30 constraints PASS with evidence; approved by the project owner on 2026-11-18 |
-| P17-003 | IN REVIEW | [Publication checklist](../engineering/publication-checklist.md): inputs, pre-flight checks, publish order, post-publication verification, tag, and rollback; the authorization table is PENDING |
-| P17-004 | NOT STARTED | Blocked by P17-003 authorization |
+| P17-003 | COMPLETED | [Publication checklist](../engineering/publication-checklist.md): inputs, pre-flight checks, publish order, post-publication verification, tag, rollback, and the owner's authorization; the executable path is the CI `publish` job with `scripts/publish-release.mjs` |
+| P17-004 | BLOCKED | Needs the `sendust` npm organization and the `NPM_TOKEN` repository secret; the job and hash verification are ready |
 | P17-005 | NOT STARTED | Blocked by P17-004 |
 
 ## 3. Acceptance summary
@@ -64,8 +63,11 @@ evidence are in the [matrix](../qa/mvp-acceptance.md).
 | Release notes | READY — install command is updated for the registry at publication |
 | Support matrix and licence | READY |
 | SBOM | Dependency inventory only; the CycloneDX/SPDX deferral recorded in PHASE-16 stands |
-| npm scope, 2FA, token | Owner action — not part of the repository |
-| Authorization | **PENDING** |
+| Approved hash set | `release/0.1.0-rc.1/approved.json`, checked by `scripts/publish-release.mjs` |
+| Publish automation | The CI `publish` job (manual dispatch with `publish: true`): rebuilds the facade, verifies hashes, publishes the five platform packages then `@sendust/ts` at `next`, and refuses an existing version |
+| npm scope | **MISSING** — `@sendust` does not exist; npm reports "Scope not found" |
+| Publish token | **MISSING** — no `NPM_TOKEN` repository secret |
+| Authorization | APPROVED 2026-11-18 |
 
 ## 5. Findings
 
@@ -74,6 +76,7 @@ evidence are in the [matrix](../qa/mvp-acceptance.md).
 | Medium | The publication inputs had no packed platform tarballs: CI uploaded only the raw `.node` files, so a person publishing by hand had to invent the package manifests | FIXED: `scripts/pack-platform.mjs` packs all five from the loader's map at the facade version, with `os`/`cpu`/`libc`, and the `Release candidate bundle` job runs it and records `PLATFORM-PACKAGES.sha256` |
 | Low | The phase-17 plan still described the runtime path as `TS -> napi -> core -> lettre` and called a public `AbortSignal` optional | FIXED: the plan now names the native engine (ADR-0017) and records that C-17 prohibits a public `AbortSignal` |
 | Low | The staged publish manifest keeps the repository's `scripts` and `devDependencies` | Deferred: consumers are unaffected and stripping them would change the approved facade hash |
+| Medium | Publication would have run from a developer machine, against the release strategy, and that machine holds only the macOS arm64 artifact | FIXED: a CI `publish` job publishes the six packages from the same run's verified bundle; `--dry-run` printing the plan was exercised locally and correctly warns that the local binary is not the approved CI one |
 
 No high-severity finding is open.
 
@@ -84,16 +87,19 @@ matrix is accepted as the release baseline: the candidate is `0.1.0-rc.1` at
 `a8a71e7`, every acceptance item and constraint passes with the recorded
 evidence, and no blocking defect or contract deviation is open.
 
-**P17-003 — not yet authorized.** The authorization table in the
-[publication checklist](../engineering/publication-checklist.md) is still
-`PENDING`. It must name the six packages, the candidate version and hashes, and
-the `next` dist-tag before any publish command runs. Publishing also requires an
-authenticated npm account that owns the `@sendust` scope; the build machine is not
-signed in, so no publication is possible from here until that is done.
+**P17-003 — APPROVED by the project owner on 2026-11-18.** The
+[publication checklist](../engineering/publication-checklist.md) is signed for
+the six `@sendust` packages at `0.1.0-rc.1` with the `next` dist-tag, from CI, at
+the approved hashes.
 
-Until both are in place, P17-004 does not run and nothing is published. A checksum
-mismatch, a failed consumer check before publication, or any publication action
-taken without the authorization reopens this gate.
+**P17-004 — blocked, not failed.** Publication cannot run until the owner creates
+the `sendust` organization on npm and adds the `NPM_TOKEN` repository secret.
+Both are owner-side actions outside the repository. Once they exist, a manual CI
+run with `publish` checked executes the publish job.
+
+Nothing has been published. A checksum mismatch, a failed consumer check before
+publication, or any publication taken outside this authorization reopens the
+gate.
 
 ## 7. Deferred and non-goals
 

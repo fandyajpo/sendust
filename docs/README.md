@@ -121,7 +121,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P16 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance; PHASE-14 records distribution on five native targets; PHASE-15 records the user and maintainer documentation; PHASE-16 records the release-engineering gate and assembles candidate `0.1.0-rc.1` with its hashes and no publication. P17 is IN PROGRESS: P17-001 and P17-002 are COMPLETE with the RC verification record and the owner-approved MVP acceptance matrix, P17-003 is IN REVIEW pending the publication authorization, and P17-004–P18 are NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P16 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance; PHASE-14 records distribution on five native targets; PHASE-15 records the user and maintainer documentation; PHASE-16 records the release-engineering gate and assembles candidate `0.1.0-rc.1` with its hashes and no publication. P17 is IN PROGRESS: P17-001 to P17-003 are COMPLETE with the RC verification record, the owner-approved MVP acceptance matrix, and the signed publication authorization; P17-004 is BLOCKED on the npm organization and token, and P17-005–P18 are NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -169,9 +169,10 @@ P00–P16 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P16-005 | COMPLETED — PHASE-16 approved 2026-11-18 |
 | P17-001 | COMPLETED — RC identity, artifacts, and critical smokes verified |
 | P17-002 | COMPLETED — MVP acceptance approved 2026-11-18 |
-| P17-003 | IN REVIEW — publication checklist prepared; authorization pending |
-| P17-004–P18 | NOT STARTED |
-| Next step | P17-003: record the publication authorization (and sign in to npm) before any publish. Nothing is published yet |
+| P17-003 | COMPLETED — publication authorized 2026-11-18 |
+| P17-004 | BLOCKED — needs the `sendust` npm organization and the `NPM_TOKEN` secret |
+| P17-005–P18 | NOT STARTED |
+| Next step | Create the `sendust` npm organization and add `NPM_TOKEN`, then run the CI workflow with `publish` checked. Nothing is published yet |
 
 ## 5. Conventions
 
