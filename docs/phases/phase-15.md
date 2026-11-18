@@ -1,6 +1,6 @@
 # Phase 15 — Documentation
 
-**Phase status:** IN PROGRESS (P15-001 to P15-003 completed)  
+**Phase status:** IN PROGRESS (P15-001 to P15-004 completed)  
 **Phase dependency:** Phase 09  
 **Companion references:** [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [reliability strategy](../engineering/reliability-strategy.md), [release strategy](../engineering/release-strategy.md)
 
@@ -41,7 +41,7 @@ In scope: API reference for `ts/src`, quick start, relay-accepted semantics, lif
 ### P15-004 — Write the error catalog and security/operations guide
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** COMPLETED — [errors, security, and operations](../guides/errors-security-operations.md)
 - **Prerequisites:** P15-001, P11-005
 - **Description:** Document every public error class/code, cause, retryability posture, and redaction behavior. Explain TLS verification is mandatory, credentials must be protected, logs are redacted, and the library does not guarantee delivery. Add operational notes for relay outages, ambiguous outcomes, close during shutdown, and safe handling of `unknown`.
 - **Evidence criteria:** Error catalog matches P09/P11 exactly. Every code has a description and caller action. Security guide states verification cannot be disabled and no plaintext fallback exists. `unknown` guidance explicitly forbids automatic resend without caller-level idempotency reasoning.

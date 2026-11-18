@@ -83,6 +83,8 @@ This documentation set is the source of truth for product scope, requirements, a
 | 69 | [Quick start and semantic contract](guides/quick-start.md) | P15-001 install steps, first send, accepted/rejected/unknown and BUSY semantics, and the executable sample |
 | 70 | [Lifecycle, timeouts, concurrency, and limits](guides/lifecycle-limits.md) | P15-002 state machine, close, BUSY, the four timeout budgets, and the four hard caps with boundary behaviour |
 | 71 | [Addresses, MIME, and attachments](guides/addressing-mime-attachments.md) | P15-003 address rules, header safety, body shapes, attachment opt-in and caps, and the content-type map |
+| 72 | [Errors, security, and operations](guides/errors-security-operations.md) | P15-004 error catalog with caller actions, redaction, TLS posture, and operational guidance |
+| 73 | [Maintainer guide](guides/maintainer.md) | P15-005 repository layout, commands, test harness, documentation rules, and release inputs |
 
 ## 2. Directory map
 
@@ -152,8 +154,9 @@ P00–P14 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P15-001 | COMPLETED — quick start and semantic contract, with an executed sample |
 | P15-002 | COMPLETED — lifecycle, timeouts, concurrency, and limits |
 | P15-003 | COMPLETED — addresses, MIME, and attachments |
-| P15-004–P18 | NOT STARTED |
-| Next task | P15-004 — error catalog and security/operations guide |
+| P15-004 | COMPLETED — error catalog, security, and operations |
+| P15-005–P18 | NOT STARTED |
+| Next task | P15-005 — documentation accuracy gate and maintainer guide |
 
 ## 5. Conventions
 
