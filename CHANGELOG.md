@@ -10,9 +10,9 @@ tag format, version sources, and compatibility promises — are in
 
 Nothing yet. The next candidate is `0.1.0-rc.1` once P16 finishes assembling it.
 
-## [0.1.0] - unreleased
+## [0.1.0-rc.1] - 2026-11-18
 
-The first MVP candidate. Not published; publication is P17.
+The first MVP release candidate. Not published; publication is P17.
 
 ### Added
 
