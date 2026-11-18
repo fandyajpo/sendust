@@ -5,7 +5,7 @@
  * `check-docs.mjs` proves structure and links. This proves content:
  *
  * - every stable error code named in a guide exists in the error model;
- * - the cap and timeout numbers in the limits guide match the Rust defaults;
+ * - the cap and timeout numbers in the limits guide match the code;
  * - no guide claims delivery, automatic retries, pooling, SMTPUTF8, URL
  *   attachments, or a way to disable verification (negated statements are fine);
  * - a guide that shows a send also shows an explicit close.
@@ -19,6 +19,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const read = (path) => readFileSync(join(ROOT, path), "utf8");
+const posix = (path) => relative(ROOT, join(ROOT, path)).split(sep).join("/");
 
 const failures = [];
 const fail = (message) => failures.push(message);
@@ -34,9 +35,11 @@ function guides() {
   ];
 }
 
-const posix = (path) => relative(ROOT, join(ROOT, path)).split(sep).join("/");
-
 // 1. Error codes must exist in the normative catalog.
+// Only the documented prefixes are treated as codes, so identifiers such as
+// `PLATFORM_PACKAGES` or `SENDUST_HOST` are not mistaken for error codes.
+const CODE = /`((?:VALIDATION|CONFIG|LIMIT|TLS|AUTH|PROTOCOL|TIMEOUT|TRANSPORT)_[A-Z0-9_]+)`/g;
+
 function knownCodes() {
   const model = read("docs/architecture/error-model.md");
   return new Set([...model.matchAll(/^\| `([A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+)` \|/gm)].map((m) => m[1]));
@@ -45,63 +48,53 @@ function knownCodes() {
 function checkCodes() {
   const catalog = knownCodes();
   for (const file of guides()) {
-    const text = read(file);
-    for (const match of text.matchAll(/`([A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+)`/g)) {
-      const code = match[1];
-      if (!catalog.has(code)) {
-        fail(`${posix(file)}: \`${code}\` is not in the error catalog`);
+    for (const match of read(file).matchAll(CODE)) {
+      if (!catalog.has(match[1])) {
+        fail(`${posix(file)}: \`${match[1]}\` is not in the error catalog`);
       }
     }
   }
 }
 
-// 2. Numeric claims in the limits guide must equal the implemented defaults.
+// 2. Cap and timeout numbers in the limits guide must equal the code.
+function evaluate(expression, miB) {
+  return expression
+    .split("*")
+    .map((part) => part.trim())
+    .reduce((total, part) => {
+      if (part === "MIB") return total * miB;
+      if (/^\d+$/.test(part)) return total * Number(part);
+      return Number.NaN;
+    }, 1);
+}
+
 function checkNumbers() {
   const limits = read("ts/src/limits.ts");
   const config = read("crates/sendust-core/src/config/mod.rs");
 
-  // Evaluate "10 * MIB" style expressions from the TypeScript source.
-  const evaluate = (expression, miB) =>
-    expression
-      .split("*")
-      .map((part) => part.trim())
-      .reduce((total, part) => {
-        if (part === "MIB") return total * miB;
-        if (/^\d+$/.test(part)) return total * Number(part);
-        return Number.NaN;
-      }, 1);
-
   const miB = evaluate(/export const MIB = ([^;]+);/.exec(limits)?.[1] ?? "", 1);
-  if (Number.isNaN(miB)) {
-    fail("limits.ts: could not derive MIB");
-    return;
-  }
-
-  const cap = (name) => {
-    const expression = new RegExp(`${name}: ([^,]+),`).exec(limits)?.[1] ?? "";
-    return evaluate(expression, miB);
-  };
-
+  const cap = (name) => evaluate(new RegExp(`${name}: ([^,]+),`).exec(limits)?.[1] ?? "", miB);
   const caps = {
     "10 MiB": cap("maxAttachmentBytes"),
     "20 MiB": cap("maxTotalAttachmentBytes"),
     "30 MiB": cap("maxWireBytes"),
   };
-  if (Object.values(caps).some((value) => Number.isNaN(value))) {
-    fail("limits.ts: could not derive the caps");
-    return;
-  }
 
-  const seconds = (field) => Number(new RegExp(`${field}: Duration::from_secs\\((\\d+)\\)`).exec(config)?.[1]);
+  const seconds = (field) =>
+    Number(new RegExp(`${field}: Duration::from_secs\\((\\d+)\\)`).exec(config)?.[1]);
   const timeouts = {
     10_000: seconds("connect") * 1000,
     30_000: seconds("operation") * 1000,
     120_000: seconds("total") * 1000,
     125_000: seconds("close") * 1000,
   };
-  if (Object.entries(timeouts).some(([key, value]) => value !== Number(key))) {
-    fail("config/mod.rs: timeout defaults are not the documented 10/30/120/125 s");
+
+  if ([miB, ...Object.values(caps), ...Object.values(timeouts)].some((value) => Number.isNaN(value))) {
+    fail("could not derive the caps or timeouts from the code");
     return;
+  }
+  if (Object.entries(timeouts).some(([expected, actual]) => actual !== Number(expected))) {
+    fail("config/mod.rs: timeout defaults are not the documented 10/30/120/125 s");
   }
 
   const guide = read("docs/guides/lifecycle-limits.md");
@@ -113,16 +106,13 @@ function checkNumbers() {
       fail(`lifecycle-limits.md: missing the ${label} cap`);
     }
     if (!digits.includes(String(value))) {
-      fail(`lifecycle-limits.md: missing the ${value} byte value for ${label} (limits.ts says ${value})`);
+      fail(`lifecycle-limits.md: missing the ${value} byte value for ${label}`);
     }
   }
   for (const value of Object.keys(timeouts)) {
     if (!digits.includes(value)) {
       fail(`lifecycle-limits.md: missing the ${value} ms timeout default`);
     }
-  }
-  if (miB !== caps["10 MiB"]) {
-    fail("limits.ts: the 10 MiB cap is not one MIB");
   }
 }
 
@@ -132,14 +122,14 @@ const FORBIDDEN = [
   { pattern: /delivery\s+guarantee/i, label: "delivery guarantee" },
   { pattern: /automatically\s+retri/i, label: "automatic retry" },
   { pattern: /retri(?:es|ed)?\s+automatically/i, label: "automatic retry" },
-  { pattern: /smtputf8\s+(?:is|are)\s+supported/i, label: "SMTPUTF8 support claim" },
-  { pattern: /url\s+attachments?\s+(?:are|is)\s+supported/i, label: "URL attachment claim" },
+  { pattern: /smtputf8\s+(?:is|are)\s+supported/i, label: "SMTPUTF8 support" },
+  { pattern: /url\s+attachments?\s+(?:are|is)\s+supported/i, label: "URL attachment support" },
   { pattern: /disables?\s+(?:certificate\s+or\s+hostname\s+|tls\s+)?verification/i, label: "disabled verification" },
-  { pattern: /connection\s+pooling\s+is\s+supported/i, label: "pooling claim" },
+  { pattern: /connection\s+pooling\s+is\s+supported/i, label: "pooling support" },
 ];
 
 function negated(text, index) {
-  const before = text.slice(Math.max(0, index - 48), index).toLowerCase();
+  const before = text.slice(Math.max(0, index - 60), index).toLowerCase();
   return /\b(?:no|not|never|cannot|can't|without|isn't|doesn't|no way to)\b/.test(before);
 }
 

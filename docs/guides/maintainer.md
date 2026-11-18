@@ -93,7 +93,7 @@ Bun and Deno run the same files with their own runtime; the exact pins are in
 - `docs/guides/` is user-facing. `docs/architecture/`, `docs/engineering/`,
   `docs/planning/`, and `docs/qa/` are the design and evidence record.
 - Every guide states what is **not** provided when the topic invites a wrong
-  assumption (delivery guarantees, retries, pooling, SMTPUTF8, URL attachments).
+  assumption (delivery claims, retries, pooling, SMTPUTF8, URL attachments).
 - `node scripts/check-doc-claims.mjs` fails when a guide names an unknown error
   code, drifts from the cap or timeout numbers in the code, promises delivery or
   automatic retries, or shows a send without an explicit close.

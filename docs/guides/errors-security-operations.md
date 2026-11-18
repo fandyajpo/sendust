@@ -25,6 +25,8 @@ try {
   if (error instanceof SendustError) {
     // error.code, error.category, error.details
   }
+} finally {
+  await transport.close();
 }
 ```
 
