@@ -38,8 +38,9 @@ nondeterministic across runs of the *same* commit: the approval run recorded
 `afcd4882…`, and two runs at `38b7b5d` produced `85bfa57f…` and `fe50601e…`,
 while the other four targets reproduced exactly. The [PHASE-17
 record](../gates/phase-17.md) carries the finding; publication now requires the
-approved commit and the bundle's own checksums for Windows, and byte-identity for
-the four targets that reproduce.
+approved build inputs and the bundle's own checksums for Windows, reads the addon
+back out of each tarball, and requires byte-identity for the four targets that
+reproduce.
 
 | Target | CI SHA-256 (approved set) |
 | --- | --- |

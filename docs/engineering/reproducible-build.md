@@ -61,10 +61,18 @@ every run, including runs at later commits whose only changes were documentation
 and tests, so they are byte-identity checked at publication. The Windows DLL did
 not: two workflow runs of the same commit produced `85bfa57f…` and `fe50601e…`,
 and the approval run produced `afcd4882…`. Windows linking is therefore recorded
-as nondeterministic, and publication holds it to the approved commit and the
+as nondeterministic, and publication holds it to the approved build inputs and the
 bundle's own `SHA256SUMS` instead of a frozen hash from another run. The list is
 data, not a hidden script constant: `release/<version>/approved.json` names the
 `byteReproducible` targets.
+
+Publication also has to survive the commits that follow approval, since only a
+push to `main` can trigger the release workflow. The publisher therefore accepts
+the approved commit or a later one, provided `git diff` shows no change to the
+build inputs — `Cargo.toml`, `Cargo.lock`, the toolchain pin, both crates'
+manifests and sources, `ts/src`, `ts/package.json`, and `package-lock.json` — and
+it reads the addon back out of each platform tarball to prove it is the binary the
+run's checksums record.
 
 ## 4. Provenance record
 

@@ -3,15 +3,16 @@
  * Publishes the verified release candidate: the five platform packages first,
  * then the facade.
  *
- * The bundle must be a CI build of the approved commit: `provenance.json` names
- * that commit, every tarball matches its own inventory hash, every packed binary
- * is the bundle's artifact according to `SHA256SUMS`, and every target listed as
- * byte-reproducible in `release/<version>/approved.json` must also match the
- * approved hash exactly. The facade and the Linux/macOS binaries reproduce byte
- * for byte in CI, so they are compared exactly; the Windows DLL does not (see
- * "What is not claimed" in docs/engineering/reproducible-build.md), so it is
- * held to the approved commit and the bundle's own checksums instead of a frozen
- * hash from another run.
+ * The bundle must be a CI build of the approved source: `provenance.json` names
+ * the commit, and that commit is either the approved one or a later commit whose
+ * build inputs are unchanged. Every platform tarball must contain the binary the
+ * bundle's `SHA256SUMS` records, and every target listed as byte-reproducible in
+ * `release/<version>/approved.json` must also match the approved hash exactly.
+ * The facade and the Linux/macOS binaries reproduce byte for byte in CI, so they
+ * are compared exactly; the Windows DLL does not (see "What is not claimed" in
+ * docs/engineering/reproducible-build.md), so it is held to the approved build
+ * inputs and the bundle's own checksums instead of a frozen hash from another
+ * run.
  *
  * Nothing is published unless all of that holds. A package that already exists
  * at this version aborts the run instead of being replaced.
@@ -74,11 +75,53 @@ if (inventory.version !== version) {
   process.exit(1);
 }
 
-// The bundle must be a build of the approved commit, not of whatever happens to
-// be checked out. `provenance.json` is written by `assemble-rc` in the bundle.
+// The content that determines the published bytes. A commit later than the
+// approved one is publishable only when none of these changed in between.
+const BUILD_INPUTS = [
+  "Cargo.toml",
+  "Cargo.lock",
+  "rust-toolchain.toml",
+  "crates/sendust-core/Cargo.toml",
+  "crates/sendust-core/src",
+  "crates/sendust-napi/Cargo.toml",
+  "crates/sendust-napi/src",
+  "crates/sendust-napi/build.rs",
+  "ts/src",
+  "ts/package.json",
+  "package-lock.json",
+];
+
+/** Build inputs that differ between two commits, or null when git cannot tell. */
+function changedBuildInputs(base, head) {
+  try {
+    const out = execFileSync("git", ["diff", "--name-only", `${base}..${head}`, "--", ...BUILD_INPUTS], {
+      cwd: root,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    return out ? out.split("\n") : [];
+  } catch {
+    return null;
+  }
+}
+
+/** SHA-256 of the addon inside a packed platform tarball, or null when absent. */
+function packedBinary(tarball) {
+  try {
+    const bytes = execFileSync("tar", ["-xOf", tarball, "package/sendust.node"], {
+      maxBuffer: 64 * 1024 * 1024,
+    });
+    return createHash("sha256").update(bytes).digest("hex");
+  } catch {
+    return null;
+  }
+}
+
+// The bundle must come from the approved source, not from whatever happens to be
+// checked out. `provenance.json` is written by `assemble-rc` in the bundle.
 if (!existsSync(provenancePath)) {
   if (dryRun) {
-    console.log("publish-release: warning: no provenance.json, so the approved commit is unverified");
+    console.log("publish-release: warning: no provenance.json, so the source commit is unverified");
   } else {
     console.error("publish-release: no provenance.json; run `npm run assemble:rc` first");
     process.exit(1);
@@ -90,12 +133,25 @@ if (!existsSync(provenancePath)) {
     process.exit(1);
   }
   if (provenance.commit !== approved.commit) {
-    const message = `the bundle was built from ${provenance.commit}, not the approved ${approved.commit}`;
-    if (dryRun) {
-      console.log(`publish-release: warning: ${message}`);
+    // A later commit is fine when it only touched documentation, tests, or
+    // tooling: the artifacts are the build of the approved inputs.
+    const changed = changedBuildInputs(approved.commit, provenance.commit);
+    if (changed === null || changed.length > 0) {
+      const detail =
+        changed === null
+          ? "the approved commit is not in this checkout, so the inputs cannot be compared"
+          : `changed build input(s): ${changed.join(", ")}`;
+      const message = `the bundle was built from ${provenance.commit}, not the approved ${approved.commit}, and ${detail}`;
+      if (dryRun) {
+        console.log(`publish-release: warning: ${message}`);
+      } else {
+        console.error(`publish-release: ${message}`);
+        process.exit(1);
+      }
     } else {
-      console.error(`publish-release: ${message}`);
-      process.exit(1);
+      console.log(
+        `publish-release: ${provenance.commit} builds the approved ${approved.commit} inputs unchanged`,
+      );
     }
   }
   if (provenance.dirty) {
@@ -157,24 +213,38 @@ for (const [target, entry] of packed) {
     console.error(`publish-release: ${entry.file} does not match the inventory hash`);
     process.exit(1);
   }
+
+  // The tarball hash alone proves nothing about its contents, so read the addon
+  // back out and tie it to the artifact this run built.
+  const built = packedBinary(file);
+  if (built === null) {
+    console.error(`publish-release: ${entry.name} does not contain package/sendust.node`);
+    process.exit(1);
+  }
+  if (built !== entry.artifactSha256) {
+    console.error(
+      `publish-release: ${entry.name} contains ${built}, but the inventory records ${entry.artifactSha256}`,
+    );
+    process.exit(1);
+  }
   if (sums.size > 0) {
-    const built = sums.get(`sendust-${target}.node`);
-    if (built !== entry.artifactSha256) {
+    const recorded = sums.get(`sendust-${target}.node`);
+    if (recorded !== built) {
       console.error(
-        `publish-release: ${entry.name} packs ${entry.artifactSha256}, but the bundle's checksums record ${built ?? "nothing"} for ${target}`,
+        `publish-release: ${entry.name} contains ${built}, but the bundle's checksums record ${recorded ?? "nothing"} for ${target}`,
       );
       process.exit(1);
     }
   }
 
   const approvedHash = approved.artifacts[target];
-  if (entry.artifactSha256 === approvedHash) {
+  if (built === approvedHash) {
     continue;
   }
-  const message = `${entry.name} packs ${entry.artifactSha256}, but the approved ${target} artifact is ${approvedHash}`;
+  const message = `${entry.name} contains ${built}, but the approved ${target} artifact is ${approvedHash}`;
   if (!byteReproducible.has(target)) {
     console.log(
-      `publish-release: ${entry.name} is a fresh CI build of the approved commit; ${target} does not reproduce byte for byte (observed ${entry.artifactSha256}, approval run ${approvedHash})`,
+      `publish-release: ${entry.name} is a fresh CI build of the approved source; ${target} does not reproduce byte for byte (observed ${built}, approval run ${approvedHash})`,
     );
     continue;
   }
