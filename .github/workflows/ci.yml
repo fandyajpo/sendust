@@ -139,6 +139,14 @@ jobs:
       - name: Binding tests
         run: npm --workspace ./ts run test
 
+      # The P15-001 guide's snippets are executed here, so a doc change that no
+      # longer matches the package fails the build.
+      - name: Build the facade for the documentation sample
+        run: npm --workspace ./ts run build
+
+      - name: Quick start documentation sample
+        run: node tests/docs/quickstart.mjs
+
       - name: Forced-GC probe
         run: node --expose-gc tests/runtime/gc.mjs
 

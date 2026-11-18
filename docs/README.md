@@ -80,6 +80,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 66 | [Platform matrix](qa/platform-matrix.md) | P14-003 target matrix, per-platform package layout, build recipes, and unsupported set |
 | 67 | [Platform validation](qa/platform-validation.md) | P14-004 clean-install, load, send, BUSY, close, and negative results per target |
 | 68 | [PHASE-14 distribution record](gates/phase-14.md) | QG-14 checklist, support declaration, runtime matrix, findings, and the approved decision |
+| 69 | [Quick start and semantic contract](guides/quick-start.md) | P15-001 install steps, first send, accepted/rejected/unknown and BUSY semantics, and the executable sample |
 
 ## 2. Directory map
 
@@ -110,7 +111,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P14 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance; PHASE-14 records distribution on five native targets. P15–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P14 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance; PHASE-14 records distribution on five native targets. P15 (documentation) is IN PROGRESS (P15-001 completed); P16–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -146,8 +147,9 @@ P00–P14 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P14-003 | COMPLETED — five-target matrix |
 | P14-004 | COMPLETED — per-target install, runtime and behaviour validation |
 | P14-005 | COMPLETED — PHASE-14 approved 2026-11-17 |
-| P15–P18 | NOT STARTED |
-| Next task | P15-001 — quick start and semantic contract |
+| P15-001 | COMPLETED — quick start and semantic contract, with an executed sample |
+| P15-002–P18 | NOT STARTED |
+| Next task | P15-002 — lifecycle, timeouts, concurrency, and limits |
 
 ## 5. Conventions
 

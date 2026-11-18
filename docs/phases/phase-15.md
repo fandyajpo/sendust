@@ -1,6 +1,6 @@
 # Phase 15 — Documentation
 
-**Phase status:** NOT STARTED  
+**Phase status:** IN PROGRESS (P15-001 completed)  
 **Phase dependency:** Phase 09  
 **Companion references:** [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [reliability strategy](../engineering/reliability-strategy.md), [release strategy](../engineering/release-strategy.md)
 
@@ -17,7 +17,7 @@ In scope: API reference for `ts/src`, quick start, relay-accepted semantics, lif
 ### P15-001 — Write the quick start and semantic contract
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** COMPLETED — [quick start](../guides/quick-start.md), executed by `tests/docs/quickstart.mjs`
 - **Prerequisites:** P09-005
 - **Description:** Document installation assumptions, transport configuration, one successful send, and explicit close. Define “success” as relay acceptance, not delivery. Explain overall `accepted`, `rejected`, `unknown`, recipient `accepted`/`rejected`/`unknown`, and `BUSY`, and state that explicit final negative DATA replies are `rejected`, missing/ambiguous final replies after DATA may have reached the relay are `unknown`, and neither is retried. Include a minimal fake-relay example and a production-relay example without real credentials.
 - **Evidence criteria:** Every code sample compiles against the public types and runs locally with the fake relay. Semantics section contains no delivery guarantee. BUSY and unknown are explained with transaction-level behavior. Close appears in every lifecycle example.
@@ -88,4 +88,4 @@ Quick start, semantic contract, lifecycle/timeout/limits guide, address/MIME/att
 
 ## Status
 
-NOT STARTED.
+IN PROGRESS. P15-001 is COMPLETED; P15-002 to P15-005 are NOT STARTED.
