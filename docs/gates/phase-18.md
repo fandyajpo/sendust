@@ -1,7 +1,8 @@
 # PHASE-18 — Post-MVP closure record
 
-**Decision:** prepared — P18-001 to P18-004 COMPLETED, P18-005 closure prepared,
-PHASE-18 approval pending the project owner
+**Decision:** APPROVED — project owner approval, 2026-11-18. P18-001 to P18-005
+are COMPLETED; the planning program is closed and no post-MVP implementation is
+authorized
 **Phase:** P18 — Post-MVP
 **Gate:** PHASE-18
 **Prepared:** 2026-11-18
@@ -21,7 +22,7 @@ changed no code, test, package, or published artifact: the MVP baseline is still
 | P18-002 | COMPLETED | [Post-MVP candidate matrix](../research/post-mvp-candidates.md): SMTPUTF8, `AbortSignal`, platform and runtime expansion, richer reporting, and the rejected set, each with benefit, risk, compatibility, ADR, and evidence needs |
 | P18-003 | COMPLETED | [Connection pooling research](../research/connection-pooling.md): the contract reuse must preserve, four options, the evidence an ADR would need, and the decision to defer |
 | P18-004 | COMPLETED | [Compatibility and deprecation policy](../engineering/compatibility-policy.md): what each semver level may change, the frozen MVP contract, the deprecation process, and the support windows |
-| P18-005 | IN PROGRESS | This record and the [post-MVP backlog](../planning/post-mvp-backlog.md); the phase decision awaits the project owner |
+| P18-005 | COMPLETED | This record and the [post-MVP backlog](../planning/post-mvp-backlog.md), approved by the project owner on 2026-11-18 |
 
 ## 2. Gate checklist
 
@@ -57,14 +58,15 @@ artifact was found.
 pooling research, and compatibility policy are accepted as the post-MVP research
 baseline.
 
-**P18-005 — closure prepared, awaiting PHASE-18 approval.** The backlog is
-prioritized, the rejected items carry reasons, and the handoff states that every
+**P18-005 — COMPLETED and PHASE-18 APPROVED by the project owner on
+2026-11-18.** The backlog is accepted as the prioritized post-MVP baseline: every
+row carries its rationale, dependencies, required ADR, evidence, and entry
+criteria, the rejected items carry their reasons, and the handoff states that each
 future phase starts from one row with its ADR and evidence agreed first.
 
 PHASE-18 approval closes the planning program. It does not authorize any post-MVP
-implementation: each future capability needs its own ADR, evidence, and release
-gate, and the compatibility policy decides whether it is a minor or a major
-release.
+implementation; the compatibility policy decides whether a proposal is a minor or
+a major release, and the published MVP baseline is unchanged.
 
 ## 6. Non-goals for this phase
 

@@ -1,6 +1,6 @@
 # Phase 18 — Post-MVP
 
-**Phase status:** IN PROGRESS (P18-001 to P18-004 completed; P18-005 closure prepared, awaiting the project owner's PHASE-18 decision)  
+**Phase status:** COMPLETED (PHASE-18 approved by the project owner, 2026-11-18)  
 **Phase dependency:** Phase 17  
 **Companion references:** [release strategy](../engineering/release-strategy.md), [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [reliability strategy](../engineering/reliability-strategy.md)
 
@@ -49,7 +49,7 @@ In scope: post-MVP intake, feedback triage, candidate feature evaluation (SMTPUT
 ### P18-005 — Post-MVP intake gate and next-cycle handoff
 
 - **Size:** S
-- **Status:** IN PROGRESS — [PHASE-18 record](../gates/phase-18.md) and [post-MVP backlog](../planning/post-mvp-backlog.md); the phase decision awaits the project owner
+- **Status:** COMPLETED — [PHASE-18 record](../gates/phase-18.md) and [post-MVP backlog](../planning/post-mvp-backlog.md); approved by the project owner on 2026-11-18
 - **Prerequisites:** P18-001, P18-002, P18-003, P18-004
 - **Description:** Consolidate triage, research, and policy into a prioritized next-cycle backlog. Separate must-fix defects from optional features and rejected ideas. Confirm no post-MVP item has altered the approved MVP artifact or semantics. Hand off with explicit entry criteria for any future phase.
 - **Evidence criteria:** Backlog has priority, rationale, dependencies, required ADR, and evidence criteria for each item. Rejected items include reasons. MVP baseline and published hashes remain unchanged. The gate records that no post-MVP implementation started in this phase.
@@ -89,7 +89,7 @@ Feedback intake templates, triage log, post-MVP candidate matrix, connection poo
 
 ## Status
 
-IN PROGRESS. P18-001 is COMPLETED with the [post-MVP intake and defect
+COMPLETED. P18-001 is COMPLETED with the [post-MVP intake and defect
 triage](../qa/post-mvp-intake.md): channels, the intake template, the four
 classification rules, and the triage log for every open item at the MVP release.
 P18-002 is COMPLETED with the [post-MVP candidate matrix](../research/post-mvp-candidates.md):
@@ -100,7 +100,8 @@ research](../research/connection-pooling.md): reuse is deferred, a pool with an
 internal queue is rejected, and the MVP keeps one connection per send. P18-004 is
 COMPLETED with the [compatibility and deprecation policy](../engineering/compatibility-policy.md):
 what each semver level may change, the frozen MVP contract, and the deprecation
-process. P18-005 is IN PROGRESS with the [post-MVP backlog](../planning/post-mvp-backlog.md)
-and its closure in the [PHASE-18 record](../gates/phase-18.md); the phase decision
-awaits the project owner. No candidate is implemented, no item is a defect
-against the published artifact, and the published MVP is unchanged.
+process. P18-005 and PHASE-18 are COMPLETED, approved by the project owner on
+2026-11-18 in the [PHASE-18 record](../gates/phase-18.md), which also hands off
+the [post-MVP backlog](../planning/post-mvp-backlog.md). No candidate is
+implemented, no item is a defect against the published artifact, and the published
+MVP is unchanged.

@@ -188,3 +188,15 @@ Milestones are evidence checkpoints, not calendar dates. A milestone is reached 
 | M6 | P15, P16 |
 | M7 | P17 |
 | Post-MVP | P18 |
+
+
+## Post-MVP
+
+**CLOSED — 2026-11-18**
+
+The [PHASE-18 record](../gates/phase-18.md) approves the post-MVP intake, the
+candidate matrix, the connection-pooling research, the compatibility and
+deprecation policy, and the prioritized backlog. It closes the planning program
+and authorizes no post-MVP implementation: each future item starts from the
+[backlog](post-mvp-backlog.md) with its ADR and its evidence criteria agreed
+first.

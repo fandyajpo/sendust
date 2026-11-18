@@ -131,7 +131,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P16 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance; PHASE-14 records distribution on five native targets; PHASE-15 records the user and maintainer documentation; PHASE-16 records the release-engineering gate and assembles candidate `0.1.0-rc.1` with its hashes and no publication. P17 is COMPLETE: the candidate was verified, the owner approved the MVP and the publication, six packages were published to npm on 2026-11-18 and verified from the registry, and PHASE-17 is approved — the MVP is released. P18 is IN PROGRESS with the post-MVP intake and triage recorded. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P16 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance; PHASE-14 records distribution on five native targets; PHASE-15 records the user and maintainer documentation; PHASE-16 records the release-engineering gate and assembles candidate `0.1.0-rc.1` with its hashes and no publication. P17 is COMPLETE: the candidate was verified, the owner approved the MVP and the publication, six packages were published to npm on 2026-11-18 and verified from the registry, and PHASE-17 is approved — the MVP is released. P18 is COMPLETE with the post-MVP intake, triage, candidate research, pooling research, compatibility policy, and backlog; PHASE-18 is approved and the planning program is closed. Every phase task is complete with evidence. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -186,8 +186,8 @@ P00–P16 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P18-002 | COMPLETED — SMTPUTF8, `AbortSignal`, and platform-expansion candidate matrix |
 | P18-003 | COMPLETED — connection pooling research; reuse deferred, no queue |
 | P18-004 | COMPLETED — compatibility and deprecation policy |
-| P18-005 | IN PROGRESS — closure prepared in the PHASE-18 record; the phase decision is the project owner's |
-| Next step | The project owner decides PHASE-18 and creates the annotated tag `v0.1.0-rc.1` |
+| P18-005 | COMPLETED — PHASE-18 approved 2026-11-18; planning program closed |
+| Next step | The only open owner action is the annotated tag `v0.1.0-rc.1` on `a8a71e7`; post-MVP work starts from the backlog with its own ADR |
 
 ## 5. Conventions
 
