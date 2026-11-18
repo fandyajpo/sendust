@@ -1,6 +1,6 @@
 # Phase 16 — Release engineering
 
-**Phase status:** IN PROGRESS (P16-001 and P16-002 completed)  
+**Phase status:** IN PROGRESS (P16-001 to P16-004 completed)  
 **Phase dependency:** Phase 14, Phase 12, Phase 15, Phase 13  
 **Companion references:** [release strategy](../engineering/release-strategy.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [performance strategy](../engineering/performance-strategy.md), [system design](../architecture/system-design.md)
 
@@ -33,7 +33,7 @@ In scope: release checklist, versioning policy, reproducible build inputs, artif
 ### P16-003 — Draft release notes and migration/limitations section
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** COMPLETED — [0.1.0-rc.1 release notes](../releases/0.1.0-rc.1.md)
 - **Prerequisites:** P16-001, P15-005
 - **Description:** Draft release notes from the changelog and documentation: supported platforms and tested Node.js/Bun/Deno versions, installation, relay-accepted semantics, unknown-after-DATA, BUSY, close, caps, attachment opt-in, TLS requirements, and explicit non-goals. Include known limitations and any migration notes for API/status changes.
 - **Evidence criteria:** Notes contain no delivery guarantee, no retry/pooling claim, and no unsupported platform. Every limitation links to documentation. Status semantics match P02/P09/P15 exactly. Draft is reviewed by QA and security owners.
@@ -41,7 +41,7 @@ In scope: release checklist, versioning policy, reproducible build inputs, artif
 ### P16-004 — Create the release checklist and rollback plan
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** COMPLETED — [release checklist and rollback plan](../engineering/release-checklist.md)
 - **Prerequisites:** P16-002, P16-003, P12-005, P13-005
 - **Description:** Define pre-release checks: clean build, full test matrix, security gate, performance report, distribution matrix, documentation accuracy, artifact checksums, license/SBOM, and secret scan. Define rollback/unpublish criteria, yanked-version process, consumer communication, and artifact quarantine. Distinguish candidate assembly from publication approval.
 - **Evidence criteria:** Checklist has owner, evidence link, and pass condition for every item. Rollback plan covers bad binary, contract bug, security issue, and install breakage. No checklist item relies on unpublished evidence. Publication remains explicitly out of scope.
@@ -88,5 +88,4 @@ Versioning/changelog policy, reproducible build recipe, provenance/SBOM, release
 
 ## Status
 
-IN PROGRESS. P16-001 and P16-002 are COMPLETED; P16-003 to P16-005 are NOT
-STARTED.
+IN PROGRESS. P16-001 to P16-004 are COMPLETED; P16-005 is NOT STARTED.
