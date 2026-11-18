@@ -4,7 +4,7 @@
 **Phase:** P16 — Release engineering
 **Gate:** PHASE-16
 **Prepared:** 2026-11-18
-**Candidate:** `0.1.0-rc.1` at commit `023f6fc3b60590d177dd3ea834f0f6737dbf5d54`
+**Candidate:** `0.1.0-rc.1` at commit `a8a71e7b613e0c56bbd48655ba5a2aedaa55afa5`
 **Branch:** `main`
 
 This record is the release-candidate handoff for PHASE-16. No publish command has
@@ -16,27 +16,36 @@ agent, so the decision in section 6 is the required human review step.
 | Item | Value |
 | --- | --- |
 | Version | `0.1.0-rc.1` (root and facade manifests, Cargo workspace, facade constant, lockfile, changelog — all agree) |
-| Commit | `023f6fc3b60590d177dd3ea834f0f6737dbf5d54` |
+| Commit | `a8a71e7b613e0c56bbd48655ba5a2aedaa55afa5` |
 | Working tree at assembly | clean |
 | Rust toolchain | 1.100.0 (pinned by `rust-toolchain.toml`) |
 | Node.js / npm | 22.23.5 / 10.9.2 locally; CI pins npm 12.2.2 |
 | Facade tarball | `artifacts/publish/sendust-ts-0.1.0-rc.1.tgz` |
 | Facade SHA-256 | `9470aa8ab9321d38438c8b10662bb93e622349a28c158a45d786e2af9b9b5873` |
+| Bundle job | `Release candidate bundle` (14/14 checks green on this commit) |
 
 ### Artifact hashes
 
-| Target | SHA-256 | Source |
-| --- | --- | --- |
-| `macos-arm64` | `a39b370a6c28ef96a70c37bd133d815e6801629d858a079234fd49909221eb86` | Local clean build of the candidate commit; hash recorded in `artifacts/release/0.1.0-rc.1/SHA256SUMS` |
-| `linux-x64-gnu` | produced by the `Native artifact (linux-x64)` job on this commit | CI artifact, hashed by its `assemble-rc` step |
-| `linux-arm64-gnu` | produced by the `Native artifact (linux-arm64)` job on this commit | Same |
-| `macos-x64` | produced by the Native artifact (`macos-15-intel`) job on this commit | Same |
-| `windows-x64` | produced by the `Native artifact (windows-x64)` job on this commit | Same |
+All five from the `Release candidate bundle` CI job, which downloaded each
+target's artifact from this run, ran `assemble-rc --require-all`, and uploaded
+one `release-candidate` bundle containing `provenance.json`, `dependencies.json`,
+and `SHA256SUMS`:
 
-Native artifacts are per-runner builds, so each runner's hash is authoritative for
-its own target; P17 verifies the set against the CI run for this commit before
-publishing anything. The facade tarball is target-independent and its hash above
-is the one P17 must match.
+| Target | SHA-256 |
+| --- | --- |
+| `linux-x64-gnu` | `7527891da22c7b4e672c1db6635b3a597f2c1ee03d770ae5024045ddf1bf0548` |
+| `linux-arm64-gnu` | `bf90530b39ae66236d358c3e2311ef386f9c357aa56e5900a42fcc0f9c776716` |
+| `macos-arm64` | `8da616f24ec1d2c675774641e7bbbb7976091bd552a52e8834a3aa507f007a55` |
+| `macos-x64` | `f561cbf5e6373afbaff3a81f21661c9f8d376d14c0c48ccbc7755ace6ae3e215` |
+| `windows-x64` | `afcd488212a89bb88b57e830f2b6c4617d9cac81ac1ccf7341b16c44454385de` |
+
+The hashes are per-runner builds, so this set — not a rebuild — is what P17
+verifies before publishing. The facade tarball is target-independent and its hash
+above is the one P17 must match. A local clean rebuild on macOS arm64 at this
+source produced `a39b370a…` twice, identical to itself but not to the CI runner's
+binary: linkers and host SDK paths differ, which is why the
+[reproducible build](../engineering/reproducible-build.md) document claims
+same-host reproducibility only.
 
 ## 2. Task evidence
 
@@ -60,7 +69,7 @@ is the one P17 must match.
 | 6 | Performance report | PASS — PHASE-13 approved budgets |
 | 7 | Distribution matrix | PASS — PHASE-14 approved, five targets |
 | 8 | Documentation accuracy | PASS — PHASE-15 approved; `check-docs`, `check-doc-claims`, doc sample |
-| 9 | Artifact checksums | PASS — `SHA256SUMS` for the local artifact; per-target hashes from each CI artifact job |
+| 9 | Artifact checksums | PASS — `Release candidate bundle` job: five artifacts, one hash each, uploaded as the `release-candidate` bundle |
 | 10 | Dependency inventory | PASS — `dependencies.json` (98 Rust crates, 101 npm packages) |
 | 11 | Licence | PASS — `MIT OR Apache-2.0` in both manifests and the facade tarball |
 | 12 | Publish manifest | PASS — declares the five platform packages at `0.1.0-rc.1`, `private: false`, no bundled addon |
@@ -82,7 +91,8 @@ is the one P17 must match.
 | Severity | Finding | State |
 | --- | --- | --- |
 | High | Cutting the candidate version was impossible at first: `sendust-napi` pinned `sendust-core = "=0.1.0"`, so the workspace bump broke the build | FIXED: the adapter uses a path-only dependency; `check-versions` now rejects such a pin |
-| Low | A stale artifact from the previous version was picked up by the assembler during the failed build | FIXED: the stale file was removed and the artifact rebuilt; the gate records the candidate hash |
+| Medium | The first handoff named only the local artifact hash and deferred the other four to "their jobs", so the candidate had no complete hash set | FIXED: a `Release candidate bundle` job downloads all five artifacts, runs `--require-all`, and uploads one hashed bundle; its SHA256SUMS is the table above |
+| Low | A stale artifact from a previous version was picked up by the assembler during the failed build | FIXED: the assembler now fails when an artifact is older than the native sources, and the failed build's artifact was rebuilt |
 
 No high-severity finding is open.
 
@@ -91,8 +101,8 @@ No high-severity finding is open.
 **AWAITING APPROVAL.** The project owner must confirm the release-candidate
 handoff:
 
-1. The candidate identity: `0.1.0-rc.1` at commit `023f6fc`, with the facade
-   hash and the per-target artifact hashes as recorded.
+1. The candidate identity: `0.1.0-rc.1` at commit `a8a71e7`, with the facade
+   hash and the complete five-target artifact hash set from the bundle job.
 2. The checklist in section 3 is the evidence P17 must re-verify, not re-derive.
 3. No publication has happened and none happens until P17 approves it, platform
    packages first.
