@@ -69,14 +69,28 @@ fn open_fds() -> usize {
         .unwrap_or(0)
 }
 
-/// Descriptor counts are process-wide, so these probes must not overlap.
+/// Runs one probe with the process to itself.
+///
+/// Descriptor counts are process-wide, so only one probe may hold a runtime at
+/// a time. A `#[tokio::test]` would build its runtime before the body runs,
+/// which leaves a waiting probe holding three descriptors (the reactor and its
+/// wakers) while the running probe measures: on a loaded runner those arrive
+/// after the baseline snapshot and look exactly like a leak, which is how one
+/// of these probes failed on CI with a jump of nine. Taking a blocking guard and
+/// building the runtime behind it means a probe that has not started has opened
+/// nothing, and the runtime's descriptors are closed before the guard is
+/// released because it is declared last.
 #[cfg(unix)]
-async fn serial() -> tokio::sync::MutexGuard<'static, ()> {
-    static SERIAL: std::sync::OnceLock<tokio::sync::Mutex<()>> = std::sync::OnceLock::new();
-    SERIAL
-        .get_or_init(|| tokio::sync::Mutex::new(()))
+fn probe(body: impl std::future::Future<Output = ()>) {
+    static SERIAL: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    let _guard = SERIAL
         .lock()
-        .await
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("build the test runtime");
+    runtime.block_on(body);
 }
 
 /// The probe fails only if descriptors stay above the bound.
@@ -101,135 +115,139 @@ async fn assert_descriptors_settled(before: usize, limit: usize, label: &str) {
 }
 
 #[cfg(unix)]
-#[tokio::test]
-async fn repeated_successful_sends_do_not_leak_descriptors() {
-    let _guard = serial().await;
-    let server = serving(Script::default());
-    let config = config(server.addr());
+#[test]
+fn repeated_successful_sends_do_not_leak_descriptors() {
+    probe(async {
+        let server = serving(Script::default());
+        let config = config(server.addr());
 
-    for _ in 0..3 {
-        delivery(config.clone())
-            .send(message())
-            .await
-            .expect("warm-up send");
-    }
-    let before = open_fds();
+        for _ in 0..3 {
+            delivery(config.clone())
+                .send(message())
+                .await
+                .expect("warm-up send");
+        }
+        let before = open_fds();
 
-    for _ in 0..20 {
-        delivery(config.clone())
-            .send(message())
-            .await
-            .expect("send");
-    }
+        for _ in 0..20 {
+            delivery(config.clone())
+                .send(message())
+                .await
+                .expect("send");
+        }
 
-    assert_descriptors_settled(before, 2, "descriptor leak across successes").await;
+        assert_descriptors_settled(before, 2, "descriptor leak across successes").await;
+    });
 }
 
 #[cfg(unix)]
-#[tokio::test]
-async fn repeated_failed_connections_do_not_leak_descriptors() {
-    let _guard = serial().await;
-    let port = {
-        let listener = TcpListener::bind(("127.0.0.1", 0)).expect("bind");
-        listener.local_addr().expect("addr").port()
-    };
-    let config = SmtpConfig::new("127.0.0.1", port, SmtpSecurity::ImplicitTls)
-        .expect("valid relay")
-        .with_root_certificate_pem(ca_pem())
-        .expect("trusted fixture root");
+#[test]
+fn repeated_failed_connections_do_not_leak_descriptors() {
+    probe(async {
+        let port = {
+            let listener = TcpListener::bind(("127.0.0.1", 0)).expect("bind");
+            listener.local_addr().expect("addr").port()
+        };
+        let config = SmtpConfig::new("127.0.0.1", port, SmtpSecurity::ImplicitTls)
+            .expect("valid relay")
+            .with_root_certificate_pem(ca_pem())
+            .expect("trusted fixture root");
 
-    for _ in 0..3 {
-        delivery(config.clone())
-            .send(message())
-            .await
-            .expect_err("refused");
-    }
-    let before = open_fds();
-
-    for _ in 0..50 {
-        let error = delivery(config.clone())
-            .send(message())
-            .await
-            .expect_err("refused");
-        assert_eq!(error.code(), ErrorCode::ProtocolConnectionReset);
-    }
-
-    assert_descriptors_settled(before, 2, "descriptor leak across refused connections").await;
-}
-
-#[cfg(unix)]
-#[tokio::test]
-async fn mixed_stress_loop_keeps_descriptors_and_outcomes_stable() {
-    let _guard = serial().await;
-    let server = serving(Script::default());
-    let good = config(server.addr());
-    let refused_port = {
-        let listener = TcpListener::bind(("127.0.0.1", 0)).expect("bind");
-        listener.local_addr().expect("addr").port()
-    };
-    let refused = SmtpConfig::new("127.0.0.1", refused_port, SmtpSecurity::ImplicitTls)
-        .expect("valid relay")
-        .with_root_certificate_pem(ca_pem())
-        .expect("trusted fixture root");
-
-    for _ in 0..3 {
-        delivery(good.clone())
-            .send(message())
-            .await
-            .expect("warm-up");
-        delivery(refused.clone())
-            .send(message())
-            .await
-            .expect_err("warm-up refused");
-    }
-    let before = open_fds();
-    let data_before = server.trace().count_prefix("DATA");
-
-    for iteration in 0..100 {
-        if iteration % 2 == 0 {
-            let outcome = delivery(good.clone())
+        for _ in 0..3 {
+            delivery(config.clone())
                 .send(message())
                 .await
-                .expect("stress send");
-            assert_eq!(outcome.status(), DeliveryStatus::Accepted);
-        } else {
-            let error = delivery(refused.clone())
+                .expect_err("refused");
+        }
+        let before = open_fds();
+
+        for _ in 0..50 {
+            let error = delivery(config.clone())
                 .send(message())
                 .await
-                .expect_err("stress refusal");
+                .expect_err("refused");
             assert_eq!(error.code(), ErrorCode::ProtocolConnectionReset);
         }
-    }
 
-    assert_descriptors_settled(before, 2, "descriptor leak across the stress loop").await;
-    assert_eq!(server.trace().count_prefix("DATA") - data_before, 50);
+        assert_descriptors_settled(before, 2, "descriptor leak across refused connections").await;
+    });
 }
 
 #[cfg(unix)]
-#[tokio::test]
-async fn repeated_tls_failures_do_not_leak_descriptors() {
-    let _guard = serial().await;
-    let server = serving(Script::default());
-    // No fixture root is trusted here, so every handshake fails closed.
-    let config = SmtpConfig::new("127.0.0.1", server.addr().port(), SmtpSecurity::ImplicitTls)
-        .expect("valid relay");
+#[test]
+fn mixed_stress_loop_keeps_descriptors_and_outcomes_stable() {
+    probe(async {
+        let server = serving(Script::default());
+        let good = config(server.addr());
+        let refused_port = {
+            let listener = TcpListener::bind(("127.0.0.1", 0)).expect("bind");
+            listener.local_addr().expect("addr").port()
+        };
+        let refused = SmtpConfig::new("127.0.0.1", refused_port, SmtpSecurity::ImplicitTls)
+            .expect("valid relay")
+            .with_root_certificate_pem(ca_pem())
+            .expect("trusted fixture root");
 
-    for _ in 0..3 {
-        delivery(config.clone())
-            .send(message())
-            .await
-            .expect_err("untrusted");
-    }
-    let before = open_fds();
+        for _ in 0..3 {
+            delivery(good.clone())
+                .send(message())
+                .await
+                .expect("warm-up");
+            delivery(refused.clone())
+                .send(message())
+                .await
+                .expect_err("warm-up refused");
+        }
+        let before = open_fds();
+        let data_before = server.trace().count_prefix("DATA");
 
-    for _ in 0..20 {
-        let error = delivery(config.clone())
-            .send(message())
-            .await
-            .expect_err("untrusted");
-        assert_eq!(error.code(), ErrorCode::TlsCertificate);
-    }
+        for iteration in 0..100 {
+            if iteration % 2 == 0 {
+                let outcome = delivery(good.clone())
+                    .send(message())
+                    .await
+                    .expect("stress send");
+                assert_eq!(outcome.status(), DeliveryStatus::Accepted);
+            } else {
+                let error = delivery(refused.clone())
+                    .send(message())
+                    .await
+                    .expect_err("stress refusal");
+                assert_eq!(error.code(), ErrorCode::ProtocolConnectionReset);
+            }
+        }
 
-    assert_descriptors_settled(before, 2, "descriptor leak across TLS failures").await;
-    assert_eq!(server.trace().count_prefix("MAIL"), 0);
+        assert_descriptors_settled(before, 2, "descriptor leak across the stress loop").await;
+        assert_eq!(server.trace().count_prefix("DATA") - data_before, 50);
+    });
+}
+
+#[cfg(unix)]
+#[test]
+fn repeated_tls_failures_do_not_leak_descriptors() {
+    probe(async {
+        let server = serving(Script::default());
+        // No fixture root is trusted here, so every handshake fails closed.
+        let config = SmtpConfig::new("127.0.0.1", server.addr().port(), SmtpSecurity::ImplicitTls)
+            .expect("valid relay");
+
+        for _ in 0..3 {
+            delivery(config.clone())
+                .send(message())
+                .await
+                .expect_err("untrusted");
+        }
+        let before = open_fds();
+
+        for _ in 0..20 {
+            let error = delivery(config.clone())
+                .send(message())
+                .await
+                .expect_err("untrusted");
+            assert_eq!(error.code(), ErrorCode::TlsCertificate);
+        }
+
+        assert_descriptors_settled(before, 2, "descriptor leak across TLS failures").await;
+        assert_eq!(server.trace().count_prefix("MAIL"), 0);
+    });
 }
