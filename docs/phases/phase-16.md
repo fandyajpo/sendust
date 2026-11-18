@@ -1,6 +1,6 @@
 # Phase 16 — Release engineering
 
-**Phase status:** IN PROGRESS (P16-001 completed)  
+**Phase status:** IN PROGRESS (P16-001 and P16-002 completed)  
 **Phase dependency:** Phase 14, Phase 12, Phase 15, Phase 13  
 **Companion references:** [release strategy](../engineering/release-strategy.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [performance strategy](../engineering/performance-strategy.md), [system design](../architecture/system-design.md)
 
@@ -25,7 +25,7 @@ In scope: release checklist, versioning policy, reproducible build inputs, artif
 ### P16-002 — Assemble reproducible build and artifact provenance
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** COMPLETED — [reproducible build and provenance](../engineering/reproducible-build.md), produced by `scripts/assemble-rc.mjs`
 - **Prerequisites:** P16-001
 - **Description:** Define deterministic build inputs: pinned Rust toolchain, lockfile, napi/Node-API 8 settings, TypeScript build, target matrix, and environment controls. Specify artifact checksums, SBOM or dependency inventory, and provenance metadata. Ensure builds do not fetch unverified code or require secrets. Record how rustls `ring`/`webpki-roots` features are fixed.
 - **Evidence criteria:** Build recipe reproduces identical artifact checksums in a clean environment, or documents unavoidable nondeterminism. Provenance includes source commit, toolchain, dependency inventory, and target. No secret or external relay is used. Feature set matches P01-002.
@@ -88,4 +88,5 @@ Versioning/changelog policy, reproducible build recipe, provenance/SBOM, release
 
 ## Status
 
-IN PROGRESS. P16-001 is COMPLETED; P16-002 to P16-005 are NOT STARTED.
+IN PROGRESS. P16-001 and P16-002 are COMPLETED; P16-003 to P16-005 are NOT
+STARTED.

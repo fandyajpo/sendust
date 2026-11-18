@@ -34,6 +34,7 @@ step("behaviour harness", "node", ["tests/runtime/behaviour.mjs"]);
 step("quick start sample", "node", ["tests/docs/quickstart.mjs"]);
 step("documentation claims", "node", ["scripts/check-doc-claims.mjs"]);
 step("platform artifact", "node", ["scripts/build-artifact.mjs"]);
+step("release evidence", "node", ["scripts/assemble-rc.mjs"]);
 step("per-platform resolution", "node", ["scripts/verify-platform.mjs"]);
 
 const artifacts = join(root, "artifacts");

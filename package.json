@@ -21,6 +21,7 @@
     "build:artifact": "node scripts/build-artifact.mjs",
     "verify": "node scripts/verify.mjs",
     "verify:platform": "node scripts/verify-platform.mjs",
-    "prepare:publish": "node scripts/prepare-publish.mjs"
+    "prepare:publish": "node scripts/prepare-publish.mjs",
+    "assemble:rc": "node scripts/assemble-rc.mjs"
   }
 }

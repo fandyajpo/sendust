@@ -87,6 +87,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 73 | [Maintainer guide](guides/maintainer.md) | P15-005 repository layout, commands, test harness, documentation rules, and release inputs |
 | 74 | [PHASE-15 documentation record](gates/phase-15.md) | QG-15 checklist, guide coverage, accuracy instruments, findings, and the approved decision |
 | 75 | [Versioning, tagging, and changelog policy](engineering/versioning-policy.md) | P16-001 semantic versioning, pre-release and tag format, version sources, changelog, and compatibility promises |
+| 76 | [Reproducible build and artifact provenance](engineering/reproducible-build.md) | P16-002 pinned inputs, recipe, determinism evidence, provenance and inventory format, and negative checks |
 
 ## 2. Directory map
 
@@ -159,8 +160,9 @@ P00–P15 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P15-004 | COMPLETED — error catalog, security, and operations |
 | P15-005 | COMPLETED — PHASE-15 approved 2026-11-18 |
 | P16-001 | COMPLETED — versioning, changelog, and version consistency check |
-| P16-002–P18 | NOT STARTED |
-| Next task | P16-002 — reproducible build and artifact provenance |
+| P16-002 | COMPLETED — reproducible build inputs, provenance, and dependency inventory |
+| P16-003–P18 | NOT STARTED |
+| Next task | P16-003 — release notes and limitations draft |
 
 ## 5. Conventions
 
