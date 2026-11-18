@@ -354,13 +354,32 @@ jobs:
           merge-multiple: true
           path: artifacts
 
+      - name: Install the facade toolchain
+        run: npm ci --no-audit --no-fund
+
+      # `dist` is platform-independent. One downloaded addon satisfies the
+      # package build's bundled-addon step, and no tarball produced here ships
+      # it: each platform package carries its own binary.
+      - name: Stage an addon for the facade build
+        run: cp artifacts/sendust-linux-x64.node ts/sendust.node
+
+      - name: Build the facade
+        run: npm --workspace ./ts run build
+
       # Downloaded artifacts predate this job's checkout, so the staleness check
       # is skipped here; each artifact job guards its own fresh build.
       - name: Assemble the candidate bundle
         run: node scripts/assemble-rc.mjs --require-all --allow-stale
 
+      # Publication pushes exactly these tarballs, so the bundle carries them
+      # and their hashes instead of leaving the step to a release operator.
+      - name: Pack the platform packages
+        run: node scripts/pack-platform.mjs --require-all
+
       - name: Show the artifact checksums
-        run: cat artifacts/release/*/SHA256SUMS
+        run: |
+          cat artifacts/release/*/SHA256SUMS
+          cat artifacts/release/*/PLATFORM-PACKAGES.sha256
 
       - uses: actions/upload-artifact@v4
         with:

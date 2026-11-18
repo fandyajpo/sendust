@@ -22,6 +22,7 @@
     "verify": "node scripts/verify.mjs",
     "verify:platform": "node scripts/verify-platform.mjs",
     "prepare:publish": "node scripts/prepare-publish.mjs",
+    "pack:platform": "node scripts/pack-platform.mjs",
     "assemble:rc": "node scripts/assemble-rc.mjs"
   }
 }
