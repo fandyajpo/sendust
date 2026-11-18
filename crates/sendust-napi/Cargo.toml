@@ -16,7 +16,9 @@ path = "src/lib.rs"
 workspace = true
 
 [dependencies]
-sendust-core = { path = "../sendust-core", version = "=0.1.0" }
+# Path-only: both crates are unpublished workspace members, so the version is
+# tracked once in the workspace manifest instead of in a second pin here.
+sendust-core = { path = "../sendust-core" }
 napi.workspace = true
 napi-derive.workspace = true
 tokio.workspace = true

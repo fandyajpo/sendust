@@ -48,6 +48,13 @@ for (const [label, actual] of checks) {
   }
 }
 
+// The adapter must not pin the core's version: both are unpublished workspace
+// members and the workspace manifest is the single source of that version.
+const napiManifest = read("crates/sendust-napi/Cargo.toml");
+if (/sendust-core\s*=\s*\{[^}]*version/.test(napiManifest)) {
+  fail("crates/sendust-napi/Cargo.toml pins sendust-core's version; use a path-only dependency");
+}
+
 const changelog = read("CHANGELOG.md");
 if (!changelog.includes(`## [${version}]`)) {
   fail(`CHANGELOG.md has no "## [${version}]" section`);
