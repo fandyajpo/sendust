@@ -1,6 +1,6 @@
 # Phase 17 — RC and MVP approval/publication
 
-**Phase status:** IN PROGRESS (P17-001 completed; P17-002 and P17-003 in review)  
+**Phase status:** IN PROGRESS (P17-001 and P17-002 completed; P17-003 in review)  
 **Phase dependency:** Phase 16  
 **Companion references:** [release strategy](../engineering/release-strategy.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [system design](../architecture/system-design.md)
 
@@ -25,7 +25,7 @@ In scope: RC verification, approval review, publication checklist, publication e
 ### P17-002 — Run final MVP acceptance review against authoritative constraints
 
 - **Size:** L
-- **Status:** IN REVIEW — [MVP acceptance matrix](../qa/mvp-acceptance.md); the reviewer decision is recorded in the gate record
+- **Status:** COMPLETED — [MVP acceptance matrix](../qa/mvp-acceptance.md), approved by the project owner 2026-11-18
 - **Prerequisites:** P17-001
 - **Description:** Review the candidate against every authoritative constraint: two crates with core free of Node, `TS -> napi -> core -> native SMTP engine`, no third-party SMTP engine (ADR-0017), no pooling, no automatic retries, relay-accepted semantics, unknown after DATA, BUSY with no queue, explicit close, finite timeouts, copied buffers, opt-in regular-file attachments, hard caps, address policy, TLS verification, and no public AbortSignal (C-17). Confirm documentation and release notes match.
 - **Evidence criteria:** Acceptance matrix marks each constraint pass/fail with evidence. No open high-severity defect or contract deviation. Reviewer records explicit approve or reject. Any rejection names the blocking task and does not publish.
@@ -89,6 +89,7 @@ RC verification record, MVP acceptance matrix, publication checklist and authori
 ## Status
 
 IN PROGRESS. P17-001 is COMPLETED with the [RC verification record](../qa/rc-verification.md);
-P17-002 and P17-003 are IN REVIEW, waiting on the project owner's acceptance
-decision and publication authorization. P17-004 and P17-005 are NOT STARTED, and
-no publication has happened.
+P17-002 is COMPLETED with the [MVP acceptance matrix](../qa/mvp-acceptance.md),
+approved by the project owner. P17-003 is IN REVIEW, waiting on the publication
+authorization. P17-004 and P17-005 are NOT STARTED, and no publication has
+happened.

@@ -83,7 +83,8 @@ attachment, "all platforms", or "all Node versions" claim.
 
 ## 5. Decision
 
-The matrix is complete and all 17 acceptance items and 30 constraints pass. The
-explicit approve or reject decision belongs to the project owner and is recorded
-in the [PHASE-17 gate record](../gates/phase-17.md); a rejection must name the
-blocking task and no publication may occur.
+**APPROVED by the project owner, 2026-11-18.** The matrix was accepted as the
+release baseline for `0.1.0-rc.1`: all 17 acceptance items and all 30 constraints
+pass with the recorded evidence, and no blocking defect or contract deviation is
+open. The approval is recorded in the [PHASE-17 gate record](../gates/phase-17.md);
+it accepts the candidate and does not authorize publication, which is P17-003.

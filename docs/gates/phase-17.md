@@ -1,7 +1,7 @@
 # QG-17 — RC and MVP approval record
 
-**Decision:** PENDING — RC verified and acceptance matrixed; publication not
-authorized
+**Decision:** P17-002 APPROVED — MVP acceptance accepted by the project owner,
+2026-11-18; publication (P17-003) not authorized
 **Phase:** P17 — RC and MVP approval/publication
 **Gate:** PHASE-17
 **Prepared:** 2026-11-18
@@ -33,7 +33,7 @@ Verified in the [RC verification record](../qa/rc-verification.md).
 | Task | Status | Evidence |
 | --- | --- | --- |
 | P17-001 | COMPLETED | [RC verification](../qa/rc-verification.md): identity, contents, evidence completeness, critical smokes from the candidate artifacts, and no mismatch |
-| P17-002 | IN REVIEW | [MVP acceptance matrix](../qa/mvp-acceptance.md): all 17 acceptance items and all 30 constraints PASS with evidence; the approve/reject decision is section 6 |
+| P17-002 | COMPLETED | [MVP acceptance matrix](../qa/mvp-acceptance.md): all 17 acceptance items and all 30 constraints PASS with evidence; approved by the project owner on 2026-11-18 |
 | P17-003 | IN REVIEW | [Publication checklist](../engineering/publication-checklist.md): inputs, pre-flight checks, publish order, post-publication verification, tag, and rollback; the authorization table is PENDING |
 | P17-004 | NOT STARTED | Blocked by P17-003 authorization |
 | P17-005 | NOT STARTED | Blocked by P17-004 |
@@ -79,16 +79,19 @@ No high-severity finding is open.
 
 ## 6. Decision
 
-**PENDING.** The project owner must record two things, in this order:
+**P17-002 — APPROVED by the project owner on 2026-11-18.** The MVP acceptance
+matrix is accepted as the release baseline: the candidate is `0.1.0-rc.1` at
+`a8a71e7`, every acceptance item and constraint passes with the recorded
+evidence, and no blocking defect or contract deviation is open.
 
-1. **MVP acceptance (P17-002):** approve or reject the candidate against the
-   [acceptance matrix](../qa/mvp-acceptance.md). A rejection names the blocking
-   task and no artifact is published.
-2. **Publication authorization (P17-003):** sign the authorization table in the
-   [publication checklist](../engineering/publication-checklist.md), naming the
-   six packages, the candidate version and hashes, and the `next` dist-tag.
+**P17-003 — not yet authorized.** The authorization table in the
+[publication checklist](../engineering/publication-checklist.md) is still
+`PENDING`. It must name the six packages, the candidate version and hashes, and
+the `next` dist-tag before any publish command runs. Publishing also requires an
+authenticated npm account that owns the `@sendust` scope; the build machine is not
+signed in, so no publication is possible from here until that is done.
 
-Until both are recorded, P17-004 does not run and nothing is published. A checksum
+Until both are in place, P17-004 does not run and nothing is published. A checksum
 mismatch, a failed consumer check before publication, or any publication action
 taken without the authorization reopens this gate.
 
