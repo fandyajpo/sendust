@@ -1,6 +1,6 @@
 # Phase 18 — Post-MVP
 
-**Phase status:** IN PROGRESS (P18-001 completed)  
+**Phase status:** IN PROGRESS (P18-001 and P18-002 completed)  
 **Phase dependency:** Phase 17  
 **Companion references:** [release strategy](../engineering/release-strategy.md), [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [reliability strategy](../engineering/reliability-strategy.md)
 
@@ -25,7 +25,7 @@ In scope: post-MVP intake, feedback triage, candidate feature evaluation (SMTPUT
 ### P18-002 — Evaluate SMTPUTF8, AbortSignal, and platform expansion candidates
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** COMPLETED — [post-MVP candidate matrix](../research/post-mvp-candidates.md)
 - **Prerequisites:** P18-001
 - **Description:** Research post-MVP candidates without committing implementation: SMTPUTF8 support, AbortSignal integration, additional Node.js, Bun, and Deno versions/platforms, and richer recipient reporting if the native engine exposes it. Assess compatibility, security, API impact, and test burden. Preserve ASCII local parts and IDNA domains for MVP compatibility.
 - **Evidence criteria:** Candidate matrix lists benefit, risk, compatibility, required ADR, and evidence needed. SMTPUTF8 remains explicitly post-MVP until an ADR proves relay support and encoding behavior. AbortSignal must map to bounded close semantics, not required shutdown. Platform expansion requires lifecycle and distribution evidence.
@@ -92,5 +92,9 @@ Feedback intake templates, triage log, post-MVP candidate matrix, connection poo
 IN PROGRESS. P18-001 is COMPLETED with the [post-MVP intake and defect
 triage](../qa/post-mvp-intake.md): channels, the intake template, the four
 classification rules, and the triage log for every open item at the MVP release.
-No item was classified as a defect against the published artifact, and no
-semantic change was accepted. P18-002 to P18-005 are NOT STARTED.
+P18-002 is COMPLETED with the [post-MVP candidate matrix](../research/post-mvp-candidates.md):
+SMTPUTF8, `AbortSignal`, platform and runtime expansion, and the rejected
+candidates, each with its benefit, risk, compatibility impact, required ADR, and
+the evidence it would need. No candidate is implemented and the published MVP is
+unchanged. No item was classified as a defect against the published artifact. P18-003
+to P18-005 are NOT STARTED.

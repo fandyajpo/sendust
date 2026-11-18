@@ -96,6 +96,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 82 | [Publication checklist and authorization](engineering/publication-checklist.md) | P17-003 inputs, pre-flight checks, CI publish path, post-publication checks, tag, and rollback |
 | 83 | [PHASE-17 record](gates/phase-17.md) | QG-17 checklist, publication evidence, findings, and the approved decision |
 | 84 | [Post-MVP intake and defect triage](qa/post-mvp-intake.md) | P18-001 channels, template, classification rules, and the triage log |
+| 85 | [Post-MVP candidate matrix](research/post-mvp-candidates.md) | P18-002 SMTPUTF8, `AbortSignal`, pooling pointer, platform expansion, and rejected candidates with their evidence needs |
 
 ## 2. Directory map
 
@@ -178,7 +179,8 @@ P00–P16 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P17-004 | COMPLETED — six packages published to npm 2026-11-18 and verified from the registry |
 | P17-005 | COMPLETED — PHASE-17 approved 2026-11-18; MVP released |
 | P18-001 | COMPLETED — post-MVP intake channels, template, classification, and triage log |
-| P18-002–P18-005 | NOT STARTED |
+| P18-002 | COMPLETED — SMTPUTF8, `AbortSignal`, and platform-expansion candidate matrix |
+| P18-003–P18-005 | NOT STARTED |
 | Next step | P18-002 evaluates SMTPUTF8, `AbortSignal`, and platform expansion; the annotated tag `v0.1.0-rc.1` is still the project owner's to create |
 
 ## 5. Conventions
