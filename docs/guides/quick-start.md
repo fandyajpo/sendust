@@ -25,11 +25,12 @@ The package is published as the pre-release `0.1.0-rc.1`:
 npm install @sendust/ts@0.1.0-rc.1
 ```
 
-Install the exact version or the `next` tag (`npm install @sendust/ts@next`). If
-a bare `npm install @sendust/ts` reports
-`ETARGET No matching version found for @sendust/ts@*`, npm is resolving the
-`latest` tag from package metadata it cached, or fetched from a mirror or proxy,
-before this release existed. `npm cache clean --force` drops the stale copy,
+Install the exact version or the `next` tag (`npm install @sendust/ts@next`). A
+bare `npm install @sendust/ts` resolves the `latest` tag, and it fails with
+`ETARGET No matching version found for @sendust/ts@*` when npm reads cached or
+mirrored metadata from before the publish, or when the consumer's own
+`package.json` declares `"@sendust/ts": "*"`, because a `*` range never matches
+a pre-release. `npm cache clean --force` drops the stale copy,
 `npm config get registry` should report `https://registry.npmjs.org/`, and the
 pinned command above always resolves.
 
