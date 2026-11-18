@@ -1,6 +1,6 @@
 # Phase 18 — Post-MVP
 
-**Phase status:** IN PROGRESS (P18-001 and P18-002 completed)  
+**Phase status:** IN PROGRESS (P18-001 to P18-004 completed; P18-005 closure prepared, awaiting the project owner's PHASE-18 decision)  
 **Phase dependency:** Phase 17  
 **Companion references:** [release strategy](../engineering/release-strategy.md), [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [reliability strategy](../engineering/reliability-strategy.md)
 
@@ -33,7 +33,7 @@ In scope: post-MVP intake, feedback triage, candidate feature evaluation (SMTPUT
 ### P18-003 — Evaluate connection pooling as separate future research; queue/job orchestration is held outside the roadmap
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** COMPLETED — [connection pooling research](../research/connection-pooling.md)
 - **Prerequisites:** P18-001
 - **Description:** Investigate whether connection pooling could be offered in a future release without violating MVP lifecycle and BUSY semantics. Analyze session health, concurrency, relay behavior, resource limits, and close/drain interaction. Retry policy may be researched only as a separate caller-owned policy; no automatic retry implementation is included. Queueing, workers, persistence, scheduling, and queue adapters are not part of this phase or the current roadmap.
 - **Evidence criteria:** Research record states MVP remains one-connection-per-send with no pooling and no automatic retry. Any pooling proposal includes lifecycle, concurrency, resource, and compatibility analysis. No queue architecture or adapter contract is produced. No code change occurs in this phase.
@@ -41,7 +41,7 @@ In scope: post-MVP intake, feedback triage, candidate feature evaluation (SMTPUT
 ### P18-004 — Define the next compatibility and deprecation policy
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** COMPLETED — [compatibility and deprecation policy](../engineering/compatibility-policy.md)
 - **Prerequisites:** P18-002, P18-003
 - **Description:** Define how post-MVP releases preserve status semantics, error codes, close behavior, caps, TLS posture, and support matrix. Specify deprecation notice periods, migration guidance, and the rule that relaxing limits or adding features requires documentation and tests. Clarify that delivery confirmation is not planned without a separate product decision.
 - **Evidence criteria:** Policy covers semantic versioning, deprecation, support windows, and breaking-change approval. It forbids silently enabling pooling, retry, SMTPUTF8, or URL attachments. Each future feature requires an ADR, tests, docs, and release-gate evidence. MVP constraints remain the baseline.
@@ -49,7 +49,7 @@ In scope: post-MVP intake, feedback triage, candidate feature evaluation (SMTPUT
 ### P18-005 — Post-MVP intake gate and next-cycle handoff
 
 - **Size:** S
-- **Status:** NOT STARTED
+- **Status:** IN PROGRESS — [PHASE-18 record](../gates/phase-18.md) and [post-MVP backlog](../planning/post-mvp-backlog.md); the phase decision awaits the project owner
 - **Prerequisites:** P18-001, P18-002, P18-003, P18-004
 - **Description:** Consolidate triage, research, and policy into a prioritized next-cycle backlog. Separate must-fix defects from optional features and rejected ideas. Confirm no post-MVP item has altered the approved MVP artifact or semantics. Hand off with explicit entry criteria for any future phase.
 - **Evidence criteria:** Backlog has priority, rationale, dependencies, required ADR, and evidence criteria for each item. Rejected items include reasons. MVP baseline and published hashes remain unchanged. The gate records that no post-MVP implementation started in this phase.
@@ -95,6 +95,12 @@ classification rules, and the triage log for every open item at the MVP release.
 P18-002 is COMPLETED with the [post-MVP candidate matrix](../research/post-mvp-candidates.md):
 SMTPUTF8, `AbortSignal`, platform and runtime expansion, and the rejected
 candidates, each with its benefit, risk, compatibility impact, required ADR, and
-the evidence it would need. No candidate is implemented and the published MVP is
-unchanged. No item was classified as a defect against the published artifact. P18-003
-to P18-005 are NOT STARTED.
+the evidence it would need. P18-003 is COMPLETED with the [connection pooling
+research](../research/connection-pooling.md): reuse is deferred, a pool with an
+internal queue is rejected, and the MVP keeps one connection per send. P18-004 is
+COMPLETED with the [compatibility and deprecation policy](../engineering/compatibility-policy.md):
+what each semver level may change, the frozen MVP contract, and the deprecation
+process. P18-005 is IN PROGRESS with the [post-MVP backlog](../planning/post-mvp-backlog.md)
+and its closure in the [PHASE-18 record](../gates/phase-18.md); the phase decision
+awaits the project owner. No candidate is implemented, no item is a defect
+against the published artifact, and the published MVP is unchanged.

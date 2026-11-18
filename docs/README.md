@@ -97,6 +97,10 @@ This documentation set is the source of truth for product scope, requirements, a
 | 83 | [PHASE-17 record](gates/phase-17.md) | QG-17 checklist, publication evidence, findings, and the approved decision |
 | 84 | [Post-MVP intake and defect triage](qa/post-mvp-intake.md) | P18-001 channels, template, classification rules, and the triage log |
 | 85 | [Post-MVP candidate matrix](research/post-mvp-candidates.md) | P18-002 SMTPUTF8, `AbortSignal`, pooling pointer, platform expansion, and rejected candidates with their evidence needs |
+| 86 | [Connection pooling research](research/connection-pooling.md) | P18-003 the contract reuse must preserve, four options, the evidence an ADR needs, and the decision to defer |
+| 87 | [Compatibility and deprecation policy](engineering/compatibility-policy.md) | P18-004 semver levels, the frozen MVP contract, the deprecation process, and the support windows |
+| 88 | [Post-MVP backlog and next-cycle handoff](planning/post-mvp-backlog.md) | P18-005 prioritized backlog, rejected items with reasons, and the entry criteria for future work |
+| 89 | [PHASE-18 post-MVP closure record](gates/phase-18.md) | QG-18 checklist, phase evidence, findings, and the pending decision |
 
 ## 2. Directory map
 
@@ -180,8 +184,10 @@ P00–P16 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P17-005 | COMPLETED — PHASE-17 approved 2026-11-18; MVP released |
 | P18-001 | COMPLETED — post-MVP intake channels, template, classification, and triage log |
 | P18-002 | COMPLETED — SMTPUTF8, `AbortSignal`, and platform-expansion candidate matrix |
-| P18-003–P18-005 | NOT STARTED |
-| Next step | P18-002 evaluates SMTPUTF8, `AbortSignal`, and platform expansion; the annotated tag `v0.1.0-rc.1` is still the project owner's to create |
+| P18-003 | COMPLETED — connection pooling research; reuse deferred, no queue |
+| P18-004 | COMPLETED — compatibility and deprecation policy |
+| P18-005 | IN PROGRESS — closure prepared in the PHASE-18 record; the phase decision is the project owner's |
+| Next step | The project owner decides PHASE-18 and creates the annotated tag `v0.1.0-rc.1` |
 
 ## 5. Conventions
 
@@ -193,7 +199,7 @@ P00–P16 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 - Task IDs: Pxx-00y.
 - Decision IDs: ADR-0001–ADR-0020.
 - Risk IDs: R-001–R-049.
-- Gate IDs: QG-00–QG-17, QG-03A, QG-A01, QG-A02.
+- Gate IDs: QG-00–QG-18, QG-03A, QG-A01, QG-A02.
 - Milestones: M0–M7.
 
 ## 6. Current architecture amendment

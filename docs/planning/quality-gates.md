@@ -300,6 +300,19 @@ Node.js, Bun, and Deno are required MVP targets. A pass on Node.js does not sati
 | Provenance | Registry shows provenance | Registry |
 | Closure | Release notes, support matrix, and rollback plan published | Links |
 
+## QG-18 — Post-MVP intake
+
+| Check | Requirement | Evidence |
+| --- | --- | --- |
+| Intake | Channels, template, and diagnostics capture are defined | Record |
+| Triage | Every item is classified defect, documentation gap, feature request, or unsupported use | Triage log |
+| Candidates | Each candidate carries benefit, risk, compatibility, required ADR, and evidence need | Matrix |
+| Pooling | Pooling stays disabled; a pool with an internal queue is rejected | Research record |
+| Compatibility | Deprecation and support rules protect the frozen MVP contract | Policy |
+| Backlog | Prioritized, with rejected items and the reasons they were rejected | Backlog |
+| Baseline | The published MVP, its hashes, and its gates are unchanged | Registry and gate records |
+| No implementation | No post-MVP capability was implemented in this phase | Diff and record |
+
 ## Enforcement rules
 
 1. A gate is `APPROVED` only with a reviewer-attributed record listing the decision, review date, each check, and its evidence link.
