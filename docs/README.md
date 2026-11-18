@@ -91,6 +91,11 @@ This documentation set is the source of truth for product scope, requirements, a
 | 77 | [0.1.0-rc.1 release notes](releases/0.1.0-rc.1.md) | P16-003 candidate notes: support, install, semantics, limits, security, and known limitations |
 | 78 | [Release checklist and rollback plan](engineering/release-checklist.md) | P16-004 candidate checks with owners and evidence, plus the publication and rollback boundaries |
 | 79 | [PHASE-16 release-engineering record](gates/phase-16.md) | QG-16 checklist, candidate identity and hashes, findings, and the pending handoff decision |
+| 80 | [RC verification record](qa/rc-verification.md) | P17-001 candidate identity, artifact contents, evidence completeness, and critical smokes from the candidate artifacts |
+| 81 | [MVP acceptance matrix](qa/mvp-acceptance.md) | P17-002 every acceptance item and constraint with evidence, and the owner's approval |
+| 82 | [Publication checklist and authorization](engineering/publication-checklist.md) | P17-003 inputs, pre-flight checks, CI publish path, post-publication checks, tag, and rollback |
+| 83 | [PHASE-17 record](gates/phase-17.md) | QG-17 checklist, publication evidence, findings, and the approved decision |
+| 84 | [Post-MVP intake and defect triage](qa/post-mvp-intake.md) | P18-001 channels, template, classification rules, and the triage log |
 
 ## 2. Directory map
 
@@ -121,7 +126,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P16 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance; PHASE-14 records distribution on five native targets; PHASE-15 records the user and maintainer documentation; PHASE-16 records the release-engineering gate and assembles candidate `0.1.0-rc.1` with its hashes and no publication. P17 is IN PROGRESS: P17-001 to P17-003 are COMPLETE with the RC verification record, the owner-approved MVP acceptance matrix, and the signed publication authorization; P17-004 is COMPLETE — six packages published to npm on 2026-11-18 and verified from the registry — P17-005 is COMPLETE, PHASE-17 is approved, and the MVP is released; P18 is NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P16 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance; PHASE-14 records distribution on five native targets; PHASE-15 records the user and maintainer documentation; PHASE-16 records the release-engineering gate and assembles candidate `0.1.0-rc.1` with its hashes and no publication. P17 is COMPLETE: the candidate was verified, the owner approved the MVP and the publication, six packages were published to npm on 2026-11-18 and verified from the registry, and PHASE-17 is approved — the MVP is released. P18 is IN PROGRESS with the post-MVP intake and triage recorded. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -172,8 +177,9 @@ P00–P16 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P17-003 | COMPLETED — publication authorized 2026-11-18 |
 | P17-004 | COMPLETED — six packages published to npm 2026-11-18 and verified from the registry |
 | P17-005 | COMPLETED — PHASE-17 approved 2026-11-18; MVP released |
-| P18 | NOT STARTED — post-MVP intake and research |
-| Next step | P18-001 collects post-MVP feedback and triages defects; the annotated tag `v0.1.0-rc.1` is still the project owner's to create |
+| P18-001 | COMPLETED — post-MVP intake channels, template, classification, and triage log |
+| P18-002–P18-005 | NOT STARTED |
+| Next step | P18-002 evaluates SMTPUTF8, `AbortSignal`, and platform expansion; the annotated tag `v0.1.0-rc.1` is still the project owner's to create |
 
 ## 5. Conventions
 

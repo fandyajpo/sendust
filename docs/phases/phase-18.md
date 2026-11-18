@@ -1,6 +1,6 @@
 # Phase 18 — Post-MVP
 
-**Phase status:** NOT STARTED  
+**Phase status:** IN PROGRESS (P18-001 completed)  
 **Phase dependency:** Phase 17  
 **Companion references:** [release strategy](../engineering/release-strategy.md), [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [reliability strategy](../engineering/reliability-strategy.md)
 
@@ -17,7 +17,7 @@ In scope: post-MVP intake, feedback triage, candidate feature evaluation (SMTPUT
 ### P18-001 — Collect post-MVP feedback and defect intake
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** COMPLETED — [post-MVP intake and defect triage](../qa/post-mvp-intake.md)
 - **Prerequisites:** P17-005
 - **Description:** Define channels and templates for consumer feedback, bug reports, security reports, and feature requests. Triage against the proposed MVP contract: relay-accepted semantics, explicit SMTP refusal versus unknown-after-DATA, BUSY, no internal queue/worker/adapter, no automatic retry, caps, attachment policy, TLS verification, and support matrix. Separate defects from feature requests and unsupported-use reports.
 - **Evidence criteria:** Intake template captures version, platform, runtime version, relay behavior, result status, and redacted diagnostics. Every item is classified as defect, documentation gap, feature request, or unsupported use. Security reports have a private path. No item is accepted by changing MVP semantics silently.
@@ -89,4 +89,8 @@ Feedback intake templates, triage log, post-MVP candidate matrix, connection poo
 
 ## Status
 
-NOT STARTED.
+IN PROGRESS. P18-001 is COMPLETED with the [post-MVP intake and defect
+triage](../qa/post-mvp-intake.md): channels, the intake template, the four
+classification rules, and the triage log for every open item at the MVP release.
+No item was classified as a defect against the published artifact, and no
+semantic change was accepted. P18-002 to P18-005 are NOT STARTED.
