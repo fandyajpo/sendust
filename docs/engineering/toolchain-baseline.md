@@ -65,6 +65,8 @@ All commands below run from the repository root. JavaScript lint/format/typechec
 | Workspace Rust tests | `cargo test --workspace --all-targets` | Exit 0 |
 | Crate/dependency audit | `cargo metadata --format-version 1 --no-deps` then `node scripts/check-architecture.mjs` | Exactly two Rust packages; dependency direction and forbidden dependencies are valid |
 | Documentation structure audit | `node scripts/check-docs.mjs` | Relative links, IDs, phase/task counts, and index references are valid |
+| Documentation claims audit | `node scripts/check-doc-claims.mjs` | Guide codes exist in the error model, cap/timeout numbers match the code, no unsupported claims, sends close |
+| Quick start doc sample | `node tests/docs/quickstart.mjs` | The guide's loopback example sends, closes, and refuses a send after close |
 | JavaScript install | `npm ci` | Reproducible install from the committed root lockfile; installs the root package and `ts` workspace |
 | TypeScript lint | `npm --workspace ./ts run lint` | Biome exits 0 |
 | TypeScript formatting | `npm --workspace ./ts run format:check` | Biome exits 0 with no diff |

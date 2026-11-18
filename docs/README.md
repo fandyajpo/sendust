@@ -85,6 +85,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 71 | [Addresses, MIME, and attachments](guides/addressing-mime-attachments.md) | P15-003 address rules, header safety, body shapes, attachment opt-in and caps, and the content-type map |
 | 72 | [Errors, security, and operations](guides/errors-security-operations.md) | P15-004 error catalog with caller actions, redaction, TLS posture, and operational guidance |
 | 73 | [Maintainer guide](guides/maintainer.md) | P15-005 repository layout, commands, test harness, documentation rules, and release inputs |
+| 74 | [PHASE-15 documentation record](gates/phase-15.md) | QG-15 checklist, guide coverage, accuracy instruments, findings, and the pending decision |
 
 ## 2. Directory map
 
@@ -115,7 +116,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P14 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance; PHASE-14 records distribution on five native targets. P15 (documentation) is IN PROGRESS (P15-001 completed); P16–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P14 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance; PHASE-14 records distribution on five native targets. P15 (documentation) is IN PROGRESS (P15-001 to P15-004 completed, P15-005 in review); P16–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -155,8 +156,9 @@ P00–P14 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P15-002 | COMPLETED — lifecycle, timeouts, concurrency, and limits |
 | P15-003 | COMPLETED — addresses, MIME, and attachments |
 | P15-004 | COMPLETED — error catalog, security, and operations |
-| P15-005–P18 | NOT STARTED |
-| Next task | P15-005 — documentation accuracy gate and maintainer guide |
+| P15-005 | IN REVIEW — PHASE-15 gate awaiting approval |
+| P16–P18 | NOT STARTED |
+| Next step | Project owner approval of PHASE-15 |
 
 ## 5. Conventions
 
