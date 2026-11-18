@@ -1,6 +1,6 @@
 # QG-15 — Documentation Phase Record
 
-**Decision:** AWAITING APPROVAL — project owner review
+**Decision:** APPROVED — project owner review, 2026-11-18
 **Phase:** P15 — Documentation
 **Gate:** PHASE-15
 **Prepared:** 2026-11-18
@@ -83,20 +83,25 @@ attachment, or disabled verification survives the checker.
 
 ## 6. Decision
 
-**AWAITING APPROVAL.** The project owner must review the four guides and the
-maintainer guide, and confirm:
+**APPROVED, 2026-11-18.** The project owner reviewed the guides and this record
+and approved the PHASE-15 gate ("I approve PHASE-15"). The documentation was
+written by an agent, so this approval is the required human review step, not a
+self-approval. The reviewer accepted:
 
-1. The semantics match what the product promises: `accepted` is relay
-   acceptance, `unknown` is never an automatic retry signal, and BUSY is not a
-   queue signal.
-2. The security posture is stated correctly: verification cannot be disabled,
-   trust can only be extended additively, and no plaintext mode exists.
-3. The support statement is honest: five targets, Node.js/Bun/Deno, and no
-   unsupported platform or feature advertised.
+1. **The semantics.** `accepted` is relay acceptance, `unknown` is never an
+   automatic retry signal, and BUSY is not a queue signal.
+2. **The security posture.** Verification cannot be disabled, trust can only be
+   extended additively through `tlsRootCertificate`, and no plaintext mode
+   exists.
+3. **The support statement.** Five targets, Node.js/Bun/Deno, with no
+   unsupported platform or feature advertised, and the accuracy checks in
+   section 3 as the drift guard.
 
-Approval makes P15-001 to P15-005 COMPLETED and PHASE-15 APPROVED, which makes
-P16 eligible. A broken link, a failing claim check, or a doc sample that no
-longer runs reopens this gate.
+P15-001 to P15-005 are COMPLETED and PHASE-15 is APPROVED. P16 becomes eligible.
+
+Approval covers P15 only. It does not approve P16 or any later gate; a broken
+link, a failing claim check, or a doc sample that no longer runs reopens this
+gate.
 
 ## 7. Deferred and non-goals
 

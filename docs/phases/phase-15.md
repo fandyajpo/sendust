@@ -1,6 +1,6 @@
 # Phase 15 — Documentation
 
-**Phase status:** IN PROGRESS (P15-001 to P15-004 completed)  
+**Phase status:** COMPLETED (PHASE-15 approved, 2026-11-18)  
 **Phase dependency:** Phase 09  
 **Companion references:** [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [reliability strategy](../engineering/reliability-strategy.md), [release strategy](../engineering/release-strategy.md)
 
@@ -49,7 +49,7 @@ In scope: API reference for `ts/src`, quick start, relay-accepted semantics, lif
 ### P15-005 — Documentation accuracy gate and maintainer guide
 
 - **Size:** S
-- **Status:** IN REVIEW — [PHASE-15 gate record](../gates/phase-15.md), approval pending
+- **Status:** COMPLETED — [PHASE-15 gate record](../gates/phase-15.md), approved 2026-11-18
 - **Prerequisites:** P15-001, P15-002, P15-003, P15-004
 - **Description:** Validate docs against types, tests, and the support matrix. Add a maintainer guide covering the two-crate layout, no-Node-core rule, test commands, fake relay fixtures, and release inputs. Link the architecture and engineering strategies. Record known limitations and unsupported platforms.
 - **Evidence criteria:** Doc samples compile or are validated against tests. Link check passes for relative strategy docs. Maintainer guide accurately describes `crates/sendust-core/src`, `crates/sendust-napi/src`, `ts/src`, and `tests/`. No unsupported feature or platform is advertised. Phase 16 may consume P15-005.
@@ -88,6 +88,6 @@ Quick start, semantic contract, lifecycle/timeout/limits guide, address/MIME/att
 
 ## Status
 
-IN PROGRESS. P15-001 to P15-004 are COMPLETED; P15-005 is IN REVIEW, with the
-[PHASE-15 gate record](../gates/phase-15.md) awaiting the project owner's
-approval.
+COMPLETED. P15-001 to P15-005 are COMPLETED and PHASE-15 was approved by the
+project owner on 2026-11-18 ([gate record](../gates/phase-15.md)). P16 is
+eligible.
