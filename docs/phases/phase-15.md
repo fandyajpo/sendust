@@ -1,6 +1,6 @@
 # Phase 15 — Documentation
 
-**Phase status:** IN PROGRESS (P15-001 completed)  
+**Phase status:** IN PROGRESS (P15-001 and P15-002 completed)  
 **Phase dependency:** Phase 09  
 **Companion references:** [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [reliability strategy](../engineering/reliability-strategy.md), [release strategy](../engineering/release-strategy.md)
 
@@ -25,7 +25,7 @@ In scope: API reference for `ts/src`, quick start, relay-accepted semantics, lif
 ### P15-002 — Document lifecycle, timeouts, concurrency, and limits
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** COMPLETED — [lifecycle, timeouts, concurrency, and limits](../guides/lifecycle-limits.md)
 - **Prerequisites:** P15-001
 - **Description:** Explain `open -> closing -> closed`, idempotent close, the 125s close/drain bound, no GC-dependent shutdown, one active send, immediate BUSY with no queue, and finite tunable timeouts (connect 10s, operation 30s, total 120s, close 125s). Document hard caps: 100 recipients, 10 MiB per attachment, 20 MiB aggregate raw, 30 MiB wire. Include operational guidance for callers and explicitly state no pooling and no automatic retries.
 - **Evidence criteria:** Docs match P02/P09 contracts exactly. Timeout table and cap table are complete with boundary behavior. BUSY guidance says do not queue internally. No wording implies retry or delivery confirmation.
@@ -88,4 +88,5 @@ Quick start, semantic contract, lifecycle/timeout/limits guide, address/MIME/att
 
 ## Status
 
-IN PROGRESS. P15-001 is COMPLETED; P15-002 to P15-005 are NOT STARTED.
+IN PROGRESS. P15-001 and P15-002 are COMPLETED; P15-003 to P15-005 are NOT
+STARTED.

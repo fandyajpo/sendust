@@ -81,6 +81,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 67 | [Platform validation](qa/platform-validation.md) | P14-004 clean-install, load, send, BUSY, close, and negative results per target |
 | 68 | [PHASE-14 distribution record](gates/phase-14.md) | QG-14 checklist, support declaration, runtime matrix, findings, and the approved decision |
 | 69 | [Quick start and semantic contract](guides/quick-start.md) | P15-001 install steps, first send, accepted/rejected/unknown and BUSY semantics, and the executable sample |
+| 70 | [Lifecycle, timeouts, concurrency, and limits](guides/lifecycle-limits.md) | P15-002 state machine, close, BUSY, the four timeout budgets, and the four hard caps with boundary behaviour |
 
 ## 2. Directory map
 
@@ -148,8 +149,9 @@ P00–P14 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P14-004 | COMPLETED — per-target install, runtime and behaviour validation |
 | P14-005 | COMPLETED — PHASE-14 approved 2026-11-17 |
 | P15-001 | COMPLETED — quick start and semantic contract, with an executed sample |
-| P15-002–P18 | NOT STARTED |
-| Next task | P15-002 — lifecycle, timeouts, concurrency, and limits |
+| P15-002 | COMPLETED — lifecycle, timeouts, concurrency, and limits |
+| P15-003–P18 | NOT STARTED |
+| Next task | P15-003 — addresses, MIME, and attachments |
 
 ## 5. Conventions
 

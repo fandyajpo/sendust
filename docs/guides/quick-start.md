@@ -178,7 +178,8 @@ roots, cannot disable verification, and a malformed PEM fails with
 
 ## 6. Where to go next
 
-- Lifecycle, timeouts, concurrency, and hard caps: P15-002 guide.
+- Lifecycle, timeouts, concurrency, and hard caps:
+  [lifecycle and limits](lifecycle-limits.md).
 - Addresses, MIME, and attachments: P15-003 guide.
 - Error catalog, security, and operations: P15-004 guide.
 - Maintainer guide and testing map: P15-005 guide.
