@@ -394,8 +394,9 @@ jobs:
 
   # Publishes the candidate the `rc` job just verified. Manual and explicit: it
   # runs only on a workflow_dispatch with `publish` checked, and the script
-  # refuses unless every tarball matches the run's hashes and every packed binary
-  # matches `release/<version>/approved.json`.
+  # refuses unless the bundle's provenance names the approved commit, every
+  # tarball matches the run's hashes, every packed binary is that run's artifact,
+  # and every byte-reproducible target matches `release/<version>/approved.json`.
   publish:
     name: Publish the release candidate
     if: github.event_name == 'workflow_dispatch' && inputs.publish

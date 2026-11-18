@@ -14,7 +14,7 @@
 | Packages | five platform packages plus `@sendust/ts`, six in total |
 | Platform packages | `@sendust/ts-linux-x64-gnu`, `@sendust/ts-linux-arm64-gnu`, `@sendust/ts-macos-arm64`, `@sendust/ts-macos-x64`, `@sendust/ts-windows-x64` |
 | Versions | all `0.1.0-rc.1`; the platform manifests are generated from `ts/package.json` by `scripts/pack-platform.mjs` |
-| Approved hashes | `release/0.1.0-rc.1/approved.json` — facade hash and the five artifact hashes |
+| Approved hashes | `release/0.1.0-rc.1/approved.json` — facade hash, the five artifact hashes, and the `byteReproducible` target list |
 | Facade tarball | produced by `prepare:publish`; must reproduce `9470aa8a…` |
 | Platform tarballs | produced by `pack:platform`; each must contain the approved target binary |
 | Provenance and inventory | `provenance.json`, `dependencies.json`, `SHA256SUMS`, `platform-packages.json`, `PLATFORM-PACKAGES.sha256` |
@@ -32,7 +32,7 @@ documents that deferral.
 | --- | --- | --- | --- |
 | 1 | Secret scan | `node scripts/check-secrets.mjs` | No credential shape outside the committed TLS fixture leaf keys |
 | 2 | No test or source files in the tarballs | `tar -tzf` on each | Only `dist/`, `README.md`, `package.json`, and, for platform packages, `sendust.node` |
-| 3 | Hashes match the approved candidate | `scripts/publish-release.mjs` | Facade equals `approved.facade.sha256`; each platform package contains the approved target binary |
+| 3 | Hashes match the approved candidate | `scripts/publish-release.mjs` | Facade equals `approved.facade.sha256`; the bundle's `provenance.json` names the approved commit; each platform package contains the artifact the bundle's `SHA256SUMS` records; each `byteReproducible` target also equals its approved hash |
 | 4 | Unsupported targets absent | Inventory, `os`/`cpu`/`libc` | Only the five claimed targets exist |
 | 5 | Registry scope | npm UI | An organization named `sendust` exists with `fanvercel` as owner |
 | 6 | Publish credentials | GitHub repository secret | `NPM_TOKEN` is set, granular, scoped to `@sendust` read-and-write, with a short expiry and bypass-2FA enabled so CI can publish without an interactive OTP |
@@ -66,8 +66,10 @@ workflow run produced and verified, not from a developer machine
 3. Run the `CI` workflow manually with **publish** checked
    (`gh workflow run ci.yml -f publish=true`, or *Run workflow* in the Actions
    UI). The `publish` job downloads the candidate bundle, rebuilds the facade,
-   and runs `scripts/publish-release.mjs --tag next`, which publishes the five
-   platform packages and then `@sendust/ts`.
+   and runs `scripts/publish-release.mjs --tag next`, which verifies the approved
+   commit, the facade hash, the bundle checksums, and byte equality for the
+   byte-reproducible targets, then publishes the five platform packages and then
+   `@sendust/ts`.
 4. A package that already exists at `0.1.0-rc.1` aborts the run; nothing is
    replaced.
 
@@ -105,12 +107,14 @@ After the registry and clean-consumer checks pass, create the annotated tag
 | Authorized packages | `@sendust/ts-linux-x64-gnu`, `@sendust/ts-linux-arm64-gnu`, `@sendust/ts-macos-arm64`, `@sendust/ts-macos-x64`, `@sendust/ts-windows-x64`, `@sendust/ts` |
 | Authorized version | `0.1.0-rc.1` |
 | Authorized dist-tag | `next` |
-| Scope of authorization | the six packages above, published from the CI `publish` job at the approved hashes, with platform packages first |
+| Scope of authorization | the six packages above, published from the CI `publish` job from a CI build of the approved commit, with the facade and the byte-reproducible targets matching their approved hashes and platform packages first |
 | Rollback owner | project owner |
 
-The authorization covers exactly this candidate. A hash mismatch, a failed
-consumer check before publication, or any later change to the version reopens
-this gate. Execution is ready: the `@sendust` organization exists, the owner
+The authorization covers exactly this candidate. A hash mismatch in the facade or
+a byte-reproducible target, a failed consumer check before publication, or any
+later change to the version reopens this gate. A Windows DLL that links to
+different bytes is not a hash mismatch under this policy: Windows is identified by
+the approved commit, as [reproducible build](reproducible-build.md) records. Execution is ready: the `@sendust` organization exists, the owner
 reports the `NPM_TOKEN` secret is set, and the `Rust workspace` flake that failed
 the previous manual run is fixed in the PHASE-17 record. The remaining step is
 the owner's manual dispatch.

@@ -12,5 +12,11 @@
     "macos-arm64": "8da616f24ec1d2c675774641e7bbbb7976091bd552a52e8834a3aa507f007a55",
     "macos-x64": "f561cbf5e6373afbaff3a81f21661c9f8d376d14c0c48ccbc7755ace6ae3e215",
     "windows-x64": "afcd488212a89bb88b57e830f2b6c4617d9cac81ac1ccf7341b16c44454385de"
-  }
+  },
+  "byteReproducible": [
+    "linux-x64-gnu",
+    "linux-arm64-gnu",
+    "macos-arm64",
+    "macos-x64"
+  ]
 }

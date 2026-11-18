@@ -52,7 +52,19 @@ So the inputs and flags are sufficient to reproduce the artifact on this host an
 toolchain. The evidence is a hash comparison, not a claim that every host
 produces the same bytes: linkers and platform SDKs can embed host-specific
 metadata. The candidate is therefore **built once in CI**, its hashes are frozen
-in provenance, and those hashes — not a rebuild — are what publication verifies.
+in provenance, and those hashes — not a rebuild — are what publication
+verifies.
+
+The CI set was checked across runs while P17 verified the candidate. `linux-x64-gnu`,
+`linux-arm64-gnu`, `macos-arm64`, and `macos-x64` reproduced byte for byte in
+every run, including runs at later commits whose only changes were documentation
+and tests, so they are byte-identity checked at publication. The Windows DLL did
+not: two workflow runs of the same commit produced `85bfa57f…` and `fe50601e…`,
+and the approval run produced `afcd4882…`. Windows linking is therefore recorded
+as nondeterministic, and publication holds it to the approved commit and the
+bundle's own `SHA256SUMS` instead of a frozen hash from another run. The list is
+data, not a hidden script constant: `release/<version>/approved.json` names the
+`byteReproducible` targets.
 
 ## 4. Provenance record
 
@@ -90,6 +102,8 @@ candidate at P16-005.
 ## 6. What is not claimed
 
 - Byte-identical output across different hosts or platform SDKs.
+- Byte-identical Windows output across CI runs; the DLL is identified by the
+  approved source commit and the bundle's own checksums instead.
 - Signed or notarized artifacts; macOS signing and notarization are not part of
   the MVP.
 - A formal SBOM standard: the inventory is a flat, reviewable list, not CycloneDX

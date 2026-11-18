@@ -33,6 +33,14 @@ what P17 verifies; different hosts link different bytes, which the
 [reproducible build](../engineering/reproducible-build.md) note has documented
 since P16.
 
+The first P17-004 publication attempt proved the Windows binary is also
+nondeterministic across runs of the *same* commit: the approval run recorded
+`afcd4882…`, and two runs at `38b7b5d` produced `85bfa57f…` and `fe50601e…`,
+while the other four targets reproduced exactly. The [PHASE-17
+record](../gates/phase-17.md) carries the finding; publication now requires the
+approved commit and the bundle's own checksums for Windows, and byte-identity for
+the four targets that reproduce.
+
 | Target | CI SHA-256 (approved set) |
 | --- | --- |
 | `linux-x64-gnu` | `7527891da22c7b4e672c1db6635b3a597f2c1ee03d770ae5024045ddf1bf0548` |
@@ -118,6 +126,7 @@ section 1a and the [platform validation](platform-validation.md) procedure.
 | Low | The staged publish manifest keeps the repository's `scripts` and `devDependencies`, which name files (`ts/scripts/*`, `src/`, `test/`) that the tarball does not ship. Consumers are unaffected: npm never installs a dependency's `devDependencies` and never runs its `scripts`. | Deferred — stripping them changes the tarball hash, so it requires a new candidate version rather than an edit to the approved one |
 | Low | Local assembly now records commit `9ed653c` in `provenance.json` rather than the approved `a8a71e7`, because the assembly was re-run at HEAD. Build inputs are identical (section 1); the approved artifact set is unchanged. | Explained — no action |
 | Low | The local Bun is 1.3.14, not the pinned 1.4.4. The CI behaviour suite runs 1.4.4 per target, which is the support claim; the local run is corroboration only. | Explained — no action |
+| Medium | `scripts/publish-release.mjs` compared every platform binary to the frozen approval hash, which demanded cross-run byte equality the project does not claim. The Windows DLL failed it once publication was attempted, and it is genuinely nondeterministic. | FIXED: the gate now requires the approved commit (`provenance.json`), the bundle's own `SHA256SUMS` per target, the facade hash, and byte equality only for the targets `approved.json` marks `byteReproducible` |
 
 No high- or medium-severity finding is open, and no identity mismatch was found.
 

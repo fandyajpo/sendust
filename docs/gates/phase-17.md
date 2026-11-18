@@ -64,7 +64,7 @@ evidence are in the [matrix](../qa/mvp-acceptance.md).
 | Release notes | READY — install command is updated for the registry at publication |
 | Support matrix and licence | READY |
 | SBOM | Dependency inventory only; the CycloneDX/SPDX deferral recorded in PHASE-16 stands |
-| Approved hash set | `release/0.1.0-rc.1/approved.json`, checked by `scripts/publish-release.mjs` |
+| Approved hash set | `release/0.1.0-rc.1/approved.json`: facade hash, five artifact hashes, and `byteReproducible`; checked by `scripts/publish-release.mjs` with the bundle's `provenance.json` and `SHA256SUMS` |
 | Publish automation | The CI `publish` job (manual dispatch with `publish: true`): rebuilds the facade, verifies hashes, publishes the five platform packages then `@sendust/ts` at `next`, and refuses an existing version |
 | npm scope | READY — the `sendust` organization exists; `npm org ls sendust` reports `fanvercel - owner` |
 | Publish token | READY — the owner reports the `NPM_TOKEN` repository secret is set; the publish job's `npm whoami` step verifies it before publishing |
@@ -79,6 +79,7 @@ evidence are in the [matrix](../qa/mvp-acceptance.md).
 | Medium | `repeated_failed_connections_do_not_leak_descriptors` failed on CI with `descriptor leak across refused connections: 9 -> 18`: `#[tokio::test]` built each probe's runtime before its body took the serial mutex, so the other three probes' idle runtimes (three descriptors each) landed in the process-wide count after the baseline snapshot | FIXED: the probes build their runtime behind a blocking guard, so a probe that has not started has opened nothing; measured on macOS that an idle runtime holds exactly three descriptors and drops back on release |
 | Medium | Publication would have run from a developer machine, against the release strategy, and that machine holds only the macOS arm64 artifact | FIXED: a CI `publish` job publishes the six packages from the same run's verified bundle; `--dry-run` printing the plan was exercised locally and correctly warns that the local binary is not the approved CI one |
 | Low | The staged publish manifest keeps the repository's `scripts` and `devDependencies` | Deferred: consumers are unaffected and stripping them would change the approved facade hash |
+| Medium | The first `publish` dispatch failed with `@sendust/ts-windows-x64 packs a binary that is not the approved windows-x64 artifact`: the gate required cross-run byte equality of a Windows DLL that is not byte-reproducible. Two runs at the same commit produced `85bfa57f…` and `fe50601e…`, the approval run `afcd4882…`, while the other four targets reproduced exactly | FIXED: `scripts/publish-release.mjs` now requires the approved commit from `provenance.json`, the bundle's own `SHA256SUMS` per target, the facade hash, and byte equality only for the targets `approved.json` marks `byteReproducible`; `reproducible-build.md` records the evidence |
 
 No high-severity finding is open.
 
@@ -91,14 +92,16 @@ evidence, and no blocking defect or contract deviation is open.
 
 **P17-003 — APPROVED by the project owner on 2026-11-18.** The
 [publication checklist](../engineering/publication-checklist.md) is signed for
-the six `@sendust` packages at `0.1.0-rc.1` with the `next` dist-tag, from CI, at
-the approved hashes.
+the six `@sendust` packages at `0.1.0-rc.1` with the `next` dist-tag, from CI,
+with the facade and the byte-reproducible targets matching their approved hashes
+and Windows identified by the approved commit.
 
 **P17-004 — ready, awaiting the dispatch.** The `sendust` organization exists
 with `fanvercel` as owner, and the owner reports the `NPM_TOKEN` repository
 secret is set. The descriptor-probe flake that failed the `Rust workspace` job is
-fixed, so the remaining action is the owner's: run the `CI` workflow manually
-with `publish` checked. Nothing is published until that job completes.
+fixed, as is the Windows hash the gate over-claimed, so the remaining action is
+the owner's: run the `CI` workflow manually with `publish` checked. Nothing is
+published until that job completes.
 
 Nothing has been published. A checksum mismatch, a failed consumer check before
 publication, or any publication taken outside this authorization reopens the
