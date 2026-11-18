@@ -73,7 +73,7 @@ same-host reproducibility only.
 | 3 | TypeScript contract | PASS — Node 22/24/26 jobs |
 | 4 | Runtime smokes and behaviour | PASS — binding and artifact jobs (Node, Bun, Deno), doc sample |
 | 5 | Security gate | PASS — PHASE-11 approved; secret scan clean; redaction tests in the suite |
-| 6 | Performance report | PASS — PHASE-13 approved budgets; the four harnesses that [checklist item 6](../engineering/release-checklist.md) names are listed in the [performance budget](../qa/performance-budget.md), and the facade copy probe ran at this source on Node.js 22.23.5 / macOS arm64: `facade.send_copy_10mib, 759.6, 1385.3, 539.3, 1770.5, 20` (p50 760 µs, p95 1.4 ms against a 20 ms / 40 ms budget) |
+| 6 | Performance report | PASS — PHASE-13 approved budgets; all four harnesses that [checklist item 6](../engineering/release-checklist.md) names ran at this candidate and every budget was met (metrics below) |
 | 7 | Distribution matrix | PASS — PHASE-14 approved, five targets |
 | 8 | Documentation accuracy | PASS — PHASE-15 approved; `check-docs`, `check-doc-claims` (which now also fails on a performance-harness row whose file or `--test` target does not exist), doc sample |
 | 9 | Artifact checksums | PASS — `Release candidate bundle` job: five artifacts, one hash each, uploaded as the `release-candidate` bundle |
@@ -82,6 +82,34 @@ same-host reproducibility only.
 | 12 | Publish manifest | PASS — declares the five platform packages at `0.1.0-rc.1`, `private: false`, no bundled addon |
 | 13 | No publication action | PASS — no `npm publish` in `scripts/` or `.github/` |
 | 14 | Clean tree | PASS — assembly ran on a clean commit |
+
+### Performance evidence for this candidate
+
+Run on macOS arm64 (Apple M2), Node.js 22.23.5, rustc 1.100.0, on source whose
+`crates/`, `ts/src`, and build scripts are identical to `a8a71e7` (the commits
+after it are documentation, test, and check changes). Every Rust metric in
+`perf_serialize` and `perf_attachments` is asserted in the harness and passed;
+the lifecycle probe asserts its own budgets and descriptor bound.
+
+```text
+validate.small_text, 0, 0, 0, 0, 20
+serialize.small_text, 22, 31, 22, 59, 20
+serialize.1mib_text, 5803, 8878, 5306, 9830, 20
+serialize.10mib_attachment, 34519, 38504, 33246, 40009, 20
+serialize.unicode_long_headers, 327, 349, 317, 352, 20
+linearity.throughput_bytes_per_us, 170.67, 191.73
+read.10mib_file, 2254, 2503, 20
+copy.10mib, 1462, 1758, 20
+serialize.attachment_20mib, 69654, 73132, 20
+busy.rejection, 22.6, 94.2, 8.9, 116.5, 20
+close.idle, 12.1, 19.5, 10.2, 80.8, 20
+close.during_send, 20.3, 27.0, 18.0, 27.9, 20
+close.cycles, 1000, descriptor_delta, 0
+facade.send_copy_10mib, 665.7, 1302.0, 491.0, 1395.8, 20
+```
+
+Two runs of the facade probe differed by 12% in p50 (759.6 µs vs 665.7 µs),
+inside the 20% instability band.
 
 ## 4. Acceptance criteria
 
