@@ -56,13 +56,21 @@ in provenance, and those hashes — not a rebuild — are what publication verif
 
 ## 4. Provenance record
 
-`npm run assemble:rc` writes `artifacts/release/<version>/`:
+`npm run assemble:rc` writes `artifacts/release/<version>/`. A dedicated CI job
+(`Release candidate bundle`) downloads all five artifacts and runs it with
+`--require-all`, so the candidate carries one complete hash set; `--allow-stale`
+is used there only because downloaded artifacts legitimately predate that job's
+checkout. Every artifact job runs the assembler against its own fresh build,
+where the staleness guard is active.
 
 | File | Contents |
 | --- | --- |
 | `provenance.json` | package name and version, source commit, dirty flag, toolchain versions (rustc, cargo, Node, npm, TypeScript, Biome, Vitest, Bun, Deno when present), and each artifact's target, byte size, and SHA-256 |
 | `dependencies.json` | Rust crates from `Cargo.lock` and npm packages from `package-lock.json` |
 | `SHA256SUMS` | `<hash>  sendust-<platform>-<arch>.node` per artifact |
+
+The assembler also prints the checksum lines, so a CI log carries the same set
+the bundle file does.
 
 `dirty` is `true` when the working tree has uncommitted changes; a release
 candidate must be assembled from a clean tree at the commit the gate record names.

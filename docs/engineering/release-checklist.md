@@ -18,7 +18,7 @@ item may rely on unpublished or remembered evidence.
 | 6 | Performance report | Performance | PHASE-13 record | Every budget met; no unexplained regression |
 | 7 | Distribution matrix | Distribution | PHASE-14 record | All five targets build, load, and pass clean-consumer selection |
 | 8 | Documentation accuracy | Documentation | PHASE-15 record, `check-docs`, `check-doc-claims`, doc sample | Links valid; claims, codes, and numbers match the code |
-| 9 | Artifact checksums | Release | `npm run assemble:rc` → `SHA256SUMS` | One hash per artifact, recorded in `provenance.json` |
+| 9 | Artifact checksums | Release | `Release candidate bundle` CI job → `SHA256SUMS` | All five artifacts present, one hash each, in one bundle |
 | 10 | Dependency inventory | Release | `dependencies.json` from the assembler | Rust and npm inventories present; no unexpected package |
 | 11 | Licence | Release | `LICENSE-MIT`, `LICENSE-APACHE`, manifest fields | Dual licence present in both manifests and the facade tarball |
 | 12 | Publish manifest | Release | `npm run prepare:publish` | Tarball declares the five platform packages, `private: false`, no bundled addon |

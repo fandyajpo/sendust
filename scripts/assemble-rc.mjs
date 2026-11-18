@@ -10,9 +10,14 @@
  * Output: artifacts/release/<version>/{provenance.json,dependencies.json,SHA256SUMS}
  *
  * The script fails on an artifact whose platform key is not in the supported
- * set, on a missing artifact, or on a secret-scan failure. An empty artifact
- * list is allowed only with `--allow-empty` (used by unit-style runs); the RC
- * candidate requires at least one.
+ * set, on a missing artifact, on an artifact older than the sources it was
+ * built from, or on a secret-scan failure.
+ *
+ * Flags:
+ *   --allow-empty   no artifact required (guarded runs only)
+ *   --require-all   the complete five-target set must be present
+ *   --allow-stale   skip the artifact-newer-than-sources check (CI bundle, where
+ *                   downloaded artifacts legitimately predate this job's checkout)
  */
 
 import { execFileSync } from "node:child_process";
@@ -33,7 +38,10 @@ const SUPPORTED = {
   "windows-x64": ["win32", "x64"],
 };
 
-const allowEmpty = process.argv.includes("--allow-empty");
+const flag = (name) => process.argv.includes(name);
+const allowEmpty = flag("--allow-empty");
+const requireAll = flag("--require-all");
+const allowStale = flag("--allow-stale");
 const failures = [];
 const fail = (message) => failures.push(message);
 
@@ -80,6 +88,46 @@ const artifacts = existsSync(artifactsDir)
 
 if (artifacts.length === 0 && !allowEmpty) {
   fail("no artifacts found; run `npm run build:artifact` first");
+}
+
+if (requireAll) {
+  const missing = Object.keys(SUPPORTED).filter((key) => !artifacts.some((a) => a.target === key));
+  if (missing.length > 0) {
+    fail(`incomplete candidate; missing artifact(s): ${missing.join(", ")}`);
+  }
+}
+
+/** Newest mtime among the files that produce the native addon. */
+function newestNativeSource() {
+  let newest = 0;
+  const visit = (relative) => {
+    for (const entry of readdirSync(join(ROOT, relative), { withFileTypes: true })) {
+      const path = join(relative, entry.name);
+      newest = Math.max(newest, statSync(join(ROOT, path)).mtimeMs);
+      if (entry.isDirectory()) visit(path);
+    }
+  };
+  visit("crates/sendust-core/src");
+  visit("crates/sendust-napi/src");
+  for (const file of [
+    "Cargo.toml",
+    "Cargo.lock",
+    "crates/sendust-core/Cargo.toml",
+    "crates/sendust-napi/Cargo.toml",
+    "crates/sendust-napi/build.rs",
+  ]) {
+    newest = Math.max(newest, statSync(join(ROOT, file)).mtimeMs);
+  }
+  return newest;
+}
+
+if (!allowStale && artifacts.length > 0) {
+  const newest = newestNativeSource();
+  for (const artifact of artifacts) {
+    if (statSync(join(artifactsDir, artifact.name)).mtimeMs < newest) {
+      fail(`${artifact.name} is older than the native sources; rebuild the artifact`);
+    }
+  }
 }
 
 // Dependency inventory: Rust crates from the lockfile, npm packages from the
@@ -129,11 +177,12 @@ rmSync(outDir, { recursive: true, force: true });
 mkdirSync(outDir, { recursive: true });
 writeFileSync(join(outDir, "provenance.json"), `${JSON.stringify(provenance, null, 2)}\n`);
 writeFileSync(join(outDir, "dependencies.json"), `${JSON.stringify(dependencies, null, 2)}\n`);
-writeFileSync(
-  join(outDir, "SHA256SUMS"),
-  `${artifacts.map((artifact) => `${artifact.sha256}  ${artifact.name}`).join("\n")}${artifacts.length ? "\n" : ""}`,
-);
+const sums = artifacts.map((artifact) => `${artifact.sha256}  ${artifact.name}`).join("\n");
+writeFileSync(join(outDir, "SHA256SUMS"), `${sums}${artifacts.length ? "\n" : ""}`);
 
 console.log(`release evidence: ${outDir}`);
 console.log(`  version ${version} at ${commit}${dirty ? " (working tree dirty)" : ""}`);
 console.log(`  ${artifacts.length} artifact(s), ${rust.length} Rust crates, ${npm.length} npm packages`);
+if (sums) {
+  console.log(sums);
+}

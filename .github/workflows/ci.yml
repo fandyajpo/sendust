@@ -330,3 +330,40 @@ jobs:
           name: sendust-${{ matrix.target }}
           path: artifacts/*.node
           if-no-files-found: error
+
+  # Assembles one release-candidate bundle from every target's artifact, so the
+  # candidate has the complete hash set instead of per-job fragments. No
+  # publication action.
+  rc:
+    name: Release candidate bundle
+    needs: artifacts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.23.5"
+
+      - name: Download the five artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: sendust-*
+          merge-multiple: true
+          path: artifacts
+
+      # Downloaded artifacts predate this job's checkout, so the staleness check
+      # is skipped here; each artifact job guards its own fresh build.
+      - name: Assemble the candidate bundle
+        run: node scripts/assemble-rc.mjs --require-all --allow-stale
+
+      - name: Show the artifact checksums
+        run: cat artifacts/release/*/SHA256SUMS
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-candidate
+          path: artifacts/release
+          if-no-files-found: error
