@@ -1,6 +1,6 @@
 # Phase 16 — Release engineering
 
-**Phase status:** NOT STARTED  
+**Phase status:** IN PROGRESS (P16-001 completed)  
 **Phase dependency:** Phase 14, Phase 12, Phase 15, Phase 13  
 **Companion references:** [release strategy](../engineering/release-strategy.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [performance strategy](../engineering/performance-strategy.md), [system design](../architecture/system-design.md)
 
@@ -17,7 +17,7 @@ In scope: release checklist, versioning policy, reproducible build inputs, artif
 ### P16-001 — Define versioning, tagging, and changelog policy
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** COMPLETED — [versioning, tagging, and changelog policy](../engineering/versioning-policy.md), enforced by `scripts/check-versions.mjs`
 - **Prerequisites:** P14-005, P15-005
 - **Description:** Specify semantic versioning, pre-release identifiers, tag format, version source of truth, and changelog categories. Define compatibility promises for Node.js/Bun/Deno runtime versions, platforms, and the public API. State that delivery, retry, pooling, SMTPUTF8, and URL attachments are not provided. Include how breaking changes to status semantics are handled.
 - **Evidence criteria:** Policy document covers major/minor/patch/pre-release rules, tag naming, and changelog format. Compatibility statement matches Phase 14 support matrix and Phase 15 docs. No promise exceeds tested behavior.
@@ -88,4 +88,4 @@ Versioning/changelog policy, reproducible build recipe, provenance/SBOM, release
 
 ## Status
 
-NOT STARTED.
+IN PROGRESS. P16-001 is COMPLETED; P16-002 to P16-005 are NOT STARTED.

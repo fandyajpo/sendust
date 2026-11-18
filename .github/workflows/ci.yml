@@ -73,6 +73,9 @@ jobs:
       - name: Documentation claims
         run: node scripts/check-doc-claims.mjs
 
+      - name: Version consistency
+        run: node scripts/check-versions.mjs
+
       - name: Secret scan self-test
         run: node scripts/check-secrets.mjs --selftest
 

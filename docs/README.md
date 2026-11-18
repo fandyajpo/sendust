@@ -86,6 +86,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 72 | [Errors, security, and operations](guides/errors-security-operations.md) | P15-004 error catalog with caller actions, redaction, TLS posture, and operational guidance |
 | 73 | [Maintainer guide](guides/maintainer.md) | P15-005 repository layout, commands, test harness, documentation rules, and release inputs |
 | 74 | [PHASE-15 documentation record](gates/phase-15.md) | QG-15 checklist, guide coverage, accuracy instruments, findings, and the approved decision |
+| 75 | [Versioning, tagging, and changelog policy](engineering/versioning-policy.md) | P16-001 semantic versioning, pre-release and tag format, version sources, changelog, and compatibility promises |
 
 ## 2. Directory map
 
@@ -116,7 +117,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P15 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance; PHASE-14 records distribution on five native targets; PHASE-15 records the user and maintainer documentation. P16 (release engineering) is next; P17–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P15 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance; PHASE-14 records distribution on five native targets; PHASE-15 records the user and maintainer documentation. P16 (release engineering) is IN PROGRESS (P16-001 completed); P17–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -157,8 +158,9 @@ P00–P15 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P15-003 | COMPLETED — addresses, MIME, and attachments |
 | P15-004 | COMPLETED — error catalog, security, and operations |
 | P15-005 | COMPLETED — PHASE-15 approved 2026-11-18 |
-| P16–P18 | NOT STARTED |
-| Next task | P16-001 — versioning, tagging, and changelog policy |
+| P16-001 | COMPLETED — versioning, changelog, and version consistency check |
+| P16-002–P18 | NOT STARTED |
+| Next task | P16-002 — reproducible build and artifact provenance |
 
 ## 5. Conventions
 
