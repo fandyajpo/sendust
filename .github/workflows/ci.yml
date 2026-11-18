@@ -4,6 +4,11 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish this candidate to npm (irreversible)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -386,3 +391,65 @@ jobs:
           name: release-candidate
           path: artifacts/release
           if-no-files-found: error
+
+  # Publishes the candidate the `rc` job just verified. Manual and explicit: it
+  # runs only on a workflow_dispatch with `publish` checked, and the script
+  # refuses unless every tarball matches the run's hashes and every packed binary
+  # matches `release/<version>/approved.json`.
+  publish:
+    name: Publish the release candidate
+    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    needs: rc
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.23.5"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Check the npm token
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "::error::NPM_TOKEN is not set; add it as a repository secret"
+            exit 1
+          fi
+          npm whoami
+
+      - name: Download the candidate bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: release-candidate
+          path: artifacts/release
+
+      # The facade build needs an addon staged, and `dist` is platform
+      # independent, so this target's binary is enough. It is not published from
+      # here: the platform tarballs in the bundle are.
+      - name: Download the linux artifact for the facade build
+        uses: actions/download-artifact@v4
+        with:
+          name: sendust-linux-x64
+          path: artifacts
+
+      - name: Install the facade toolchain
+        run: npm ci --no-audit --no-fund
+
+      - name: Stage an addon for the facade build
+        run: cp artifacts/sendust-linux-x64-gnu.node ts/sendust.node
+
+      - name: Build the facade and its publish manifest
+        run: |
+          npm --workspace ./ts run build
+          node scripts/prepare-publish.mjs
+
+      - name: Publish the six packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: node scripts/publish-release.mjs --tag next

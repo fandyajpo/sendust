@@ -137,6 +137,7 @@ for (const target of targets) {
       file: `packages/${produced}`,
       bytes: statSync(file).size,
       sha256: sha256(file),
+      artifactSha256: sha256(addon),
       os: manifest.os,
       cpu: manifest.cpu,
       libc: manifest.libc ?? null,
