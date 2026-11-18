@@ -1,6 +1,6 @@
 # Phase 15 — Documentation
 
-**Phase status:** IN PROGRESS (P15-001 and P15-002 completed)  
+**Phase status:** IN PROGRESS (P15-001 to P15-003 completed)  
 **Phase dependency:** Phase 09  
 **Companion references:** [system design](../architecture/system-design.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [reliability strategy](../engineering/reliability-strategy.md), [release strategy](../engineering/release-strategy.md)
 
@@ -33,7 +33,7 @@ In scope: API reference for `ts/src`, quick start, relay-accepted semantics, lif
 ### P15-003 — Document addresses, MIME, and attachments
 
 - **Size:** L
-- **Status:** NOT STARTED
+- **Status:** COMPLETED — [addresses, MIME, and attachments](../guides/addressing-mime-attachments.md)
 - **Prerequisites:** P15-001
 - **Description:** Explain ASCII local parts, IDNA domains, Unicode display names and bodies, and SMTPUTF8 as post-MVP. Document text/HTML alternatives, header encoding, filename rules, and attachment opt-in. State that filesystem access is disabled by default, only bounded regular files are allowed, and URL/remote attachment fetching is unsupported. Include examples of accepted and rejected inputs.
 - **Evidence criteria:** Address and attachment examples align with validation tests. Every rejected category is documented with its error code. No example uses a URL attachment or non-ASCII local part. The opt-in requirement is prominent.
@@ -88,5 +88,5 @@ Quick start, semantic contract, lifecycle/timeout/limits guide, address/MIME/att
 
 ## Status
 
-IN PROGRESS. P15-001 and P15-002 are COMPLETED; P15-003 to P15-005 are NOT
+IN PROGRESS. P15-001 to P15-003 are COMPLETED; P15-004 and P15-005 are NOT
 STARTED.

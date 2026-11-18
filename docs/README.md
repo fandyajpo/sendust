@@ -82,6 +82,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 68 | [PHASE-14 distribution record](gates/phase-14.md) | QG-14 checklist, support declaration, runtime matrix, findings, and the approved decision |
 | 69 | [Quick start and semantic contract](guides/quick-start.md) | P15-001 install steps, first send, accepted/rejected/unknown and BUSY semantics, and the executable sample |
 | 70 | [Lifecycle, timeouts, concurrency, and limits](guides/lifecycle-limits.md) | P15-002 state machine, close, BUSY, the four timeout budgets, and the four hard caps with boundary behaviour |
+| 71 | [Addresses, MIME, and attachments](guides/addressing-mime-attachments.md) | P15-003 address rules, header safety, body shapes, attachment opt-in and caps, and the content-type map |
 
 ## 2. Directory map
 
@@ -150,8 +151,9 @@ P00–P14 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P14-005 | COMPLETED — PHASE-14 approved 2026-11-17 |
 | P15-001 | COMPLETED — quick start and semantic contract, with an executed sample |
 | P15-002 | COMPLETED — lifecycle, timeouts, concurrency, and limits |
-| P15-003–P18 | NOT STARTED |
-| Next task | P15-003 — addresses, MIME, and attachments |
+| P15-003 | COMPLETED — addresses, MIME, and attachments |
+| P15-004–P18 | NOT STARTED |
+| Next task | P15-004 — error catalog and security/operations guide |
 
 ## 5. Conventions
 
