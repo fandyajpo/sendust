@@ -35,7 +35,7 @@ documents that deferral.
 | 3 | Hashes match the approved candidate | `scripts/publish-release.mjs` | Facade equals `approved.facade.sha256`; each platform package contains the approved target binary |
 | 4 | Unsupported targets absent | Inventory, `os`/`cpu`/`libc` | Only the five claimed targets exist |
 | 5 | Registry scope | npm UI | An organization named `sendust` exists with `fanvercel` as owner |
-| 6 | Publish credentials | GitHub repository secret | `NPM_TOKEN` is set, and npm accepts it for publishing |
+| 6 | Publish credentials | GitHub repository secret | `NPM_TOKEN` is set, granular, scoped to `@sendust` read-and-write, with a short expiry and bypass-2FA enabled so CI can publish without an interactive OTP |
 | 7 | Release notes current | [0.1.0-rc.1](../releases/0.1.0-rc.1.md) | Install command updated for the registry; limitations and support matrix unchanged |
 | 8 | Licence present | Every tarball manifest | `MIT OR Apache-2.0` plus the repository licence files |
 | 9 | Rollback readiness | [release strategy](release-strategy.md) §5–§6 | Partial-publication and bad-artifact procedures understood and owned |
@@ -52,10 +52,14 @@ workflow run produced and verified, not from a developer machine
 
 1. The project owner creates the `sendust` organization on npmjs.com and adds
    `fanvercel` as an owner.
-2. The project owner adds a repository secret `NPM_TOKEN` with publish rights for
-   the `@sendust` scope. If npm refuses a non-interactive token for publishing
-   because of its 2FA policy, the fallback is trusted publishing (OIDC): enable a
-   trusted publisher for the GitHub `publish` job and drop the token.
+2. The project owner adds a repository secret `NPM_TOKEN`: a granular token with
+   read-and-write access to the `@sendust` scope, **Bypass 2FA** enabled, a seven-day
+   expiry, and no IP allow-list (GitHub runners are dynamic). Bypass 2FA is
+   deprecated for direct publishing in January 2027, so the token is a
+   short-lived release credential: revoke it after the publish, and move to
+   trusted publishing (OIDC) or a stage-only token with maintainer promotion
+   before then. A stage-only token cannot publish directly: CI would stage the
+   six versions and a maintainer would promote each with an OTP.
 3. Run the `CI` workflow manually with **publish** checked
    (`gh workflow run ci.yml -f publish=true`, or *Run workflow* in the Actions
    UI). The `publish` job downloads the candidate bundle, rebuilds the facade,
