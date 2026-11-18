@@ -1,6 +1,6 @@
 # Phase 16 — Release engineering
 
-**Phase status:** IN PROGRESS (P16-001 to P16-004 completed)  
+**Phase status:** IN PROGRESS (P16-001 to P16-004 completed; P16-005 in review)  
 **Phase dependency:** Phase 14, Phase 12, Phase 15, Phase 13  
 **Companion references:** [release strategy](../engineering/release-strategy.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [performance strategy](../engineering/performance-strategy.md), [system design](../architecture/system-design.md)
 
@@ -49,7 +49,7 @@ In scope: release checklist, versioning policy, reproducible build inputs, artif
 ### P16-005 — Release-engineering gate and RC handoff
 
 - **Size:** S
-- **Status:** NOT STARTED
+- **Status:** IN REVIEW — [PHASE-16 gate record](../gates/phase-16.md), approval pending
 - **Prerequisites:** P16-001, P16-002, P16-003, P16-004
 - **Description:** Assemble the release candidate package and hand off to Phase 17. Verify all prerequisite gates are approved, artifacts are reproducible, notes and checklist are complete, and no publication action has occurred. Record the candidate version and artifact hashes.
 - **Evidence criteria:** Gate record includes candidate version, commit, artifact hashes, checklist status, and links to QA/performance/distribution/docs evidence. No publish command is run. Phase 17 receives an explicit approve/reject package.
@@ -88,4 +88,6 @@ Versioning/changelog policy, reproducible build recipe, provenance/SBOM, release
 
 ## Status
 
-IN PROGRESS. P16-001 to P16-004 are COMPLETED; P16-005 is NOT STARTED.
+IN PROGRESS. P16-001 to P16-004 are COMPLETED; P16-005 is IN REVIEW, with the
+[PHASE-16 gate record](../gates/phase-16.md) awaiting the project owner's
+approval.
