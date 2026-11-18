@@ -1,6 +1,6 @@
 # Phase 17 — RC and MVP approval/publication
 
-**Phase status:** IN PROGRESS (P17-001 to P17-004 completed; P17-005 closure prepared, awaiting the project owner's PHASE-17 decision)  
+**Phase status:** COMPLETED (PHASE-17 approved by the project owner, 2026-11-18)  
 **Phase dependency:** Phase 16  
 **Companion references:** [release strategy](../engineering/release-strategy.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [system design](../architecture/system-design.md)
 
@@ -49,7 +49,7 @@ In scope: RC verification, approval review, publication checklist, publication e
 ### P17-005 — MVP approval record, publication closure, and rollback readiness
 
 - **Size:** M
-- **Status:** IN PROGRESS — closure, publication evidence, limitations, and rollback readiness recorded in the [PHASE-17 record](../gates/phase-17.md); PHASE-17 approval is the project owner's
+- **Status:** COMPLETED — closure, publication evidence, limitations, and rollback readiness recorded in the [PHASE-17 record](../gates/phase-17.md); approved by the project owner on 2026-11-18
 - **Prerequisites:** P17-001, P17-002, P17-003, P17-004
 - **Description:** Close the MVP release with an approval record, publication evidence, known limitations, and rollback status. Confirm the published version is exactly the approved candidate, consumer smoke passed, and support claims are honest. Hand off post-MVP work to Phase 18 without changing MVP semantics.
 - **Evidence criteria:** Closure record includes approval signatures, published version/hashes, consumer smoke results, limitations, and rollback readiness. No unresolved blocker remains. Phase 18 receives the approved baseline and explicit non-goals. If publication was rejected, the record states no artifact was published and names the blocking work.
@@ -88,13 +88,13 @@ RC verification record, MVP acceptance matrix, publication checklist and authori
 
 ## Status
 
-IN PROGRESS. P17-001 to P17-003 are COMPLETED — the [RC verification record](../qa/rc-verification.md),
+COMPLETED. P17-001 to P17-003 are COMPLETED — the [RC verification record](../qa/rc-verification.md),
 the owner-approved [MVP acceptance matrix](../qa/mvp-acceptance.md), and the
 [publication checklist](../engineering/publication-checklist.md) signed for the
 six `@sendust` packages at `0.1.0-rc.1` with the `next` dist-tag. P17-004 is
 COMPLETED: the CI `publish` job published all six packages on 2026-11-18, the
 registry tarball matches the approved facade hash, and the clean-consumer
-behaviour contract passes on Node.js, Bun, and Deno. P17-005 is IN PROGRESS with
-its closure in the [PHASE-17 record](../gates/phase-17.md); the phase decision
-awaits the project owner, and the annotated tag `v0.1.0-rc.1` is theirs to
-create.
+behaviour contract passes on Node.js, Bun, and Deno. P17-005 and PHASE-17 are
+COMPLETED, approved by the project owner on 2026-11-18 in the
+[PHASE-17 record](../gates/phase-17.md). The annotated tag `v0.1.0-rc.1` on
+`a8a71e7` remains the project owner's to create.

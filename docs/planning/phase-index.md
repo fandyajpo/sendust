@@ -23,7 +23,7 @@ Entry point to all 19 Sendust phases. P00–P16 are completed with reviewed gate
 | [P14](../phases/phase-14.md) | Distribution | Early smoke, metadata, platform matrix, clean installs, and final gate | P05, P03 (early); P12/P13 via tasks | 5 | P14-005 | COMPLETED |
 | [P15](../phases/phase-15.md) | Documentation | Quick start, lifecycle, addresses/MIME/attachments, errors/security, accuracy gate | P09 | 5 | P15-005 | COMPLETED |
 | [P16](../phases/phase-16.md) | Release engineering | Versioning, reproducible build, notes, checklist, and RC handoff | P14, P12, P15, P13 | 5 | P16-005 | COMPLETED |
-| [P17](../phases/phase-17.md) | RC and MVP approval | Verify RC, final acceptance, authorize, publish, and close | P16 | 5 | P17-005 | IN PROGRESS |
+| [P17](../phases/phase-17.md) | RC and MVP approval | Verify RC, final acceptance, authorize, publish, and close | P16 | 5 | P17-005 | COMPLETED |
 | [P18](../phases/phase-18.md) | Post-MVP | Feedback intake, feature research, compatibility policy, and next cycle | P17 | 5 | P18-005 | NOT STARTED |
 
 ## Task ranges
@@ -55,10 +55,10 @@ Entry point to all 19 Sendust phases. P00–P16 are completed with reviewed gate
 | Status | Count |
 | --- | --- |
 | NOT STARTED | 1 |
-| IN PROGRESS | 1 |
+| IN PROGRESS | 0 |
 | IN REVIEW | 0 |
 | BLOCKED | 0 |
-| COMPLETED | 17 |
+| COMPLETED | 18 |
 
 ## Parallel work
 

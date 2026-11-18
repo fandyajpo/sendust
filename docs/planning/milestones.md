@@ -152,6 +152,10 @@ Milestones are evidence checkpoints, not calendar dates. A milestone is reached 
 
 ## M7 — MVP Release
 
+**REACHED — 2026-11-18**
+
+**Evidence:** [PHASE-17 record](../gates/phase-17.md) and the npm registry (`@sendust/ts@0.1.0-rc.1` with its five platform packages).
+
 **Purpose:** Authorize and publish the MVP, then verify the published package.
 
 **Required gates:**

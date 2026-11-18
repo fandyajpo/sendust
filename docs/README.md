@@ -121,7 +121,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P16 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance; PHASE-14 records distribution on five native targets; PHASE-15 records the user and maintainer documentation; PHASE-16 records the release-engineering gate and assembles candidate `0.1.0-rc.1` with its hashes and no publication. P17 is IN PROGRESS: P17-001 to P17-003 are COMPLETE with the RC verification record, the owner-approved MVP acceptance matrix, and the signed publication authorization; P17-004 is COMPLETE — six packages published to npm on 2026-11-18 and verified from the registry — and P17-005 is IN PROGRESS with its closure prepared; P18 is NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P16 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance; PHASE-14 records distribution on five native targets; PHASE-15 records the user and maintainer documentation; PHASE-16 records the release-engineering gate and assembles candidate `0.1.0-rc.1` with its hashes and no publication. P17 is IN PROGRESS: P17-001 to P17-003 are COMPLETE with the RC verification record, the owner-approved MVP acceptance matrix, and the signed publication authorization; P17-004 is COMPLETE — six packages published to npm on 2026-11-18 and verified from the registry — P17-005 is COMPLETE, PHASE-17 is approved, and the MVP is released; P18 is NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -171,9 +171,9 @@ P00–P16 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P17-002 | COMPLETED — MVP acceptance approved 2026-11-18 |
 | P17-003 | COMPLETED — publication authorized 2026-11-18 |
 | P17-004 | COMPLETED — six packages published to npm 2026-11-18 and verified from the registry |
-| P17-005 | IN PROGRESS — closure prepared in the PHASE-17 record; the phase decision is the project owner's |
-| P18 | NOT STARTED |
-| Next step | The project owner creates the annotated tag `v0.1.0-rc.1` on `a8a71e7` and decides PHASE-17. The release is published |
+| P17-005 | COMPLETED — PHASE-17 approved 2026-11-18; MVP released |
+| P18 | NOT STARTED — post-MVP intake and research |
+| Next step | P18-001 collects post-MVP feedback and triages defects; the annotated tag `v0.1.0-rc.1` is still the project owner's to create |
 
 ## 5. Conventions
 

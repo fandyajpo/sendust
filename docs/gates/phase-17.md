@@ -1,8 +1,8 @@
 # QG-17 — RC and MVP approval record
 
-**Decision:** P17-002 and P17-003 APPROVED by the project owner, 2026-11-18;
-P17-004 published to npm on 2026-11-18 and verified from the registry; P17-005
-closure prepared, PHASE-17 approval pending the project owner
+**Decision:** APPROVED — project owner approval, 2026-11-18. P17-001 to P17-005
+are COMPLETED; the six `@sendust` packages are published at `0.1.0-rc.1` and
+verified from the registry
 **Phase:** P17 — RC and MVP approval/publication
 **Gate:** PHASE-17
 **Prepared:** 2026-11-18
@@ -10,11 +10,10 @@ closure prepared, PHASE-17 approval pending the project owner
 **Branch:** `main`
 
 This record is the approval package for PHASE-17. The project owner accepted the
-MVP (P17-002) and authorized publication (P17-003); the CI `publish` job then
-published the six `@sendust` packages at `0.1.0-rc.1` on 2026-11-18 (P17-004),
-and the published artifact was verified from the registry rather than the
-workspace (section 4). The phase decision itself is the project owner's,
-recorded in section 6.
+MVP (P17-002), authorized publication (P17-003), and approved the phase after the
+CI `publish` job published the six `@sendust` packages at `0.1.0-rc.1` on
+2026-11-18 (P17-004) and the published artifact was verified from the registry
+rather than the workspace (section 4).
 
 ## 1. Candidate identity
 
@@ -38,7 +37,7 @@ Verified in the [RC verification record](../qa/rc-verification.md).
 | P17-002 | COMPLETED | [MVP acceptance matrix](../qa/mvp-acceptance.md): all 17 acceptance items and all 30 constraints PASS with evidence; approved by the project owner on 2026-11-18 |
 | P17-003 | COMPLETED | [Publication checklist](../engineering/publication-checklist.md): inputs, pre-flight checks, publish order, post-publication verification, tag, rollback, and the owner's authorization; the executable path is the CI `publish` job with `scripts/publish-release.mjs` |
 | P17-004 | COMPLETED | Published from CI on 2026-11-18 and verified from the registry (section 4): six packages at `0.1.0-rc.1`, facade hash matches the approval, clean consumer install on macOS arm64, and 16/16 behaviour checks on Node.js, Bun, and Deno |
-| P17-005 | IN PROGRESS | This record: the publication, verification, limitation, and rollback closure; the phase decision in section 6 awaits the project owner |
+| P17-005 | COMPLETED | This record: the publication, verification, limitation, and rollback closure, approved by the project owner on 2026-11-18 |
 
 ## 3. Acceptance summary
 
@@ -128,13 +127,16 @@ at `0.1.0-rc.1` from the CI `publish` job, the facade tarball on the registry
 reproduces the approved `9470aa8a…`, and the clean-consumer behaviour contract
 passes on Node.js, Bun, and Deno (section 4).
 
-**P17-005 — closure prepared, awaiting PHASE-17 approval.** This record carries
-the publication evidence, the two remaining findings, the known limitations
-(npm's `latest` assignment, the pre-existing deferred items), and the rollback
-path in the [publication checklist](../engineering/publication-checklist.md).
-The release is published; the annotated tag `v0.1.0-rc.1` on
-`a8a71e7b613e0c56bbd48655ba5a2aedaa55afa5` is the project owner's to create,
-since no tag tool exists in this environment.
+**P17-005 — COMPLETED and PHASE-17 APPROVED by the project owner on
+2026-11-18.** The closure is accepted: the published registry artifact matches the
+approved facade hash, the clean-consumer behaviour contract passes on Node.js,
+Bun, and Deno, the two remaining findings are documented, and the rollback path
+is the [publication checklist](../engineering/publication-checklist.md)'s. The
+MVP is released, and Phase 18 may begin from this approved baseline.
+
+The annotated tag `v0.1.0-rc.1` on
+`a8a71e7b613e0c56bbd48655ba5a2aedaa55afa5` remains an owner action, since no tag
+tool exists in this environment.
 
 A checksum mismatch in the facade or a byte-reproducible target, a failed
 consumer check, or any publication taken outside this authorization reopens the
