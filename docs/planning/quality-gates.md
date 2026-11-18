@@ -25,6 +25,7 @@ Quality gates are mandatory, evidence-based checkpoints. A gate is `APPROVED` on
 | QG-15 | Documentation | P15 | P16 |
 | QG-16 | Release engineering | P16 | P17 |
 | QG-17 | Release approval | P17 | MVP release |
+| QG-18 | Post-MVP intake | P18 | Post-MVP backlog handoff |
 | QG-A01 | Multi-runtime architecture amendment | A01 | P03 |
 | QG-A02 | Modular-monolith architecture amendment | A02 | P03/P04/P06/P12 |
 
