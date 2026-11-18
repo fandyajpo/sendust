@@ -15,7 +15,7 @@ item may rely on unpublished or remembered evidence.
 | 3 | TypeScript contract | CI | Node 22/24/26 jobs | Lint, format, typecheck, and the 61-test suite pass |
 | 4 | Runtime smokes and behaviour | CI | Native binding and artifact jobs | Binding, facade, behaviour harness, and doc sample pass on Node.js, Bun, and Deno |
 | 5 | Security gate | Security | PHASE-11 record, `check-secrets`, redaction tests | No open high-severity finding; no credential shape outside fixtures |
-| 6 | Performance report | Performance | PHASE-13 record | Every budget met; no unexplained regression |
+| 6 | Performance report | Performance | PHASE-13 record, plus the four harness runs in section 1a at the candidate commit | Every budget met; the printed metric lines are attached to the gate record; no unexplained regression |
 | 7 | Distribution matrix | Distribution | PHASE-14 record | All five targets build, load, and pass clean-consumer selection |
 | 8 | Documentation accuracy | Documentation | PHASE-15 record, `check-docs`, `check-doc-claims`, doc sample | Links valid; claims, codes, and numbers match the code |
 | 9 | Artifact checksums | Release | `Release candidate bundle` CI job → `SHA256SUMS` | All five artifacts present, one hash each, in one bundle |
@@ -24,6 +24,25 @@ item may rely on unpublished or remembered evidence.
 | 12 | Publish manifest | Release | `npm run prepare:publish` | Tarball declares the five platform packages, `private: false`, no bundled addon |
 | 13 | No publication action | Release | `git grep -n "npm publish" -- scripts .github` returns nothing | No script or workflow publishes |
 | 14 | Clean tree | Release | `provenance.json` `dirty: false` | Candidate assembled at a commit with no uncommitted changes |
+
+## 1a. Performance evidence
+
+Item 6 is the only row whose evidence is produced off CI, so it names its
+commands. Run all four at the candidate commit on the reference host and attach
+the printed `metric, p50, p95, min, max, iterations` lines to the gate record:
+
+```text
+cargo test -p sendust-core --release --test perf_serialize -- --ignored --nocapture --test-threads=1
+cargo test -p sendust-core --release --test perf_attachments -- --ignored --nocapture --test-threads=1
+npm run build:native && node tests/perf/lifecycle.mjs
+npm run build:native && npm --workspace ./ts run build && node tests/perf/facade.mjs
+```
+
+Budgets and method are in the [performance budget](../qa/performance-budget.md).
+A metric that moves more than 20% between two runs of the same command is
+recorded as unstable and not used as a gate value; a median above its budget
+fails the item. The 2× allowance exists only for a shared runner, which is why
+these are not CI jobs.
 
 ## 2. Candidate versus publication
 
@@ -66,6 +85,7 @@ For the RC handoff (P16-005), attach:
 - the CI run URL for the candidate commit;
 - links to the PHASE-11 to PHASE-15 gate records;
 - the release notes draft;
+- the four performance harness outputs from section 1a;
 - this checklist, filled with pass conditions and evidence links.
 
 ## 5. Related reading

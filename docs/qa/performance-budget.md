@@ -19,7 +19,7 @@ Budgets are set **before** the benchmarks run, so P13-002…P13-004 test them ra
 | Multi-run stability | The report records two full runs; a metric that moves more than 20% between runs is marked unstable and not used as a gate value |
 | Environment capture | `rustc -V`, host OS/version, CPU model and core count, RAM, Node.js version for facade metrics, and the release profile |
 | Harness | Ignored Rust tests (`#[ignore]`) run with `cargo test --release -- --ignored --nocapture`, so no benchmark dependency is added. Facade metrics use a standalone `node` script against the staged addon |
-| CI behaviour | CI records medians as trend data only. A gate failure is raised when a median exceeds **2× its budget** (noise allowance) or when a correctness bound (memory, descriptors, connections) is violated at any value |
+| CI behaviour | The harnesses do not run in CI: shared runners are not a stable measurement environment. They are the explicit release gate in [release checklist item 6](../engineering/release-checklist.md), run on a reference host with their printed metric lines attached to the candidate record. If one is ever run on a CI runner, a median above **2× its budget** is the failure threshold (noise allowance) and a correctness bound (memory, descriptors, connections) fails at any value |
 
 Protocol latency is explicitly **not** measured: the fake relay is local, so every send is dominated by the client's own work. Results describe local processing cost, never delivery time.
 
@@ -31,7 +31,7 @@ Protocol latency is explicitly **not** measured: the fake relay is local, so eve
 | Validate + serialize, 1 MiB text | 1 MiB body | median ≤ 10 ms, p95 ≤ 20 ms | ≈100 MB/s floor for a single-pass encoder |
 | Validate + serialize, 1 MiB + 10 MiB attachment | 10 MiB attachment, base64 | median ≤ 150 ms, p95 ≤ 300 ms | 13.3 MiB of output at ≈90 MB/s; below 0.2% of the total budget |
 | Wire-size accounting | Runs with each serialization | — | included above | Must not double-scan: the same call reports the byte count |
-| Facade buffer copy, 10 MiB | `Uint8Array(10 MiB)` through `send()` | median ≤ 20 ms, p95 ≤ 40 ms | Memory-bandwidth bound; measured, never assumed free |
+| Facade buffer copy, 10 MiB | 10 MiB content attachment through `send()` | median ≤ 20 ms, p95 ≤ 40 ms | Memory-bandwidth bound; measured, never assumed free |
 | Attachment read, 10 MiB | page-cached temp file | median ≤ 30 ms, p95 ≤ 60 ms | ≈350 MB/s read plus the cap check |
 | BUSY rejection | second send during an active one | median ≤ 0.1 ms, p95 ≤ 0.5 ms | Fail-fast is the contract; must not dial |
 | BUSY connections | same fixture | 0 new connections | Hard invariant, not a budget |
@@ -53,20 +53,20 @@ Protocol latency is explicitly **not** measured: the fake relay is local, so eve
 
 | Harness | Location | Runs |
 | --- | --- | --- |
-| Core serialization and accounting | `crates/sendust-core/tests/perf_serialize.rs` (`#[ignore]`) | `cargo test -p sendust-core --release --test perf_serialize -- --ignored --nocapture` |
-| Attachment read and encode | `crates/sendust-core/tests/perf_attachments.rs` (`#[ignore]`) | same command, `--test perf_attachments` |
-| Lifecycle, BUSY, close | `crates/sendust-core/tests/perf_lifecycle.rs` (`#[ignore]`) | same command, `--test perf_lifecycle` |
-| Facade copy and BUSY | `tests/perf/facade.mjs` | `node tests/perf/facade.mjs` after `npm run build:native` |
+| Core serialization and accounting | `crates/sendust-core/tests/perf_serialize.rs` (`#[ignore]`) | `cargo test -p sendust-core --release --test perf_serialize -- --ignored --nocapture --test-threads=1` |
+| Attachment read, copy, and encode | `crates/sendust-core/tests/perf_attachments.rs` (`#[ignore]`) | `cargo test -p sendust-core --release --test perf_attachments -- --ignored --nocapture --test-threads=1` |
+| Lifecycle, BUSY, close | `tests/perf/lifecycle.mjs` | `node tests/perf/lifecycle.mjs` after `npm run build:native` |
+| Facade buffer copy | `tests/perf/facade.mjs` | `node tests/perf/facade.mjs` after `npm run build:native` and `npm --workspace ./ts run build` |
 
-Each harness prints one line per metric in a stable format (`metric, p50_us, p95_us, min_us, max_us, iterations`) so two runs can be compared without parsing prose. This task defines the budget and the harness contract; the harnesses themselves are implemented in P13-002…P13-004.
+Each harness prints one line per metric in a stable format (`metric, p50_us, p95_us, min_us, max_us, iterations`) so two runs can be compared without parsing prose. The Rust harnesses and the lifecycle probe were implemented in P13-002…P13-004; the facade copy probe was added in P16, because the budget had no harness of its own and the copy was only inferred from an equivalent Rust `memcpy`. `check-doc-claims` fails when a row here names a file that does not exist or a `--test` name that has no ignored test.
 
 ## 5. Regression thresholds
 
 | Threshold | Value | Where enforced |
 | --- | --- | --- |
-| Gate budget | the table above | P13-005 report |
-| CI noise allowance | 2× budget median | P13-005, documented for future CI use |
-| Cross-run instability | > 20% between two runs | The metric is reported but not gated |
+| Gate budget | the table above | The four harnesses in section 4, run as [release checklist](../engineering/release-checklist.md) item 6 at the candidate commit |
+| CI noise allowance | 2× budget median | Only if a harness is ever run on a shared runner |
+| Cross-run instability | > 20% between two runs | The release-gate run records two full runs; an unstable metric is reported but not gated |
 | Correctness bounds | memory, descriptors, connections | Always gated, independent of timing noise |
 
 ## 6. Limitations

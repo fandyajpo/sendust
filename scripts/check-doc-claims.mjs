@@ -13,7 +13,7 @@
  * Usage: node scripts/check-doc-claims.mjs
  */
 
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -156,10 +156,45 @@ function checkClose() {
   }
 }
 
+// 5. Every harness named in the performance budget exists. That table is the
+// release gate's command list, so a row pointing at a missing file is a stale
+// gate. A Rust row's `--test <name>` must also name a real ignored test target.
+function checkPerformanceHarnessTable() {
+  const section =
+    /^## 4\. Harness specification$([\s\S]*?)^## /m.exec(read("docs/qa/performance-budget.md"))?.[1] ??
+    "";
+  let checked = 0;
+
+  for (const row of section.split("\n").filter((line) => /^\|/.test(line))) {
+    const cells = row.split("|").map((cell) => cell.trim());
+    const location = /`([^`]+)`/.exec(cells[2] ?? "")?.[1];
+    if (!location) continue;
+    if (!existsSync(join(ROOT, location))) {
+      fail(`performance-budget.md: harness \`${location}\` does not exist`);
+      continue;
+    }
+    checked += 1;
+
+    const test = /--test ([a-z0-9_]+)/.exec(cells[3] ?? "")?.[1];
+    if (!test) continue;
+    const target = `crates/sendust-core/tests/${test}.rs`;
+    if (!existsSync(join(ROOT, target))) {
+      fail(`performance-budget.md: \`--test ${test}\` has no test target ${target}`);
+    } else if (!read(target).includes("#[ignore")) {
+      fail(`performance-budget.md: ${target} has no ignored test, so it would run in CI`);
+    }
+  }
+
+  if (checked === 0) {
+    fail("performance-budget.md: no harness rows were checked");
+  }
+}
+
 checkCodes();
 checkNumbers();
 checkClaims();
 checkClose();
+checkPerformanceHarnessTable();
 
 if (failures.length > 0) {
   for (const message of failures) {
@@ -167,4 +202,6 @@ if (failures.length > 0) {
   }
   process.exit(1);
 }
-console.log("PASS: guide codes, cap/timeout numbers, forbidden claims, and explicit closes");
+console.log(
+  "PASS: guide codes, cap/timeout numbers, forbidden claims, explicit closes, and performance harness paths",
+);
