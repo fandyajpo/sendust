@@ -121,7 +121,7 @@ This documentation set is the source of truth for product scope, requirements, a
 
 ## 3. Status model
 
-P00–P15 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance; PHASE-14 records distribution on five native targets; PHASE-15 records the user and maintainer documentation. P16 (release engineering) is IN PROGRESS (P16-001 to P16-004 completed, P16-005 in review); P17–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
+P00–P16 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and selects a Sendust-owned SMTP engine, implemented and approved under PHASE-06; PHASE-07 records MIME composition; PHASE-11 records the security gate; PHASE-12 records QA; PHASE-13 records performance; PHASE-14 records distribution on five native targets; PHASE-15 records the user and maintainer documentation; PHASE-16 records the release-engineering gate and assembles candidate `0.1.0-rc.1` with its hashes and no publication. P17–P18 remain NOT STARTED. A task is COMPLETED only with evidence per the [definition of done](planning/definition-of-done.md). A phase is COMPLETED only when its gate is approved.
 
 | State | Meaning |
 | --- | --- |
@@ -136,7 +136,7 @@ P00–P15 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | Item | State |
 | --- | --- |
 | Repository | Documentation, architecture planning, and the two-crate workspace with native SMTP, MIME, Node-API binding, and TypeScript facade |
-| Application implementation | Core complete (errors, addresses, message model, MIME, orchestration, fault matrix, native SMTP engine); Node-API binding and TypeScript facade implemented; attachment file policy (P08) and public API contract (P09) pending |
+| Application implementation | Core complete (errors, addresses, message model, MIME, orchestration, fault matrix, native SMTP engine); Node-API binding and TypeScript facade implemented and approved under PHASE-05 and PHASE-09; attachment file policy (P08) and public API contract (P09) COMPLETED |
 | Toolchain validation | Rust 1.100.0 and the Node.js 22.23.5/24.22.3/26.13.1 jobs pass in Sendust CI |
 | QG-00 Discovery | APPROVED |
 | QG-01 Research | APPROVED with implementation validation gates |
@@ -166,9 +166,9 @@ P00–P15 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P16-002 | COMPLETED — reproducible build inputs, provenance, and dependency inventory |
 | P16-003 | COMPLETED — release notes draft for 0.1.0-rc.1 |
 | P16-004 | COMPLETED — release checklist and rollback plan |
-| P16-005 | IN REVIEW — PHASE-16 gate awaiting approval |
+| P16-005 | COMPLETED — PHASE-16 approved 2026-11-18 |
 | P17–P18 | NOT STARTED |
-| Next step | Project owner approval of PHASE-16 |
+| Next step | P17-001 — verify the `0.1.0-rc.1` candidate identity and artifacts. Publication still requires the P17-003 authorization |
 
 ## 5. Conventions
 
@@ -178,8 +178,8 @@ P00–P15 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 - Open questions: OQ-01–OQ-07.
 - Phase IDs: P00–P18.
 - Task IDs: Pxx-00y.
-- Decision IDs: ADR-0001–ADR-0017.
-- Risk IDs: R-001–R-047.
+- Decision IDs: ADR-0001–ADR-0020.
+- Risk IDs: R-001–R-049.
 - Gate IDs: QG-00–QG-17, QG-03A, QG-A01, QG-A02.
 - Milestones: M0–M7.
 

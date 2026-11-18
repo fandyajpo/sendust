@@ -1,6 +1,6 @@
 # QG-16 — Release Engineering Phase Record
 
-**Decision:** AWAITING APPROVAL — project owner review
+**Decision:** APPROVED — project owner review, 2026-11-18
 **Phase:** P16 — Release engineering
 **Gate:** PHASE-16
 **Prepared:** 2026-11-18
@@ -9,7 +9,7 @@
 
 This record is the release-candidate handoff for PHASE-16. No publish command has
 run; publication is P17 and needs its own approval. The record was prepared by an
-agent, so the decision in section 6 is the required human review step.
+agent; section 6 records the project owner's decision on it.
 
 ## 1. Candidate identity
 
@@ -62,7 +62,7 @@ same-host reproducibility only.
 | P16-002 | COMPLETED | [Reproducible build and provenance](../engineering/reproducible-build.md) and `scripts/assemble-rc.mjs`; `artifacts/release/0.1.0-rc.1/` holds `provenance.json` (98 Rust crates, 101 npm packages), `dependencies.json`, and `SHA256SUMS`. |
 | P16-003 | COMPLETED | [0.1.0-rc.1 release notes](../releases/0.1.0-rc.1.md): support matrix, install, semantics, limits, security, limitations, no migration. |
 | P16-004 | COMPLETED | [Release checklist and rollback plan](../engineering/release-checklist.md): 14 checks with owner, evidence, and pass condition; the assembly/publication boundary; five rollback scenarios. |
-| P16-005 | IN REVIEW | This record. |
+| P16-005 | COMPLETED | This record; approved by the project owner on 2026-11-18. |
 
 ## 3. Checklist status
 
@@ -135,8 +135,8 @@ No high-severity finding is open.
 
 ## 6. Decision
 
-**AWAITING APPROVAL.** The project owner must confirm the release-candidate
-handoff:
+**APPROVED — project owner, 2026-11-18.** The project owner reviewed the
+release-candidate handoff and confirmed:
 
 1. The candidate identity: `0.1.0-rc.1` at commit `a8a71e7`, with the facade
    hash and the complete five-target artifact hash set from the bundle job.
@@ -145,7 +145,8 @@ handoff:
    packages first.
 
 Approval makes P16-001 to P16-005 COMPLETED and PHASE-16 APPROVED, which makes
-P17 eligible. A failed check on the candidate commit, a checksum mismatch, or a
+P17 eligible. It does not authorize publication: P17-003 records its own
+authorization. A failed check on the candidate commit, a checksum mismatch, or a
 publication action reopens this gate.
 
 ## 7. Deferred and non-goals

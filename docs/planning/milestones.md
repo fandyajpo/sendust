@@ -1,6 +1,6 @@
 # Milestone Registry
 
-Milestones are evidence checkpoints, not calendar dates. A milestone is reached only when every mapped gate task is `COMPLETED` and its evidence is accepted. M0 is reached with QG-00, QG-01, and QG-02 records; all implementation milestones remain pending. Effort is relative (S/M/L/XL) and never a delivery estimate.
+Milestones are evidence checkpoints, not calendar dates. A milestone is reached only when every mapped gate task is `COMPLETED` and its evidence is accepted. M0 is reached with QG-00, QG-01, and QG-02 records; M6 is reached with the PHASE-15 and PHASE-16 records. M1–M5 are evidenced inside the P03–P14 gate records rather than given separate markers, and M7 remains ahead. Effort is relative (S/M/L/XL) and never a delivery estimate.
 
 ## Milestone summary
 
@@ -129,6 +129,10 @@ Milestones are evidence checkpoints, not calendar dates. A milestone is reached 
 **Mitigation:** early smoke (P14-001), explicit matrix, per-target validation, no untested claims.
 
 ## M6 — Release Candidate
+
+**REACHED — 2026-11-18**
+
+**Evidence:** [PHASE-15](../gates/phase-15.md) and [PHASE-16](../gates/phase-16.md) gate records, plus `artifacts/release/0.1.0-rc.1/` (`provenance.json`, `dependencies.json`, `SHA256SUMS`).
 
 **Purpose:** Assemble a reproducible, auditable release candidate without publishing.
 
