@@ -361,7 +361,7 @@ jobs:
       # package build's bundled-addon step, and no tarball produced here ships
       # it: each platform package carries its own binary.
       - name: Stage an addon for the facade build
-        run: cp artifacts/sendust-linux-x64.node ts/sendust.node
+        run: cp artifacts/sendust-linux-x64-gnu.node ts/sendust.node
 
       - name: Build the facade
         run: npm --workspace ./ts run build
