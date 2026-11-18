@@ -24,6 +24,13 @@ agent, so the decision in section 6 is the required human review step.
 | Facade SHA-256 | `9470aa8ab9321d38438c8b10662bb93e622349a28c158a45d786e2af9b9b5873` |
 | Bundle job | `Release candidate bundle` (14/14 checks green on this commit) |
 
+The commits after `a8a71e7` are documentation, test, and check changes only:
+`ts/src`, `crates/`, the lockfiles, and the four release-building scripts
+(`build-addon.mjs`, `build-artifact.mjs`, `prepare-publish.mjs`,
+`assemble-rc.mjs`) are untouched, so the facade tarball and the five artifacts
+above remain the build of this source. `provenance.json` records `a8a71e7` as
+the source commit, which is what P17 must match.
+
 ### Artifact hashes
 
 All five from the `Release candidate bundle` CI job, which downloaded each
@@ -62,13 +69,13 @@ same-host reproducibility only.
 | # | Check | Status |
 | --- | --- | --- |
 | 1 | Version agreement | PASS — check-versions on the candidate commit |
-| 2 | Clean build | PASS — Rust workspace job green on `023f6fc`; local `build:native` and the 61-test suite pass |
+| 2 | Clean build | PASS — Rust workspace job green on the candidate commit `a8a71e7`; local `build:native`, `npm run verify`, and `cargo test --workspace --locked` pass |
 | 3 | TypeScript contract | PASS — Node 22/24/26 jobs |
 | 4 | Runtime smokes and behaviour | PASS — binding and artifact jobs (Node, Bun, Deno), doc sample |
 | 5 | Security gate | PASS — PHASE-11 approved; secret scan clean; redaction tests in the suite |
-| 6 | Performance report | PASS — PHASE-13 approved budgets |
+| 6 | Performance report | PASS — PHASE-13 approved budgets; the four harnesses that [checklist item 6](../engineering/release-checklist.md) names are listed in the [performance budget](../qa/performance-budget.md), and the facade copy probe ran at this source on Node.js 22.23.5 / macOS arm64: `facade.send_copy_10mib, 759.6, 1385.3, 539.3, 1770.5, 20` (p50 760 µs, p95 1.4 ms against a 20 ms / 40 ms budget) |
 | 7 | Distribution matrix | PASS — PHASE-14 approved, five targets |
-| 8 | Documentation accuracy | PASS — PHASE-15 approved; `check-docs`, `check-doc-claims`, doc sample |
+| 8 | Documentation accuracy | PASS — PHASE-15 approved; `check-docs`, `check-doc-claims` (which now also fails on a performance-harness row whose file or `--test` target does not exist), doc sample |
 | 9 | Artifact checksums | PASS — `Release candidate bundle` job: five artifacts, one hash each, uploaded as the `release-candidate` bundle |
 | 10 | Dependency inventory | PASS — `dependencies.json` (98 Rust crates, 101 npm packages) |
 | 11 | Licence | PASS — `MIT OR Apache-2.0` in both manifests and the facade tarball |
@@ -93,6 +100,8 @@ same-host reproducibility only.
 | High | Cutting the candidate version was impossible at first: `sendust-napi` pinned `sendust-core = "=0.1.0"`, so the workspace bump broke the build | FIXED: the adapter uses a path-only dependency; `check-versions` now rejects such a pin |
 | Medium | The first handoff named only the local artifact hash and deferred the other four to "their jobs", so the candidate had no complete hash set | FIXED: a `Release candidate bundle` job downloads all five artifacts, runs `--require-all`, and uploads one hashed bundle; its SHA256SUMS is the table above |
 | Low | A stale artifact from a previous version was picked up by the assembler during the failed build | FIXED: the assembler now fails when an artifact is older than the native sources, and the failed build's artifact was rebuilt |
+| Medium | The [performance budget](../qa/performance-budget.md) named two harnesses that do not exist (`crates/sendust-core/tests/perf_lifecycle.rs` and `tests/perf/facade.mjs`), so checklist item 6 pointed at files nobody could run. The facade copy budget had no harness at all and was only inferred from an equivalent Rust `memcpy` | FIXED: the harness table now names the four real harnesses, `tests/perf/facade.mjs` exists and passed here (p50 760 µs, p95 1.4 ms against 20 ms / 40 ms), and `check-doc-claims` fails on a row whose file or `--test` target is missing |
+| Medium | Performance budgets were only measured when someone remembered to run the ignored harnesses (R-049) | MITIGATED (R-049): checklist item 6 now names the four commands and requires their printed metric lines as candidate evidence. The CI arm was not taken, because shared runners are not a stable measurement environment |
 
 No high-severity finding is open.
 
@@ -113,7 +122,8 @@ publication action reopens this gate.
 
 ## 7. Deferred and non-goals
 
-- Deferred: downloading and re-hashing the five CI artifacts as one bundle,
-  signing or notarizing binaries, a CycloneDX/SPDX SBOM, and the tag itself
-  (created only when publication is approved).
+- Deferred: signing or notarizing binaries, a CycloneDX/SPDX SBOM, running
+  the performance harnesses on CI runners (they are the release gate instead,
+  because shared runners are not a stable measurement environment), and the tag
+  itself (created only when publication is approved).
 - Non-goals: publishing, moving a tag, replacing a tarball, or claiming delivery.
