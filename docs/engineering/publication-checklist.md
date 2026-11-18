@@ -21,7 +21,7 @@
 | Release notes | [0.1.0-rc.1](../releases/0.1.0-rc.1.md) |
 | Support matrix | [platform matrix](../qa/platform-matrix.md) and release notes |
 | Licence | `MIT OR Apache-2.0`, in every manifest |
-| npm dist-tag | `next` — a pre-release must never move `latest` |
+| npm dist-tag | `next`, set explicitly. npm also assigns `latest` on a package's first publish and the registry refuses to remove it, so `latest` equals the RC until the first stable release moves it |
 
 The dependency inventory stands in for a CycloneDX/SPDX SBOM; the PHASE-16 record
 documents that deferral.
@@ -90,10 +90,19 @@ target, and a partial release is an incident.
 
 No post-publication check contacts an external SMTP server or uses credentials.
 
+Executed on 2026-11-18: the facade tarball from the registry reproduces
+`9470aa8a…`, the five optional dependencies are pinned to `0.1.0-rc.1`, platform
+metadata carries the expected `os`/`cpu`/`libc`, a clean install pulls only the
+facade and the local platform package, and the behaviour contract passes 16/16 on
+Node.js, Bun, and Deno. The [PHASE-17 record](../gates/phase-17.md) section 4
+holds the full table.
+
 ## 5. Tag
 
-After the registry and clean-consumer checks pass, create the annotated tag
-`v0.1.0-rc.1` on the approved candidate commit. The tag is not moved afterwards.
+After the registry and clean-consumer checks pass, the project owner creates the
+annotated tag `v0.1.0-rc.1` on the approved candidate commit. The tag is not
+moved afterwards. The registry and consumer checks passed on 2026-11-18; the tag
+is still open because this environment has no tag tool.
 
 ## 6. Authorization
 
@@ -115,7 +124,8 @@ a byte-reproducible target, a failed consumer check before publication, or any
 later change to the version reopens this gate. A Windows DLL that links to
 different bytes is not a hash mismatch under this policy: Windows is identified by
 the approved build inputs and the bundle's checksums, as
-[reproducible build](reproducible-build.md) records. Execution is ready: the `@sendust` organization exists, the owner
+[reproducible build](reproducible-build.md) records. The run completed on
+2026-11-18 and every post-publication check passed. Execution is ready: the `@sendust` organization exists, the owner
 reports the `NPM_TOKEN` secret is set, and the `Rust workspace` flake that failed
 the previous manual run is fixed in the PHASE-17 record. The remaining step is
 the owner's manual dispatch.

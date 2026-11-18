@@ -19,8 +19,13 @@ received anything.
 
 ## 2. Installation
 
-The npm package is pre-release and not published yet. Until publication, build
-the package from a checkout and install the packed tarball:
+The package is published as the pre-release `0.1.0-rc.1`:
+
+```text
+npm install @sendust/ts@0.1.0-rc.1
+```
+
+To build the package from a checkout instead:
 
 ```text
 npm ci

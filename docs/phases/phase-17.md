@@ -1,6 +1,6 @@
 # Phase 17 — RC and MVP approval/publication
 
-**Phase status:** IN PROGRESS (P17-001 to P17-003 completed; P17-004 authorized and ready to dispatch from CI)  
+**Phase status:** IN PROGRESS (P17-001 to P17-004 completed; P17-005 closure prepared, awaiting the project owner's PHASE-17 decision)  
 **Phase dependency:** Phase 16  
 **Companion references:** [release strategy](../engineering/release-strategy.md), [testing strategy](../engineering/testing-strategy.md), [security strategy](../engineering/security-strategy.md), [system design](../architecture/system-design.md)
 
@@ -41,7 +41,7 @@ In scope: RC verification, approval review, publication checklist, publication e
 ### P17-004 — Publish the approved MVP and run post-publication verification
 
 - **Size:** L
-- **Status:** BLOCKED — the organization and the token are in place and the CI `publish` job is ready; it waits on the owner's manual workflow dispatch
+- **Status:** COMPLETED — six packages published from CI on 2026-11-18 and verified from the registry in the [PHASE-17 record](../gates/phase-17.md)
 - **Prerequisites:** P17-003
 - **Description:** Publish only the approved artifacts, then verify from a clean consumer environment: install, import, native binary resolution, accepted fake-relay send, BUSY, close, and documentation availability. Do not use production relays or real credentials. Record publication URLs, timestamps, and checksums.
 - **Evidence criteria:** Post-publication smoke passes from the registry artifact, not the workspace. Installed artifact hash matches approval. Release notes and support matrix are visible. No post-publication test contacts external SMTP. Any failure triggers the rollback path rather than ad hoc patching.
@@ -49,7 +49,7 @@ In scope: RC verification, approval review, publication checklist, publication e
 ### P17-005 — MVP approval record, publication closure, and rollback readiness
 
 - **Size:** M
-- **Status:** NOT STARTED
+- **Status:** IN PROGRESS — closure, publication evidence, limitations, and rollback readiness recorded in the [PHASE-17 record](../gates/phase-17.md); PHASE-17 approval is the project owner's
 - **Prerequisites:** P17-001, P17-002, P17-003, P17-004
 - **Description:** Close the MVP release with an approval record, publication evidence, known limitations, and rollback status. Confirm the published version is exactly the approved candidate, consumer smoke passed, and support claims are honest. Hand off post-MVP work to Phase 18 without changing MVP semantics.
 - **Evidence criteria:** Closure record includes approval signatures, published version/hashes, consumer smoke results, limitations, and rollback readiness. No unresolved blocker remains. Phase 18 receives the approved baseline and explicit non-goals. If publication was rejected, the record states no artifact was published and names the blocking work.
@@ -92,7 +92,9 @@ IN PROGRESS. P17-001 to P17-003 are COMPLETED — the [RC verification record](.
 the owner-approved [MVP acceptance matrix](../qa/mvp-acceptance.md), and the
 [publication checklist](../engineering/publication-checklist.md) signed for the
 six `@sendust` packages at `0.1.0-rc.1` with the `next` dist-tag. P17-004 is
-ready to dispatch: the organization exists, the owner reports the `NPM_TOKEN`
-secret is set, and the descriptor-probe flake that failed the `Rust workspace`
-job is fixed; it waits on the owner's manual workflow dispatch. P17-005 is NOT
-STARTED. Nothing has been published.
+COMPLETED: the CI `publish` job published all six packages on 2026-11-18, the
+registry tarball matches the approved facade hash, and the clean-consumer
+behaviour contract passes on Node.js, Bun, and Deno. P17-005 is IN PROGRESS with
+its closure in the [PHASE-17 record](../gates/phase-17.md); the phase decision
+awaits the project owner, and the annotated tag `v0.1.0-rc.1` is theirs to
+create.
