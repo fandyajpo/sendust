@@ -25,6 +25,14 @@ The package is published as the pre-release `0.1.0-rc.1`:
 npm install @sendust/ts@0.1.0-rc.1
 ```
 
+Install the exact version or the `next` tag (`npm install @sendust/ts@next`). If
+a bare `npm install @sendust/ts` reports
+`ETARGET No matching version found for @sendust/ts@*`, npm is resolving the
+`latest` tag from package metadata it cached, or fetched from a mirror or proxy,
+before this release existed. `npm cache clean --force` drops the stale copy,
+`npm config get registry` should report `https://registry.npmjs.org/`, and the
+pinned command above always resolves.
+
 To build the package from a checkout instead:
 
 ```text
