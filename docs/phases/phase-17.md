@@ -97,4 +97,4 @@ registry tarball matches the approved facade hash, and the clean-consumer
 behaviour contract passes on Node.js, Bun, and Deno. P17-005 and PHASE-17 are
 COMPLETED, approved by the project owner on 2026-11-18 in the
 [PHASE-17 record](../gates/phase-17.md). The annotated tag `v0.1.0-rc.1` on
-`a8a71e7` remains the project owner's to create.
+`a8a71e7` was created on 2026-11-18.

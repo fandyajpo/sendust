@@ -40,8 +40,8 @@ changed no code, test, package, or published artifact: the MVP baseline is still
 Nothing was published or republished in this phase. The registry still holds
 `@sendust/ts@0.1.0-rc.1` and its five platform packages, with the approved facade
 hash `9470aa8a…` and the `next` dist-tag, exactly as recorded in the
-[PHASE-17 record](phase-17.md). The annotated tag `v0.1.0-rc.1` remains an owner
-action.
+[PHASE-17 record](phase-17.md). The annotated tag `v0.1.0-rc.1` was created on
+2026-11-18 and points at the approved commit.
 
 ## 4. Findings
 

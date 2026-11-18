@@ -99,10 +99,9 @@ holds the full table.
 
 ## 5. Tag
 
-After the registry and clean-consumer checks pass, the project owner creates the
-annotated tag `v0.1.0-rc.1` on the approved candidate commit. The tag is not
-moved afterwards. The registry and consumer checks passed on 2026-11-18; the tag
-is still open because this environment has no tag tool.
+The annotated tag `v0.1.0-rc.1` was created on the approved candidate commit on
+2026-11-18 and pushed (`refs/tags/v0.1.0-rc.1` resolves to
+`a8a71e7b613e0c56bbd48655ba5a2aedaa55afa5`). The tag is not moved afterwards.
 
 ## 6. Authorization
 

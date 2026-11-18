@@ -60,7 +60,7 @@ Every open item at the moment the MVP shipped, classified and dispositioned.
 | The publish manifest keeps the repository's `scripts` and `devDependencies` | PHASE-16 finding | Feature request | Deferred to a later version: stripping them changes the facade hash, so it needs a new candidate |
 | No CycloneDX/SPDX SBOM; the dependency inventory stands in for it | PHASE-16 deferral | Feature request | Deferred; revisit with the next release line |
 | macOS binaries are neither signed nor notarized | Release notes limitation | Feature request | Deferred; not part of the MVP claim |
-| The annotated tag `v0.1.0-rc.1` is not created yet | PHASE-17 closure | Process item, owner action | Open: the project owner creates it on `a8a71e7` |
+| The annotated tag `v0.1.0-rc.1` is not created yet | PHASE-17 closure | Process item, owner action | Closed 2026-11-18: the tag was created on `a8a71e7` and pushed |
 | The npm bypass-2FA token is deprecated for direct publishing in January 2027 | Publication checklist | Operational item | Open: migrate to trusted publishing or stage-only with maintainer promotion before then |
 | SMTPUTF8 is excluded; envelope local parts must be ASCII | MVP scope | Feature request | P18-002 candidate |
 | No public `AbortSignal` | Constraint C-17 | Feature request | P18-002 candidate, mapped to bounded close, never required shutdown |

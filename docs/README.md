@@ -187,7 +187,7 @@ P00–P16 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P18-003 | COMPLETED — connection pooling research; reuse deferred, no queue |
 | P18-004 | COMPLETED — compatibility and deprecation policy |
 | P18-005 | COMPLETED — PHASE-18 approved 2026-11-18; planning program closed |
-| Next step | The only open owner action is the annotated tag `v0.1.0-rc.1` on `a8a71e7`; post-MVP work starts from the backlog with its own ADR |
+| Next step | The release is tagged `v0.1.0-rc.1`; post-MVP work starts from the backlog with its own ADR |
 
 ## 5. Conventions
 

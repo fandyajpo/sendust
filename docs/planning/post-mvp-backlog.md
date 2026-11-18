@@ -20,7 +20,7 @@ published MVP and its hashes stay unchanged.
 
 | Item | Rationale | Dependencies | ADR | Evidence | Entry criteria |
 | --- | --- | --- | --- | --- | --- |
-| Create the annotated tag `v0.1.0-rc.1` on `a8a71e7` | The checklist requires the tag and it is not moved afterwards | None | None | Tag visible on GitHub | Owner action; no code |
+| Create the annotated tag `v0.1.0-rc.1` on `a8a71e7` | The checklist requires the tag and it is not moved afterwards | None | None | Done 2026-11-18: `refs/tags/v0.1.0-rc.1` resolves to `a8a71e7` | Closed |
 | Move off bypass-2FA tokens before January 2027 | npm deprecates bypass-2FA direct publishing | A trusted publisher or a stage-only token with maintainer promotion | None | A published release using the new path | Owner configures npm; then the next release uses it |
 
 ## 3. Priority 2 — capability candidates

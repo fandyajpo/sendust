@@ -37,9 +37,9 @@ npm install ./artifacts/publish/sendust-ts-0.1.0.tgz
 ```
 
 The publish manifest declares the per-platform packages as
-`optionalDependencies`, so a registry install would select the one matching your
-OS and CPU. Those packages are not published either; for local use, install the
-platform package built by the artifact jobs, or run from the repository.
+`optionalDependencies`, so npm installs only the one matching your OS and CPU
+(or libc, on Linux). All five are published at the same version; a target without
+a build fails closed at `createTransport`.
 
 Requirements:
 

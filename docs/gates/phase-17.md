@@ -134,9 +134,9 @@ Bun, and Deno, the two remaining findings are documented, and the rollback path
 is the [publication checklist](../engineering/publication-checklist.md)'s. The
 MVP is released, and Phase 18 may begin from this approved baseline.
 
-The annotated tag `v0.1.0-rc.1` on
-`a8a71e7b613e0c56bbd48655ba5a2aedaa55afa5` remains an owner action, since no tag
-tool exists in this environment.
+The annotated tag `v0.1.0-rc.1` was created on
+`a8a71e7b613e0c56bbd48655ba5a2aedaa55afa5` on 2026-11-18 and pushed; the remote
+tag resolves to the approved commit.
 
 A checksum mismatch in the facade or a byte-reproducible target, a failed
 consumer check, or any publication taken outside this authorization reopens the
