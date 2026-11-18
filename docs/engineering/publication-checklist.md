@@ -10,7 +10,7 @@
 | --- | --- |
 | Registry | `https://registry.npmjs.org` |
 | npm account | `fanvercel` (signed in on the build host) |
-| npm scope | `@sendust` — **does not exist yet**; the npm API answers "Scope not found" |
+| npm scope | `@sendust` — exists; `npm org ls sendust` reports `fanvercel - owner` |
 | Packages | five platform packages plus `@sendust/ts`, six in total |
 | Platform packages | `@sendust/ts-linux-x64-gnu`, `@sendust/ts-linux-arm64-gnu`, `@sendust/ts-macos-arm64`, `@sendust/ts-macos-x64`, `@sendust/ts-windows-x64` |
 | Versions | all `0.1.0-rc.1`; the platform manifests are generated from `ts/package.json` by `scripts/pack-platform.mjs` |
@@ -41,8 +41,10 @@ documents that deferral.
 | 9 | Rollback readiness | [release strategy](release-strategy.md) §5–§6 | Partial-publication and bad-artifact procedures understood and owned |
 | 10 | No publication yet | `git grep -n "npm publish" -- scripts .github` | Only the comment in `prepare-publish.mjs` explains why the source manifest stays private |
 
-Checks 5 and 6 are the owner's, and they are the only reason publication has not
-run.
+Checks 5 and 6 are the owner's, and both are in place: the organization exists,
+and the owner reports the repository secret is set. The publish job's `npm
+whoami` step is the check that the token is accepted before anything is
+published.
 
 ## 3. Execution path
 
@@ -50,16 +52,17 @@ Publication runs from CI, from the `release-candidate` bundle that the same
 workflow run produced and verified, not from a developer machine
 ([release strategy](release-strategy.md) §10).
 
-1. The project owner creates the `sendust` organization on npmjs.com and adds
-   `fanvercel` as an owner.
-2. The project owner adds a repository secret `NPM_TOKEN`: a granular token with
-   read-and-write access to the `@sendust` scope, **Bypass 2FA** enabled, a seven-day
-   expiry, and no IP allow-list (GitHub runners are dynamic). Bypass 2FA is
-   deprecated for direct publishing in January 2027, so the token is a
-   short-lived release credential: revoke it after the publish, and move to
-   trusted publishing (OIDC) or a stage-only token with maintainer promotion
-   before then. A stage-only token cannot publish directly: CI would stage the
-   six versions and a maintainer would promote each with an OTP.
+1. Done on 2026-11-18: the project owner created the `sendust` organization on
+   npmjs.com with `fanvercel` as an owner.
+2. Done by the project owner (reported 2026-11-18): the repository secret
+   `NPM_TOKEN` is a granular token with read-and-write access to the `@sendust`
+   scope, **Bypass 2FA** enabled, a seven-day expiry, and no IP allow-list
+   (GitHub runners are dynamic). Bypass 2FA is deprecated for direct publishing
+   in January 2027, so the token is a short-lived release credential: revoke it
+   after the publish, and move to trusted publishing (OIDC) or a stage-only token
+   with maintainer promotion before then. A stage-only token cannot publish
+   directly: CI would stage the six versions and a maintainer would promote each
+   with an OTP.
 3. Run the `CI` workflow manually with **publish** checked
    (`gh workflow run ci.yml -f publish=true`, or *Run workflow* in the Actions
    UI). The `publish` job downloads the candidate bundle, rebuilds the facade,
@@ -107,8 +110,10 @@ After the registry and clean-consumer checks pass, create the annotated tag
 
 The authorization covers exactly this candidate. A hash mismatch, a failed
 consumer check before publication, or any later change to the version reopens
-this gate. Execution is blocked only on the `@sendust` organization and the
-`NPM_TOKEN` secret, both of which only the owner can create.
+this gate. Execution is ready: the `@sendust` organization exists, the owner
+reports the `NPM_TOKEN` secret is set, and the `Rust workspace` flake that failed
+the previous manual run is fixed in the PHASE-17 record. The remaining step is
+the owner's manual dispatch.
 
 ## 7. Rollback
 

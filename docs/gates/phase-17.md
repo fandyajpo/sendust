@@ -1,7 +1,7 @@
 # QG-17 — RC and MVP approval record
 
 **Decision:** P17-002 and P17-003 APPROVED by the project owner, 2026-11-18;
-publication (P17-004) blocked on the npm organization and token, nothing published
+publication (P17-004) authorized and ready to dispatch from CI, nothing published
 **Phase:** P17 — RC and MVP approval/publication
 **Gate:** PHASE-17
 **Prepared:** 2026-11-18
@@ -10,8 +10,9 @@ publication (P17-004) blocked on the npm organization and token, nothing publish
 
 This record is the approval package for PHASE-17. No publish command has run and
 no artifact has been sent to a registry. The project owner accepted the MVP
-(P17-002) and authorized publication (P17-003); execution needs two owner-side
-prerequisites, recorded in section 6.
+(P17-002) and authorized publication (P17-003); the two owner-side prerequisites
+are in place and execution needs only the owner's manual workflow dispatch,
+recorded in section 6.
 
 ## 1. Candidate identity
 
@@ -34,7 +35,7 @@ Verified in the [RC verification record](../qa/rc-verification.md).
 | P17-001 | COMPLETED | [RC verification](../qa/rc-verification.md): identity, contents, evidence completeness, critical smokes from the candidate artifacts, and no mismatch |
 | P17-002 | COMPLETED | [MVP acceptance matrix](../qa/mvp-acceptance.md): all 17 acceptance items and all 30 constraints PASS with evidence; approved by the project owner on 2026-11-18 |
 | P17-003 | COMPLETED | [Publication checklist](../engineering/publication-checklist.md): inputs, pre-flight checks, publish order, post-publication verification, tag, rollback, and the owner's authorization; the executable path is the CI `publish` job with `scripts/publish-release.mjs` |
-| P17-004 | BLOCKED | Needs the `sendust` npm organization and the `NPM_TOKEN` repository secret; the job and hash verification are ready |
+| P17-004 | BLOCKED | Prerequisites in place: the organization and token exist. Waits on the owner's manual dispatch of the CI `publish` job; the `Rust workspace` flake in section 5 is fixed |
 | P17-005 | NOT STARTED | Blocked by P17-004 |
 
 ## 3. Acceptance summary
@@ -65,8 +66,8 @@ evidence are in the [matrix](../qa/mvp-acceptance.md).
 | SBOM | Dependency inventory only; the CycloneDX/SPDX deferral recorded in PHASE-16 stands |
 | Approved hash set | `release/0.1.0-rc.1/approved.json`, checked by `scripts/publish-release.mjs` |
 | Publish automation | The CI `publish` job (manual dispatch with `publish: true`): rebuilds the facade, verifies hashes, publishes the five platform packages then `@sendust/ts` at `next`, and refuses an existing version |
-| npm scope | **MISSING** — `@sendust` does not exist; npm reports "Scope not found" |
-| Publish token | **MISSING** — no `NPM_TOKEN` repository secret |
+| npm scope | READY — the `sendust` organization exists; `npm org ls sendust` reports `fanvercel - owner` |
+| Publish token | READY — the owner reports the `NPM_TOKEN` repository secret is set; the publish job's `npm whoami` step verifies it before publishing |
 | Authorization | APPROVED 2026-11-18 |
 
 ## 5. Findings
@@ -75,8 +76,9 @@ evidence are in the [matrix](../qa/mvp-acceptance.md).
 | --- | --- | --- |
 | Medium | The publication inputs had no packed platform tarballs: CI uploaded only the raw `.node` files, so a person publishing by hand had to invent the package manifests | FIXED: `scripts/pack-platform.mjs` packs all five from the loader's map at the facade version, with `os`/`cpu`/`libc`, and the `Release candidate bundle` job runs it and records `PLATFORM-PACKAGES.sha256` |
 | Low | The phase-17 plan still described the runtime path as `TS -> napi -> core -> lettre` and called a public `AbortSignal` optional | FIXED: the plan now names the native engine (ADR-0017) and records that C-17 prohibits a public `AbortSignal` |
-| Low | The staged publish manifest keeps the repository's `scripts` and `devDependencies` | Deferred: consumers are unaffected and stripping them would change the approved facade hash |
+| Medium | `repeated_failed_connections_do_not_leak_descriptors` failed on CI with `descriptor leak across refused connections: 9 -> 18`: `#[tokio::test]` built each probe's runtime before its body took the serial mutex, so the other three probes' idle runtimes (three descriptors each) landed in the process-wide count after the baseline snapshot | FIXED: the probes build their runtime behind a blocking guard, so a probe that has not started has opened nothing; measured on macOS that an idle runtime holds exactly three descriptors and drops back on release |
 | Medium | Publication would have run from a developer machine, against the release strategy, and that machine holds only the macOS arm64 artifact | FIXED: a CI `publish` job publishes the six packages from the same run's verified bundle; `--dry-run` printing the plan was exercised locally and correctly warns that the local binary is not the approved CI one |
+| Low | The staged publish manifest keeps the repository's `scripts` and `devDependencies` | Deferred: consumers are unaffected and stripping them would change the approved facade hash |
 
 No high-severity finding is open.
 
@@ -92,10 +94,11 @@ evidence, and no blocking defect or contract deviation is open.
 the six `@sendust` packages at `0.1.0-rc.1` with the `next` dist-tag, from CI, at
 the approved hashes.
 
-**P17-004 — blocked, not failed.** Publication cannot run until the owner creates
-the `sendust` organization on npm and adds the `NPM_TOKEN` repository secret.
-Both are owner-side actions outside the repository. Once they exist, a manual CI
-run with `publish` checked executes the publish job.
+**P17-004 — ready, awaiting the dispatch.** The `sendust` organization exists
+with `fanvercel` as owner, and the owner reports the `NPM_TOKEN` repository
+secret is set. The descriptor-probe flake that failed the `Rust workspace` job is
+fixed, so the remaining action is the owner's: run the `CI` workflow manually
+with `publish` checked. Nothing is published until that job completes.
 
 Nothing has been published. A checksum mismatch, a failed consumer check before
 publication, or any publication taken outside this authorization reopens the
