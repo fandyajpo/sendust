@@ -48,7 +48,7 @@ interface Job {
 
 interface Retry {
   readonly job: Job;
-  readonly timer: ReturnType<typeof setTimeout>;
+  readonly timer: unknown;
 }
 
 interface Waiter {
@@ -70,6 +70,15 @@ const MAX_CONCURRENCY = 32;
 const GROWTH_STREAK = 8;
 /** How long to hold concurrency down after throttling, before growing again. */
 const COOLDOWN_MS = 1_000;
+
+/**
+ * Timer host, read off `globalThis` so this module needs no runtime-specific
+ * type package: Node.js, Bun, and Deno all provide these functions.
+ */
+const timers = globalThis as unknown as {
+  "setTimeout": (handler: () => void, ms: number) => unknown;
+  "clearTimeout": (handle: unknown) => void;
+};
 
 function closedError(): SendustClosedError {
   return new SendustClosedError({
@@ -112,7 +121,7 @@ export class DeliveryEngine {
   #cooldownUntil = 0;
   #tokens = 1;
   #rateStamp = 0;
-  #rateTimer: ReturnType<typeof setTimeout> | undefined;
+  #rateTimer: unknown;
 
   readonly #retries = new Set<Retry>();
   #closePromise: Promise<void> | undefined;
@@ -205,7 +214,7 @@ export class DeliveryEngine {
 
     const error = closedError();
     for (const entry of this.#retries) {
-      clearTimeout(entry.timer);
+      timers.clearTimeout(entry.timer);
       entry.job.reject(error);
     }
     this.#retries.clear();
@@ -220,7 +229,7 @@ export class DeliveryEngine {
     }
 
     if (this.#rateTimer !== undefined) {
-      clearTimeout(this.#rateTimer);
+      timers.clearTimeout(this.#rateTimer);
       this.#rateTimer = undefined;
     }
 
@@ -310,7 +319,7 @@ export class DeliveryEngine {
 
   #scheduleRetry(job: Job, delayMs: number): void {
     let entry: Retry | undefined;
-    const timer = setTimeout(() => {
+    const timer = timers.setTimeout(() => {
       if (entry) {
         this.#retries.delete(entry);
       }
@@ -376,7 +385,7 @@ export class DeliveryEngine {
       job.reject(error);
     }
     for (const entry of this.#retries) {
-      clearTimeout(entry.timer);
+      timers.clearTimeout(entry.timer);
       entry.job.reject(error);
     }
     this.#retries.clear();
@@ -412,7 +421,7 @@ export class DeliveryEngine {
     if (this.#rateTimer !== undefined) {
       return;
     }
-    this.#rateTimer = setTimeout(() => {
+    this.#rateTimer = timers.setTimeout(() => {
       this.#rateTimer = undefined;
       this.#pump();
     }, 20);
