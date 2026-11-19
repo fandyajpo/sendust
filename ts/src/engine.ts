@@ -233,11 +233,13 @@ export class DeliveryEngine {
       this.#rateTimer = undefined;
     }
 
-    this.#state = "closed";
-
-    await Promise.allSettled([...this.#all].map((transport) => transport.close()));
+    // `closing` until every native session has finished closing, so a caller
+    // that observes the state during shutdown sees the transition, not a jump.
+    const transports = [...this.#all];
     this.#all.clear();
     this.#idle.length = 0;
+    await Promise.allSettled(transports.map((transport) => transport.close()));
+    this.#state = "closed";
   }
 
   // ---------------------------------------------------------------- scheduling

@@ -187,8 +187,8 @@ describe("autonomous delivery engine", () => {
 
       await transport.close();
       const codes = await Promise.all(pending);
-      expect(codes).toContain("LIMIT_QUEUE_FULL");
-      expect(codes).toContain("TRANSPORT_CLOSED");
+      expect(codes, JSON.stringify(codes)).toContain("LIMIT_QUEUE_FULL");
+      expect(codes, JSON.stringify(codes)).toContain("TRANSPORT_CLOSED");
     } finally {
       await relay.close();
     }
@@ -252,7 +252,13 @@ describe("autonomous delivery engine", () => {
       await waitFor(() => relay.connections() >= 1);
       await transport.close();
       const codes = await Promise.all(pending);
-      expect(codes.every((code) => code === "TRANSPORT_CLOSED")).toBe(true);
+      // A queued message is refused; one already transmitting may resolve as
+      // `unknown` because the body could have reached the relay. Neither hangs.
+      expect(codes, JSON.stringify(codes)).toContain("TRANSPORT_CLOSED");
+      expect(
+        codes.every((code) => code === null || code === "TRANSPORT_CLOSED"),
+        JSON.stringify(codes),
+      ).toBe(true);
       expect(transport.state).toBe("closed");
       await expect(transport.send(message(99))).rejects.toBeInstanceOf(SendustError);
     } finally {
