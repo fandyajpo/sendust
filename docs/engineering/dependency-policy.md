@@ -105,6 +105,7 @@ Development tools never ship to consumers and are installed from one root lockfi
 | TypeScript | `7.0.2` | strict type checking |
 | Biome | `2.6.7` | linting and formatting |
 | Vitest | `5.1.0` | TypeScript unit and contract tests |
+| Nodemailer | `10.6.0` | benchmark comparison only; never shipped (`bench/`, root devDependency) |
 
 These versions are enforced by `scripts/check-docs.mjs`, which compares this baseline, `ts/package.json`, `rust-toolchain.toml`, and `.github/workflows/ci.yml`.
 

@@ -25,7 +25,13 @@ async function sendustSender(relay) {
     port: relay.port,
     secure: "tls",
     tlsRootCertificate: relay.trustAnchor,
-    delivery: { maxConcurrent: concurrency, maxConnections: concurrency },
+    delivery: {
+      maxConcurrent: concurrency,
+      maxConnections: concurrency,
+      // Lift the per-session cap so both clients are compared on connection
+      // reuse alone; the product default stays 100.
+      maxMessagesPerSession: 10_000,
+    },
   });
   return {
     send: (index) => transport.send(message(index)),

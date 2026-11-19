@@ -17,6 +17,8 @@ tag format, version sources, and compatibility promises — are in
   definitive outcome, resets it with `RSET`, and re-dials only on an error, an
   `unknown` disposition, the message cap, or the idle window (ADR-0022).
 - `transport.stats`, `delivery.*` options, and the `LIMIT_QUEUE_FULL` code.
+- A Nodemailer comparison benchmark (`npm run bench`) with results recorded in
+  [docs/qa/benchmark-nodemailer.md](docs/qa/benchmark-nodemailer.md).
 
 ### Changed
 
