@@ -101,9 +101,10 @@ async function fakeRelay(behaviour: (index: number) => Final = () => "accepted")
                 socket.write("451 4.3.0 try again later\r\n");
               } else if (outcome === "permanent") {
                 socket.write("550 5.1.1 no such user\r\n");
-              } else {
+              } else if (outcome === "accepted") {
                 socket.write("250 2.0.0 accepted\r\n");
               }
+              // `stall` deliberately writes nothing: the send stays in flight.
             }
             continue;
           }
