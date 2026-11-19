@@ -24,6 +24,7 @@
     "prepare:publish": "node scripts/prepare-publish.mjs",
     "pack:platform": "node scripts/pack-platform.mjs",
     "publish:release": "node scripts/publish-release.mjs",
-    "assemble:rc": "node scripts/assemble-rc.mjs"
+    "assemble:rc": "node scripts/assemble-rc.mjs",
+    "bench": "node bench/run.mjs"
   }
 }
