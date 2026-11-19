@@ -13,8 +13,8 @@ use napi::bindgen_prelude::{Result, Uint8Array};
 use napi_derive::napi;
 use sendust_core::{
     Attachment, AuthMechanism, Delivery, DeliveryProgress, Error as CoreError, ErrorCode,
-    FileDescriptor, Header, Limits, Mailbox, OutgoingMessage, SmtpConfig, SmtpCredentials,
-    SmtpSecurity, SmtpTransport, Timeouts,
+    FileDescriptor, Header, Limits, Mailbox, OutgoingMessage, ReusePolicy, SmtpConfig,
+    SmtpCredentials, SmtpSecurity, SmtpTransport, Timeouts,
 };
 
 const OPEN: u8 = 0;
@@ -58,6 +58,10 @@ pub struct TransportOptions {
     pub allow_file_access: Option<bool>,
     /// Additive PEM trust anchor; verification stays on (ADR-0018).
     pub tls_root_certificate: Option<String>,
+    /// Messages one authenticated session may serve (ADR-0022).
+    pub max_messages_per_session: Option<u32>,
+    /// How long an idle session may be reused before a fresh dial (ADR-0022).
+    pub idle_reuse_ms: Option<u32>,
 }
 
 /// One custom header.
@@ -202,6 +206,15 @@ impl Transport {
                 .map_err(to_napi)?;
         }
         config = config.with_timeouts(timeouts).map_err(to_napi)?;
+
+        let mut reuse = ReusePolicy::default();
+        if let Some(value) = options.max_messages_per_session {
+            reuse = reuse.with_max_messages(value as usize);
+        }
+        if let Some(ms) = options.idle_reuse_ms {
+            reuse = reuse.with_idle(Duration::from_millis(u64::from(ms)));
+        }
+        config = config.with_reuse(reuse);
 
         let mut limits = Limits::default();
         if let Some(value) = options.max_recipients {
@@ -383,8 +396,16 @@ impl Transport {
             }
         }
 
-        if let Ok(mut slot) = self.inner.slot.try_lock() {
-            *slot = None;
+        // A retained session gets a polite QUIT before the slot is dropped. An
+        // aborted in-flight send already dropped its session, which is why this
+        // is only reached once `active` is idle.
+        let retained = match self.inner.slot.try_lock() {
+            Ok(mut slot) => slot.take(),
+            Err(_) => None,
+        };
+        if let Some(mut transport) = retained {
+            let budget = self.inner.close_timeout;
+            let _ = tokio::time::timeout(budget, transport.shutdown()).await;
         }
         self.inner.phase.store(CLOSED, Ordering::SeqCst);
         Ok(())

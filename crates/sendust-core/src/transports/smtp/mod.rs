@@ -114,6 +114,7 @@ pub struct SmtpConfig {
     hello_name: String,
     timeouts: Timeouts,
     root_certificates: Vec<Vec<u8>>,
+    reuse: ReusePolicy,
 }
 
 impl SmtpConfig {
@@ -131,6 +132,7 @@ impl SmtpConfig {
             hello_name: DEFAULT_HELLO_NAME.to_string(),
             timeouts: Timeouts::default(),
             root_certificates: Vec::new(),
+            reuse: ReusePolicy::default(),
         })
     }
 
@@ -181,6 +183,17 @@ impl SmtpConfig {
         &self.host
     }
 
+    /// How long one authenticated session may serve further messages.
+    pub fn reuse(&self) -> ReusePolicy {
+        self.reuse
+    }
+
+    /// Replaces the reuse policy (ADR-0022).
+    pub fn with_reuse(mut self, reuse: ReusePolicy) -> Self {
+        self.reuse = reuse;
+        self
+    }
+
     pub fn port(&self) -> u16 {
         self.port
     }
@@ -202,11 +215,70 @@ impl SmtpConfig {
     }
 }
 
+/// How long one authenticated session may serve further messages (ADR-0022).
+///
+/// A session is kept only after a definitive outcome and only when the relay
+/// answers the `RSET` that closes the transaction; any error or an `unknown`
+/// disposition drops it, so the next send dials again.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ReusePolicy {
+    max_messages: usize,
+    idle: Duration,
+}
+
+impl Default for ReusePolicy {
+    fn default() -> Self {
+        Self {
+            max_messages: 100,
+            idle: Duration::from_secs(30),
+        }
+    }
+}
+
+impl ReusePolicy {
+    /// Messages one session may serve before it is closed and replaced.
+    pub fn max_messages(&self) -> usize {
+        self.max_messages
+    }
+
+    /// How long an idle session may be reused before a fresh dial.
+    pub fn idle(&self) -> Duration {
+        self.idle
+    }
+
+    /// At least one message per session; zero would disable reuse.
+    pub fn with_max_messages(mut self, max_messages: usize) -> Self {
+        self.max_messages = max_messages.max(1);
+        self
+    }
+
+    pub fn with_idle(mut self, idle: Duration) -> Self {
+        self.idle = idle;
+        self
+    }
+}
+
 /// The single MVP delivery adapter.
-#[derive(Debug, Clone)]
 pub struct SmtpTransport {
     config: SmtpConfig,
     progress: Option<Arc<DeliveryProgress>>,
+    /// A session kept between sends, already authenticated (ADR-0022).
+    session: Option<Session>,
+    /// Messages this session has served, for `ReusePolicy::max_messages`.
+    served: usize,
+    /// When the session last became idle, for `ReusePolicy::idle`.
+    idle_since: Option<Instant>,
+}
+
+impl fmt::Debug for SmtpTransport {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("SmtpTransport")
+            .field("host", &self.config.host)
+            .field("port", &self.config.port)
+            .field("session", &self.session.is_some())
+            .field("served", &self.served)
+            .finish()
+    }
 }
 
 impl PartialEq for SmtpTransport {
@@ -222,6 +294,9 @@ impl SmtpTransport {
         Self {
             config,
             progress: None,
+            session: None,
+            served: 0,
+            idle_since: None,
         }
     }
 
@@ -256,15 +331,65 @@ impl SmtpTransport {
 
     /// Runs exactly one delivery over this transport.
     ///
+    /// The session is opened on first use and kept after a definitive outcome,
+    /// so a second message pays no TCP, TLS, or AUTH round trip. Any error or an
+    /// `unknown` disposition drops it, because its protocol state cannot be
+    /// trusted (ADR-0022).
+    ///
     /// The caller keeps ownership, which is what the FFI layer needs to reuse a
     /// single transport across `send()` calls.
     pub async fn run(&mut self, request: DeliveryRequest) -> Result<SendOutcome, Error> {
-        let config = &self.config;
-        let deadlines = SendDeadlines::start(config.timeouts, Instant::now());
+        let deadlines = SendDeadlines::start(self.config.timeouts, Instant::now());
         let envelope = Envelope::of(&request.message)?;
         self.reset_progress();
-        self.mark(Stage::ConnectionSetup);
 
+        let mut session = self.acquire_session(deadlines).await?;
+        let outcome = self
+            .transact(&mut session, deadlines, envelope, &request.wire)
+            .await;
+
+        match &outcome {
+            Ok(SendOutcome::Accepted { .. }) | Ok(SendOutcome::Rejected { .. }) => {
+                self.retain(session).await;
+            }
+            _ => {}
+        }
+        outcome
+    }
+
+    /// Closes a retained session politely. Bounded and best-effort: shutdown
+    /// never reports a relay failure of its own.
+    pub async fn shutdown(&mut self) {
+        if let Some(mut session) = self.session.take() {
+            let budget = self.config.timeouts.operation();
+            let _ = tokio::time::timeout(budget, session.quit()).await;
+        }
+    }
+
+    /// A warm session when one may be reused, otherwise a fresh authenticated
+    /// one. An expired session is closed before the new dial, never after.
+    async fn acquire_session(&mut self, deadlines: SendDeadlines) -> Result<Session, Error> {
+        if let Some(mut session) = self.session.take() {
+            let policy = self.config.reuse;
+            let idle_expired = self
+                .idle_since
+                .is_some_and(|idle| idle.elapsed() >= policy.idle());
+            if self.served < policy.max_messages() && !idle_expired {
+                session.begin_transaction(self.config.timeouts);
+                return Ok(session);
+            }
+            let budget = self.config.timeouts.operation();
+            let _ = tokio::time::timeout(budget, session.quit()).await;
+        }
+        self.served = 0;
+        self.idle_since = None;
+        self.open_session(deadlines).await
+    }
+
+    /// A new session, with STARTTLS and AUTH when the relay configuration asks
+    /// for them. `Session::open` already greets and sends EHLO.
+    async fn open_session(&self, deadlines: SendDeadlines) -> Result<Session, Error> {
+        let config = &self.config;
         let mut session = Session::open(config)
             .await
             .map_err(|error| annotate(error, config, deadlines, Stage::ConnectionSetup))?;
@@ -287,12 +412,40 @@ impl SmtpTransport {
                 .await
                 .map_err(|error| annotate(error, config, deadlines, Stage::Auth))?;
         }
+        Ok(session)
+    }
 
+    /// Keeps a session for the next send when it is still healthy.
+    ///
+    /// `RSET` closes the transaction; a relay that refuses it, or a session that
+    /// reached its message cap, is closed instead. The outcome the relay already
+    /// gave is never changed by this cleanup.
+    async fn retain(&mut self, mut session: Session) {
+        self.served += 1;
+        if self.served >= self.config.reuse.max_messages() {
+            let budget = self.config.timeouts.operation();
+            let _ = tokio::time::timeout(budget, session.quit()).await;
+            return;
+        }
+        if session.reset().await.is_ok() {
+            self.session = Some(session);
+            self.idle_since = Some(Instant::now());
+        }
+    }
+
+    /// One SMTP transaction over an already authenticated session.
+    async fn transact(
+        &self,
+        session: &mut Session,
+        deadlines: SendDeadlines,
+        envelope: Envelope,
+        wire: &[u8],
+    ) -> Result<SendOutcome, Error> {
+        let config = &self.config;
         self.mark(Stage::Mail);
         match session.mail_from(&envelope.from).await {
             Ok(reply) if reply.is_positive() => {}
             Ok(reply) => {
-                quiet_quit(&mut session, config).await;
                 return match verdict(&reply) {
                     Verdict::Refused => Ok(rejected_outcome(
                         &envelope,
@@ -338,7 +491,6 @@ impl SmtpTransport {
         }
 
         if closing || accepted.is_empty() {
-            quiet_quit(&mut session, config).await;
             return Ok(rejected_outcome(&envelope, &statuses, None));
         }
 
@@ -363,10 +515,9 @@ impl SmtpTransport {
         }
 
         self.mark(Stage::DataBody);
-        match session.data_body(&request.wire).await {
+        match session.data_body(wire).await {
             Ok(reply) => match verdict(&reply) {
                 Verdict::Complete => {
-                    quiet_quit(&mut session, config).await;
                     settle(&mut statuses, &accepted, RecipientStatus::Accepted);
                     Ok(SendOutcome::Accepted {
                         recipients: outcomes(&envelope, &statuses),
@@ -374,7 +525,6 @@ impl SmtpTransport {
                     })
                 }
                 Verdict::Refused => {
-                    quiet_quit(&mut session, config).await;
                     settle(&mut statuses, &accepted, RecipientStatus::Rejected);
                     Ok(rejected_outcome(
                         &envelope,
@@ -478,12 +628,6 @@ fn verdict(reply: &Reply) -> Verdict {
         ReplyClass::Transient | ReplyClass::Permanent => Verdict::Refused,
         ReplyClass::Intermediate => Verdict::Invalid,
     }
-}
-
-/// Best-effort QUIT after the final response. Its failure never changes the
-/// outcome the relay already stated.
-async fn quiet_quit(session: &mut Session, config: &SmtpConfig) {
-    let _ = tokio::time::timeout(config.timeouts.operation(), session.quit()).await;
 }
 
 fn smtp_response(reply: &Reply) -> SmtpResponse {

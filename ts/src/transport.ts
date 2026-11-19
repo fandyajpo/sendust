@@ -52,6 +52,8 @@ const DELIVERY_KEYS = new Set([
   "maxAttempts",
   "retryBaseMs",
   "retryMaxMs",
+  "maxMessagesPerSession",
+  "sessionIdleMs",
 ]);
 
 /** Safe defaults: no tuning is required for a normal workload. */
@@ -63,6 +65,8 @@ const DELIVERY_DEFAULTS = {
   maxAttempts: 3,
   retryBaseMs: 250,
   retryMaxMs: 30_000,
+  maxMessagesPerSession: 100,
+  sessionIdleMs: 30_000,
 };
 
 /** The core's default close budget, used when the caller configures none. */
@@ -180,6 +184,33 @@ function deliverySettings(
     retryMaxMs,
     closeMs,
     totalMs,
+  };
+}
+
+/**
+ * Session reuse settings, passed to the native layer rather than the engine:
+ * they govern how long one authenticated SMTP session may serve messages
+ * (ADR-0022).
+ */
+function reuseSettings(delivery: DeliveryOptions | undefined): {
+  maxMessagesPerSession: number;
+  sessionIdleMs: number;
+} {
+  return {
+    maxMessagesPerSession: bounded(
+      "maxMessagesPerSession",
+      delivery?.maxMessagesPerSession,
+      1,
+      10_000,
+      DELIVERY_DEFAULTS.maxMessagesPerSession,
+    ),
+    sessionIdleMs: bounded(
+      "sessionIdleMs",
+      delivery?.sessionIdleMs,
+      0,
+      600_000,
+      DELIVERY_DEFAULTS.sessionIdleMs,
+    ),
   };
 }
 
@@ -354,7 +385,13 @@ export class Transport {
   constructor(options: TransportOptions) {
     // Validate the caller's options before loading the addon, so an invalid
     // option always reports a Sendust error even where the addon is missing.
-    const nativeOptions = toNativeOptions(options);
+    const native = toNativeOptions(options);
+    const reuse = reuseSettings(options.delivery);
+    const nativeOptions: Record<string, unknown> = {
+      ...native,
+      maxMessagesPerSession: reuse.maxMessagesPerSession,
+      sessionIdleMs: reuse.sessionIdleMs,
+    };
     // Snapshot the caps now; the caller's options object may be mutated later.
     this.#perFileBytes = options.limits?.maxAttachmentBytes ?? DEFAULT_LIMITS.maxAttachmentBytes;
     this.#totalBytes =

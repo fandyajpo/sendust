@@ -193,6 +193,8 @@ export type TransportState = "open" | "closing" | "closed";
  * | `maxAttempts` | 3 | 1–10 |
  * | `retryBaseMs` | 250 | 0–60000 |
  * | `retryMaxMs` | 30000 | 0–600000, and ≥ `retryBaseMs` |
+ * | `maxMessagesPerSession` | 100 | 1–10000 |
+ * | `sessionIdleMs` | 30000 | 0–600000 |
  */
 export interface DeliveryOptions {
   /** Sends allowed at once; concurrency grows toward it and backs off from it. */
@@ -211,6 +213,10 @@ export interface DeliveryOptions {
   readonly retryBaseMs?: number;
   /** Backoff cap. */
   readonly retryMaxMs?: number;
+  /** Messages one authenticated SMTP session may serve before it is closed. */
+  readonly maxMessagesPerSession?: number;
+  /** How long an idle session may be reused before a fresh connection. */
+  readonly sessionIdleMs?: number;
 }
 
 /** Observable delivery-engine state. Counters are monotonic per transport. */

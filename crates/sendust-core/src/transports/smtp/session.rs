@@ -4,6 +4,7 @@
 //! classifies outcomes (ADR-0005); only protocol-level requirements become
 //! errors here.
 
+use crate::config::Timeouts;
 use crate::errors::{Error, Stage};
 use crate::transports::smtp::SmtpConfig;
 use crate::transports::smtp::client::connection::Connection;
@@ -26,6 +27,18 @@ impl Session {
 
     pub fn capabilities(&self) -> &Capabilities {
         self.connection.capabilities()
+    }
+
+    /// Starts a fresh budget for a reused session: a later message must not
+    /// inherit the total deadline of the one that opened it (ADR-0007).
+    pub fn begin_transaction(&mut self, timeouts: Timeouts) {
+        self.connection.begin_transaction(timeouts);
+    }
+
+    /// Closes the current transaction so the session can carry another message
+    /// (ADR-0022). A refusal means the session is not reusable.
+    pub async fn reset(&mut self) -> Result<Reply, Error> {
+        self.connection.command(Command::Reset, Stage::Cleanup).await
     }
 
     pub fn is_encrypted(&self) -> bool {

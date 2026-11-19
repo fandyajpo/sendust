@@ -27,3 +27,11 @@ pub type DeliveryFuture<'a> = Pin<Box<dyn Future<Output = Result<SendOutcome, Er
 pub trait DeliveryPort {
     fn deliver<'a>(&'a mut self, request: DeliveryRequest) -> DeliveryFuture<'a>;
 }
+
+// A borrowed adapter is still a port, so orchestration can be built over a
+// transport without giving up ownership of it.
+impl<T: DeliveryPort + ?Sized> DeliveryPort for &mut T {
+    fn deliver<'a>(&'a mut self, request: DeliveryRequest) -> DeliveryFuture<'a> {
+        (**self).deliver(request)
+    }
+}

@@ -15,7 +15,7 @@ use tokio::net::TcpStream;
 use tokio_rustls::TlsConnector;
 use tokio_rustls::client::TlsStream;
 
-use crate::config::SendDeadlines;
+use crate::config::{SendDeadlines, Timeouts};
 use crate::errors::{Error, ErrorCode, ErrorDetails, Stage};
 use crate::transports::smtp::proto::capabilities::Capabilities;
 use crate::transports::smtp::proto::command::{AuthMechanism, Command, auth_plain_initial};
@@ -160,6 +160,15 @@ impl Connection {
 
     pub fn is_encrypted(&self) -> bool {
         self.encrypted
+    }
+
+    /// Restarts the send budgets for a session that is reused across messages.
+    ///
+    /// The session was established under the budget of the send that opened it;
+    /// a later message gets its own, exactly as a fresh connection would.
+    pub fn begin_transaction(&mut self, timeouts: Timeouts) {
+        self.deadlines = SendDeadlines::start(timeouts, Instant::now());
+        self.in_setup = false;
     }
 
     /// Writes raw protocol bytes (the DATA body) under the operation budget.
