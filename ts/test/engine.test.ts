@@ -219,7 +219,8 @@ describe("autonomous delivery engine", () => {
       expect(result.status).toBe("accepted");
       expect(transport.stats.retried).toBe(1);
       expect(transport.stats.accepted).toBe(1);
-      expect(relay.connections()).toBe(2);
+      // The retry reuses the session that got the 451 (ADR-0022).
+      expect(relay.connections()).toBe(1);
     } finally {
       await transport.close();
       await relay.close();
