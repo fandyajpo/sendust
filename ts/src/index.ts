@@ -48,4 +48,4 @@ export type {
 } from "./types.ts";
 
 /** Package version; kept in step with package.json at release time. */
-export const version = "0.1.0-rc.1";
+export const version = "1.0.0";

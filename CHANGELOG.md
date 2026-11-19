@@ -8,6 +8,15 @@ tag format, version sources, and compatibility promises — are in
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.0.0] - 2026-11-19
+
+The first stable release. It makes concurrent delivery the default: a queue, a
+pool, adaptive concurrency, and bounded retries replace the single-send
+behaviour of `0.1.0-rc.1`, and a transport reuses one authenticated SMTP session
+across messages.
+
 ### Added
 
 - Autonomous delivery engine in the TypeScript facade: a bounded queue, a pool of

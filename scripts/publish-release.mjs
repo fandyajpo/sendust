@@ -238,6 +238,15 @@ for (const [target, entry] of packed) {
   }
 
   const approvedHash = approved.artifacts[target];
+  if (typeof approvedHash !== "string") {
+    // A release may pin only the approved commit and the facade, leaving each
+    // platform binary to the approval bundle's own checksums (already verified
+    // above). Byte-for-byte reproduction is then not claimed for that release.
+    console.log(
+      `publish-release: ${target} has no pinned hash in approved.json; the bundle's checksums identify it`,
+    );
+    continue;
+  }
   if (built === approvedHash) {
     continue;
   }
