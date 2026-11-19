@@ -89,6 +89,8 @@ async function relay(final = "accepted") {
           } else if (line === "DATA") {
             inData = true;
             socket.write("354 go\r\n");
+          } else if (line.startsWith("RSET")) {
+            socket.write("250 2.0.0 ok\r\n");
           } else if (line.startsWith("QUIT")) {
             socket.write("221 2.0.0 bye\r\n");
             socket.end();
