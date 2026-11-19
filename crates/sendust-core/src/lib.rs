@@ -33,7 +33,8 @@ pub use crate::results::{
     SendOutcome, SmtpResponse,
 };
 pub use crate::transports::smtp::{
-    AuthMechanism, ReusePolicy, SmtpConfig, SmtpCredentials, SmtpSecurity, SmtpSession, SmtpTransport,
+    AuthMechanism, ReusePolicy, SmtpConfig, SmtpCredentials, SmtpSecurity, SmtpSession,
+    SmtpTransport,
 };
 pub use crate::validation::{Failures as ValidationFailures, ValidationStage, validate_in_order};
 

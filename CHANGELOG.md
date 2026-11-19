@@ -8,7 +8,20 @@ tag format, version sources, and compatibility promises — are in
 
 ## [Unreleased]
 
-Nothing yet. The next candidate is `0.1.0-rc.1` once P16 finishes assembling it.
+### Added
+
+- Autonomous delivery engine in the TypeScript facade: a bounded queue, a pool of
+  native transports, adaptive concurrency, an optional message rate, and bounded
+  retries for transient failures (ADR-0021).
+- SMTP session reuse: a transport keeps its authenticated session after a
+  definitive outcome, resets it with `RSET`, and re-dials only on an error, an
+  `unknown` disposition, the message cap, or the idle window (ADR-0022).
+- `transport.stats`, `delivery.*` options, and the `LIMIT_QUEUE_FULL` code.
+
+### Changed
+
+- A concurrent `send()` is queued and scheduled instead of rejecting with
+  `TRANSPORT_BUSY`. A retry is bounded by the message's total send budget.
 
 ## [0.1.0-rc.1] - 2026-11-18
 

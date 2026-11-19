@@ -38,7 +38,9 @@ impl Session {
     /// Closes the current transaction so the session can carry another message
     /// (ADR-0022). A refusal means the session is not reusable.
     pub async fn reset(&mut self) -> Result<Reply, Error> {
-        self.connection.command(Command::Reset, Stage::Cleanup).await
+        self.connection
+            .command(Command::Reset, Stage::Cleanup)
+            .await
     }
 
     pub fn is_encrypted(&self) -> bool {

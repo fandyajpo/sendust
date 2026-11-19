@@ -152,6 +152,10 @@ Read-only. Reflects the state machine synchronously.
 - The queue is bounded by `delivery.maxQueue` and `delivery.maxQueueBytes`;
   beyond either, `send()` rejects with `LIMIT_QUEUE_FULL` instead of exhausting
   memory.
+- A session is reused across sequential messages: after a definitive outcome it
+  is reset with `RSET` and kept, up to `delivery.maxMessagesPerSession` messages
+  or `delivery.sessionIdleMs` of inactivity. An error or an `unknown`
+  disposition drops it ([ADR-0022](decisions/0022-session-reuse.md)).
 - `transport.stats` reports queue depth, active sends, pool size, concurrency,
   and outcome counters.
 - Automatic management is the default; every option is an override

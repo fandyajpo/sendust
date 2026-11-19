@@ -49,14 +49,16 @@ queue adapters are outside the product and are not considered here.
 
 ## 4. Decision
 
-**Defer.** The MVP stays one connection per send, with no pooling, no retry, and
-no queue. Option B is the only shape that could be proposed later, and it needs
-its own ADR, its own evidence, and its own release gate; option C is incompatible
-with the product boundary.
+**Option B was adopted** by [ADR-0022](../architecture/decisions/0022-session-reuse.md)
+on 2026-11-19, after ADR-0021 added the queue and pool that option B needs above
+the core. A session is now kept after a definitive outcome, reset with `RSET`,
+capped by message count and idle time, and dropped on any error or `unknown`
+disposition. Option C remains rejected: the queue lives in the facade, and the
+core never multiplexes one session.
 
-Concurrent senders can already use option D today: create a small number of
-transports in the application and route messages across them. That keeps the
-orchestration, the retry policy, and any queue where they belong.
+The evidence section 3 asked for is recorded in ADR-0022: session lifetime is
+bounded by `ReusePolicy`, failure mapping keeps a pre-`MAIL` failure a
+connection error, and the send budget restarts for every message.
 
 ## 5. Evidence for the phase gate
 

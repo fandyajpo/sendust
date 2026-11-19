@@ -176,7 +176,9 @@ describe("autonomous delivery engine", () => {
       expect(transport.stats.accepted).toBe(100);
       expect(transport.stats.queueDepth).toBe(0);
       expect(transport.stats.connections).toBeLessThanOrEqual(8);
-      expect(relay.connections()).toBeLessThanOrEqual(100);
+      // Sessions are reused: the pool dials at most once per connection, not
+      // once per message.
+      expect(relay.connections()).toBeLessThanOrEqual(8);
     } finally {
       await transport.close();
       await relay.close();

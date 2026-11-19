@@ -348,11 +348,11 @@ impl SmtpTransport {
             .transact(&mut session, deadlines, envelope, &request.wire)
             .await;
 
-        match &outcome {
-            Ok(SendOutcome::Accepted { .. }) | Ok(SendOutcome::Rejected { .. }) => {
-                self.retain(session).await;
-            }
-            _ => {}
+        if matches!(
+            &outcome,
+            Ok(SendOutcome::Accepted { .. }) | Ok(SendOutcome::Rejected { .. })
+        ) {
+            self.retain(session).await;
         }
         outcome
     }
