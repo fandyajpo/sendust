@@ -6,14 +6,16 @@
 
 import { execFileSync } from "node:child_process";
 
+// Sendust validates `maxConcurrent` to 1..32 for provider safety, so the
+// comparison runs both clients at the same effective concurrency rather than
+// claiming Sendust can exceed its own ceiling.
 const workloads = [
   { name: "Sequential", messages: 100, concurrency: 1 },
   { name: "Low", messages: 100, concurrency: 5 },
   { name: "Medium", messages: 100, concurrency: 10 },
   { name: "High", messages: 100, concurrency: 25 },
-  { name: "Stress", messages: 100, concurrency: 50 },
-  { name: "Maximum", messages: 100, concurrency: 100 },
-  { name: "Extended", messages: 1000, concurrency: 8 },
+  { name: "Ceiling", messages: 100, concurrency: 32 },
+  { name: "Extended", messages: 1000, concurrency: 32 },
 ];
 
 const clients = ["sendust", "nodemailer"];
