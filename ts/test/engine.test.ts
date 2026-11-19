@@ -22,7 +22,14 @@ try {
 
 /** Reads one committed TLS fixture relative to the repository root. */
 function tlsFixture(name: string): string {
-  const path = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "tests", "fixtures", "tls");
+  const path = join(
+    dirname(fileURLToPath(import.meta.url)),
+    "..",
+    "..",
+    "tests",
+    "fixtures",
+    "tls",
+  );
   return readFileSync(join(path, name), "utf8");
 }
 
@@ -249,7 +256,9 @@ describe("autonomous delivery engine", () => {
     const relay = await fakeRelay(() => "stall");
     const transport = transportFor(relay, { maxConcurrent: 1, maxQueue: 20 });
     try {
-      const pending = Array.from({ length: 5 }, (_, index) => settleCode(transport.send(message(index))));
+      const pending = Array.from({ length: 5 }, (_, index) =>
+        settleCode(transport.send(message(index))),
+      );
       await waitFor(() => relay.connections() >= 1);
       await transport.close();
       const codes = await Promise.all(pending);

@@ -150,13 +150,7 @@ function deliverySettings(
 
   return {
     maxConcurrent,
-    maxConnections: bounded(
-      "maxConnections",
-      delivery?.maxConnections,
-      1,
-      32,
-      maxConcurrent,
-    ),
+    maxConnections: bounded("maxConnections", delivery?.maxConnections, 1, 32, maxConcurrent),
     maxQueue: bounded("maxQueue", delivery?.maxQueue, 1, 1_000_000, DELIVERY_DEFAULTS.maxQueue),
     maxQueueBytes: bounded(
       "maxQueueBytes",
@@ -172,7 +166,13 @@ function deliverySettings(
       10_000,
       DELIVERY_DEFAULTS.messagesPerSecond,
     ),
-    maxAttempts: bounded("maxAttempts", delivery?.maxAttempts, 1, 10, DELIVERY_DEFAULTS.maxAttempts),
+    maxAttempts: bounded(
+      "maxAttempts",
+      delivery?.maxAttempts,
+      1,
+      10,
+      DELIVERY_DEFAULTS.maxAttempts,
+    ),
     retryBaseMs,
     retryMaxMs,
     closeMs,

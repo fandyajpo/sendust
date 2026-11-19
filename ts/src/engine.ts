@@ -10,12 +10,7 @@
  * or with a typed error. No path drops a message without settling it.
  */
 
-import {
-  SendustClosedError,
-  SendustError,
-  SendustLimitError,
-  fromNative,
-} from "./errors.ts";
+import { SendustClosedError, SendustError, SendustLimitError, fromNative } from "./errors.ts";
 import { retryAfterError, retryAfterResult, type BackoffPolicy } from "./policy.ts";
 import type { NativeTransport } from "./loader.ts";
 import { toSendResult } from "./results.ts";
@@ -76,8 +71,8 @@ const COOLDOWN_MS = 1_000;
  * type package: Node.js, Bun, and Deno all provide these functions.
  */
 const timers = globalThis as unknown as {
-  "setTimeout": (handler: () => void, ms: number) => unknown;
-  "clearTimeout": (handle: unknown) => void;
+  setTimeout: (handler: () => void, ms: number) => unknown;
+  clearTimeout: (handle: unknown) => void;
 };
 
 function closedError(): SendustClosedError {
@@ -406,10 +401,7 @@ export class DeliveryEngine {
     }
     const elapsed = now - this.#rateStamp;
     if (elapsed > 0) {
-      this.#tokens = Math.min(
-        perSecond,
-        this.#tokens + (elapsed * perSecond) / 1000,
-      );
+      this.#tokens = Math.min(perSecond, this.#tokens + (elapsed * perSecond) / 1000);
       this.#rateStamp = now;
     }
     if (this.#tokens >= 1) {
@@ -457,5 +449,4 @@ export class DeliveryEngine {
       this.#idle.push(transport);
     }
   }
-
 }
