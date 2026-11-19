@@ -302,12 +302,13 @@ export class DeliveryEngine {
 
       const mapped = fromNative(error) ?? error;
       const decision = retryAfterError(mapped, this.#ledger(job), this.#backoff);
+      const fatal = decision.retry === false && decision.fatal === true;
       if (decision.retry && this.#budgetAllows(job, decision.delayMs)) {
         this.#counters.retried += 1;
         this.#throttle();
         this.#scheduleRetry(job, decision.delayMs);
       } else {
-        if (decision.fatal === true && mapped instanceof SendustError) {
+        if (fatal && mapped instanceof SendustError) {
           this.#abortWith(mapped);
         }
         this.#fail(job, mapped);
