@@ -5,9 +5,9 @@
  * acceptance, never delivery**: `accepted` means the SMTP relay took
  * responsibility for the message, not that a mailbox received it.
  *
- * Sendust never retries, never queues, and never sends per-recipient messages.
- * A transport runs one send at a time; an overlapping `send()` rejects with
- * `TRANSPORT_BUSY` immediately, without opening a second connection.
+ * A transport owns a bounded queue and a pool of native sessions. Concurrent
+ * `send()` calls are accepted and scheduled automatically, one message per
+ * session at a time, and only transient failures are retried — never `unknown`.
  *
  * Timeout defaults are connect 10 s, per-operation 30 s, total 120 s, close/drain
  * 125 s. Each may be lowered but never raised. Attachment limits default to 100
@@ -113,6 +113,12 @@ export interface TransportOptions {
   readonly tlsRootCertificate?: string;
   /** Filesystem access for path attachments; disabled unless explicitly enabled. */
   readonly attachments?: { readonly allowFileAccess?: boolean };
+  /**
+   * Automatic delivery management. Every field is an optional override: the
+   * defaults accept bursts, pool sessions, bound the queue, and retry only
+   * transient failures, so a normal caller sets nothing here.
+   */
+  readonly delivery?: DeliveryOptions;
 }
 
 /** A mailbox given as a bare address or with a display name. */
@@ -171,3 +177,53 @@ export interface Message {
 
 /** Transport lifecycle state, observed synchronously. */
 export type TransportState = "open" | "closing" | "closed";
+
+/**
+ * Automatic delivery management. Defaults are safe for normal workloads and
+ * need no tuning; every value is bounded, and an out-of-range value is rejected
+ * with `VALIDATION_INVALID_OPTION` before any message is accepted.
+ *
+ * | Field | Default | Range |
+ * | --- | --- | --- |
+ * | `maxConcurrent` | 8 | 1–32 |
+ * | `maxConnections` | `maxConcurrent` | 1–32 |
+ * | `maxQueue` | 10000 | 1–1000000 |
+ * | `maxQueueBytes` | 67108864 (64 MiB) | 1–1073741824 |
+ * | `messagesPerSecond` | 0 (unlimited) | 0–10000 |
+ * | `maxAttempts` | 3 | 1–10 |
+ * | `retryBaseMs` | 250 | 0–60000 |
+ * | `retryMaxMs` | 30000 | 0–600000, and ≥ `retryBaseMs` |
+ */
+export interface DeliveryOptions {
+  /** Sends allowed at once; concurrency grows toward it and backs off from it. */
+  readonly maxConcurrent?: number;
+  /** Native sessions the pool may create. Each runs one send at a time. */
+  readonly maxConnections?: number;
+  /** Messages waiting for a session; beyond this, `send()` rejects. */
+  readonly maxQueue?: number;
+  /** Bytes waiting for a session, estimated from text, HTML, and buffers. */
+  readonly maxQueueBytes?: number;
+  /** Token-bucket rate across all sessions; 0 disables the limiter. */
+  readonly messagesPerSecond?: number;
+  /** Total attempts for a retryable failure, including the first one. */
+  readonly maxAttempts?: number;
+  /** First backoff window; each further attempt doubles it. */
+  readonly retryBaseMs?: number;
+  /** Backoff cap. */
+  readonly retryMaxMs?: number;
+}
+
+/** Observable delivery-engine state. Counters are monotonic per transport. */
+export interface TransportStats {
+  readonly state: TransportState;
+  readonly queueDepth: number;
+  readonly queueBytes: number;
+  readonly active: number;
+  readonly connections: number;
+  readonly concurrency: number;
+  readonly accepted: number;
+  readonly rejected: number;
+  readonly unknown: number;
+  readonly retried: number;
+  readonly queueRejections: number;
+}

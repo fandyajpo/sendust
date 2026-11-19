@@ -120,12 +120,14 @@ function checkNumbers() {
 const FORBIDDEN = [
   { pattern: /guarantees?\s+delivery/i, label: "delivery guarantee" },
   { pattern: /delivery\s+guarantee/i, label: "delivery guarantee" },
-  { pattern: /automatically\s+retri/i, label: "automatic retry" },
-  { pattern: /retri(?:es|ed)?\s+automatically/i, label: "automatic retry" },
+  {
+    pattern: /\bretri(?:es|ed)\b[^.]{0,40}\b(?:unknown|uncertain)\b/i,
+    label: "retry of an unknown disposition",
+  },
   { pattern: /smtputf8\s+(?:is|are)\s+supported/i, label: "SMTPUTF8 support" },
   { pattern: /url\s+attachments?\s+(?:are|is)\s+supported/i, label: "URL attachment support" },
   { pattern: /disables?\s+(?:certificate\s+or\s+hostname\s+|tls\s+)?verification/i, label: "disabled verification" },
-  { pattern: /connection\s+pooling\s+is\s+supported/i, label: "pooling support" },
+  { pattern: /unlimited\s+(?:throughput|sending|concurrency)/i, label: "unlimited throughput" },
 ];
 
 function negated(text, index) {

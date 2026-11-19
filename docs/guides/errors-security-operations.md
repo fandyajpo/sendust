@@ -10,7 +10,7 @@ A send ends in exactly one of two ways:
 - **A result** for a relay outcome: `accepted`, `rejected`, or `unknown`.
 - **A `SendustError`** for anything that prevents a trustworthy outcome:
   validation, configuration, limits, TLS, authentication, protocol, timeouts,
-  a closed or busy transport, or an internal fault.
+  a closed transport, or an internal fault.
 
 Branch on `result.status` and `error.code`. Never parse message text: it is not a
 contract, and it deliberately omits credentials, bodies, and paths.
@@ -111,7 +111,8 @@ remove them or turn verification off.
 | `TIMEOUT_TOTAL` | Whole-send budget expired | Retry only if known pre-DATA |
 | `TIMEOUT_CLOSE` | Close drain exceeded its budget | Process-level concern; the transport is closed |
 | `TRANSPORT_CLOSED` | Send after or during close | Create a new transport |
-| `TRANSPORT_BUSY` | A send is already active | Wait for it, or use another transport; never queue inside Sendust |
+| `TRANSPORT_BUSY` | A send is already active on one native session | Internal to the engine, which queues instead; raise `delivery.maxQueue` if `LIMIT_QUEUE_FULL` appears |
+| `LIMIT_QUEUE_FULL` | The configured queue bound was reached | Slow the producer, or raise `delivery.maxQueue` / `maxQueueBytes`; this is a local bound, not a provider limit |
 | `INTERNAL` | Invariant violation or caught panic | Report a bug; do not retry |
 
 ## 3. Redaction
@@ -176,11 +177,13 @@ observed. Treat it as **possibly delivered**:
   `unknown` and close does not rewrite it.
 - There is no finalizer or process-exit hook; closing is the caller's job.
 
-### BUSY under load
+### Throttling under load
 
-`TRANSPORT_BUSY` is immediate and opens no connection. It is a signal to
-serialize, not to buffer. For concurrency, create one transport per concurrent
-send and close each one; there is no pool to tune.
+The engine queues concurrent sends and halves concurrency when a relay answers
+with a `4xx` or a start attempt fails transiently, then grows back after
+sustained success. `LIMIT_QUEUE_FULL` is a local bound: the queue reached
+`delivery.maxQueue` or `maxQueueBytes`. Slow the producer or raise the bound; it
+says nothing about the relay's own capacity.
 
 ### Deployment checklist
 

@@ -66,6 +66,7 @@ describe("public contract types", () => {
       | "limits"
       | "attachments"
       | "tlsRootCertificate"
+      | "delivery"
     >();
     expectTypeOf<keyof AuthOptions>().toEqualTypeOf<"user" | "pass" | "method">();
     expectTypeOf<keyof TimeoutOptions>().toEqualTypeOf<

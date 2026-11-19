@@ -502,7 +502,7 @@ describe("sendust facade", () => {
     await new Promise<void>((resolve) => server.close(() => resolve()));
   });
 
-  it.skipIf(!available)("rejects a second concurrent send with TRANSPORT_BUSY", async () => {
+  it.skipIf(!available)("queues a second concurrent send instead of rejecting it", async () => {
     const gate = connectionGate();
     let connections = 0;
     const server = createServer((socket) => {
@@ -524,21 +524,23 @@ describe("sendust facade", () => {
       .catch((error: unknown) => error);
     await gate.first;
 
-    const second = await errorCode(
-      transport.send({
+    // Queued behind the first send, not rejected: the engine owns one active
+    // send, so no second connection is opened for it.
+    const second = transport
+      .send({
         from: "a@example.test",
         to: ["b@example.test"],
         subject: "x",
         text: "y",
-      }),
-    );
-    expect(second).toBe("TRANSPORT_BUSY");
-    expect(connections).toBe(1);
+      })
+      .catch((error: unknown) => error);
 
     await transport.close();
-    const firstError = await first;
+    const [firstError, secondError] = await Promise.all([first, second]);
     expect(firstError).toBeInstanceOf(SendustError);
     expect((firstError as SendustError).code).toBe("TRANSPORT_CLOSED");
+    expect((secondError as SendustError).code).toBe("TRANSPORT_CLOSED");
+    expect(connections).toBe(1);
 
     for (const socket of gate.sockets) {
       socket.destroy();

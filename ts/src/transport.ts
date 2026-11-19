@@ -1,21 +1,25 @@
 /**
  * Runtime-neutral transport facade.
  *
- * Owns lifecycle composition over the native binding only. SMTP, MIME,
- * validation, and delivery policy stay in `sendust-core`.
+ * Owns lifecycle composition over the native binding and the automatic delivery
+ * engine only. SMTP, MIME, validation, and delivery policy stay in
+ * `sendust-core`; queueing, pooling, classification, and retry policy live in
+ * `policy.ts` and `engine.ts`.
  */
 
+import { DeliveryEngine, type EngineOptions } from "./engine.ts";
 import { SendustClosedError, SendustError, SendustValidationError, fromNative } from "./errors.ts";
 import { DEFAULT_LIMITS, assertAttachmentBudget } from "./limits.ts";
 import { loadNative, type NativeTransport } from "./loader.ts";
-import { toSendResult } from "./results.ts";
 import type {
   Address,
   Attachment,
+  DeliveryOptions,
   Message,
   SendResult,
   TransportOptions,
   TransportState,
+  TransportStats,
 } from "./types.ts";
 
 const TRANSPORT_KEYS = new Set([
@@ -28,6 +32,7 @@ const TRANSPORT_KEYS = new Set([
   "limits",
   "attachments",
   "tlsRootCertificate",
+  "delivery",
 ]);
 const AUTH_KEYS = new Set(["user", "pass", "method"]);
 const TIMEOUT_KEYS = new Set(["connectMs", "operationMs", "totalMs", "closeMs"]);
@@ -38,6 +43,38 @@ const LIMIT_KEYS = new Set([
   "maxWireBytes",
 ]);
 const ATTACHMENT_KEYS = new Set(["allowFileAccess"]);
+const DELIVERY_KEYS = new Set([
+  "maxConcurrent",
+  "maxConnections",
+  "maxQueue",
+  "maxQueueBytes",
+  "messagesPerSecond",
+  "maxAttempts",
+  "retryBaseMs",
+  "retryMaxMs",
+]);
+
+/** Safe defaults: no tuning is required for a normal workload. */
+const DELIVERY_DEFAULTS = {
+  maxConcurrent: 8,
+  maxQueue: 10_000,
+  maxQueueBytes: 64 << 20,
+  messagesPerSecond: 0,
+  maxAttempts: 3,
+  retryBaseMs: 250,
+  retryMaxMs: 30_000,
+};
+
+/** The core's default close budget, used when the caller configures none. */
+const CLOSE_MS_DEFAULT = 125_000;
+
+function closedError(): SendustClosedError {
+  return new SendustClosedError({
+    code: "TRANSPORT_CLOSED",
+    category: "closed",
+    message: "transport is closed",
+  });
+}
 
 function invalidOption(): SendustValidationError {
   return new SendustValidationError({
@@ -54,6 +91,92 @@ function assertKnownKeys(value: object, allowed: Set<string>): void {
       throw invalidOption();
     }
   }
+}
+
+/** One delivery option, clamped to its documented range. */
+function bounded(
+  name: keyof DeliveryOptions,
+  value: number | undefined,
+  min: number,
+  max: number,
+  fallback: number,
+): number {
+  if (value === undefined) {
+    return fallback;
+  }
+  if (!Number.isInteger(value) || value < min || value > max) {
+    throw new SendustValidationError({
+      code: "VALIDATION_INVALID_OPTION",
+      category: "validation",
+      message: `invalid delivery option: ${name}`,
+    });
+  }
+  return value;
+}
+
+/** Validates `delivery` and turns it into engine options. */
+function deliverySettings(
+  delivery: DeliveryOptions | undefined,
+  closeMs: number,
+): Omit<EngineOptions, "createTransport" | "first"> {
+  if (delivery) {
+    assertKnownKeys(delivery, DELIVERY_KEYS);
+  }
+
+  const maxConcurrent = bounded(
+    "maxConcurrent",
+    delivery?.maxConcurrent,
+    1,
+    32,
+    DELIVERY_DEFAULTS.maxConcurrent,
+  );
+  const retryBaseMs = bounded(
+    "retryBaseMs",
+    delivery?.retryBaseMs,
+    0,
+    60_000,
+    DELIVERY_DEFAULTS.retryBaseMs,
+  );
+  const retryMaxMs = bounded(
+    "retryMaxMs",
+    delivery?.retryMaxMs,
+    0,
+    600_000,
+    DELIVERY_DEFAULTS.retryMaxMs,
+  );
+  if (retryMaxMs < retryBaseMs) {
+    throw invalidOption();
+  }
+
+  return {
+    maxConcurrent,
+    maxConnections: bounded(
+      "maxConnections",
+      delivery?.maxConnections,
+      1,
+      32,
+      maxConcurrent,
+    ),
+    maxQueue: bounded("maxQueue", delivery?.maxQueue, 1, 1_000_000, DELIVERY_DEFAULTS.maxQueue),
+    maxQueueBytes: bounded(
+      "maxQueueBytes",
+      delivery?.maxQueueBytes,
+      1,
+      1_073_741_824,
+      DELIVERY_DEFAULTS.maxQueueBytes,
+    ),
+    messagesPerSecond: bounded(
+      "messagesPerSecond",
+      delivery?.messagesPerSecond,
+      0,
+      10_000,
+      DELIVERY_DEFAULTS.messagesPerSecond,
+    ),
+    maxAttempts: bounded("maxAttempts", delivery?.maxAttempts, 1, 10, DELIVERY_DEFAULTS.maxAttempts),
+    retryBaseMs,
+    retryMaxMs,
+    closeMs,
+  };
 }
 
 function addressString(value: Address): string {
@@ -185,112 +308,120 @@ function toNativeMessage(
   return native;
 }
 
+/**
+ * Rough byte budget for the queue: the text and HTML a caller supplied plus any
+ * buffer attachment. It deliberately ignores encoding overhead, so it
+ * under-counts rather than rejecting a message the core would accept.
+ */
+function estimateMessageBytes(message: Message): number {
+  let bytes = 0;
+  if (message.subject) bytes += message.subject.length;
+  if (message.text) bytes += message.text.length;
+  if (message.html) bytes += message.html.length;
+  for (const attachment of message.attachments ?? []) {
+    if ("content" in attachment) bytes += attachment.content.byteLength;
+  }
+  return bytes;
+}
+
 function rethrow(error: unknown): never {
   const mapped = fromNative(error);
   throw mapped ?? error;
 }
 
-function closedError(): SendustClosedError {
-  return new SendustClosedError({
-    code: "TRANSPORT_CLOSED",
-    category: "closed",
-    message: "transport is closed",
-  });
-}
-
 /**
  * One open transport.
  *
- * Lifecycle is `open -> closing -> closed`. One send may be active at a time;
- * a second overlapping `send()` rejects with `TRANSPORT_BUSY` immediately and
- * never opens another connection or queues work. `close()` is explicit,
- * idempotent, and bounded by `closeMs` (125 s by default); it is never driven by
- * garbage collection or process exit.
+ * Lifecycle is `open -> closing -> closed`. A send is queued and scheduled: the
+ * engine runs up to `maxConcurrent` sends at once over at most `maxConnections`
+ * native sessions, retries only transient failures, and never retries an
+ * `unknown` disposition. `close()` is explicit, idempotent, bounded by `closeMs`
+ * (125 s by default), and never driven by garbage collection or process exit.
  *
  * Every result means relay acceptance only, never delivery.
  */
 export class Transport {
-  readonly #native: NativeTransport;
+  readonly #engine: DeliveryEngine;
   /** Effective per-attachment cap: the caller's lowered value or the default. */
   readonly #perFileBytes: number;
   /** Effective aggregate attachment cap: the caller's lowered value or the default. */
   readonly #totalBytes: number;
-  /**
-   * State this facade has committed to. The native state answers while it is
-   * `open`; `close()` moves it to `closing` before the native call is polled, so
-   * a send that races close reports `TRANSPORT_CLOSED`, never `TRANSPORT_BUSY`.
-   */
-  #state: TransportState = "open";
 
   constructor(options: TransportOptions) {
     // Validate the caller's options before loading the addon, so an invalid
     // option always reports a Sendust error even where the addon is missing.
-    const native = toNativeOptions(options);
+    const nativeOptions = toNativeOptions(options);
     // Snapshot the caps now; the caller's options object may be mutated later.
     this.#perFileBytes = options.limits?.maxAttachmentBytes ?? DEFAULT_LIMITS.maxAttachmentBytes;
     this.#totalBytes =
       options.limits?.maxTotalAttachmentBytes ?? DEFAULT_LIMITS.maxTotalAttachmentBytes;
+
+    // One native transport is created eagerly: the core validates the relay at
+    // construction, and a missing addon fails here rather than on first send.
+    let first: NativeTransport;
     try {
-      this.#native = new (loadNative().Transport)(native);
+      first = new (loadNative().Transport)(nativeOptions);
     } catch (error) {
       rethrow(error);
     }
+
+    this.#engine = new DeliveryEngine({
+      ...deliverySettings(options.delivery, options.timeouts?.closeMs ?? CLOSE_MS_DEFAULT),
+      createTransport: () => {
+        try {
+          return new (loadNative().Transport)(nativeOptions);
+        } catch (error) {
+          return rethrow(error);
+        }
+      },
+      first,
+    });
   }
 
   /** Current lifecycle state, read synchronously. */
   get state(): TransportState {
-    if (this.#state !== "open") {
-      return this.#state;
-    }
-    return this.#native.state() as TransportState;
+    return this.#engine.state;
+  }
+
+  /** Queue depth, active sends, pool size, and outcome counters. */
+  get stats(): TransportStats {
+    return this.#engine.stats;
   }
 
   /**
-   * Sends one message and resolves with the relay's outcome.
+   * Queues one message and resolves with the relay's outcome for that message.
    *
    * Resolves for `accepted`, `rejected`, and `unknown`; `accepted` means the
-   * relay took responsibility, not that a mailbox received the message. Never
-   * retries, never queues, and never sends per-recipient messages.
+   * relay took responsibility, not that a mailbox received the message. A
+   * transient failure (`4xx`, connect or operation timeout, reset before DATA)
+   * is retried within the attempt budget; `unknown` and permanent failures are
+   * returned as they are. Never sends per-recipient messages.
    *
-   * @throws {SendustError} for validation, configuration, limit, TLS, auth,
-   * timeout, closed, busy, and internal failures.
+   * @throws {SendustError} for validation, configuration, limit (including
+   * `LIMIT_QUEUE_FULL`), TLS, auth, timeout, closed, and internal failures.
    */
   async send(message: Message): Promise<SendResult> {
     // Refused synchronously once close has been requested, so the race between
     // `close()` and a send cannot depend on when the native call is polled.
-    if (this.#state !== "open") {
+    if (this.#engine.state !== "open") {
       throw closedError();
     }
-    try {
-      return toSendResult(
-        await this.#native.send(toNativeMessage(message, this.#perFileBytes, this.#totalBytes)),
-      );
-    } catch (error) {
-      rethrow(error);
-    }
+    // Built before submitting: every buffer is copied now, so the caller may
+    // mutate its message as soon as send() has been called.
+    const nativeMessage = toNativeMessage(message, this.#perFileBytes, this.#totalBytes);
+    return this.#engine.submit(nativeMessage, estimateMessageBytes(message));
   }
 
   /**
-   * Closes the transport, cancelling an in-flight send within the close budget.
+   * Closes the transport.
    *
-   * Idempotent; after it resolves, `send()` rejects with `TRANSPORT_CLOSED`.
-   * Reports `TIMEOUT_CLOSE` if the drain budget is exceeded.
+   * Idempotent. Queued messages reject with `TRANSPORT_CLOSED`, an active send
+   * is cancelled within the close budget (reporting `unknown` when the body may
+   * already have reached the relay), and every promise settles. After it
+   * resolves, `send()` rejects with `TRANSPORT_CLOSED`.
    */
   async close(): Promise<void> {
-    if (this.#state === "closed") {
-      return;
-    }
-    // Committed before the native call can be polled: a send that starts now is
-    // refused as CLOSED, not BUSY against the send this close is aborting.
-    this.#state = "closing";
-    try {
-      await this.#native.close();
-      this.#state = "closed";
-    } catch (error) {
-      // The transport is closed either way; the error reports the drain result.
-      this.#state = "closed";
-      rethrow(error);
-    }
+    await this.#engine.close();
   }
 }
 

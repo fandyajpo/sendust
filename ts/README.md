@@ -8,8 +8,7 @@ configure. A result reports relay acceptance, never mailbox delivery.
 
 ## Status
 
-Pre-release. The package is not published, and no runtime is supported until
-the exact runtime and platform evidence in the Sendust repository passes.
+Pre-release. `0.1.0-rc.1` is published on npm as the `next` tag.
 
 ## Usage
 
@@ -24,13 +23,13 @@ const transport = createTransport({
 });
 
 try {
-  const result = await transport.send({
-    from: "sender@example.test",
-    to: ["recipient@example.test"],
-    subject: "Hello",
-    text: "Hello from Sendust.",
-  });
-  // result.status is "accepted", "rejected" or "unknown".
+  // Concurrent sends are queued, pooled, and scheduled automatically.
+  const results = await Promise.all(
+    recipients.map((to) =>
+      transport.send({ from: "sender@example.test", to: [to], subject: "Hello", text: "Hello." }),
+    ),
+  );
+  // Each result.status is "accepted", "rejected" or "unknown".
 } finally {
   await transport.close();
 }
@@ -40,9 +39,11 @@ try {
 
 - TLS certificate and hostname verification are always on. There is no option
   to disable them and no plaintext mode.
-- A transport runs one send at a time. An overlapping `send()` rejects with
-  `TRANSPORT_BUSY` and opens no connection.
-- There is no automatic retry, connection pool, or internal queue.
+- Concurrent `send()` calls are queued and run over a bounded pool of native
+  sessions; one SMTP transaction runs per session at a time.
+- Only transient failures are retried: a `4xx` final reply, or a connect or
+  operation timeout before `DATA`. An `unknown` disposition is never retried.
+- The queue is bounded; beyond it, `send()` rejects with `LIMIT_QUEUE_FULL`.
 - Attachments from file paths are disabled unless `attachments.allowFileAccess`
   is set.
 

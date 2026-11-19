@@ -144,12 +144,21 @@ be in the queue of the relay. A safe pattern is a caller-generated idempotency
 key in `headers` plus a supplier-side dedupe rule, or accepting the risk of a
 duplicate deliberately.
 
-### BUSY
+### Concurrency and throughput
 
-One transport runs one send. A second `send()` while the first is in flight
-rejects immediately with `TRANSPORT_BUSY` and opens no connection. Do not build
-an internal queue around it; create another transport when you need concurrency,
-and accept that each owns its own connection.
+`send()` queues work: concurrent calls are accepted and scheduled, up to
+`delivery.maxConcurrent` at once (8 by default) over at most
+`delivery.maxConnections` native sessions. Transient failures — a `4xx` final
+reply, or a connect or operation timeout before `DATA` — are retried with
+backoff; `unknown` and `5xx` are not. `transport.stats` exposes queue depth and
+counters, and `close()` settles anything still queued with `TRANSPORT_CLOSED`.
+
+```js
+const results = await Promise.all(
+  recipients.map((to) => transport.send({ from, to: [to], subject, text })),
+);
+await transport.close();
+```
 
 ## 5. Try it without a relay
 

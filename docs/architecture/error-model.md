@@ -97,6 +97,7 @@ export type ErrorCategory =
 | `LIMIT_ATTACHMENT_BYTES` | limit | Promise rejection from send | Attachment exceeds 10 MiB | No |
 | `LIMIT_ATTACHMENT_TOTAL` | limit | Promise rejection from send | Raw attachments exceed 20 MiB | No |
 | `LIMIT_WIRE_BYTES` | limit | Promise rejection from send | Serialized message exceeds 30 MiB | No |
+| `LIMIT_QUEUE_FULL` | limit | Promise rejection from send | The delivery queue reached `delivery.maxQueue` or `delivery.maxQueueBytes` | Slow the producer or raise the bound; this is a local bound, not a provider limit |
 | `TLS_CERTIFICATE` | tls | async | Certificate/hostname verification failed | No, configuration/trust issue |
 | `TLS_HANDSHAKE` | tls | async | TLS negotiation failed | Maybe, only with corrected config |
 | `TLS_PROTOCOL` | tls | async | Unsupported TLS version/cipher | No |
@@ -110,7 +111,7 @@ export type ErrorCategory =
 | `TIMEOUT_TOTAL` | timeout | async | Total send budget exceeded | Only when known to be pre-DATA; after DATA uncertainty, return `unknown` and do not automatically retry |
 | `TIMEOUT_CLOSE` | timeout | async | Close drain exceeded budget | Process-level concern |
 | `TRANSPORT_CLOSED` | closed | async | Send after close or during close | No |
-| `TRANSPORT_BUSY` | busy | async | A send is already active | No, wait for completion |
+| `TRANSPORT_BUSY` | busy | async | A send is already active on this native transport | No: the delivery engine queues sends; only the native layer reports this |
 | `INTERNAL` | internal | async | Invariant violation or unexpected panic | No, report bug |
 
 Codes are append-only within a major version. Removing or renaming a code is a breaking change.

@@ -31,7 +31,7 @@ Non-personas for MVP: marketing operators, campaign managers, mailbox hosting ad
 ## 3. Product principles
 
 1. **Relay acceptance is not delivery.** A successful send means the configured SMTP relay accepted responsibility for the message. Sendust never claims mailbox delivery.
-2. **One obvious path.** One transport, one active send, one explicit close. No internal queue, worker, background delivery, automatic retry, or connection pool in the current scope.
+2. **One obvious path.** One transport, an explicit close, and an engine that queues, pools, and retries transient failures without configuration. No worker process, no scheduler, no persistence, and no delivery work that outlives the call to `close()`.
 3. **Correct over convenient.** RFC-compliant headers, correct MIME boundaries, deterministic encoding, and strict input validation beat permissive guessing.
 4. **Bounded by construction.** Every buffer, timeout, recipient list, attachment, and close drain has a finite, documented limit.
 5. **Secure defaults, no escape hatch.** Certificate verification cannot be disabled. Filesystem attachment access is opt-in. Credentials are redacted from errors.

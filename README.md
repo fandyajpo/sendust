@@ -13,11 +13,11 @@ Sendust is an embeddable library, not an SMTP server, hosted email service, mail
 - Modular monolith inside exactly two Rust crates, with strict internal module boundaries.
 - Node.js, Bun, and Deno are required MVP runtime targets, subject to Sendust-owned blocking CI.
 - Server platform support is limited to explicitly tested OS/CPU/ABI combinations.
-- One message per `send()` call and one active send per transport.
+- One message per `send()` call and one SMTP transaction per session; concurrent sends are queued and pooled automatically.
 - Explicit, bounded lifecycle and resource limits.
 - A successful result means the SMTP relay accepted responsibility, not that a mailbox received the message.
-- No automatic retry, connection pooling, internal queue, worker, or background delivery in the current product scope.
-- Queueing, scheduling, and retry orchestration remain the responsibility of the consuming application. Sendust does not provide queue adapters or queue-specific abstractions.
+- Automatic in-process queueing, connection pooling, adaptive concurrency, and bounded retries for transient failures; no worker process, no scheduler, and no connection sharing across a send.
+- Queueing, scheduling, and retry policy beyond one transport's lifetime remain the consuming application's responsibility. Sendust does not provide a persistent queue, queue adapters, or queue-specific abstractions.
 
 ## Documentation
 

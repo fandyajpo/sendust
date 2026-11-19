@@ -2,11 +2,11 @@
  * Sendust public TypeScript entry point.
  *
  * The runtime-neutral facade over the Node-API binding: transport creation,
- * one send per call, explicit close, and stable error codes.
+ * automatic queueing and pooling, explicit close, and stable error codes.
  *
  * `SendResult.status` reports relay acceptance, never delivery: `accepted`
- * means the SMTP relay took responsibility for the message. One transport runs
- * one send at a time; overlapping sends reject with `TRANSPORT_BUSY`.
+ * means the SMTP relay took responsibility for the message. Concurrent sends
+ * are queued and scheduled automatically.
  */
 
 export { createTransport, Transport } from "./transport.ts";
@@ -30,6 +30,7 @@ export type {
   Attachment,
   AuthOptions,
   BufferAttachment,
+  DeliveryOptions,
   DeliveryStatus,
   FileAttachment,
   HeaderLike,
@@ -43,6 +44,7 @@ export type {
   TimeoutOptions,
   TransportOptions,
   TransportState,
+  TransportStats,
 } from "./types.ts";
 
 /** Package version; kept in step with package.json at release time. */

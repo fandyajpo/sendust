@@ -47,21 +47,23 @@ try {
 - **Never GC-driven.** No finalizer, no process-exit hook. Do not rely on the
   garbage collector to close connections.
 
-## 3. Concurrency and BUSY
+## 3. Concurrency and the queue
 
-One transport runs **one send at a time**.
+`send()` is **queued**. A transport runs up to `delivery.maxConcurrent` sends at
+once (8 by default) over at most `delivery.maxConnections` native sessions, and
+each session runs one SMTP transaction at a time.
 
 | Situation | Behaviour |
 | --- | --- |
-| Second `send()` while one is in flight | Rejects immediately with `TRANSPORT_BUSY`; opens no connection |
+| Many concurrent `send()` calls | Queued and scheduled; results settle per message |
+| Queue at `delivery.maxQueue` or `maxQueueBytes` | Rejects with `LIMIT_QUEUE_FULL`; nothing is silently dropped |
 | `send()` while `closing` or `closed` | Rejects with `TRANSPORT_CLOSED` |
-| Two `close()` calls | Both resolve; one drain |
-| Two concurrent sends on two transports | Independent connections; no sharing |
+| Two `close()` calls | Both resolve; one shutdown |
+| Two transports | Independent queues, pools, and limits |
 
-There is no internal queue and no connection pool. Do not build a queue around
-`TRANSPORT_BUSY`: it is a signal that this transport is busy, not that the work
-should pile up. For concurrent work, create one transport per concurrent send
-and close each one.
+Concurrency starts at one and grows after sustained success. A `4xx` final reply
+or a transient start failure halves it and starts a cooldown. Only transient
+failures are retried; `unknown` never is.
 
 ## 4. Timeouts
 
@@ -113,8 +115,8 @@ Lowering a cap is allowed; raising it is not.
 - **Close during shutdown.** Close every transport in the shutdown path, and
   await it. The 125 s close budget is above the 120 s send budget so a maximal
   send can still drain.
-- **One transport per concurrent send.** Do not share a transport between
-  parallel requests; BUSY is immediate and the caller keeps control.
+- **One transport per service, not per request.** The engine already queues and
+  pools; a transport per request multiplies connections and defeats the pool.
 - **Lower timeouts for interactive paths.** A relay that stalls will otherwise
   hold a request for the full 120 s total budget.
 - **Watch the caps, not the provider.** Rejecting a 12 MiB attachment locally is
