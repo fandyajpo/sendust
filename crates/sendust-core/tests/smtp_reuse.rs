@@ -72,8 +72,16 @@ async fn a_second_message_reuses_the_authenticated_session() {
     assert_eq!(second.status().as_str(), "accepted");
 
     let trace = server.trace();
-    assert_eq!(trace.count_prefix("EHLO"), 1, "one greeting for both messages");
-    assert_eq!(trace.count_prefix("MAIL"), 2, "both messages used the envelope");
+    assert_eq!(
+        trace.count_prefix("EHLO"),
+        1,
+        "one greeting for both messages"
+    );
+    assert_eq!(
+        trace.count_prefix("MAIL"),
+        2,
+        "both messages used the envelope"
+    );
     assert_eq!(
         trace.count_prefix("RSET"),
         2,
@@ -92,7 +100,11 @@ async fn the_message_cap_closes_the_session_before_the_next_send() {
 
     let trace = server.trace();
     assert_eq!(trace.count_prefix("EHLO"), 2, "a new session per message");
-    assert_eq!(trace.count_prefix("QUIT"), 2, "each capped session was closed");
+    assert_eq!(
+        trace.count_prefix("QUIT"),
+        2,
+        "each capped session was closed"
+    );
 }
 
 #[tokio::test]
