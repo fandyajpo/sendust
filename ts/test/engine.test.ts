@@ -73,17 +73,16 @@ async function waitFor(predicate: () => boolean, timeoutMs = 5000): Promise<void
 
 /**
  * A loopback SMTP relay over TLS with the committed valid fixture. `behaviour`
- * decides the final reply per connection (by accept order) so one test can mix
- * temporary, permanent, and stalled outcomes without separate servers.
+ * decides the final reply for each *message* (not each connection), so a reused
+ * session and a retried message are both modelled correctly.
  */
-async function fakeRelay(behaviour: (index: number) => Final = () => "accepted"): Promise<Relay> {
+async function fakeRelay(behaviour: () => Final = () => "accepted"): Promise<Relay> {
   const sockets = new Set<Socket>();
   let connections = 0;
 
   const server = createTlsServer(
     { key: tlsFixture("valid-server.key"), cert: tlsFixture("valid-server.crt") },
     (socket) => {
-      const outcome = behaviour(connections);
       connections += 1;
       sockets.add(socket);
       socket.on("close", () => sockets.delete(socket));
@@ -104,6 +103,7 @@ async function fakeRelay(behaviour: (index: number) => Final = () => "accepted")
           if (inData) {
             if (line === ".") {
               inData = false;
+              const outcome = behaviour();
               if (outcome === "transient") {
                 socket.write("451 4.3.0 try again later\r\n");
               } else if (outcome === "permanent") {
@@ -207,7 +207,8 @@ describe("autonomous delivery engine", () => {
   });
 
   it.skipIf(!available)("retries a transient 451 and reports the eventual acceptance", async () => {
-    const relay = await fakeRelay((index) => (index === 0 ? "transient" : "accepted"));
+    let deliveries = 0;
+    const relay = await fakeRelay(() => (deliveries++ === 0 ? "transient" : "accepted"));
     const transport = transportFor(relay, {
       maxAttempts: 3,
       retryBaseMs: 0,
@@ -241,7 +242,8 @@ describe("autonomous delivery engine", () => {
   });
 
   it.skipIf(!available)("isolates a failed message from the rest of the batch", async () => {
-    const relay = await fakeRelay((index) => (index === 0 ? "permanent" : "accepted"));
+    let deliveries = 0;
+    const relay = await fakeRelay(() => (deliveries++ === 0 ? "permanent" : "accepted"));
     const transport = transportFor(relay, { maxConcurrent: 1, retryBaseMs: 0, retryMaxMs: 0 });
     try {
       const results = await Promise.all(

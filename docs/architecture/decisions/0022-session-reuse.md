@@ -2,13 +2,13 @@
 
 **Status:** ACCEPTED (project owner decision, 2026-11-19; supersedes ADR-0006's
 "no reuse" clause and adopts option B of the
-[connection pooling research](../research/connection-pooling.md)).
+[connection pooling research](../../research/connection-pooling.md)).
 **Related:** ADR-0006 (superseded clause), ADR-0007 (timeout budgets),
 ADR-0017 (native engine), ADR-0021 (autonomous delivery engine).
 
 ## 1. Context
 
-The audit ([2026-11-18](../audits/2026-11-18-autonomous-delivery-audit.md))
+The audit ([2026-11-18](../../audits/2026-11-18-autonomous-delivery-audit.md))
 found that every `send()` opened a fresh TCP connection, TLS handshake, and AUTH
 exchange, because `SmtpTransport::run` called `Session::open` unconditionally and
 `QUIT` at the end. On a real relay the handshake dominates the cost of a small
