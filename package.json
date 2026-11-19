@@ -26,5 +26,8 @@
     "publish:release": "node scripts/publish-release.mjs",
     "assemble:rc": "node scripts/assemble-rc.mjs",
     "bench": "node bench/run.mjs"
+  },
+  "devDependencies": {
+    "nodemailer": "^10.6.0"
   }
 }
