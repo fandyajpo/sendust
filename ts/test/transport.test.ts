@@ -163,7 +163,7 @@ describe("sendust facade", () => {
   });
 
   it.skipIf(!available)("closes idempotently and refuses later sends", async () => {
-    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls" });
+    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls", delivery: { maxAttempts: 1 } });
     expect(transport.state).toBe("open");
 
     await transport.close();
@@ -176,7 +176,7 @@ describe("sendust facade", () => {
   });
 
   it.skipIf(!available)("closes concurrently without drifting past closed", async () => {
-    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls" });
+    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls", delivery: { maxAttempts: 1 } });
 
     await Promise.all([transport.close(), transport.close()]);
 
@@ -225,7 +225,7 @@ describe("sendust facade", () => {
   });
 
   it.skipIf(!available)("rejects a path attachment without filesystem opt-in", async () => {
-    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls" });
+    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls", delivery: { maxAttempts: 1 } });
     let code: string | null = null;
     try {
       await transport.send({
@@ -250,7 +250,12 @@ describe("sendust facade", () => {
     const port = typeof address === "object" && address ? address.port : 1;
     await new Promise<void>((resolve) => server.close(() => resolve()));
 
-    const transport = createTransport({ host: "127.0.0.1", port, secure: "tls" });
+    const transport = createTransport({
+      host: "127.0.0.1",
+      port,
+      secure: "tls",
+      delivery: { maxAttempts: 1 },
+    });
     const content = new Uint8Array([104, 101, 108, 108, 111]);
     let code: string | null = null;
     try {
@@ -273,7 +278,7 @@ describe("sendust facade", () => {
   });
 
   it.skipIf(!available)("rejects an attachment with neither a path nor content", async () => {
-    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls" });
+    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls", delivery: { maxAttempts: 1 } });
     let code: string | null = null;
     try {
       await transport.send({
@@ -298,6 +303,7 @@ describe("sendust facade", () => {
       port: 1,
       secure: "tls",
       attachments: { allowFileAccess: true },
+      delivery: { maxAttempts: 1 },
     });
 
     let code: string | null = null;
@@ -377,7 +383,7 @@ describe("sendust facade", () => {
   });
 
   it.skipIf(!available)("snapshots a buffer before the caller detaches it", async () => {
-    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls" });
+    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls", delivery: { maxAttempts: 1 } });
     const content = new Uint8Array([1, 2, 3]);
     let code: string | null = null;
     try {
@@ -436,7 +442,7 @@ describe("sendust facade", () => {
   });
 
   it.skipIf(!available)("validates a message before opening a connection", async () => {
-    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls" });
+    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls", delivery: { maxAttempts: 1 } });
 
     const withoutRecipient = await errorCode(
       transport.send({ from: "a@example.test", subject: "x", text: "y" }),
@@ -456,7 +462,7 @@ describe("sendust facade", () => {
   });
 
   it.skipIf(!available)("reports a missing From as VALIDATION_MISSING_FROM", async () => {
-    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls" });
+    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls", delivery: { maxAttempts: 1 } });
     const code = await errorCode(
       transport.send({ to: ["b@example.test"], subject: "x", text: "y" } as never),
     );
@@ -513,7 +519,12 @@ describe("sendust facade", () => {
     const address = server.address();
     const port = typeof address === "object" && address ? address.port : 1;
 
-    const transport = createTransport({ host: "127.0.0.1", port, secure: "tls" });
+    const transport = createTransport({
+      host: "127.0.0.1",
+      port,
+      secure: "tls",
+      delivery: { maxAttempts: 1 },
+    });
     const first = transport
       .send({
         from: "a@example.test",
@@ -555,7 +566,12 @@ describe("sendust facade", () => {
     const address = server.address();
     const port = typeof address === "object" && address ? address.port : 1;
 
-    const transport = createTransport({ host: "127.0.0.1", port, secure: "tls" });
+    const transport = createTransport({
+      host: "127.0.0.1",
+      port,
+      secure: "tls",
+      delivery: { maxAttempts: 1 },
+    });
     const first = transport
       .send({
         from: "a@example.test",
@@ -597,7 +613,12 @@ describe("sendust facade", () => {
     const port = typeof address === "object" && address ? address.port : 1;
     await new Promise<void>((resolve) => server.close(() => resolve()));
 
-    const transport = createTransport({ host: "127.0.0.1", port, secure: "tls" });
+    const transport = createTransport({
+      host: "127.0.0.1",
+      port,
+      secure: "tls",
+      delivery: { maxAttempts: 1 },
+    });
     let code: string | null = null;
     try {
       await transport.send({
@@ -615,7 +636,7 @@ describe("sendust facade", () => {
   });
 
   it.skipIf(!available)("rejects an oversize attachment before copying it", async () => {
-    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls" });
+    const transport = createTransport({ host: "127.0.0.1", port: 1, secure: "tls", delivery: { maxAttempts: 1 } });
     // Only `byteLength` is real. Copying this would produce an empty buffer, so
     // a limit rejection proves the size was checked before the copy and not by
     // the native layer afterwards.

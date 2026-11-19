@@ -27,6 +27,8 @@ export interface EngineOptions {
   readonly retryBaseMs: number;
   readonly retryMaxMs: number;
   readonly closeMs: number;
+  /** Whole-message budget across every attempt, so retries cannot multiply it. */
+  readonly totalMs: number;
   /** Creates one more native transport. Called only while the pool may grow. */
   readonly createTransport: () => NativeTransport;
   /** The transport created eagerly by `Transport`, so construction validates. */
@@ -38,6 +40,8 @@ interface Job {
   readonly bytes: number;
   readonly resolve: (result: SendResult) => void;
   readonly reject: (error: unknown) => void;
+  /** Wall-clock budget shared by every attempt of this message. */
+  readonly deadline: number;
   attempts: number;
 }
 
@@ -183,7 +187,14 @@ export class DeliveryEngine {
     }
 
     return new Promise<SendResult>((resolve, reject) => {
-      this.#queue.push({ nativeMessage, bytes, resolve, reject, attempts: 0 });
+      this.#queue.push({
+        nativeMessage,
+        bytes,
+        resolve,
+        reject,
+        deadline: Date.now() + this.#options.totalMs,
+        attempts: 0,
+      });
       this.#queueBytes += bytes;
       this.#pump();
     });
@@ -277,7 +288,7 @@ export class DeliveryEngine {
 
       const result = toSendResult(raw);
       const decision = retryAfterResult(result, this.#ledger(job), this.#backoff);
-      if (decision.retry) {
+      if (decision.retry && this.#budgetAllows(job, decision.delayMs)) {
         this.#counters.retried += 1;
         this.#throttle();
         this.#scheduleRetry(job, decision.delayMs);
@@ -291,7 +302,7 @@ export class DeliveryEngine {
 
       const mapped = fromNative(error) ?? error;
       const decision = retryAfterError(mapped, this.#ledger(job), this.#backoff);
-      if (decision.retry) {
+      if (decision.retry && this.#budgetAllows(job, decision.delayMs)) {
         this.#counters.retried += 1;
         this.#throttle();
         this.#scheduleRetry(job, decision.delayMs);
@@ -312,6 +323,14 @@ export class DeliveryEngine {
 
   #ledger(job: Job): { attempt: number; maxAttempts: number } {
     return { attempt: job.attempts, maxAttempts: this.#options.maxAttempts };
+  }
+
+  /**
+   * A retry may only start while this message still has budget left, so a
+   * stalled relay cannot turn one message into attempt-count × the timeout.
+   */
+  #budgetAllows(job: Job, delayMs: number): boolean {
+    return this.#state === "open" && Date.now() + delayMs < job.deadline;
   }
 
   #scheduleRetry(job: Job, delayMs: number): void {

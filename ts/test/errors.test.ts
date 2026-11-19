@@ -134,6 +134,7 @@ describe("public error classes", () => {
       port: 1,
       secure: "tls",
       auth: { user: "user", pass: "SECRET_PASS_MARKER" },
+      delivery: { maxAttempts: 1 },
     });
 
     let sendError: unknown = null;

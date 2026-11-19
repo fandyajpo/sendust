@@ -67,6 +67,8 @@ const DELIVERY_DEFAULTS = {
 
 /** The core's default close budget, used when the caller configures none. */
 const CLOSE_MS_DEFAULT = 125_000;
+/** The core's default whole-send budget, reused as the retry budget. */
+const TOTAL_MS_DEFAULT = 120_000;
 
 function closedError(): SendustClosedError {
   return new SendustClosedError({
@@ -118,6 +120,7 @@ function bounded(
 function deliverySettings(
   delivery: DeliveryOptions | undefined,
   closeMs: number,
+  totalMs: number,
 ): Omit<EngineOptions, "createTransport" | "first"> {
   if (delivery) {
     assertKnownKeys(delivery, DELIVERY_KEYS);
@@ -176,6 +179,7 @@ function deliverySettings(
     retryBaseMs,
     retryMaxMs,
     closeMs,
+    totalMs,
   };
 }
 
@@ -366,7 +370,11 @@ export class Transport {
     }
 
     this.#engine = new DeliveryEngine({
-      ...deliverySettings(options.delivery, options.timeouts?.closeMs ?? CLOSE_MS_DEFAULT),
+      ...deliverySettings(
+        options.delivery,
+        options.timeouts?.closeMs ?? CLOSE_MS_DEFAULT,
+        options.timeouts?.totalMs ?? TOTAL_MS_DEFAULT,
+      ),
       createTransport: () => {
         try {
           return new (loadNative().Transport)(nativeOptions);

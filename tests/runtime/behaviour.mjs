@@ -1,9 +1,10 @@
 // Behaviour harness: the facade's outcome contract on Node.js, Bun, and Deno.
 //
 // Runs the built package against loopback relays: accepted (`250`), rejected
-// (`451`), unknown (the relay drops the final reply), BUSY (a second send while
-// one is in flight), close, the attachment cap, and TLS failing closed without
-// the added root. No network beyond loopback, no credentials, no Vitest.
+// (`451`), unknown (the relay drops the final reply), queueing (a second send
+// waits for the session instead of failing), close, the attachment cap, and TLS
+// failing closed without the added root. No network beyond loopback, no
+// credentials, no Vitest.
 //
 // Run from the repository root after `npm --workspace ./ts run build`:
 //   node tests/runtime/behaviour.mjs
@@ -168,7 +169,7 @@ async function relay(final = "accepted") {
   }
 }
 
-// 4. BUSY: a second send never dials, and close aborts the one in flight.
+// 4. Queue: a second send waits for the session, and close settles both.
 {
   let connections = 0;
   const sockets = new Set();
@@ -190,21 +191,24 @@ async function relay(final = "accepted") {
     port: typeof address === "object" && address ? address.port : 1,
     secure: "tls",
   });
-  const sending = transport.send(message).then(
+  const first = transport.send(message).then(
     () => null,
     (error) => error,
   );
   await firstConnection;
-  let busy = null;
-  try {
-    await transport.send(message);
-  } catch (error) {
-    busy = codeOf(error);
-  }
-  check("busy", busy, "TRANSPORT_BUSY");
-  check("busy connections", connections, 1);
+
+  // Queued behind the active send, not rejected and not dialed on its own.
+  const second = transport.send(message).then(
+    () => null,
+    (error) => error,
+  );
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  check("queued connections", connections, 1);
+
   await transport.close();
-  check("close aborts the send", codeOf(await sending), "TRANSPORT_CLOSED");
+  check("close aborts the active send", codeOf(await first), "TRANSPORT_CLOSED");
+  check("close settles the queued send", codeOf(await second), "TRANSPORT_CLOSED");
+
   for (const socket of sockets) {
     socket.destroy();
   }
