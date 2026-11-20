@@ -9,6 +9,10 @@ on:
         description: "Publish this candidate to npm (irreversible)"
         type: boolean
         default: false
+      distTag:
+        description: "Set this npm dist-tag on the current version after it is published (for example latest)"
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -457,4 +461,45 @@ jobs:
       - name: Publish the six packages
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: node scripts/publish-release.mjs --tag next
+        run: |
+          VERSION=$(node -p "require('./ts/package.json').version")
+          TAG=$(node -p "require('./release/' + VERSION + '/approved.json').distTag")
+          node scripts/publish-release.mjs --tag "$TAG"
+
+  # A published version is immutable, so a dist-tag that was set wrongly at
+  # publish time can only be corrected by moving the tag, never by republishing.
+  # This job is manual and does exactly that for the version in the tree.
+  dist-tag:
+    name: Set a dist-tag on the published version
+    if: github.event_name == 'workflow_dispatch' && inputs.distTag != ''
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.23.5"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Check the npm token
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "::error::NPM_TOKEN is not set; add it as a repository secret"
+            exit 1
+          fi
+          npm whoami
+
+      - name: Move the dist-tag
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          VERSION=$(node -p "require('./ts/package.json').version")
+          npm view "@sendust/ts@$VERSION" version
+          npm dist-tag add "@sendust/ts@$VERSION" "${{ inputs.distTag }}"
+          npm view @sendust/ts dist-tags

@@ -103,6 +103,32 @@ The annotated tag `v0.1.0-rc.1` was created on the approved candidate commit on
 2026-11-18 and pushed (`refs/tags/v0.1.0-rc.1` resolves to
 `a8a71e7b613e0c56bbd48655ba5a2aedaa55afa5`). The tag is not moved afterwards.
 
+The annotated tag `v1.0.0` was created on `f1559344b8f6bc67a87300244f895f19a9cf5d3f`
+and pushed on 2026-11-19 (`refs/tags/v1.0.0`).
+
+## 5a. 1.0.0 publication record
+
+**Published 2026-11-19** from the CI `publish` job: `@sendust/ts@1.0.0` and the
+five platform packages at `1.0.0`, with `optionalDependencies` pinned to the same
+version.
+
+| Check | Result |
+| --- | --- |
+| Registry version | `npm view @sendust/ts@1.0.0 version` → `1.0.0` |
+| Platform packages | all five at `1.0.0` |
+| Optional dependencies | the five `@sendust/ts-*` entries at `1.0.0` |
+| Clean install | fresh directory: `added 2 packages` (facade and `@sendust/ts-macos-arm64`) |
+| Facade import | `version` → `1.0.0` |
+| Registry artifact hash | `npm pack @sendust/ts@1.0.0` → `4b0290741459729ae16525551fe96e9b97b46551e2cce8833ef8973fb908ae1f`, the approved value |
+
+**Dist-tag incident.** The `publish` job hardcoded `--tag next`, so `1.0.0` was
+published under `next` while `latest` still resolved to `0.1.0-rc.1`. The
+workflow now reads `distTag` from `release/<version>/approved.json`, and a
+manual `dist-tag` job was added: a published version is immutable, so the tag is
+moved with `npm dist-tag add`, never by republishing. Until that job runs,
+`npm install @sendust/ts` still resolves the release candidate and consumers
+must ask for `@sendust/ts@1.0.0` or `@sendust/ts@next`.
+
 ## 6. Authorization
 
 **APPROVED by the project owner on 2026-11-18.**
