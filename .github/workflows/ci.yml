@@ -463,7 +463,8 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           VERSION=$(node -p "require('./ts/package.json').version")
-          TAG=$(node -p "require('./release/' + VERSION + '/approved.json').distTag")
+          TAG=$(VERSION="$VERSION" node -p "require('./release/' + process.env.VERSION + '/approved.json').distTag")
+          echo "publishing $VERSION with dist-tag $TAG"
           node scripts/publish-release.mjs --tag "$TAG"
 
   # A published version is immutable, so a dist-tag that was set wrongly at
