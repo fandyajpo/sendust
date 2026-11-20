@@ -125,9 +125,9 @@ version.
 published under `next` while `latest` still resolved to `0.1.0-rc.1`. The
 workflow now reads `distTag` from `release/<version>/approved.json`, and a
 manual `dist-tag` job was added: a published version is immutable, so the tag is
-moved with `npm dist-tag add`, never by republishing. Until that job runs,
-`npm install @sendust/ts` still resolves the release candidate and consumers
-must ask for `@sendust/ts@1.0.0` or `@sendust/ts@next`.
+moved with `npm dist-tag add`, never by republishing. The owner ran that job on
+2026-11-19: `latest` and `next` both resolve `1.0.0`, and a bare
+`npm install @sendust/ts` installs `1.0.0`.
 
 ## 6. Authorization
 
