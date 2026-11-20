@@ -43,8 +43,9 @@ claimed for this release (the Windows DLL was already non-reproducible).
 
 - The benchmark is a loopback comparison on one machine; no provider or real
   relay measurement is claimed.
-- A few extra session re-establishments appeared in the benchmark and are
-  recorded, not explained away.
+- The extra session re-establishments first reported in the benchmark were a
+  stale harness on the measuring machine, not the transport; the corrected run
+  shows one session per pooled connection and `ts/test/engine.test.ts` pins it.
 - Provider quota policies remain a backlog item.
 - The npm publish path still uses the owner's bypass-2FA token until the
   January 2027 deadline is addressed.

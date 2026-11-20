@@ -45,22 +45,30 @@ no message failed.
 
 | Workload | Concurrency | Messages | Sendust msg/s | Nodemailer msg/s | Sendust p95 | Nodemailer p95 | Sendust connections | Nodemailer connections |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Sequential | 1 | 100 | 5450.3 | 2397.8 | 17.4 ms | 44.7 ms | 4 | 1 |
-| Low | 5 | 100 | 9946.1 | 2956.2 | 9.9 ms | 33.4 ms | 5 | 5 |
-| Medium | 10 | 100 | 8243.7 | 2461.3 | 15.0 ms | 40.2 ms | 10 | 10 |
-| High | 25 | 100 | 8206.9 | 2484.1 | 14.3 ms | 46.5 ms | 25 | 25 |
-| Ceiling | 32 | 100 | 7937.9 | 3071.3 | 15.1 ms | 42.5 ms | 32 | 32 |
-| Extended | 32 | 1000 | 13951.2 | 4924.9 | 80.4 ms | 207.9 ms | 39 | 32 |
+| Sequential | 1 | 100 | 5221.7 | 2426.5 | 19.1 ms | 39.4 ms | 1 | 1 |
+| Low | 5 | 100 | 9629.3 | 2852.7 | 9.9 ms | 32.7 ms | 5 | 5 |
+| Medium | 10 | 100 | 9506.3 | 3237.0 | 12.6 ms | 28.7 ms | 10 | 10 |
+| High | 25 | 100 | 8113.8 | 3313.3 | 13.8 ms | 35.2 ms | 25 | 25 |
+| Ceiling | 32 | 100 | 7938.9 | 3076.7 | 14.5 ms | 42.9 ms | 32 | 32 |
+| Extended | 32 | 1000 | 14960.9 | 4044.0 | 80.2 ms | 293.5 ms | 32 | 32 |
 
 Every run reported `ok` for all messages and zero failures for both clients:
 300 accepted per 100-message workload and 3000 per extended workload.
 
 **What the numbers show.** On this relay Sendust is roughly 2.2× (sequential) to
-3.4× (concurrency 5) the throughput of Nodemailer, with a lower p95 in every
-workload. On the extended run it is about 2.8×. Sendust's connection count is
-close to the concurrency in each workload; the sequential run used 4 connections
-for 320 messages and the extended run 39 for 3020, so a few sessions were
-re-established. That is visible in the data rather than explained away.
+3.7× (extended) the throughput of Nodemailer, with a lower p95 in every workload.
+Connection counts are now identical between the clients: one session for the
+sequential run and exactly one per pooled connection everywhere else, so the
+comparison is on equal terms.
+
+**Correction.** An earlier run of this table reported extra connections for
+Sendust (4 for the sequential workload, 39 for the extended one) and it was
+recorded here as unexplained. It was a harness fault, not a transport one: the
+worker on the benchmark machine had not been updated with the
+`maxMessagesPerSession: 10_000` override, so the product default of 100 was in
+force and each transport re-dialed every 100 messages. With the committed worker
+the counts are 1 and 32. `ts/test/engine.test.ts` now pins both behaviours: 200
+sequential sends reuse one session, and a lowered cap opens the expected number.
 
 ## 4. What this does not show
 
@@ -73,9 +81,8 @@ re-established. That is visible in the data rather than explained away.
   its ceiling. The comparison is relative.
 - **Not a full matrix.** One machine, one Node.js version, one relay type, short
   plain-text messages. TLS cost is RSA with the fixture certificate.
-- **The session count needs an explanation.** Sendust dialed more than once per
-  transport in two workloads. The cause is not yet established; it is recorded
-  here rather than hidden.
+- **Connection counts are not throughput.** Identical connection counts make the
+  comparison fair; they do not measure how a real relay's idle timeout behaves.
 
 ## 5. Reproducing
 

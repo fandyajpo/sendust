@@ -283,6 +283,44 @@ describe("autonomous delivery engine", () => {
     }
   });
 
+  it.skipIf(!available)("reuses one session across many sequential sends", async () => {
+    const relay = await fakeRelay();
+    const transport = transportFor(relay, {
+      maxConcurrent: 1,
+      maxConnections: 1,
+      maxMessagesPerSession: 10_000,
+    });
+    try {
+      for (let index = 0; index < 200; index += 1) {
+        await transport.send(message(index));
+      }
+      expect(relay.connections()).toBe(1);
+      expect(transport.stats.accepted).toBe(200);
+    } finally {
+      await transport.close();
+      await relay.close();
+    }
+  });
+
+  it.skipIf(!available)("opens a new session at the message cap", async () => {
+    const relay = await fakeRelay();
+    const transport = transportFor(relay, {
+      maxConcurrent: 1,
+      maxConnections: 1,
+      maxMessagesPerSession: 50,
+    });
+    try {
+      for (let index = 0; index < 120; index += 1) {
+        await transport.send(message(index));
+      }
+      // 120 messages at 50 per session: 50, 50, then 20 on a third.
+      expect(relay.connections()).toBe(3);
+    } finally {
+      await transport.close();
+      await relay.close();
+    }
+  });
+
   it.skipIf(!available)("spaces messages when a rate limit is configured", async () => {
     const relay = await fakeRelay();
     const transport = transportFor(relay, { messagesPerSecond: 20, maxConcurrent: 4 });
