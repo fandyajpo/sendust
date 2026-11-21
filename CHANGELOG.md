@@ -8,7 +8,14 @@ tag format, version sources, and compatibility promises — are in
 
 ## [Unreleased]
 
-Nothing yet.
+### Changed
+
+- Concurrency rises to the work already queued instead of one slot per eight
+  successes, so a burst uses the configured pool immediately; throttling still
+  halves it and holds a cooldown after a temporary failure.
+- `RSET` is sent only when an envelope was left open, removing one round trip
+  from every completed message, and a session that received `421` is never
+  reused. Analysis and measurements: [real-relay optimization](docs/qa/real-relay-optimization.md).
 
 ## [1.0.0] - 2026-11-19
 
