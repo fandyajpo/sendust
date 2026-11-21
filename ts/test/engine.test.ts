@@ -321,6 +321,28 @@ describe("autonomous delivery engine", () => {
     }
   });
 
+  it.skipIf(!available)("uses the whole pool as soon as work is waiting", async () => {
+    // A stalled relay keeps every send in flight, so the pool's own level is
+    // what is observable rather than how fast the relay answers.
+    const relay = await fakeRelay(() => "stall");
+    const transport = transportFor(relay, { maxConcurrent: 8, maxConnections: 8 });
+    try {
+      const pending = Array.from({ length: 8 }, (_, index) =>
+        transport.send(message(index)).catch(() => undefined),
+      );
+      await waitFor(() => transport.stats.active === 8);
+      // Demand sets the level, not a success streak: eight queued sends must
+      // open eight sessions, which is what a real-relay burst needs.
+      expect(transport.stats.concurrency).toBe(8);
+      expect(transport.stats.connections).toBe(8);
+
+      await transport.close();
+      await Promise.all(pending);
+    } finally {
+      await relay.close();
+    }
+  });
+
   it.skipIf(!available)("spaces messages when a rate limit is configured", async () => {
     const relay = await fakeRelay();
     const transport = transportFor(relay, { messagesPerSecond: 20, maxConcurrent: 4 });
