@@ -344,17 +344,18 @@ impl SmtpTransport {
         self.reset_progress();
 
         let mut session = self.acquire_session(deadlines).await?;
-        let outcome = self
+        match self
             .transact(&mut session, deadlines, envelope, &request.wire)
-            .await;
-
-        if matches!(
-            &outcome,
-            Ok(SendOutcome::Accepted { .. }) | Ok(SendOutcome::Rejected { .. })
-        ) {
-            self.retain(session).await;
+            .await
+        {
+            Ok((outcome, state)) => {
+                if state.reusable {
+                    self.retain(session, state.needs_reset).await;
+                }
+                Ok(outcome)
+            }
+            Err(error) => Err(error),
         }
-        outcome
     }
 
     /// Closes a retained session politely. Bounded and best-effort: shutdown
@@ -417,40 +418,49 @@ impl SmtpTransport {
 
     /// Keeps a session for the next send when it is still healthy.
     ///
-    /// `RSET` closes the transaction; a relay that refuses it, or a session that
-    /// reached its message cap, is closed instead. The outcome the relay already
-    /// gave is never changed by this cleanup.
-    async fn retain(&mut self, mut session: Session) {
+    /// A completed transaction leaves the session idle, so no `RSET` is sent
+    /// then: it would only add a round trip to every message. `RSET` is sent
+    /// only when a transaction was left open, and a session that refuses it, or
+    /// that reached its message cap, is closed instead. The outcome the relay
+    /// already gave is never changed by this cleanup.
+    async fn retain(&mut self, mut session: Session, needs_reset: bool) {
         self.served += 1;
         if self.served >= self.config.reuse.max_messages() {
             let budget = self.config.timeouts.operation();
             let _ = tokio::time::timeout(budget, session.quit()).await;
             return;
         }
-        if session.reset().await.is_ok() {
-            self.session = Some(session);
-            self.idle_since = Some(Instant::now());
+        if needs_reset && session.reset().await.is_err() {
+            return;
         }
+        self.session = Some(session);
+        self.idle_since = Some(Instant::now());
     }
 
     /// One SMTP transaction over an already authenticated session.
+    ///
+    /// Returns the outcome with what the session owes the next message: whether
+    /// a transaction was left open, and whether the relay ended the channel.
     async fn transact(
         &self,
         session: &mut Session,
         deadlines: SendDeadlines,
         envelope: Envelope,
         wire: &[u8],
-    ) -> Result<SendOutcome, Error> {
+    ) -> Result<(SendOutcome, SessionState), Error> {
         let config = &self.config;
         self.mark(Stage::Mail);
         match session.mail_from(&envelope.from).await {
             Ok(reply) if reply.is_positive() => {}
             Ok(reply) => {
                 return match verdict(&reply) {
-                    Verdict::Refused => Ok(rejected_outcome(
-                        &envelope,
-                        &vec![RecipientStatus::Rejected; envelope.recipients.len()],
-                        Some(smtp_response(&reply)),
+                    Verdict::Refused => Ok((
+                        rejected_outcome(
+                            &envelope,
+                            &vec![RecipientStatus::Rejected; envelope.recipients.len()],
+                            Some(smtp_response(&reply)),
+                        ),
+                        SessionState::clean(),
                     )),
                     Verdict::Complete | Verdict::Invalid => {
                         Err(unexpected_response(config, Stage::Mail, reply.value()))
@@ -491,7 +501,15 @@ impl SmtpTransport {
         }
 
         if closing || accepted.is_empty() {
-            return Ok(rejected_outcome(&envelope, &statuses, None));
+            // The envelope was opened but never completed, and a 421 means the
+            // relay is shutting the channel down, so it is not reusable.
+            return Ok((
+                rejected_outcome(&envelope, &statuses, None),
+                SessionState {
+                    needs_reset: true,
+                    reusable: !closing,
+                },
+            ));
         }
 
         self.mark(Stage::DataCommand);
@@ -499,10 +517,13 @@ impl SmtpTransport {
             Ok(reply) if reply.value() == 354 => {}
             Ok(reply) => {
                 return match verdict(&reply) {
-                    Verdict::Refused => Ok(rejected_outcome(
-                        &envelope,
-                        &vec![RecipientStatus::Rejected; envelope.recipients.len()],
-                        Some(smtp_response(&reply)),
+                    Verdict::Refused => Ok((
+                        rejected_outcome(
+                            &envelope,
+                            &vec![RecipientStatus::Rejected; envelope.recipients.len()],
+                            Some(smtp_response(&reply)),
+                        ),
+                        SessionState::aborted(reply.value() != 421),
                     )),
                     Verdict::Complete | Verdict::Invalid => Err(unexpected_response(
                         config,
@@ -519,36 +540,79 @@ impl SmtpTransport {
             Ok(reply) => match verdict(&reply) {
                 Verdict::Complete => {
                     settle(&mut statuses, &accepted, RecipientStatus::Accepted);
-                    Ok(SendOutcome::Accepted {
-                        recipients: outcomes(&envelope, &statuses),
-                        response: Some(smtp_response(&reply)),
-                    })
+                    Ok((
+                        SendOutcome::Accepted {
+                            recipients: outcomes(&envelope, &statuses),
+                            response: Some(smtp_response(&reply)),
+                        },
+                        SessionState::clean(),
+                    ))
                 }
                 Verdict::Refused => {
                     settle(&mut statuses, &accepted, RecipientStatus::Rejected);
-                    Ok(rejected_outcome(
-                        &envelope,
-                        &statuses,
-                        Some(smtp_response(&reply)),
+                    Ok((
+                        rejected_outcome(&envelope, &statuses, Some(smtp_response(&reply))),
+                        SessionState::clean(),
                     ))
                 }
                 Verdict::Invalid => {
                     settle(&mut statuses, &accepted, RecipientStatus::Unknown);
-                    Ok(SendOutcome::Unknown {
-                        recipients: outcomes(&envelope, &statuses),
-                        stage: AmbiguityStage::FinalResponse,
-                    })
+                    Ok((
+                        SendOutcome::Unknown {
+                            recipients: outcomes(&envelope, &statuses),
+                            stage: AmbiguityStage::FinalResponse,
+                        },
+                        SessionState::clean(),
+                    ))
                 }
             },
             Err(_) => {
                 // A timeout or connection failure after the DATA terminator
                 // leaves the disposition unknown. It is never retried.
                 settle(&mut statuses, &accepted, RecipientStatus::Unknown);
-                Ok(SendOutcome::Unknown {
-                    recipients: outcomes(&envelope, &statuses),
-                    stage: AmbiguityStage::FinalResponse,
-                })
+                Ok((
+                    SendOutcome::Unknown {
+                        recipients: outcomes(&envelope, &statuses),
+                        stage: AmbiguityStage::FinalResponse,
+                    },
+                    SessionState::drained(),
+                ))
             }
+        }
+    }
+}
+
+/// What one finished transaction owes the next message on the same session.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct SessionState {
+    /// A transaction was left open, so `RSET` must precede the next `MAIL`.
+    needs_reset: bool,
+    /// The relay did not close the channel; a 421 means it did.
+    reusable: bool,
+}
+
+impl SessionState {
+    /// The transaction completed or never started: nothing to clean up.
+    const fn clean() -> Self {
+        Self {
+            needs_reset: false,
+            reusable: true,
+        }
+    }
+
+    /// The envelope was opened and abandoned, so the next send must reset first.
+    const fn aborted(reusable: bool) -> Self {
+        Self {
+            needs_reset: true,
+            reusable,
+        }
+    }
+
+    /// The transaction may have reached the relay: the session is never reused.
+    const fn drained() -> Self {
+        Self {
+            needs_reset: false,
+            reusable: false,
         }
     }
 }
@@ -578,8 +642,7 @@ impl SmtpTransport {
 }
 
 /// The envelope addresses, validated exactly once before the session opens.
-struct Envelope {
-    from: String,
+struct Envelope {    from: String,
     recipients: Vec<String>,
 }
 

@@ -254,6 +254,7 @@ export class DeliveryEngine {
     if (this.#state !== "open") {
       return;
     }
+    this.#meetDemand();
     while (this.#active < this.#concurrency && this.#queue.length > 0) {
       if (!this.#allow()) {
         this.#scheduleRateWake();
@@ -354,6 +355,25 @@ export class DeliveryEngine {
   }
 
   // --------------------------------------------------------------- adaptation
+
+  /**
+   * Raises concurrency to the work already waiting.
+   *
+   * A burst of queued messages should use the whole pool at once: growing one
+   * slot per eight successes made a 100-message burst spend most of its run
+   * under-provisioned, which showed up as a long tail on a real relay.
+   * `#throttle` still halves the level and holds a cooldown after any temporary
+   * failure, so a misbehaving relay cannot turn this into a runaway.
+   */
+  #meetDemand(): void {
+    if (Date.now() < this.#cooldownUntil) {
+      return;
+    }
+    const wanted = Math.min(this.#options.maxConcurrent, this.#active + this.#queue.length);
+    if (wanted > this.#concurrency) {
+      this.#concurrency = wanted;
+    }
+  }
 
   #grow(): void {
     this.#streak += 1;

@@ -84,8 +84,31 @@ async fn a_second_message_reuses_the_authenticated_session() {
     );
     assert_eq!(
         trace.count_prefix("RSET"),
+        0,
+        "a completed transaction needs no reset, so no round trip is spent on it"
+    );
+}
+
+#[tokio::test]
+async fn an_abandoned_envelope_is_reset_before_the_session_is_reused() {
+    let server = serving(Script::default().rcpt_replies(vec![Reply::line("550 5.1.1 no such user")]));
+    let mut delivery = delivery(config(server.addr()));
+
+    let first = delivery.send(message()).await.expect("first send");
+    assert_eq!(first.status().as_str(), "rejected");
+    let second = delivery.send(message()).await.expect("second send");
+    assert_eq!(second.status().as_str(), "rejected");
+
+    let trace = server.trace();
+    assert_eq!(
+        trace.count_prefix("EHLO"),
+        1,
+        "the session survived a refused envelope"
+    );
+    assert_eq!(
+        trace.count_prefix("RSET"),
         2,
-        "each completed transaction was reset"
+        "each abandoned transaction was reset before reuse"
     );
 }
 
