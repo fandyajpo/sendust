@@ -125,7 +125,7 @@ function deliverySettings(
   delivery: DeliveryOptions | undefined,
   closeMs: number,
   totalMs: number,
-): Omit<EngineOptions, "createTransport" | "first"> {
+): Omit<EngineOptions, "createTransport" | "first" | "sessionIdleMs"> {
   if (delivery) {
     assertKnownKeys(delivery, DELIVERY_KEYS);
   }
