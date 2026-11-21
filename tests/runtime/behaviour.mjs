@@ -192,6 +192,10 @@ async function relay(final = "accepted") {
     host: "127.0.0.1",
     port: typeof address === "object" && address ? address.port : 1,
     secure: "tls",
+    // One session in the pool: the second send must wait for it rather than
+    // being rejected, which demand-driven concurrency would otherwise avoid by
+    // opening a second session.
+    delivery: { maxConnections: 1 },
   });
   const first = transport.send(message).then(
     () => null,
