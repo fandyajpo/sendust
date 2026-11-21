@@ -560,7 +560,10 @@ describe("sendust facade", () => {
       host: "127.0.0.1",
       port,
       secure: "tls",
-      delivery: { maxAttempts: 1 },
+      // A one-session pool, so the second send must wait for it instead of being
+      // rejected; with demand-driven concurrency a wider pool would open a
+      // second session and both would run at once.
+      delivery: { maxAttempts: 1, maxConnections: 1 },
     });
     const first = transport
       .send({
@@ -572,8 +575,8 @@ describe("sendust facade", () => {
       .catch((error: unknown) => error);
     await gate.first;
 
-    // Queued behind the first send, not rejected: the engine owns one active
-    // send, so no second connection is opened for it.
+    // Queued behind the first send, not rejected: the pool holds one session
+    // and the second send waits for it instead of opening another.
     const second = transport
       .send({
         from: "a@example.test",
