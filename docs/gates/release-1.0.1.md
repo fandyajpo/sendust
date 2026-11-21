@@ -42,6 +42,12 @@ byte-reproducibility claim is made for this release.
 
 ## 4. Known limitations at approval
 
+- Two tests encoded the old single-session behaviour and failed on the approved
+  commit: `ts/test/transport.test.ts` and `tests/runtime/behaviour.mjs` both
+  asserted one connection for two concurrent sends. They were corrected after the
+  commit by pinning a one-session pool, without touching any build input, so the
+  artifacts are identical. The publisher accepts a later commit whose build inputs
+  match for exactly this reason.
 - The Gmail comparison has not been re-run: the expected p95 improvement is a
   projection derived from the owner's `1.0.0` measurement.
 - Provider quota policies remain a backlog item.
