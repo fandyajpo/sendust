@@ -143,9 +143,9 @@ Read-only. Reflects the state machine synchronously.
 - The engine runs up to `delivery.maxConcurrent` sends at once (8 by default)
   over at most `delivery.maxConnections` native sessions, and each session runs
   one SMTP transaction at a time.
-- Concurrency starts at one and grows after sustained success; a `4xx` final
-  reply or a transient start failure halves it and starts a cooldown, so it
-  cannot oscillate.
+- Concurrency rises to the work already waiting, up to `delivery.maxConcurrent`;
+  a `4xx` final reply or a transient start failure halves it and starts a
+  cooldown, so it cannot oscillate.
 - Only transient failures are retried: a `4xx` final reply, `TIMEOUT_CONNECT`,
   `TIMEOUT_OPERATION`, `TIMEOUT_TOTAL`, and `PROTOCOL_CONNECTION_RESET`.
   `unknown` is never retried, and `AUTH_*` stops the transport.

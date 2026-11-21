@@ -8,14 +8,27 @@ tag format, version sources, and compatibility promises — are in
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.0.1] - 2026-11-21
+
+A performance fix. No API, result, error code, option, or limit changed; what
+changed is when the pool fills and how many round trips a message costs.
+
 ### Changed
 
 - Concurrency rises to the work already queued instead of one slot per eight
-  successes, so a burst uses the configured pool immediately; throttling still
-  halves it and holds a cooldown after a temporary failure.
-- `RSET` is sent only when an envelope was left open, removing one round trip
-  from every completed message, and a session that received `421` is never
-  reused. Analysis and measurements: [real-relay optimization](docs/qa/real-relay-optimization.md).
+  consecutive successes. A caller who hands Sendust a burst now uses the whole
+  configured pool from the first message, which removes the queue wait that
+  dominated p95 and p99 on a real relay. Throttling still halves the level and
+  holds a cooldown after a temporary failure, so a relay that pushes back is
+  still obeyed.
+- `RSET` is sent only when an envelope was left open — every recipient refused,
+  or `DATA` refused — instead of after every completed transaction, removing one
+  round trip per message. A session that received `421` is never reused, because
+  the relay is closing the channel.
+- Analysis, the measurement that motivated it, and what is still unmeasured:
+  [real-relay optimization](docs/qa/real-relay-optimization.md).
 
 ## [1.0.0] - 2026-11-19
 
