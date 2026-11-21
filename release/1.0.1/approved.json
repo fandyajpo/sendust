@@ -1,0 +1,17 @@
+{
+  "version": "1.0.1",
+  "commit": "377aa58570cdd591187e097bb58880bea27ad21d",
+  "distTag": "latest",
+  "facade": {
+    "name": "@sendust/ts",
+    "sha256": "004eb54a03656c1a4311b6b0d91f6f7efa6e3b7331992cdd94674e002ac1f56f"
+  },
+  "artifacts": {
+    "linux-x64-gnu": null,
+    "linux-arm64-gnu": null,
+    "macos-arm64": null,
+    "macos-x64": null,
+    "windows-x64": null
+  },
+  "byteReproducible": []
+}
