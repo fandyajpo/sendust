@@ -6,8 +6,13 @@
 ## 1. Surface
 
 ```ts
-import { createTransport } from "sendust";
+import { createTransport } from "@sendust/ts";
 ```
+
+The published package is `@sendust/ts`
+([ADR-0019](decisions/0019-installable-typescript-package.md),
+[ADR-0020](decisions/0020-per-platform-native-packages.md)); the unscoped
+`sendust` name used in earlier drafts of this contract was never published.
 
 The MVP exports exactly:
 
@@ -165,8 +170,8 @@ Read-only. Reflects the state machine synchronously.
 
 | Consumer | Entry |
 | --- | --- |
-| ESM | `import { createTransport } from "sendust"` |
-| CommonJS | `const { createTransport } = require("sendust")` |
+| ESM | `import { createTransport } from "@sendust/ts"` |
+| CommonJS | `const { createTransport } = require("@sendust/ts")` |
 | TypeScript | types resolved through `exports.types` |
 
 Both formats must expose identical classes and behavior. A class thrown from the native layer must satisfy `instanceof` against the wrapper-exported class in both formats (tested in P14-004).

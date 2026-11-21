@@ -145,8 +145,8 @@ Practical consequences:
   cannot be overridden.
 - **Filesystem access is opt-in** and limited to bounded regular files; there is
   no URL, stream, or remote fetch path.
-- **One active send per transport**, no retry, no queue, no pool, no background
-  worker.
+- **One SMTP transaction per session at a time**, with an in-process queue and a
+  bounded pool of native sessions; no background worker and no persistent queue.
 - **`accepted` is relay acceptance**, never mailbox delivery. There is no
   `delivered`, `opened`, `bounced`, or `queued` status.
 
@@ -155,8 +155,9 @@ Practical consequences:
 ### Relay outage
 
 Connect and TLS failures surface as `PROTOCOL_*` or `TLS_*` errors, never as a
-`rejected` result. Backoff and retry policy belong to the caller. Sendust holds
-no queue, so a restart cannot lose queued work it never had.
+`rejected` result. A transient failure is retried inside the message's own send
+budget; anything beyond one transport's lifetime is the caller's policy. The
+queue is in-process only, so a restart loses whatever it still held.
 
 ### Ambiguous outcomes
 

@@ -124,6 +124,19 @@ MVP MUST open one connection per send and close it deterministically. Sendust MU
 
 Enforced by P02-003, P09-004, and the product-scope review.
 
+**Amended for `1.0.0` ([ADR-0021](../architecture/decisions/0021-autonomous-delivery-engine.md),
+[ADR-0022](../architecture/decisions/0022-session-reuse.md)).** The project owner
+approved the autonomous delivery engine and session reuse on 2026-11-18 and
+2026-11-19. What stands from C-16: one SMTP transaction per session at a time, a
+bounded queue that reports `LIMIT_QUEUE_FULL` instead of growing without limit,
+one transport's work bounded by its own options, and no persistence, worker,
+scheduler, dead-letter queue, or queue adapter. What changed: `1.0.x` does pool
+native sessions, does queue concurrent `send()` calls, retries transient failures
+inside each message's send budget, and reuses an authenticated session across
+messages. The "no pool, no queue, no retry" reading of this constraint describes
+`0.1.0-rc.1`; FR-054 (`BUSY` on a concurrent send) and FR-057 (no automatic
+retry) are read with this amendment.
+
 ### C-17 — Cancellation
 
 The public MVP API MUST NOT expose AbortSignal. Internal close cancellation and finite timeout budgets are required. A future public AbortSignal feature may be considered post-MVP only; it MUST map onto the same bounded-close semantics and MUST NOT introduce a second cancellation path.

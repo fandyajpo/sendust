@@ -11,28 +11,32 @@ received anything.
 
 - A library you embed in your own application. It is not an SMTP server, a
   hosted service, a campaign tool, or a job scheduler.
-- One transport owns one connection and runs **one send at a time**. There is no
-  connection pool, no internal queue, and no automatic retry.
+- One transport owns a **bounded queue and a small pool of native sessions**,
+  runs one SMTP transaction per session at a time, and reuses a session across
+  messages. Transient failures are retried with backoff; an `unknown` outcome
+  never is.
 - TLS is mandatory. There is no plaintext mode and no way to disable certificate
   or hostname verification.
-- You decide what to do about failures. Sendust reports them; it does not retry.
+- Delivery beyond the transport is yours: Sendust has no persistent queue, no
+  scheduler, and no worker process, so a restart loses whatever was queued.
 
 ## 2. Installation
 
-The package is published as the pre-release `0.1.0-rc.1`:
+The package is published as `@sendust/ts`, and `latest` resolves the stable
+`1.0.1`:
 
 ```text
-npm install @sendust/ts@0.1.0-rc.1
+npm install @sendust/ts
 ```
 
-Install the exact version or the `next` tag (`npm install @sendust/ts@next`). A
-bare `npm install @sendust/ts` resolves the `latest` tag, and it fails with
-`ETARGET No matching version found for @sendust/ts@*` when npm reads cached or
-mirrored metadata from before the publish, or when the consumer's own
-`package.json` declares `"@sendust/ts": "*"`, because a `*` range never matches
-a pre-release. `npm cache clean --force` drops the stale copy,
-`npm config get registry` should report `https://registry.npmjs.org/`, and the
-pinned command above always resolves.
+Pin it (`npm install @sendust/ts@1.0.1`) when an install must not float, or
+follow the `next` tag (`npm install @sendust/ts@next`, currently `1.0.0`). A bare
+install fails with `ETARGET No matching version found for @sendust/ts@*` when npm
+reads cached or mirrored metadata from before the publish, or when the consumer's
+own `package.json` declares `"@sendust/ts": "*"`, because a `*` range never
+matches a pre-release such as `0.1.0-rc.1`. `npm cache clean --force` drops the
+stale copy, `npm config get registry` should report
+`https://registry.npmjs.org/`, and the bare command above resolves again.
 
 To build the package from a checkout instead:
 
@@ -40,9 +44,9 @@ To build the package from a checkout instead:
 npm ci
 npm run build:native            # stages ts/sendust.node
 npm run build --workspace ts    # compiles dist/ (ESM and CommonJS)
-npm run prepare:publish         # artifacts/publish/sendust-ts-0.1.0.tgz
+npm run prepare:publish         # artifacts/publish/sendust-ts-1.0.1.tgz
 
-npm install ./artifacts/publish/sendust-ts-0.1.0.tgz
+npm install ./artifacts/publish/sendust-ts-1.0.1.tgz
 ```
 
 The publish manifest declares the per-platform packages as
@@ -138,7 +142,7 @@ The full contract is [the public API document](../architecture/public-api.md).
 
 ### `unknown` is not a retry signal
 
-The library never resends. Whether to retry an `unknown` outcome is your
+The library never resends an `unknown` outcome. Whether to retry one is your
 decision, and only with caller-level idempotency: the same message may already
 be in the queue of the relay. A safe pattern is a caller-generated idempotency
 key in `headers` plus a supplier-side dedupe rule, or accepting the risk of a

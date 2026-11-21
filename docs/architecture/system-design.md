@@ -13,7 +13,7 @@ sendust/
 ├── Cargo.toml
 ├── rust-toolchain.toml
 ├── Cargo.lock
-├── package.json                 # published root package manifest
+├── package.json                 # npm workspace root only, not published (ADR-0019)
 ├── crates/
 │   ├── sendust-core/
 │   │   ├── Cargo.toml
@@ -61,7 +61,7 @@ sendust/
 └── docs/
 ```
 
-The root `package.json` is the published artifact and npm workspace root. `ts/package.json` is the internal TypeScript wrapper workspace; one root `package-lock.json` is authoritative. Exact Rust/JavaScript tool versions and validation commands are owned by [the toolchain baseline](../engineering/toolchain-baseline.md). The release process composes the TypeScript wrapper into the root package. The exact split is decided in P14-002 and must not leak workspace paths into the published package.
+The root `package.json` is the npm workspace root only; the published artifact is `ts/package.json`, packed as `@sendust/ts` with the per-platform native packages declared as optional dependencies (ADR-0019, ADR-0020). One root `package-lock.json` is authoritative. Exact Rust/JavaScript tool versions and validation commands are owned by [the toolchain baseline](../engineering/toolchain-baseline.md). The release process packs `ts/`, and the published package must not leak workspace paths.
 
 ## 2. `sendust-core`
 

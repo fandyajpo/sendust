@@ -3,11 +3,20 @@
 **Applies to:** P14, P16, P17.  
 **Related:** [ADR-0011](../architecture/decisions/0011-platform-distribution.md), [release strategy](release-strategy.md), [requirements](../product/requirements.md) C-05, C-06, C-26, C-27.
 
+**Status:** §1 and §5 describe the original plan and are superseded by
+[ADR-0019](../architecture/decisions/0019-installable-typescript-package.md) and
+[ADR-0020](../architecture/decisions/0020-per-platform-native-packages.md). The
+published facade is `@sendust/ts`, built and packed from `ts/`, with five
+`@sendust/ts-<platform>-<arch>[-<libc>]` packages resolved as
+`optionalDependencies`. The no-postinstall, no-compiler-at-install and
+no-silent-fallback rules below still stand.
+
 ## 1. Distribution model
 
 Sendust ships prebuilt native addons as npm packages using the napi-rs model:
 
-- One root package: `sendust`.
+- One root package: `@sendust/ts` (ADR-0019; this plan first named it the
+  unscoped `sendust`).
 - One optional package per platform, for example:
   - `@sendust/darwin-arm64`
   - `@sendust/darwin-x64`

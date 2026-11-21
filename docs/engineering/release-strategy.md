@@ -54,7 +54,7 @@ Delivery semantics (`accepted` = relay acceptance), no-retry behavior, and lifec
 4. Confirm provenance and SBOM.
 5. Publish platform packages first, then the root package, using the documented napi-rs flow.
 6. Verify registry metadata:
-   - `npm view sendust@<version> --json`
+   - `npm view @sendust/ts@<version> --json`
    - optional dependency versions,
    - platform package `os`, `cpu`, `libc`,
    - tarball contents,

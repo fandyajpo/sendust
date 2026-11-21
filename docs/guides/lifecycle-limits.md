@@ -61,9 +61,9 @@ each session runs one SMTP transaction at a time.
 | Two `close()` calls | Both resolve; one shutdown |
 | Two transports | Independent queues, pools, and limits |
 
-Concurrency starts at one and grows after sustained success. A `4xx` final reply
-or a transient start failure halves it and starts a cooldown. Only transient
-failures are retried; `unknown` never is.
+Concurrency rises to the work already waiting, up to `delivery.maxConcurrent`. A
+`4xx` final reply or a transient start failure halves it and starts a cooldown.
+Only transient failures are retried; `unknown` never is.
 
 ## 4. Timeouts
 
@@ -109,8 +109,10 @@ Lowering a cap is allowed; raising it is not.
 
 ## 6. Operational guidance
 
-- **Do not retry inside the library's lifetime.** Sendust never retries. Decide
-  about an `unknown` outcome at the caller level, with idempotency in mind
+- **Do not retry an `unknown` outcome.** Sendust retries only a `4xx` final reply
+  or a connect or operation timeout before `DATA`, inside that message's own send
+  budget. An `unknown` disposition is never retried; decide about it at the
+  caller level, with idempotency in mind
   (see the [quick start](quick-start.md#unknown-is-not-a-retry-signal)).
 - **Close during shutdown.** Close every transport in the shutdown path, and
   await it. The 125 s close budget is above the 120 s send budget so a maximal

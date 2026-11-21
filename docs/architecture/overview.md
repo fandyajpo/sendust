@@ -11,7 +11,7 @@ Sendust is a two-crate Rust workspace plus a thin TypeScript package.
 
 ```text
 Consumer application (Node.js / Bun / Deno)
-        │  import { createTransport } from "sendust"
+        │  import { createTransport } from "@sendust/ts"
         ▼
 ts/src  ── public API, option shape, result/error classes, ESM+CJS entry points
         │  calls generated napi exports
