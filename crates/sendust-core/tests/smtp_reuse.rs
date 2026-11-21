@@ -91,9 +91,8 @@ async fn a_second_message_reuses_the_authenticated_session() {
 
 #[tokio::test]
 async fn an_abandoned_envelope_is_reset_before_the_session_is_reused() {
-    let server = serving(Script::default().rcpt_replies(vec![Reply::line(
-        "550 5.1.1 no such user",
-    )]));
+    let server =
+        serving(Script::default().rcpt_replies(vec![Reply::line("550 5.1.1 no such user")]));
     let mut delivery = delivery(config(server.addr()));
 
     let first = delivery.send(message()).await.expect("first send");
