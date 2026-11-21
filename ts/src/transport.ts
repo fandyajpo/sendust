@@ -387,6 +387,13 @@ export class Transport {
     // option always reports a Sendust error even where the addon is missing.
     const native = toNativeOptions(options);
     const reuse = reuseSettings(options.delivery);
+    // Every option that can throw is validated before a native transport
+    // exists, so a rejected value cannot leave one behind unclosed.
+    const settings = deliverySettings(
+      options.delivery,
+      options.timeouts?.closeMs ?? CLOSE_MS_DEFAULT,
+      options.timeouts?.totalMs ?? TOTAL_MS_DEFAULT,
+    );
     const nativeOptions: Record<string, unknown> = {
       ...native,
       maxMessagesPerSession: reuse.maxMessagesPerSession,
@@ -407,11 +414,8 @@ export class Transport {
     }
 
     this.#engine = new DeliveryEngine({
-      ...deliverySettings(
-        options.delivery,
-        options.timeouts?.closeMs ?? CLOSE_MS_DEFAULT,
-        options.timeouts?.totalMs ?? TOTAL_MS_DEFAULT,
-      ),
+      ...settings,
+      sessionIdleMs: reuse.sessionIdleMs,
       createTransport: () => {
         try {
           return new (loadNative().Transport)(nativeOptions);

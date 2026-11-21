@@ -60,9 +60,12 @@ paid one handshake per message: it reused objects, not sessions.
 
 **Negative / accepted**
 
-- A held session is a held socket. The descriptor-leak probes now cover a
-  transport that keeps a session open, and `close()` is the only thing that
-  releases it; a caller that never closes keeps one connection per transport.
+- A held session is a held socket. The descriptor-leak probes cover a transport
+  that keeps a session open. The delivery engine releases an idle session once
+  `delivery.sessionIdleMs` passes and `close()` releases it immediately, so a
+  transport that stops sending does not hold a relay connection indefinitely.
+  Before that release, a transport holds at most one connection per pooled
+  session.
 - A relay that silently expires idle sessions makes the first reused send fail.
   That failure surfaces as a normal connection error, is retried by the delivery
   engine (ADR-0021) only when it is pre-DATA and transient, and drops the

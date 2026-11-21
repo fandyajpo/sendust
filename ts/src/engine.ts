@@ -29,6 +29,12 @@ export interface EngineOptions {
   readonly closeMs: number;
   /** Whole-message budget across every attempt, so retries cannot multiply it. */
   readonly totalMs: number;
+  /**
+   * How long a native session may sit idle before the pool releases it. The
+   * core refuses to reuse a session past the same window; enforcing it here as
+   * well is what actually closes the socket.
+   */
+  readonly sessionIdleMs: number;
   /** Creates one more native transport. Called only while the pool may grow. */
   readonly createTransport: () => NativeTransport;
   /** The transport created eagerly by `Transport`, so construction validates. */
@@ -121,6 +127,7 @@ export class DeliveryEngine {
   #tokens = 1;
   #rateStamp = 0;
   #rateTimer: unknown;
+  #idleTimer: unknown;
 
   readonly #retries = new Set<Retry>();
   #closePromise: Promise<void> | undefined;
@@ -237,6 +244,11 @@ export class DeliveryEngine {
     if (this.#rateTimer !== undefined) {
       timers.clearTimeout(this.#rateTimer);
       this.#rateTimer = undefined;
+    }
+
+    if (this.#idleTimer !== undefined) {
+      timers.clearTimeout(this.#idleTimer);
+      this.#idleTimer = undefined;
     }
 
     // `closing` until every native session has finished closing, so a caller
@@ -479,14 +491,51 @@ export class DeliveryEngine {
   }
 
   #release(transport: NativeTransport): void {
-    if (this.#state === "closed") {
+    // Only an open engine re-pools a transport. While closing, `#closeImpl`
+    // owns every session it captured and awaits its close.
+    if (this.#state !== "open") {
       return;
     }
     const waiter = this.#waiters.shift();
     if (waiter) {
       waiter.resolve(transport);
-    } else {
-      this.#idle.push(transport);
+      return;
+    }
+    this.#idle.push(transport);
+    this.#armIdleRetire();
+  }
+
+  /**
+   * Releases idle native sessions once the reuse window ends.
+   *
+   * The core already refuses to reuse a stale session, but refusing is not the
+   * same as releasing: without this, a transport that sends one message and
+   * lives on would hold an authenticated relay connection open until the next
+   * send or `close()`. Retiring closes it with a polite `QUIT` and drops it
+   * from the pool, so a later message dials a fresh session.
+   */
+  #armIdleRetire(): void {
+    if (this.#state !== "open" || this.#idleTimer !== undefined) {
+      return;
+    }
+    if (this.#idle.length === 0 || this.#options.sessionIdleMs <= 0) {
+      return;
+    }
+    this.#idleTimer = timers.setTimeout(() => {
+      this.#idleTimer = undefined;
+      this.#retireIdle();
+    }, this.#options.sessionIdleMs);
+  }
+
+  #retireIdle(): void {
+    if (this.#state !== "open" || this.#idle.length === 0) {
+      return;
+    }
+    for (const transport of this.#idle.splice(0)) {
+      this.#all.delete(transport);
+      // Best effort: the message this session served has already settled, so a
+      // failed shutdown is not a caller's problem.
+      void transport.close().catch(() => undefined);
     }
   }
 }

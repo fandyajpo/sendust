@@ -8,7 +8,13 @@ tag format, version sources, and compatibility promises — are in
 
 ## [Unreleased]
 
-Nothing yet.
+### Fixed
+
+- An idle native session is released when `delivery.sessionIdleMs` elapses,
+  instead of waiting for the next send or `close()`. A service that sends one
+  message and stays up no longer holds an authenticated relay connection open.
+- A transport with an invalid `delivery` option no longer creates a native
+  transport before rejecting the option.
 
 ## [1.0.1] - 2026-11-21
 

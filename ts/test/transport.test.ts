@@ -195,6 +195,49 @@ describe("sendust facade", () => {
     expect(transport.state).toBe("closed");
   });
 
+  it.skipIf(!available)("releases an idle session after the reuse window", async () => {
+    const relay = await fakeTlsRelay();
+    const transport = createTransport({
+      host: "127.0.0.1",
+      port: relay.port,
+      secure: "tls",
+      tlsRootCertificate: tlsFixture("ca.crt"),
+      delivery: { sessionIdleMs: 40 },
+    });
+
+    try {
+      const first = await transport.send({
+        from: "a@example.test",
+        to: ["b@example.test"],
+        subject: "x",
+        text: "y",
+      });
+      expect(first.status).toBe("accepted");
+      expect(transport.stats.connections).toBe(1);
+
+      // The pool releases the socket on the idle window instead of holding it
+      // until the next send or close.
+      const deadline = Date.now() + 5_000;
+      while (transport.stats.connections > 0 && Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      expect(transport.stats.connections).toBe(0);
+
+      // The next message dials again rather than reusing a released session.
+      const second = await transport.send({
+        from: "a@example.test",
+        to: ["b@example.test"],
+        subject: "x",
+        text: "y",
+      });
+      expect(second.status).toBe("accepted");
+      expect(transport.stats.connections).toBe(1);
+    } finally {
+      await transport.close();
+      await relay.close();
+    }
+  });
+
   it.skipIf(!available)("aborts a send in flight and rejects it as TRANSPORT_CLOSED", async () => {
     // Accept the TCP connection and stay silent: the client is left waiting in
     // the TLS handshake, which only close can interrupt.

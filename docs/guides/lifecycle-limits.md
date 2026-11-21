@@ -65,6 +65,10 @@ Concurrency rises to the work already waiting, up to `delivery.maxConcurrent`. A
 `4xx` final reply or a transient start failure halves it and starts a cooldown.
 Only transient failures are retried; `unknown` never is.
 
+A session that sits idle for `delivery.sessionIdleMs` (30 s by default) is closed
+politely and dropped from the pool, so a transport that stops sending does not
+hold a relay connection open until shutdown.
+
 ## 4. Timeouts
 
 All budgets are finite, may only be **lowered**, and default to their maximum.
