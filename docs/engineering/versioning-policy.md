@@ -104,14 +104,15 @@ unsupported combination keeps failing closed with `CONFIG_NATIVE_UNAVAILABLE`.
 
 The frozen semantics are part of the contract: `accepted` means relay
 acceptance, never delivery; `unknown` after DATA is never an automatic retry;
-one transport runs one send and returns `BUSY` instead of queueing; close is
-explicit and bounded.
+one SMTP transaction runs per session at a time, with concurrent `send()` calls
+queued and pooled inside one transport; close is explicit and bounded.
 
 ## 6. Not provided, in any version of the MVP
 
-These are non-goals, not roadmap promises: mailbox delivery confirmation,
-automatic retry, connection pooling, an internal queue or scheduler, SMTPUTF8,
-URL or remote attachments, provider-specific transports, and plaintext SMTP.
+These are non-goals, not roadmap promises: mailbox delivery confirmation, a
+persistent queue, a worker process or scheduler, queue adapters, retries beyond
+one message's send budget, SMTPUTF8, URL or remote attachments,
+provider-specific transports, and plaintext SMTP.
 
 ## 7. Release flow
 

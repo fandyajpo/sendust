@@ -8,6 +8,12 @@ tag format, version sources, and compatibility promises — are in
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.0.2] - 2026-11-21
+
+A resource fix. No API, result, error code, option, or limit changed.
+
 ### Fixed
 
 - An idle native session is released when `delivery.sessionIdleMs` elapses,
@@ -15,6 +21,7 @@ tag format, version sources, and compatibility promises — are in
   message and stays up no longer holds an authenticated relay connection open.
 - A transport with an invalid `delivery` option no longer creates a native
   transport before rejecting the option.
+- The pool no longer re-pools a session that the close path already owns.
 
 ## [1.0.1] - 2026-11-21
 

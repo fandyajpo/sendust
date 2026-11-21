@@ -86,8 +86,8 @@ npm run build && npm start
 # then POST the same benchmark request as before, concurrency 5, count 100
 ```
 
-The published `1.0.0` does **not** contain these two fixes; they are unreleased.
-Until a `1.0.1` is published, a consumer only gets them from the repository.
+`1.0.1` carries both fixes and is the published `latest`; `1.0.0` does not have
+them.
 
 ## 6. Recommended production configuration
 
