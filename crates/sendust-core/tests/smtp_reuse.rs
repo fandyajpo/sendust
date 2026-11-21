@@ -13,7 +13,7 @@ use sendust_core::{
     SmtpSecurity, SmtpTransport,
 };
 use support::tls;
-use support::{AfterBody, FakeSmtp, Script};
+use support::{AfterBody, FakeSmtp, Reply, Script};
 
 fn tls_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))

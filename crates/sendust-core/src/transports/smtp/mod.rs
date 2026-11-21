@@ -642,7 +642,8 @@ impl SmtpTransport {
 }
 
 /// The envelope addresses, validated exactly once before the session opens.
-struct Envelope {    from: String,
+struct Envelope {
+    from: String,
     recipients: Vec<String>,
 }
 
