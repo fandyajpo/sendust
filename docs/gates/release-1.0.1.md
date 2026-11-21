@@ -56,6 +56,15 @@ byte-reproducibility claim is made for this release.
 
 ## 5. Publication
 
-From the CI `publish` job with `publish` checked. The dist-tag comes from
-`approved.json` (`latest`), so no separate tag step is needed. The tag `v1.0.1`
-is created on the approved commit and never moved.
+**Executed 2026-11-21.** The CI `publish` job ran on the `v1.0.1` candidate and
+published `@sendust/ts@1.0.1` and the five platform packages at `1.0.1`. The
+dist-tag came from `approved.json` (`latest`), so no separate tag step was
+needed. The tag `v1.0.1` points at the approved commit
+`cad80fd33afcd92914d1c6d3d91db01749abcb9e` and was not moved afterwards.
+
+Post-publication verification: the registry tarball from
+`npm pack @sendust/ts@1.0.1` reproduces the approved facade hash
+`004eb54a03656c1a4311b6b0d91f6f7efa6e3b7331992cdd94674e002ac1f56f`, `latest`
+resolves `1.0.1`, and a clean install adds two packages and reports
+`version 1.0.1`. The full table is in the
+[publication checklist](../engineering/publication-checklist.md) §5b.

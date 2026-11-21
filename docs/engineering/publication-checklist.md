@@ -1,8 +1,10 @@
 # Publication checklist and authorization (P17-003)
 
-**Status:** authorized and ready to execute from CI. Nothing has been published.
+**Status:** complete. `0.1.0-rc.1`, `1.0.0`, and `1.0.1` are published; the
+current record is §5b.
 **Date:** 2026-11-18.
-**Candidate:** `0.1.0-rc.1`, verified in the [RC verification record](../qa/rc-verification.md).
+**Original candidate:** `0.1.0-rc.1`, verified in the
+[RC verification record](../qa/rc-verification.md).
 
 ## 1. Publication inputs
 
@@ -106,6 +108,13 @@ The annotated tag `v0.1.0-rc.1` was created on the approved candidate commit on
 The annotated tag `v1.0.0` was created on `f1559344b8f6bc67a87300244f895f19a9cf5d3f`
 and pushed on 2026-11-19 (`refs/tags/v1.0.0`).
 
+The annotated tag `v1.0.1` was created on `cad80fd33afcd92914d1c6d3d91db01749abcb9e`
+and pushed on 2026-11-21 (`refs/tags/v1.0.1`, tag object
+`8432db90cfdef24ea0ea160bab44e805de742159`). It was first created at `377aa58` and
+moved to `cad80fd` before anything was published, because the earlier commit's
+tests still encoded the single-session behaviour; the
+[gate record](../gates/release-1.0.1.md) holds that history.
+
 ## 5a. 1.0.0 publication record
 
 **Published 2026-11-19** from the CI `publish` job: `@sendust/ts@1.0.0` and the
@@ -129,6 +138,26 @@ moved with `npm dist-tag add`, never by republishing. The owner ran that job on
 2026-11-19: `latest` and `next` both resolve `1.0.0`, and a bare
 `npm install @sendust/ts` installs `1.0.0`.
 
+## 5b. 1.0.1 publication record
+
+**Published 2026-11-21** from the CI `publish` job on the `v1.0.1` candidate:
+`@sendust/ts@1.0.1` and the five platform packages at `1.0.1`, with
+`optionalDependencies` pinned to the same version.
+
+| Check | Result |
+| --- | --- |
+| Registry version | `npm view @sendust/ts@1.0.1 version` → `1.0.1` |
+| Dist-tag | `npm view @sendust/ts dist-tags` → `latest` `1.0.1`; `next` `1.0.0` |
+| Platform packages | all five at `1.0.1` |
+| Optional dependencies | the five `@sendust/ts-*` entries at `1.0.1` |
+| Clean install | fresh directory: `added 2 packages`, then `version` → `1.0.1` |
+| Registry artifact hash | `npm pack @sendust/ts@1.0.1` → `004eb54a03656c1a4311b6b0d91f6f7efa6e3b7331992cdd94674e002ac1f56f`, the approved facade value |
+
+The published facade tarball is byte-identical to the approved candidate, so the
+release carries no caveat about which build went up. The `next` tag was left at
+`1.0.0`: a published version's tag is moved with the manual `dist-tag` job when a
+pre-release channel is wanted, and a bare `npm install` reads `latest`.
+
 ## 6. Authorization
 
 **APPROVED by the project owner on 2026-11-18.**
@@ -150,10 +179,11 @@ later change to the version reopens this gate. A Windows DLL that links to
 different bytes is not a hash mismatch under this policy: Windows is identified by
 the approved build inputs and the bundle's checksums, as
 [reproducible build](reproducible-build.md) records. The run completed on
-2026-11-18 and every post-publication check passed. Execution is ready: the `@sendust` organization exists, the owner
-reports the `NPM_TOKEN` secret is set, and the `Rust workspace` flake that failed
-the previous manual run is fixed in the PHASE-17 record. The remaining step is
-the owner's manual dispatch.
+2026-11-18 and every post-publication check passed, so this authorization is
+spent: the `@sendust` organization exists, the owner reports the `NPM_TOKEN`
+secret is set, and the `Rust workspace` flake that failed the previous manual
+run is fixed in the PHASE-17 record. The dispatches for `1.0.0` and `1.0.1` used
+the same path and are recorded in §5a and §5b.
 
 ## 7. Rollback
 

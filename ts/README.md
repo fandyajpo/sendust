@@ -8,7 +8,9 @@ configure. A result reports relay acceptance, never mailbox delivery.
 
 ## Status
 
-Pre-release. `0.1.0-rc.1` is published on npm as the `next` tag.
+Stable. `1.0.1` is published on npm and the `latest` tag resolves it. A
+published version is never replaced, so this file reaches npm with the next
+release.
 
 ## Usage
 

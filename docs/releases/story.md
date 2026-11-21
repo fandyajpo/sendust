@@ -118,7 +118,8 @@ Backoff kept its teeth: any temporary failure still halves the level and starts 
 cooldown, and a `421` now drops the session rather than reusing a channel the
 relay is closing.
 
-That is `1.0.1`.
+That is `1.0.1`, published on 2026-11-21; it is what a bare
+`npm install @sendust/ts` installs.
 
 ## 6. Version timeline
 
