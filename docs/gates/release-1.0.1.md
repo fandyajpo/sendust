@@ -42,12 +42,13 @@ byte-reproducibility claim is made for this release.
 
 ## 4. Known limitations at approval
 
-- Two tests encoded the old single-session behaviour and failed on the approved
-  commit: `ts/test/transport.test.ts` and `tests/runtime/behaviour.mjs` both
-  asserted one connection for two concurrent sends. They were corrected after the
-  commit by pinning a one-session pool, without touching any build input, so the
-  artifacts are identical. The publisher accepts a later commit whose build inputs
-  match for exactly this reason.
+- Two tests encoded the old single-session behaviour and failed on the original
+  candidate commit: `ts/test/transport.test.ts` and `tests/runtime/behaviour.mjs`
+  both asserted one connection for two concurrent sends. They were corrected by
+  pinning a one-session pool, and the approval and the tag were both moved to
+  `cad80fd33afcd92914d1c6d3d91db01749abcb9e`, where CI is green on all five
+  targets. No build input changed, so the facade tarball hash is the same one
+  measured before the correction. Nothing had been published when the tag moved.
 - The Gmail comparison has not been re-run: the expected p95 improvement is a
   projection derived from the owner's `1.0.0` measurement.
 - Provider quota policies remain a backlog item.

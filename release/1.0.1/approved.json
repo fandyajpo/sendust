@@ -1,6 +1,6 @@
 {
   "version": "1.0.1",
-  "commit": "377aa58570cdd591187e097bb58880bea27ad21d",
+  "commit": "cad80fd33afcd92914d1c6d3d91db01749abcb9e",
   "distTag": "latest",
   "facade": {
     "name": "@sendust/ts",
