@@ -19,6 +19,11 @@ node --version
 rustc --version
 cargo --version
 
+# musl targets default to a static crt, and rustc refuses to produce a cdylib
+# for one ("does not support these crate types"). A Node addon has to link the
+# same dynamic musl libc that Node itself uses, so the crt is dynamic here.
+export RUSTFLAGS="-C target-feature=-crt-static"
+
 node scripts/build-artifact.mjs
 
 node -e "
