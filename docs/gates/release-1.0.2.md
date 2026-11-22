@@ -57,7 +57,13 @@ byte-reproducibility claim is made for this release.
 
 ## 5. Publication
 
-Pin `release/1.0.2/approved.json`, create the annotated tag `v1.0.2` on the
-approved commit, and dispatch the CI `publish` workflow with `publish` checked.
-The dist-tag comes from `approved.json` (`latest`), so no separate tag step is
-needed. Nothing has been published at the time this record was written.
+**Executed 2026-11-21.** The CI `publish` job ran on the `v1.0.2` candidate and
+published `@sendust/ts@1.0.2` and the five platform packages at `1.0.2`. The
+dist-tag came from `approved.json` (`latest`), so no separate tag step was
+needed. The tag `v1.0.2` points at the approved commit
+`bc72a6c28edd7464fde3107579fa4fb5fbce5b7c` and was not moved afterwards.
+
+Post-publication verification: `npm pack @sendust/ts@1.0.2` reproduces the
+approved facade hash
+`90ce59433dc864e49dbe3f940f50d3a40788b808c8473216d9628507d48bd20a`, and
+`latest` resolves `1.0.2` while `next` stays on `1.0.0`.

@@ -118,7 +118,18 @@ Backoff kept its teeth: any temporary failure still halves the level and starts 
 cooldown, and a `421` now drops the session rather than reusing a channel the
 relay is closing.
 
-That is `1.0.1`, published on 2026-11-21; it is what a bare
+That is `1.0.1`.
+
+Then an audit of the whole delivery path found one thing the release notes had
+implied and the code had not done: an idle session stopped being **reused** after
+thirty seconds, but nothing closed it, so a service that sent one message and
+stayed up held an authenticated relay connection — and its TLS state — until the
+next send or `close()`. `1.0.2` releases it, and looks at the field properly:
+[the competitive landscape](../research/competitive-landscape.md) compares
+Sendust with Nodemailer, Upyo, EmailJS and the hosted-API SDKs, including the
+places Sendust currently loses.
+
+That is `1.0.2`, published on 2026-11-21; it is what a bare
 `npm install @sendust/ts` installs.
 
 ## 6. Version timeline
@@ -129,6 +140,7 @@ That is `1.0.1`, published on 2026-11-21; it is what a bare
 | `0.1.0-rc.1` | 2026-11-18 | First publication, npm `next`; one send at a time |
 | `1.0.0` | 2026-11-19 | Queue, pool, adaptive concurrency, bounded retries, session reuse |
 | `1.0.1` | 2026-11-21 | Demand-driven pool; one fewer round trip per message |
+| `1.0.2` | 2026-11-21 | Idle sessions released; options validated before the native transport |
 
 ## 7. What Sendust is now
 

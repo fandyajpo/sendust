@@ -52,9 +52,17 @@ Non-personas for MVP: marketing operators, campaign managers, mailbox hosting ad
 - TypeScript declarations, ESM and CommonJS loading.
 - Prebuilt native packages for a validated platform matrix.
 
-### Post-MVP candidates
+### After the MVP
 
-Connection pooling, carefully scoped retry research, SMTPUTF8, public AbortSignal cancellation, streaming attachments, additional transports, DKIM, and observability hooks may be evaluated separately. Queue/job orchestration and queue adapters are **held outside the current product roadmap**: no API, adapter contract, persistence model, worker, or implementation is being designed. See [MVP scope](mvp-scope.md) and the [feature matrix](../planning/feature-matrix.md).
+Connection pooling, bounded retries and session reuse shipped in `1.0.0`
+([ADR-0021](../architecture/decisions/0021-autonomous-delivery-engine.md),
+[ADR-0022](../architecture/decisions/0022-session-reuse.md)). Still candidates,
+each with its own decision: SMTPUTF8, public AbortSignal cancellation, streaming
+attachments, additional transports, DKIM, XOAUTH2, musl Linux builds, and
+observability hooks. Queue/job orchestration and queue adapters remain **outside
+the product**: no API, adapter contract, persistence model, worker, or
+implementation is being designed. See [MVP scope](mvp-scope.md) and the
+[feature matrix](../planning/feature-matrix.md).
 
 ### Explicit non-goals
 

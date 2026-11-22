@@ -1,7 +1,7 @@
 # Publication checklist and authorization (P17-003)
 
-**Status:** complete. `0.1.0-rc.1`, `1.0.0`, and `1.0.1` are published; the
-current record is §5b.
+**Status:** complete. `0.1.0-rc.1`, `1.0.0`, `1.0.1`, and `1.0.2` are published;
+the current record is §5c.
 **Date:** 2026-11-18.
 **Original candidate:** `0.1.0-rc.1`, verified in the
 [RC verification record](../qa/rc-verification.md).
@@ -157,6 +157,24 @@ The published facade tarball is byte-identical to the approved candidate, so the
 release carries no caveat about which build went up. The `next` tag was left at
 `1.0.0`: a published version's tag is moved with the manual `dist-tag` job when a
 pre-release channel is wanted, and a bare `npm install` reads `latest`.
+
+## 5c. 1.0.2 publication record
+
+**Published 2026-11-21** from the CI `publish` job on the `v1.0.2` candidate:
+`@sendust/ts@1.0.2` and the five platform packages at `1.0.2`, with
+`optionalDependencies` pinned to the same version.
+
+| Check | Result |
+| --- | --- |
+| Registry version | `npm view @sendust/ts dist-tags` → `latest` `1.0.2`, `next` `1.0.0` |
+| Registry artifact hash | `npm pack @sendust/ts@1.0.2` → `90ce59433dc864e49dbe3f940f50d3a40788b808c8473216d9628507d48bd20a`, the approved facade value |
+| Tag | `v1.0.2` → `bc72a6c28edd7464fde3107579fa4fb5fbce5b7c` |
+| Platform packages | all five at `1.0.2`, per the approved manifest |
+
+The published tarball reproduces the approved build byte for byte. A fresh
+clean-install run of `1.0.2` on the publishing machine is outstanding; the
+platform packages and optional dependency pins were checked from the registry
+metadata.
 
 ## 6. Authorization
 
