@@ -12,11 +12,12 @@ use crate::errors::{Error, ErrorCode};
 /// Maximum command line length including CRLF (RFC 5321 §4.5.3.1.6).
 pub const MAX_COMMAND_BYTES: usize = 512;
 
-/// AUTH mechanisms Sendust implements (ADR-0017).
+/// AUTH mechanisms Sendust implements (ADR-0017, ADR-0023).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AuthMechanism {
     Plain,
     Login,
+    XOAuth2,
 }
 
 impl AuthMechanism {
@@ -24,6 +25,7 @@ impl AuthMechanism {
         match self {
             Self::Plain => "PLAIN",
             Self::Login => "LOGIN",
+            Self::XOAuth2 => "XOAUTH2",
         }
     }
 }
@@ -75,8 +77,14 @@ impl Command {
                 None => format!("AUTH {}", mechanism.as_str()),
             },
             Self::AuthResponse { response } => {
-                validate_token(response, 12_288)?;
-                response.clone()
+                // RFC 7628: an XOAUTH2 error challenge is answered with an empty
+                // line so the relay can send its final failure reply.
+                if response.is_empty() {
+                    String::new()
+                } else {
+                    validate_token(response, 12_288)?;
+                    response.clone()
+                }
             }
             Self::MailFrom { address } => {
                 validate_address(address)?;
@@ -108,6 +116,13 @@ pub fn auth_plain_initial(user: &str, password: &str) -> String {
     raw.extend_from_slice(user.as_bytes());
     raw.push(0);
     raw.extend_from_slice(password.as_bytes());
+    STANDARD.encode(raw)
+}
+
+/// RFC 7628 initial response for AUTH XOAUTH2: the base64 of
+/// `user=<mailbox>\x01auth=Bearer <token>\x01\x01`.
+pub fn auth_xoauth2_initial(user: &str, token: &str) -> String {
+    let raw = format!("user={user}\u{1}auth=Bearer {token}\u{1}\u{1}");
     STANDARD.encode(raw)
 }
 

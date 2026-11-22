@@ -48,14 +48,24 @@ export interface SendResult {
 }
 
 /**
- * Relay credentials. `method` forces one AUTH mechanism; omit it to let the
- * engine prefer PLAIN and fall back to LOGIN from the relay's EHLO list. An
- * unadvertised forced mechanism fails the send rather than falling back.
+ * Relay credentials. Exactly one secret is required: `pass` for PLAIN/LOGIN, or
+ * `accessToken` for XOAUTH2 (ADR-0023).
+ *
+ * `method` forces one AUTH mechanism; omit it to let the engine prefer PLAIN and
+ * fall back to LOGIN from the relay's EHLO list. An unadvertised forced
+ * mechanism fails the send rather than falling back. XOAUTH2 is never chosen
+ * implicitly, because a bearer token is not a password.
+ *
+ * A function for `accessToken` is called once per native session — when the
+ * first transport is built and whenever the pool grows — and again only after
+ * that session is dropped. It must be synchronous; a token that needs an async
+ * refresh belongs to the caller, who can rebuild the transport instead.
  */
 export interface AuthOptions {
   readonly user: string;
-  readonly pass: string;
-  readonly method?: "plain" | "login";
+  readonly pass?: string;
+  readonly accessToken?: string | (() => string);
+  readonly method?: "plain" | "login" | "xoauth2";
 }
 
 /**

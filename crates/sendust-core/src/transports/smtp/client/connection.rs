@@ -373,6 +373,7 @@ impl Connection {
         let mechanism = choose_auth(
             self.capabilities.supports_auth(AuthMechanism::Plain),
             self.capabilities.supports_auth(AuthMechanism::Login),
+            self.capabilities.supports_auth(AuthMechanism::XOAuth2),
             preferred,
         )
         .ok_or_else(|| auth_error(ErrorCode::AuthUnsupported, None))?;
@@ -431,20 +432,51 @@ impl Connection {
 
                 confirm_auth(reply)
             }
+            AuthMechanism::XOAuth2 => {
+                // `password` carries the bearer token for this mechanism.
+                let reply = self
+                    .command(
+                        Command::Auth {
+                            mechanism: AuthMechanism::XOAuth2,
+                            initial_response: Some(auth_xoauth2_initial(user, password)),
+                        },
+                        Stage::Auth,
+                    )
+                    .await?;
+                if reply.value() != 334 {
+                    return confirm_auth(reply);
+                }
+
+                // RFC 7628: the 334 carries a base64 JSON error description that
+                // the client must not parse. Answer with an empty line so the
+                // relay sends its final failure reply, and report that.
+                let final_reply = self
+                    .command(
+                        Command::AuthResponse {
+                            response: String::new(),
+                        },
+                        Stage::Auth,
+                    )
+                    .await?;
+                confirm_auth(final_reply)
+            }
         }
     }
 }
 
 /// Chooses the AUTH mechanism: an explicit preference must be advertised,
-/// otherwise PLAIN is preferred over LOGIN.
+/// otherwise PLAIN is preferred over LOGIN. XOAUTH2 is never chosen implicitly
+/// because it needs a bearer token rather than a password.
 fn choose_auth(
     plain: bool,
     login: bool,
+    xoauth2: bool,
     preferred: Option<AuthMechanism>,
 ) -> Option<AuthMechanism> {
     match preferred {
         Some(AuthMechanism::Plain) if plain => Some(AuthMechanism::Plain),
         Some(AuthMechanism::Login) if login => Some(AuthMechanism::Login),
+        Some(AuthMechanism::XOAuth2) if xoauth2 => Some(AuthMechanism::XOAuth2),
         Some(_) => None,
         None if plain => Some(AuthMechanism::Plain),
         None if login => Some(AuthMechanism::Login),
@@ -480,18 +512,48 @@ mod tests {
 
     #[test]
     fn the_engine_prefers_plain_then_login() {
-        assert_eq!(choose_auth(true, true, None), Some(AuthMechanism::Plain));
-        assert_eq!(choose_auth(false, true, None), Some(AuthMechanism::Login));
-        assert_eq!(choose_auth(false, false, None), None);
+        assert_eq!(
+            choose_auth(true, true, false, None),
+            Some(AuthMechanism::Plain)
+        );
+        assert_eq!(
+            choose_auth(false, true, false, None),
+            Some(AuthMechanism::Login)
+        );
+        assert_eq!(choose_auth(false, false, false, None), None);
+    }
+
+    #[test]
+    fn xoauth2_is_never_chosen_implicitly() {
+        assert_eq!(
+            choose_auth(false, false, true, None),
+            None,
+            "a bearer token is not a password, so the caller has to ask for it"
+        );
+        assert_eq!(
+            choose_auth(true, false, true, Some(AuthMechanism::XOAuth2)),
+            Some(AuthMechanism::XOAuth2)
+        );
     }
 
     #[test]
     fn an_explicit_mechanism_must_be_advertised() {
         assert_eq!(
-            choose_auth(true, true, Some(AuthMechanism::Login)),
+            choose_auth(true, true, false, Some(AuthMechanism::Login)),
             Some(AuthMechanism::Login)
         );
-        assert_eq!(choose_auth(true, false, Some(AuthMechanism::Login)), None);
-        assert_eq!(choose_auth(false, true, Some(AuthMechanism::Plain)), None);
+        assert_eq!(
+            choose_auth(true, false, false, Some(AuthMechanism::Login)),
+            None
+        );
+        assert_eq!(
+            choose_auth(false, true, false, Some(AuthMechanism::Plain)),
+            None
+        );
+        assert_eq!(
+            choose_auth(true, true, false, Some(AuthMechanism::XOAuth2)),
+            None,
+            "XOAUTH2 requested but not advertised"
+        );
     }
 }

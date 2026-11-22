@@ -22,7 +22,9 @@ Sendust must own its email engine. Trusted infrastructure libraries remain in us
 
 - SMTP command serialization and response parsing, including multiline replies, line/response caps, and enhanced status codes (RFC 3463).
 - EHLO capability negotiation and STARTTLS upgrade sequencing (RFC 3207).
-- SMTP AUTH PLAIN and LOGIN (RFC 4954); other mechanisms are out of MVP scope.
+- SMTP AUTH PLAIN and LOGIN (RFC 4954); XOAUTH2 was added later by
+  [ADR-0023](0023-xoauth2-authentication.md), and other mechanisms stay out of
+  scope.
 - The session state machine: connect, greeting, EHLO, STARTTLS, AUTH, MAIL, RCPT, DATA, QUIT, and their failure transitions.
 - Dot-stuffing, the DATA terminator, and bounded I/O.
 - Stage-accurate outcome and error mapping through the existing taxonomy.

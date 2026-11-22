@@ -14,7 +14,7 @@ Sendust MVP is a production-usable npm package that sends one transactional emai
 ### SMTP
 
 - Implicit TLS and STARTTLS.
-- PLAIN and LOGIN authentication.
+- PLAIN and LOGIN authentication; XOAUTH2 added in 1.1.0 ([ADR-0023](../architecture/decisions/0023-xoauth2-authentication.md)).
 - Connect, operation, total, and close timeouts.
 - SMTP response classification.
 - Relay-accepted semantics.

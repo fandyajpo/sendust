@@ -68,7 +68,9 @@ describe("public contract types", () => {
       | "tlsRootCertificate"
       | "delivery"
     >();
-    expectTypeOf<keyof AuthOptions>().toEqualTypeOf<"user" | "pass" | "method">();
+    expectTypeOf<keyof AuthOptions>().toEqualTypeOf<
+      "user" | "pass" | "accessToken" | "method"
+    >();
     expectTypeOf<keyof TimeoutOptions>().toEqualTypeOf<
       "connectMs" | "operationMs" | "totalMs" | "closeMs"
     >();
@@ -103,7 +105,7 @@ describe("public contract types", () => {
         auth: {
           user: "u",
           pass: "p",
-          // @ts-expect-error only PLAIN and LOGIN can be forced
+          // @ts-expect-error only PLAIN, LOGIN and XOAUTH2 can be forced
           method: "cram-md5",
         },
       });

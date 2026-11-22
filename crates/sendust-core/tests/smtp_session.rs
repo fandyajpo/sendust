@@ -6,8 +6,7 @@ use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 
 use sendust_core::__internal::Session;
-use sendust_core::ErrorCode;
-use sendust_core::{SmtpConfig, SmtpSecurity};
+use sendust_core::{AuthMechanism, ErrorCode, SmtpConfig, SmtpSecurity};
 use support::tls;
 use support::{FakeSmtp, Reply, Script};
 
@@ -43,6 +42,109 @@ fn serving_starttls(script: Script) -> FakeSmtp {
 
 fn auth_ehlo() -> Reply {
     Reply::lines(&["250-sendust.test", "250-AUTH PLAIN LOGIN", "250 8BITMIME"])
+}
+
+fn xoauth2_ehlo() -> Reply {
+    Reply::lines(&["250-sendust.test", "250-AUTH XOAUTH2", "250 8BITMIME"])
+}
+
+/// Decodes the base64 payload of the single AUTH command in the trace.
+fn auth_payload(server: &FakeSmtp) -> String {
+    use base64::Engine as _;
+    let line = server
+        .trace()
+        .lines()
+        .into_iter()
+        .find(|line| line.to_ascii_uppercase().starts_with("AUTH"))
+        .expect("an AUTH command");
+    let encoded = line.split_whitespace().nth(2).expect("initial response");
+    String::from_utf8(
+        base64::engine::general_purpose::STANDARD
+            .decode(encoded)
+            .expect("base64"),
+    )
+    .expect("utf8")
+}
+
+#[tokio::test]
+async fn authenticates_with_xoauth2() {
+    let script = Script {
+        ehlo: xoauth2_ehlo(),
+        auth_flow: vec![Reply::line("235 2.7.0 Authentication successful")],
+        ..Script::default()
+    };
+    let server = serving(script);
+    let mut session = Session::open(&config(server.addr(), SmtpSecurity::ImplicitTls))
+        .await
+        .expect("open");
+
+    session
+        .authenticate(
+            "sender@example.test",
+            "ya29.a0Af.token",
+            Some(AuthMechanism::XOAuth2),
+        )
+        .await
+        .expect("authenticated");
+
+    assert_eq!(server.trace().count_prefix("AUTH"), 1);
+    assert_eq!(
+        auth_payload(&server),
+        "user=sender@example.test\u{1}auth=Bearer ya29.a0Af.token\u{1}\u{1}"
+    );
+}
+
+#[tokio::test]
+async fn an_xoauth2_error_challenge_gets_the_final_failure() {
+    let script = Script {
+        ehlo: xoauth2_ehlo(),
+        auth_flow: vec![
+            Reply::line("334 eyJzdGF0dXMiOiI0MDEifQ=="),
+            Reply::line("535 5.7.8 Username and Password not accepted"),
+        ],
+        ..Script::default()
+    };
+    let server = serving(script);
+    let mut session = Session::open(&config(server.addr(), SmtpSecurity::ImplicitTls))
+        .await
+        .expect("open");
+
+    let error = session
+        .authenticate(
+            "sender@example.test",
+            "expired-token",
+            Some(AuthMechanism::XOAuth2),
+        )
+        .await
+        .expect_err("rejected");
+
+    assert_eq!(error.code(), ErrorCode::AuthFailed);
+    assert_eq!(error.details().smtp_status(), Some(535));
+    assert!(!error.to_string().contains("expired-token"));
+    assert_eq!(server.trace().count_prefix("AUTH"), 1);
+}
+
+#[tokio::test]
+async fn xoauth2_that_is_not_advertised_is_unsupported() {
+    let script = Script {
+        ehlo: auth_ehlo(),
+        ..Script::default()
+    };
+    let server = serving(script);
+    let mut session = Session::open(&config(server.addr(), SmtpSecurity::ImplicitTls))
+        .await
+        .expect("open");
+
+    let error = session
+        .authenticate(
+            "sender@example.test",
+            "ya29.a0Af.token",
+            Some(AuthMechanism::XOAuth2),
+        )
+        .await
+        .expect_err("not advertised");
+    assert_eq!(error.code(), ErrorCode::AuthUnsupported);
+    assert_eq!(server.trace().count_prefix("AUTH"), 0);
 }
 
 #[tokio::test]

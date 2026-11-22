@@ -84,6 +84,16 @@ impl SmtpCredentials {
         self
     }
 
+    /// XOAUTH2 credentials: the mailbox plus a bearer token instead of a
+    /// password (ADR-0023). The token lives in the secret field, so it is
+    /// redacted and validated exactly like a password.
+    pub fn with_access_token(
+        username: impl Into<String>,
+        token: impl Into<String>,
+    ) -> Result<Self, Error> {
+        Self::new(username, token).map(|credentials| credentials.with_mechanism(AuthMechanism::XOAuth2))
+    }
+
     pub fn mechanism(&self) -> Option<AuthMechanism> {
         self.mechanism
     }

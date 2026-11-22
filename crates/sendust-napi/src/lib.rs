@@ -31,11 +31,14 @@ pub fn native_version() -> String {
     )
 }
 
-/// Relay credentials, copied into Rust-owned strings immediately.
+/// Relay credentials: a password for PLAIN/LOGIN, or a bearer token for
+/// XOAUTH2 (ADR-0023). Exactly one secret is set; the facade validates the
+/// combination first, and a direct native caller gets the same stable code.
 #[napi(object)]
 pub struct AuthOptions {
     pub user: String,
-    pub pass: String,
+    pub pass: Option<String>,
+    pub access_token: Option<String>,
     pub method: Option<String>,
 }
 
@@ -166,11 +169,17 @@ impl Transport {
         }
 
         if let Some(auth) = options.auth {
-            let mut credentials = SmtpCredentials::new(auth.user, auth.pass).map_err(to_napi)?;
+            let mut credentials = match (auth.access_token, auth.pass) {
+                (Some(token), None) => SmtpCredentials::with_access_token(auth.user, token),
+                (None, Some(pass)) => SmtpCredentials::new(auth.user, pass),
+                _ => Err(CoreError::new(ErrorCode::ValidationInvalidOption)),
+            }
+            .map_err(to_napi)?;
             if let Some(method) = auth.method {
                 let mechanism = match method.as_str() {
                     "plain" => AuthMechanism::Plain,
                     "login" => AuthMechanism::Login,
+                    "xoauth2" => AuthMechanism::XOAuth2,
                     _ => {
                         return Err(to_napi(CoreError::new(ErrorCode::ValidationInvalidOption)));
                     }

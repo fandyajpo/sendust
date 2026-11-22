@@ -26,6 +26,7 @@ Architectural decisions for Sendust. One decision per file. ADR-0016 defines the
 | [0020](0020-per-platform-native-packages.md) | Publish per-platform native packages resolved as optional dependencies | ACCEPTED (P14-003; supersedes ADR-0019's bundle layout) | P14-003, P14-004 |
 | [0021](0021-autonomous-delivery-engine.md) | Autonomous delivery engine: queue, pool, adaptive concurrency, bounded retries | ACCEPTED (project owner decision 2026-11-18; supersedes ADR-0006's no-pool/no-queue clause) | Post-MVP engine work |
 | [0022](0022-session-reuse.md) | Reuse one authenticated SMTP session across messages, reset by `RSET`, dropped on error or `unknown` | ACCEPTED (project owner decision 2026-11-19; adopts option B of the pooling research) | `crates/sendust-core/tests/smtp_reuse.rs` |
+| [0023](0023-xoauth2-authentication.md) | XOAUTH2 with a caller-supplied bearer token; never chosen implicitly, never refreshed by the library | ACCEPTED (project owner decision 2026-11-22) | `crates/sendust-core/tests/smtp_session.rs`, `ts/test/transport.test.ts` |
 | [0019](0019-installable-typescript-package.md) | Installable `@sendust/ts` package with the addon bundled; supersedes ADR-0011's packaging shape | ACCEPTED (project owner decision; packaging evidence P14-001 onward) | P14-001, P14-002 |
 
 ## ADR format

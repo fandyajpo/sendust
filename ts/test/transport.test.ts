@@ -117,7 +117,9 @@ async function fakeTlsRelay(
             continue;
           }
           if (line.startsWith("EHLO")) {
-            socket.write("250-sendust.test\r\n250 8BITMIME\r\n");
+            socket.write("250-sendust.test\r\n250-AUTH XOAUTH2 PLAIN LOGIN\r\n250 8BITMIME\r\n");
+          } else if (line.startsWith("AUTH")) {
+            socket.write("235 2.7.0 Authentication successful\r\n");
           } else if (line.startsWith("MAIL")) {
             socket.write("250 2.1.0 ok\r\n");
           } else if (line.startsWith("RCPT")) {
@@ -193,6 +195,61 @@ describe("sendust facade", () => {
     await Promise.all([transport.close(), transport.close()]);
 
     expect(transport.state).toBe("closed");
+  });
+
+  it.skipIf(!available)("authenticates with an XOAUTH2 access token", async () => {
+    const relay = await fakeTlsRelay();
+    const tokens: string[] = [];
+    const transport = createTransport({
+      host: "127.0.0.1",
+      port: relay.port,
+      secure: "tls",
+      tlsRootCertificate: tlsFixture("ca.crt"),
+      auth: {
+        user: "sender@example.test",
+        method: "xoauth2",
+        accessToken: () => {
+          const token = `ya29.token-${tokens.length + 1}`;
+          tokens.push(token);
+          return token;
+        },
+      },
+    });
+
+    try {
+      const result = await transport.send({
+        from: "sender@example.test",
+        to: ["recipient@example.test"],
+        subject: "x",
+        text: "y",
+      });
+      expect(result.status).toBe("accepted");
+      // One session, so the callback is read once.
+      expect(tokens).toHaveLength(1);
+    } finally {
+      await transport.close();
+      await relay.close();
+    }
+  });
+
+  it.skipIf(!available)("requires exactly one auth secret and a matching method", () => {
+    const base = { host: "127.0.0.1", port: 1, secure: "tls" as const };
+    const invalid = [
+      { user: "a@example.test" },
+      { user: "a@example.test", pass: "x", accessToken: "y" },
+      { user: "a@example.test", pass: "x", method: "xoauth2" as const },
+      { user: "a@example.test", accessToken: "y", method: "login" as const },
+    ];
+
+    for (const auth of invalid) {
+      try {
+        createTransport({ ...base, auth });
+        throw new Error(`expected ${JSON.stringify(auth)} to be rejected`);
+      } catch (error) {
+        expect(error).toBeInstanceOf(SendustValidationError);
+        expect((error as SendustError).code).toBe("VALIDATION_INVALID_OPTION");
+      }
+    }
   });
 
   it.skipIf(!available)("releases an idle session after the reuse window", async () => {

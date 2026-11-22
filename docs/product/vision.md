@@ -44,7 +44,7 @@ Non-personas for MVP: marketing operators, campaign managers, mailbox hosting ad
 ### MVP
 
 - SMTP over TLS (implicit TLS) and STARTTLS, with certificate verification.
-- PLAIN and LOGIN authentication against a relay.
+- PLAIN, LOGIN, and XOAUTH2 authentication against a relay.
 - One message per `send` call: From, To, CC, BCC, Reply-To, Subject, text, HTML, custom headers.
 - Buffer and opt-in local-file attachments.
 - MIME multipart composition with correct transfer encoding.

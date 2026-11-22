@@ -31,7 +31,7 @@ No plugin registry, no transport subclasses, no streaming API, no callback API, 
 | `host` | `string` | required | non-empty, no whitespace/control chars |
 | `port` | `number` | required | integer 1–65535 |
 | `secure` | `"tls" \| "starttls"` | required | one of the two; no plaintext mode |
-| `auth` | `{ user, pass, method? }` | undefined | user non-empty; `method` `"plain"` or `"login"` |
+| `auth` | `{ user, pass?, accessToken?, method? }` | undefined | user non-empty; exactly one of `pass` or `accessToken`; `method` `"plain"`, `"login"` or `"xoauth2"`, and `"xoauth2"` requires a token (ADR-0023); anything else is `VALIDATION_INVALID_OPTION` |
 | `ehloName` | `string` | `localhost` | one printable ASCII token: 1–255 bytes, no space, control or non-ASCII character |
 | `tlsRootCertificate` | `string` | none | one PEM bundle of trust anchors added on top of the bundled roots; never replaces them and never disables verification; a malformed PEM is `VALIDATION_INVALID_OPTION` (ADR-0018) |
 | `timeouts.connectMs` | `number` | 10000 | integer 1000–10000; ≤ totalMs |

@@ -30,6 +30,7 @@ impl Capabilities {
                         match word.to_ascii_uppercase().as_str() {
                             "PLAIN" => caps.auth.push(AuthMechanism::Plain),
                             "LOGIN" => caps.auth.push(AuthMechanism::Login),
+                            "XOAUTH2" => caps.auth.push(AuthMechanism::XOAuth2),
                             _ => {}
                         }
                     }

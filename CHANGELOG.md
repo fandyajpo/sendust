@@ -10,6 +10,14 @@ tag format, version sources, and compatibility promises — are in
 
 ### Added
 
+- `AUTH XOAUTH2` (RFC 7628) with a caller-supplied bearer token, so tenants that
+  disable password authentication — Microsoft 365, Google Workspace — can use
+  Sendust: `auth: { user, accessToken, method: "xoauth2" }`. The token may be a
+  string or a synchronous function read once per session. XOAUTH2 is never
+  chosen implicitly, the `334` error challenge is answered properly, and the
+  token is redacted exactly like a password
+  ([ADR-0023](docs/architecture/decisions/0023-xoauth2-authentication.md)).
+
 - `linux-x64-musl` and `linux-arm64-musl` native targets. The addon is built and
   loaded inside a musl container on the runner of that architecture, so Alpine
   and other musl images resolve a real package instead of failing closed with

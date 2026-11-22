@@ -14,6 +14,7 @@ import { loadNative, type NativeTransport } from "./loader.ts";
 import type {
   Address,
   Attachment,
+  AuthOptions,
   DeliveryOptions,
   Message,
   SendResult,
@@ -34,7 +35,7 @@ const TRANSPORT_KEYS = new Set([
   "tlsRootCertificate",
   "delivery",
 ]);
-const AUTH_KEYS = new Set(["user", "pass", "method"]);
+const AUTH_KEYS = new Set(["user", "pass", "accessToken", "method"]);
 const TIMEOUT_KEYS = new Set(["connectMs", "operationMs", "totalMs", "closeMs"]);
 const LIMIT_KEYS = new Set([
   "maxRecipients",
@@ -97,6 +98,73 @@ function assertKnownKeys(value: object, allowed: Set<string>): void {
       throw invalidOption();
     }
   }
+}
+
+/** One bearer token, validated as a non-empty string without control characters. */
+function resolveToken(value: string | (() => string) | undefined): string {
+  const resolved = typeof value === "function" ? value() : value;
+  if (
+    typeof resolved !== "string" ||
+    resolved.length === 0 ||
+    /[\u0000-\u001f\u007f]/.test(resolved)
+  ) {
+    throw invalidOption();
+  }
+  return resolved;
+}
+
+/**
+ * The `auth` record the native layer takes.
+ *
+ * Exactly one secret is required: `pass` for PLAIN/LOGIN or `accessToken` for
+ * XOAUTH2 (ADR-0023). A token function is stored as-is and resolved once per
+ * session, so a long-lived transport can hand each new session a fresh token.
+ */
+function nativeAuth(auth: AuthOptions): Record<string, unknown> {
+  const hasPass = auth.pass !== undefined;
+  const hasToken = auth.accessToken !== undefined;
+  if (hasPass === hasToken) {
+    // Neither leaves nothing to authenticate with; both make the intended
+    // mechanism ambiguous.
+    throw invalidOption();
+  }
+  if (auth.method === "xoauth2" && !hasToken) {
+    throw invalidOption();
+  }
+  if (auth.method !== undefined && auth.method !== "xoauth2" && !hasPass) {
+    throw invalidOption();
+  }
+
+  if (hasToken) {
+    return {
+      user: auth.user,
+      accessToken:
+        typeof auth.accessToken === "function" ? auth.accessToken : resolveToken(auth.accessToken),
+      method: "xoauth2",
+    };
+  }
+  return { user: auth.user, pass: auth.pass, method: auth.method };
+}
+
+/**
+ * Resolves a per-session bearer token immediately before a native transport is
+ * built: once for the first session and once per pool growth.
+ */
+function withFreshToken(
+  native: Record<string, unknown>,
+  options: TransportOptions,
+): Record<string, unknown> {
+  const auth = options.auth;
+  if (!auth || auth.accessToken === undefined) {
+    return native;
+  }
+  return {
+    ...native,
+    auth: {
+      ...(native.auth as Record<string, unknown>),
+      accessToken: resolveToken(auth.accessToken),
+    },
+  };
 }
 
 /** One delivery option, clamped to its documented range. */
@@ -249,11 +317,7 @@ function toNativeOptions(options: TransportOptions): Record<string, unknown> {
   };
 
   if (options.auth) {
-    native.auth = {
-      user: options.auth.user,
-      pass: options.auth.pass,
-      method: options.auth.method,
-    };
+    native.auth = nativeAuth(options.auth);
   }
   if (options.ehloName !== undefined) {
     native.ehloName = options.ehloName;
@@ -408,7 +472,7 @@ export class Transport {
     // construction, and a missing addon fails here rather than on first send.
     let first: NativeTransport;
     try {
-      first = new (loadNative().Transport)(nativeOptions);
+      first = new (loadNative().Transport)(withFreshToken(nativeOptions, options));
     } catch (error) {
       rethrow(error);
     }
@@ -418,7 +482,7 @@ export class Transport {
       sessionIdleMs: reuse.sessionIdleMs,
       createTransport: () => {
         try {
-          return new (loadNative().Transport)(nativeOptions);
+          return new (loadNative().Transport)(withFreshToken(nativeOptions, options));
         } catch (error) {
           return rethrow(error);
         }
