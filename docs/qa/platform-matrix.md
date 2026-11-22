@@ -26,8 +26,8 @@ Artifact naming: `sendust-<os>-<arch>[-<libc>].node`
 | Linux | x64 | glibc | `ubuntu-24.04` | `x86_64-unknown-linux-gnu` | `sendust-linux-x64-gnu.node` | CI BUILD + LOAD: PASS |
 | Linux | arm64 | glibc | `ubuntu-24.04-arm` | `aarch64-unknown-linux-gnu` | `sendust-linux-arm64-gnu.node` | CI BUILD + LOAD: PASS |
 | Windows | x64 | MSVC | `windows-2022` | `x86_64-pc-windows-msvc` | `sendust-windows-x64.node` | CI BUILD + LOAD: PASS |
-| Linux | x64 | musl | `ubuntu-24.04` in `node:22.23.5-alpine` | `x86_64-unknown-linux-musl` | `sendust-linux-x64-musl.node` | CI BUILD + LOAD: PENDING FIRST RUN |
-| Linux | arm64 | musl | `ubuntu-24.04-arm` in `node:22.23.5-alpine` | `aarch64-unknown-linux-musl` | `sendust-linux-arm64-musl.node` | CI BUILD + LOAD: PENDING FIRST RUN |
+| Linux | x64 | musl | `ubuntu-24.04` + `node:22.23.5-alpine` | `x86_64-unknown-linux-musl` | `sendust-linux-x64-musl.node` | CI BUILD + LOAD: PASS |
+| Linux | arm64 | musl | `ubuntu-24.04-arm` + `node:22.23.5-alpine` | `aarch64-unknown-linux-musl` | `sendust-linux-arm64-musl.node` | CI BUILD + LOAD: PASS |
 
 Every row builds with the pinned Rust 1.100.0 toolchain on a native runner via `npm run build:artifact`, which compiles `sendust-napi` and stages `sendust-<os>-<arch>[-<libc>].node` under `artifacts/`. The same runner then loads the artifact to prove it is the target it claims to be — no cross-compiled, unloaded binary counts. The feature set is identical everywhere: Node-API 8 (`napi8`, `async`), `rustls` with the `ring` provider and `webpki-roots`, no `native-tls`, no alternate verifier. The architecture check enforces those rules for every build, so no target can weaken TLS.
 

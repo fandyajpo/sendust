@@ -124,24 +124,24 @@ CI runs the same three steps on each matrix runner, after staging that runner's 
 P14-004 is complete. Every target — linux-x64-gnu, linux-arm64-gnu, macos-arm64, macos-x64 and windows-x64 — installs from local artifacts, loads its own binary through the published layout, sends to a loopback relay, rejects a concurrent send as BUSY, closes bounded, and reports both failure paths with the typed code. The native addon and the TypeScript facade both load and keep the public error contract on Node.js, Bun, and Deno for every target. Unsupported combinations are absent from the matrix, and no target claims support beyond what these runs observed. P14-005 consolidates this with the QA and performance evidence for the phase gate.
 
 
-## Linux musl — pending first CI run (2026-11-22)
+## Linux musl — validated in CI (2026-11-22)
 
 Alpine and other musl images had no build, so an install there failed closed
-with `CONFIG_NATIVE_UNAVAILABLE`. Two targets are now implemented and wired into
-the release pipeline; this section records what is in the tree and what is still
-needed before either becomes a support claim.
+with `CONFIG_NATIVE_UNAVAILABLE`. Both targets now build, load and pass the same
+suite as every other target, in a musl userland of their own.
 
 | Item | State |
 | --- | --- |
 | Loader keys (`linux-x64-musl`, `linux-arm64-musl`) | Added to `ts/src/loader.ts`; `ts/test/platform.test.ts` pins the package names |
 | Packaging metadata (`os`, `cpu`, `libc`) | `scripts/pack-platform.mjs` emits `libc: ["musl"]` for both keys |
-| Release manifest and evidence | `scripts/assemble-rc.mjs` accepts both keys; `scripts/verify-platform.mjs` knows the target names |
-| CI job | `artifacts-musl`: `ubuntu-24.04` and `ubuntu-24.04-arm` run `docker run node:22.23.5-alpine sh scripts/ci-musl.sh`, which installs the pinned Rust toolchain (host triple `<arch>-unknown-linux-musl`) and then the same build → load → `npm ci` → facade build → publish manifest → behaviour suite → `verify:platform` → behaviour harness path as every other target |
-| Build-and-load evidence | **PENDING** — the job has not run yet |
-| Clean-consumer install on musl | **PENDING** — `verify-platform.mjs` runs it in the job |
+| Release manifest and evidence | `scripts/assemble-rc.mjs` accepts both keys; `scripts/verify-platform.mjs` knows the target names and now declares `libc`, so a glibc host no longer installs the musl package |
+| CI job | `artifacts-musl`: `ubuntu-24.04` and `ubuntu-24.04-arm` run `docker run node:22.23.5-alpine sh scripts/ci-musl.sh`, which builds with `RUSTFLAGS=-C target-feature=-crt-static` (a musl cdylib cannot use the static crt) and then runs the same build → load → `npm ci` → facade build → publish manifest → behaviour suite → `verify:platform` → behaviour harness path as every other target |
+| Build-and-load evidence | PASS — `Native artifact (musl, linux-x64-musl)` 1m30s and `(musl, linux-arm64-musl)` 1m33s on `f6576de` (jobs 137083180984 and 137083180976) |
+| Clean-consumer install on musl | PASS — `verify-platform.mjs` installed only the matching package and loaded it through the loader |
 | Bun and Deno on musl | **Not claimed.** Those checks skip on musl until a runtime passes them |
-| Publication | Deferred until the rows above are green and a release includes the packages |
+| Publication | Pending: the two packages ship with the next release |
 
 The rule this section protects is unchanged: a target is either in the matrix
-with passing, runner-recorded evidence, or absent. Nothing here is advertised
-before the job is green.
+with passing, runner-recorded evidence, or absent. Both rows above are PASS on
+that evidence; the packages are absent from the registry until the next release
+publishes them.

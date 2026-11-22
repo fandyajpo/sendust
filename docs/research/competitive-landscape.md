@@ -52,8 +52,9 @@ What it actually guarantees, from the code rather than the README:
   session reused for up to 100 messages or 30 s idle, then released.
 - **Runtimes:** Node.js ≥ 22.23.5, Bun 1.4.4, Deno 2.9.8 (FFI, local
   `node_modules`). Platforms: `linux-x64-gnu`, `linux-arm64-gnu`,
-  `macos-x64`, `macos-arm64`, `windows-x64`, with `linux-x64-musl` and
-  `linux-arm64-musl` implemented and pending their first green CI run.
+  `macos-x64`, `macos-arm64`, `windows-x64`, plus `linux-x64-musl` and
+  `linux-arm64-musl`, which are built and tested in CI and published with the
+  next release.
 
 ## 2. Feature comparison
 
@@ -218,9 +219,9 @@ engine and a real contract", not "a better provider".
 
 1. **Alpine / musl Linux was unsupported.** `linux-x64-gnu` and
    `linux-arm64-gnu` only, so `node:alpine` failed closed with
-   `CONFIG_NATIVE_UNAVAILABLE`. Both musl targets are implemented as of
-   2026-11-22 (loader, packaging, CI job); they become a support claim and a
-   published package with the next release.
+   `CONFIG_NATIVE_UNAVAILABLE`. Both musl targets now build, load and pass their
+   suite in a musl container as of 2026-11-22; the packages ship with the next
+   release and are absent from the registry until then.
 2. **No OAuth2.** Tenants that disable basic auth (Microsoft 365, Google
    Workspace with modern policy) cannot use Sendust at all, because `PLAIN` and
    `LOGIN` are the only mechanisms.
