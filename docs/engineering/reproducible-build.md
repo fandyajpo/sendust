@@ -124,3 +124,23 @@ candidate at P16-005.
 - [Versioning policy](versioning-policy.md) — version sources and tags.
 - [Release strategy](release-strategy.md) — publication and rollback.
 - [Platform validation](../qa/platform-validation.md) — the artifact set.
+
+
+## 7. The facade tarball is runner-specific (2026-11-22)
+
+`npm pack` output is deterministic *for a given npm and zlib build*, not across
+operating systems: the same commit produced
+`b8335d85…` on macOS and `d19b8516…` on `ubuntu-24.04` for `1.1.0`. The publish
+job rebuilds the facade on the runner and compares it with
+`release/<version>/approved.json`, so the approved facade hash must come from a
+CI build of the approved commit — never from a developer machine.
+
+The rule this changes:
+
+- The approved facade hash is the one the `publish` job's own build produces on
+  the release runner; record it from a publish run that reached the hash check,
+  or from an equivalent `ubuntu-24.04` build with the pinned npm.
+- Per-target binaries keep the rule they already had: byte equality only for the
+  targets listed in `byteReproducible`, and build-input identity everywhere else.
+- A hash mismatch is a pinning error, not a compromised artifact, unless the
+  source or the pinned npm version also changed.

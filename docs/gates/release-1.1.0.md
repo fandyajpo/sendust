@@ -48,11 +48,18 @@ stays valid and installable.
 ## 3. Binary verification
 
 `release/1.1.0/approved.json` pins the approved commit, the dist-tag, the facade
-tarball hash `b8335d85…`, and all seven platform entries. Per-target binaries are
+tarball hash `d19b8516…`, and all seven platform entries. Per-target binaries are
 identified by the approval bundle's own `SHA256SUMS`, which the publisher
 verifies against the packed tarballs; no byte-reproducibility claim is made for
 this release. The publish job fails if any of the seven artifacts is missing, so
 a partial musl release cannot be published by accident.
+
+**The facade hash is the CI one.** The first pin carried a hash produced by a
+macOS build of the same commit; the publish job rebuilt it on `ubuntu-24.04` and
+refused, because `npm pack` output is not byte-identical across operating
+systems. The value above is what the publish job's own build produced on
+`9fa2f73`, so it is the only honest pin. See
+[reproducible build](../engineering/reproducible-build.md) §7.
 
 ## 4. Known limitations at approval
 

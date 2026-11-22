@@ -4,7 +4,7 @@
   "distTag": "latest",
   "facade": {
     "name": "@sendust/ts",
-    "sha256": "b8335d85718fa4578e1ad390b2c79c3431ed4d2e75f01c68c7471ebed275a2a5"
+    "sha256": "d19b85166073e60382f40cddbb6a096208336497812536a3ee2d0d26cd70f2e5"
   },
   "artifacts": {
     "linux-x64-gnu": null,
