@@ -45,6 +45,7 @@ const shell = process.platform === "win32";
 
 const OS = { "linux-x64-gnu": "linux", "linux-arm64-gnu": "linux", "linux-x64-musl": "linux", "linux-arm64-musl": "linux", "macos-x64": "darwin", "macos-arm64": "darwin", "windows-x64": "win32" };
 const CPU = { x64: "x64", arm64: "arm64" };
+const LIBC = { "linux-x64-gnu": ["glibc"], "linux-arm64-gnu": ["glibc"], "linux-x64-musl": ["musl"], "linux-arm64-musl": ["musl"] };
 
 const FACADE_CHECK = `
 import { createTransport } from '@sendust/ts';
@@ -127,7 +128,7 @@ const baseManifest = JSON.parse(readFileSync(join(root, "ts", "package.json"), "
 
 /** The manifest of one `@sendust/ts-<platform>-<arch>` package. */
 function platformManifest(key) {
-  return {
+  const manifest = {
     name: `@sendust/ts-${key}`,
     version: "0.1.0",
     description: `Sendust native addon for ${key}`,
@@ -138,6 +139,12 @@ function platformManifest(key) {
     license: "MIT OR Apache-2.0",
     private: true,
   };
+  // Without this, a glibc host installs the musl package too: Linux has two
+  // C libraries and `os` + `cpu` cannot tell them apart.
+  if (LIBC[key]) {
+    manifest.libc = LIBC[key];
+  }
+  return manifest;
 }
 
 /** A platform package folder: the real addon for this target, placeholders elsewhere. */

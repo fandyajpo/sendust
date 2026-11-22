@@ -136,7 +136,7 @@ needed before either becomes a support claim.
 | Loader keys (`linux-x64-musl`, `linux-arm64-musl`) | Added to `ts/src/loader.ts`; `ts/test/platform.test.ts` pins the package names |
 | Packaging metadata (`os`, `cpu`, `libc`) | `scripts/pack-platform.mjs` emits `libc: ["musl"]` for both keys |
 | Release manifest and evidence | `scripts/assemble-rc.mjs` accepts both keys; `scripts/verify-platform.mjs` knows the target names |
-| CI job | `artifacts-musl`: `node:22.23.5-alpine` on `ubuntu-24.04` and `ubuntu-24.04-arm`, rustup toolchain from `rust-toolchain.toml`, then the same build → load → `npm ci` → facade build → publish manifest → behaviour suite → `verify:platform` → behaviour harness path as the other targets |
+| CI job | `artifacts-musl`: `ubuntu-24.04` and `ubuntu-24.04-arm` run `docker run node:22.23.5-alpine sh scripts/ci-musl.sh`, which installs the pinned Rust toolchain (host triple `<arch>-unknown-linux-musl`) and then the same build → load → `npm ci` → facade build → publish manifest → behaviour suite → `verify:platform` → behaviour harness path as every other target |
 | Build-and-load evidence | **PENDING** — the job has not run yet |
 | Clean-consumer install on musl | **PENDING** — `verify-platform.mjs` runs it in the job |
 | Bun and Deno on musl | **Not claimed.** Those checks skip on musl until a runtime passes them |
