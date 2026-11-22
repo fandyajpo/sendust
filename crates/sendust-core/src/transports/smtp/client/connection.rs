@@ -18,7 +18,9 @@ use tokio_rustls::client::TlsStream;
 use crate::config::{SendDeadlines, Timeouts};
 use crate::errors::{Error, ErrorCode, ErrorDetails, Stage};
 use crate::transports::smtp::proto::capabilities::Capabilities;
-use crate::transports::smtp::proto::command::{AuthMechanism, Command, auth_plain_initial};
+use crate::transports::smtp::proto::command::{
+    AuthMechanism, Command, auth_plain_initial, auth_xoauth2_initial,
+};
 use crate::transports::smtp::proto::response::{MAX_LINE_BYTES, Reply, ReplyBuilder};
 use crate::transports::smtp::{SmtpConfig, SmtpSecurity};
 use base64::Engine as _;
