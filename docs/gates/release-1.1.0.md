@@ -1,0 +1,69 @@
+# Release gate — 1.1.0
+
+**Decision:** AWAITING PROJECT OWNER APPROVAL. Nothing is published or tagged
+for this candidate yet; the agent does not approve this gate.
+**Release:** `@sendust/ts@1.1.0`, dist-tag `latest`.
+**Related:** [release notes](../releases/1.1.0.md),
+[ADR-0020](../architecture/decisions/0020-per-platform-native-packages.md),
+[ADR-0023](../architecture/decisions/0023-xoauth2-authentication.md),
+[platform matrix](../qa/platform-matrix.md),
+[versioning policy](../engineering/versioning-policy.md).
+
+## 1. Scope
+
+Two additive features, chosen from the audit's install blockers:
+
+- **Linux musl**: `linux-x64-musl` and `linux-arm64-musl`, built and loaded
+  inside a musl container per architecture, packaged with `libc: ["musl"]`
+  (`ts/src/loader.ts`, `scripts/pack-platform.mjs`, `scripts/ci-musl.sh`,
+  `artifacts-musl` CI job).
+- **XOAUTH2**: `AUTH XOAUTH2` in the core, a bearer-token credential in the
+  adapter, and `auth.accessToken` in the facade
+  (`crates/sendust-core/src/transports/smtp/`, `crates/sendust-napi/src/lib.rs`,
+  `ts/src/transport.ts`, `ts/src/types.ts`).
+
+Minor is the correct bump under the [versioning policy](../engineering/versioning-policy.md):
+a new platform target and a new optional option are both minor, and `1.0.x`
+stays valid and installable.
+
+## 2. Candidate checklist
+
+| Check | Evidence |
+| --- | --- |
+| Owner approval recorded | Not yet — this record is the candidate |
+| Public contract | `public-api.md`, `error-model.md`, `types.ts` updated; no existing code, result or default changed |
+| Rust suite, clippy, fmt | CI `Rust workspace`, plus a local full run (179 unit tests) |
+| TypeScript typecheck, tests, format | CI `TypeScript` jobs; 74 tests locally |
+| Runtime behaviour on Node.js | `tests/runtime/behaviour.mjs`, 16/16 |
+| Seven native targets | CI `Native artifact` jobs, including both musl rows |
+| musl build and load | `scripts/ci-musl.sh` inside `node:22.23.5-alpine`, `ubuntu-24.04` and `ubuntu-24.04-arm` |
+| Release candidate bundle | CI `Release candidate bundle` |
+| New behaviour pinned | `crates/sendust-core/tests/smtp_session.rs`, `ts/test/transport.test.ts` |
+| Version consistent | `scripts/check-versions.mjs` at 1.1.0 |
+| Documentation guards | `npm run check`, `check-secrets.mjs` |
+| Rollback plan | Deprecate `1.1.0` and publish a patch; never republish a version |
+
+## 3. Binary verification
+
+On approval, `release/1.1.0/approved.json` pins the approved commit, the
+dist-tag, the facade tarball hash, and the seven platform entries. Per-target
+binaries are identified by the approval bundle's own `SHA256SUMS`, which the
+publisher verifies against the packed tarballs; no byte-reproducibility claim is
+made for this release. The publish job fails if any of the seven artifacts is
+missing, so a partial musl release cannot be published by accident.
+
+## 4. Known limitations at approval
+
+- The XOAUTH2 path has no live tenant evidence; it is proven against a scripted
+  relay only.
+- Bun and Deno are not claimed on musl.
+- The Gmail benchmark has not been re-run against `1.0.x`/`1.1.0`.
+- Publishing still uses the owner's bypass-2FA token until 2027, and this
+  release carries no npm provenance attestation.
+
+## 5. Publication
+
+After approval: pin `release/1.1.0/approved.json`, create the annotated tag
+`v1.1.0` on the approved commit, and dispatch the CI `publish` workflow with
+`publish` checked and the `distTag` input empty. The tag comes from
+`approved.json` (`latest`), so no separate step is needed.

@@ -8,6 +8,14 @@ tag format, version sources, and compatibility promises — are in
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.1.0] - 2026-11-22
+
+Reach, not features: the two things that stopped a real team from using Sendust
+— a missing Alpine build and no OAuth 2.0 authentication. No result, error code,
+limit or default changed for existing callers.
+
 ### Added
 
 - `AUTH XOAUTH2` (RFC 7628) with a caller-supplied bearer token, so tenants that

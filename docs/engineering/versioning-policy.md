@@ -80,8 +80,9 @@ Rules:
 
 Support is exactly what PHASE-14 validated, and nothing broader:
 
-- Node.js 22.23.5 on `linux-x64-gnu`, `linux-arm64-gnu`, `macos-arm64`,
-  `macos-x64`, `windows-x64`.
+- Node.js 22.23.5 on `linux-x64-gnu`, `linux-arm64-gnu`, `linux-x64-musl`,
+  `linux-arm64-musl`, `macos-arm64`, `macos-x64`, `windows-x64` (musl added in
+  `1.1.0`).
 - Node.js 24.22.3 and 26.13.1: tested at the suite level, not gated for the
   native matrix.
 - Bun 1.4.4 and Deno 2.9.8: tarball install, smokes, and the behaviour harness.
