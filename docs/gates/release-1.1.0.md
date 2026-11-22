@@ -1,8 +1,10 @@
 # Release gate — 1.1.0
 
-**Decision:** AWAITING PROJECT OWNER APPROVAL. Nothing is published or tagged
-for this candidate yet; the agent does not approve this gate.
+**Decision:** APPROVED — project owner, 2026-11-22. The owner reviewed the
+candidate, reported CI green on `dd4336b`, and asked to continue; publication is
+their dispatch.
 **Release:** `@sendust/ts@1.1.0`, dist-tag `latest`.
+**Candidate commit:** `dd4336b4d30a50cdc2b2f3d3fba264b470087016`.
 **Related:** [release notes](../releases/1.1.0.md),
 [ADR-0020](../architecture/decisions/0020-per-platform-native-packages.md),
 [ADR-0023](../architecture/decisions/0023-xoauth2-authentication.md),
@@ -30,7 +32,7 @@ stays valid and installable.
 
 | Check | Evidence |
 | --- | --- |
-| Owner approval recorded | Not yet — this record is the candidate |
+| Owner approval recorded | This record, 2026-11-22 |
 | Public contract | `public-api.md`, `error-model.md`, `types.ts` updated; no existing code, result or default changed |
 | Rust suite, clippy, fmt | CI `Rust workspace`, plus a local full run (179 unit tests) |
 | TypeScript typecheck, tests, format | CI `TypeScript` jobs; 74 tests locally |
@@ -45,12 +47,12 @@ stays valid and installable.
 
 ## 3. Binary verification
 
-On approval, `release/1.1.0/approved.json` pins the approved commit, the
-dist-tag, the facade tarball hash, and the seven platform entries. Per-target
-binaries are identified by the approval bundle's own `SHA256SUMS`, which the
-publisher verifies against the packed tarballs; no byte-reproducibility claim is
-made for this release. The publish job fails if any of the seven artifacts is
-missing, so a partial musl release cannot be published by accident.
+`release/1.1.0/approved.json` pins the approved commit, the dist-tag, the facade
+tarball hash `b8335d85…`, and all seven platform entries. Per-target binaries are
+identified by the approval bundle's own `SHA256SUMS`, which the publisher
+verifies against the packed tarballs; no byte-reproducibility claim is made for
+this release. The publish job fails if any of the seven artifacts is missing, so
+a partial musl release cannot be published by accident.
 
 ## 4. Known limitations at approval
 
@@ -63,7 +65,8 @@ missing, so a partial musl release cannot be published by accident.
 
 ## 5. Publication
 
-After approval: pin `release/1.1.0/approved.json`, create the annotated tag
-`v1.1.0` on the approved commit, and dispatch the CI `publish` workflow with
-`publish` checked and the `distTag` input empty. The tag comes from
-`approved.json` (`latest`), so no separate step is needed.
+Pin `release/1.1.0/approved.json`, create the annotated tag `v1.1.0` on the
+approved commit, and dispatch the CI `publish` workflow with `publish` checked
+and the `distTag` input empty. The tag comes from `approved.json` (`latest`), so
+no separate step is needed. Nothing has been published at the time this record
+was written.
