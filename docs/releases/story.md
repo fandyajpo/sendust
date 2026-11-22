@@ -129,7 +129,15 @@ next send or `close()`. `1.0.2` releases it, and looks at the field properly:
 Sendust with Nodemailer, Upyo, EmailJS and the hosted-API SDKs, including the
 places Sendust currently loses.
 
-That is `1.0.2`, published on 2026-11-21; it is what a bare
+That is `1.0.2`. Then the two things the competitive audit found stopping a real
+team were fixed, not a feature at a time but a blocker at a time: Alpine had no
+build, and an OAuth-only tenant had no way to authenticate. `1.1.0` ships both —
+the musl targets built and loaded inside a musl container, and XOAUTH2 with a
+caller-supplied token. It also cost a day to an honest mistake: the facade pin
+came from a laptop, the publish job rebuilt it on the runner and refused, and
+nothing was published until the hash matched the CI build.
+
+That is `1.1.0`, published on 2026-11-22; it is what a bare
 `npm install @sendust/ts` installs.
 
 ## 6. Version timeline
@@ -141,6 +149,7 @@ That is `1.0.2`, published on 2026-11-21; it is what a bare
 | `1.0.0` | 2026-11-19 | Queue, pool, adaptive concurrency, bounded retries, session reuse |
 | `1.0.1` | 2026-11-21 | Demand-driven pool; one fewer round trip per message |
 | `1.0.2` | 2026-11-21 | Idle sessions released; options validated before the native transport |
+| `1.1.0` | 2026-11-22 | Linux musl targets; XOAUTH2 with a bearer token |
 
 ## 7. What Sendust is now
 

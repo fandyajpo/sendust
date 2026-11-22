@@ -23,13 +23,13 @@ received anything.
 ## 2. Installation
 
 The package is published as `@sendust/ts`, and `latest` resolves the stable
-`1.0.2`:
+`1.1.0`:
 
 ```text
 npm install @sendust/ts
 ```
 
-Pin it (`npm install @sendust/ts@1.0.2`) when an install must not float, or
+Pin it (`npm install @sendust/ts@1.1.0`) when an install must not float, or
 follow the `next` tag (`npm install @sendust/ts@next`, currently `1.0.0`). A bare
 install fails with `ETARGET No matching version found for @sendust/ts@*` when npm
 reads cached or mirrored metadata from before the publish, or when the consumer's
@@ -44,23 +44,24 @@ To build the package from a checkout instead:
 npm ci
 npm run build:native            # stages ts/sendust.node
 npm run build --workspace ts    # compiles dist/ (ESM and CommonJS)
-npm run prepare:publish         # artifacts/publish/sendust-ts-1.0.2.tgz
+npm run prepare:publish         # artifacts/publish/sendust-ts-1.1.0.tgz
 
-npm install ./artifacts/publish/sendust-ts-1.0.2.tgz
+npm install ./artifacts/publish/sendust-ts-1.1.0.tgz
 ```
 
 The publish manifest declares the per-platform packages as
 `optionalDependencies`, so npm installs only the one matching your OS and CPU
-(or libc, on Linux). All five are published at the same version; a target without
-a build fails closed at `createTransport`.
+(or libc, on Linux). All seven are published at the same version; a target
+without a build fails closed at `createTransport`.
 
 Requirements:
 
 - Node.js `>=22.23.5`, Bun 1.4.4, or Deno 2.9.8. Deno needs
   `--allow-ffi --allow-read` (add `--allow-net` if your code opens sockets).
-- A supported OS/CPU pair: `linux-x64-gnu`, `linux-arm64-gnu`, `macos-arm64`,
-  `macos-x64`, `windows-x64`. Everything else fails closed with
-  `CONFIG_NATIVE_UNAVAILABLE` naming the package you would need.
+- A supported OS/CPU pair: `linux-x64-gnu`, `linux-arm64-gnu`, `linux-x64-musl`,
+  `linux-arm64-musl`, `macos-arm64`, `macos-x64`, `windows-x64`. Everything else
+  fails closed with `CONFIG_NATIVE_UNAVAILABLE` naming the package you would
+  need.
 
 The exact support evidence is in [platform validation](../qa/platform-validation.md)
 and the [toolchain baseline](../engineering/toolchain-baseline.md).

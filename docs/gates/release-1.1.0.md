@@ -72,8 +72,15 @@ systems. The value above is what the publish job's own build produced on
 
 ## 5. Publication
 
-Pin `release/1.1.0/approved.json`, create the annotated tag `v1.1.0` on the
-approved commit, and dispatch the CI `publish` workflow with `publish` checked
-and the `distTag` input empty. The tag comes from `approved.json` (`latest`), so
-no separate step is needed. Nothing has been published at the time this record
-was written.
+**Executed 2026-11-22.** The CI `publish` job ran on the `v1.1.0` candidate and
+published `@sendust/ts@1.1.0` and all seven platform packages at `1.1.0`. The
+dist-tag came from `approved.json` (`latest`), so no separate step was needed.
+
+The first dispatch failed at the facade hash check, because the pin carried a
+hash from a macOS build; it was corrected to the CI hash and the second dispatch
+published. Nothing reached the registry during the failed run.
+
+Post-publication verification: `npm pack @sendust/ts@1.1.0` reproduces
+`d19b85166073e60382f40cddbb6a096208336497812536a3ee2d0d26cd70f2e5`, every one of
+the seven platform packages resolves `1.1.0`, and `latest` resolves `1.1.0`
+while `next` stays on `1.0.0`.

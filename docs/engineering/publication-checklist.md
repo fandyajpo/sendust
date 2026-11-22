@@ -1,7 +1,7 @@
 # Publication checklist and authorization (P17-003)
 
-**Status:** complete. `0.1.0-rc.1`, `1.0.0`, `1.0.1`, and `1.0.2` are published;
-the current record is §5c.
+**Status:** complete. `0.1.0-rc.1`, `1.0.0`, `1.0.1`, `1.0.2`, and `1.1.0` are
+published; the current record is §5d.
 **Date:** 2026-11-18.
 **Original candidate:** `0.1.0-rc.1`, verified in the
 [RC verification record](../qa/rc-verification.md).
@@ -175,6 +175,24 @@ The published tarball reproduces the approved build byte for byte. A fresh
 clean-install run of `1.0.2` on the publishing machine is outstanding; the
 platform packages and optional dependency pins were checked from the registry
 metadata.
+
+## 5d. 1.1.0 publication record
+
+**Published 2026-11-22** from the CI `publish` job on the `v1.1.0` candidate:
+`@sendust/ts@1.1.0` and all seven platform packages at `1.1.0`, including
+`linux-x64-musl` and `linux-arm64-musl`.
+
+| Check | Result |
+| --- | --- |
+| Registry version | `npm view @sendust/ts dist-tags` → `latest` `1.1.0`, `next` `1.0.0` |
+| Registry artifact hash | `npm pack @sendust/ts@1.1.0` → `d19b85166073e60382f40cddbb6a096208336497812536a3ee2d0d26cd70f2e5`, the approved facade value |
+| Platform packages | all seven resolve `1.1.0` |
+| Tag | `v1.1.0` → `dd4336b4d30a50cdc2b2f3d3fba264b470087016` |
+| Facade hash origin | the CI build, not a laptop: the first dispatch was refused on a macOS hash |
+
+The first dispatch failed at the facade hash check and published nothing; the
+pin was corrected to the CI value and the second dispatch published. A clean
+install of `1.1.0` on the publishing machine is outstanding.
 
 ## 6. Authorization
 
