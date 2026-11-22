@@ -230,3 +230,44 @@ tarball. Scenarios and the partial-publication procedure are in
 [release strategy](release-strategy.md) §5–§6. A published artifact that fails a
 consumer check must be deprecated with a clear message, and the incident recorded
 with the affected versions and the final state.
+
+
+## 8. Trusted publishing (OIDC)
+
+**Changed 2026-11-22.** The `publish` job no longer uses a long-lived npm token.
+It publishes through npm trusted publishing: GitHub mints an OIDC token for the
+job, npm exchanges it for a short-lived publish credential, and a provenance
+attestation is attached automatically because the repository and the packages
+are public.
+
+What the workflow does now:
+
+- `id-token: write` on the `publish` job, and a step that fails if
+  `NODE_AUTH_TOKEN` is set, because a token in the environment wins over OIDC;
+- npm pinned to `12.2.2` (trusted publishing needs `>= 11.5.1`);
+- `repository.url` in the facade and in every platform manifest, because npm
+  matches it against the GitHub repository for each package it publishes.
+
+What the owner has to do once, on npmjs.com:
+
+1. For **each of the eight packages** (`@sendust/ts` and the seven
+   `@sendust/ts-*`), open *Settings → Trusted publishing → GitHub Actions* and set
+   organization/user `fandyajpo`, repository `sendust`, workflow `ci.yml`, and
+   allow **`npm publish`**. Enabling **`npm dist-tag`** as well lets the manual
+   `dist-tag` job run without a token.
+2. Complete the first successful publish within **two days**: an unvalidated
+   configuration expires and has to be recreated.
+3. After the first green OIDC publish, set *Settings → Publishing access →
+   Require two-factor authentication and disallow tokens* on all eight packages
+   and revoke the old `NPM_TOKEN` secret.
+
+Fallbacks and failure modes:
+
+- Without a trusted publisher the job fails with `ENEEDAUTH`; nothing is
+  published, and the fix is the configuration above, not a retry.
+- The manual `dist-tag` job still uses the token, because that path is the only
+  one that works before the `npm dist-tag` permission is enabled.
+- If OIDC has to be abandoned, re-adding
+  `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}` to the publish step restores the
+  old path; the bypass-2FA deadline in January 2027 is why that is a rollback,
+  not a plan.

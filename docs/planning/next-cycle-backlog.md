@@ -18,7 +18,7 @@ team from installing Sendust today comes before what would make it nicer to use.
 | Item | Why | Size | Version |
 | --- | --- | --- | --- |
 | Clean-install verification of `1.0.2` on each claimed platform | The publication record verified the tarball hash and dist-tags but not a fresh install ([checklist](../engineering/publication-checklist.md) §5c) | Small | — |
-| Move to npm trusted publishing (OIDC) with provenance | Bypass-2FA direct publishing is deprecated in January 2027, and Nodemailer and Resend already publish with SLSA attestations while `@sendust/ts` publishes with a token and no attestation | Small (owner configures npm, workflow change) | — |
+| Move to npm trusted publishing (OIDC) with provenance | **Workflow and manifests changed 2026-11-22**; the owner still has to add the trusted publisher to the eight packages on npmjs.com and complete a publish within two days ([publication checklist](../engineering/publication-checklist.md) §8) | Small (owner config + one dispatch) | — |
 | Re-run the owner's Gmail benchmark against `1.0.x` | The only real-relay comparison on record is `1.0.0`; the `1.0.1` tail fix is still a projection | Small (harness exists) | — |
 
 None of these changes the package. They change what the project can claim.

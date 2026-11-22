@@ -443,8 +443,13 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && inputs.publish
     needs: rc
     runs-on: ubuntu-24.04
+    # Trusted publishing: npm exchanges this workflow's OIDC token for a
+    # short-lived publish credential and attaches a provenance attestation. It
+    # needs `id-token: write`, a public repository, npm >= 11.5.1, and no
+    # long-lived npm token in the environment.
     permissions:
       contents: read
+      id-token: write
     timeout-minutes: 15
     steps:
       # Full history: the publisher compares this commit's build inputs with the
@@ -459,15 +464,25 @@ jobs:
           node-version: "22.23.5"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Check the npm token
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # Trusted publishing needs npm >= 11.5.1; the runner image ships older.
+      - name: Pin npm for trusted publishing
         run: |
-          if [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "::error::NPM_TOKEN is not set; add it as a repository secret"
+          npm install --global npm@12.2.2
+          npm --version
+
+      # A leftover NODE_AUTH_TOKEN would silently win over OIDC, so the run
+      # refuses one. The request URL only exists when `id-token: write` is on.
+      - name: Verify OIDC publishing is available
+        run: |
+          if [ -n "${NODE_AUTH_TOKEN:-}" ]; then
+            echo "::error::NODE_AUTH_TOKEN is set; trusted publishing must run without it"
             exit 1
           fi
-          npm whoami
+          if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
+            echo "::error::no OIDC request URL; the publish job needs id-token: write"
+            exit 1
+          fi
+          echo "OIDC available; npm will exchange it for a short-lived credential"
 
       - name: Download the candidate bundle
         uses: actions/download-artifact@v4
@@ -495,9 +510,7 @@ jobs:
           npm --workspace ./ts run build
           node scripts/prepare-publish.mjs
 
-      - name: Publish the six packages
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish the seven packages
         run: |
           VERSION=$(node -p "require('./ts/package.json').version")
           TAG=$(VERSION="$VERSION" node -p "require('./release/' + process.env.VERSION + '/approved.json').distTag")

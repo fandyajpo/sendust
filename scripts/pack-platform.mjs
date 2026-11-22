@@ -92,6 +92,11 @@ function platformManifest(target) {
     license: facade.license,
     private: false,
   };
+  if (facade.repository) {
+    // Trusted publishing matches `repository.url` against the GitHub repository
+    // for every package it publishes, so the platform packages carry it too.
+    manifest.repository = facade.repository;
+  }
   if (LIBC[target]) {
     manifest.libc = LIBC[target];
   }
