@@ -192,7 +192,9 @@ metadata.
 
 The first dispatch failed at the facade hash check and published nothing; the
 pin was corrected to the CI value and the second dispatch published. A clean
-install of `1.1.0` on the publishing machine is outstanding.
+install on macOS arm64 added two packages — the facade and
+`@sendust/ts-macos-arm64` — and reported `version 1.1.0`. The two musl packages
+were verified from registry metadata and by CI, not installed by hand here.
 
 ## 6. Authorization
 
