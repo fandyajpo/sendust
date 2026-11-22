@@ -340,12 +340,101 @@ jobs:
           path: artifacts/*.node
           if-no-files-found: error
 
+  # Linux musl is a native target, not a cross-build: the container *is* the
+  # musl userland, so the same runner compiles and loads the binary it ships
+  # (ADR-0020). Alpine is the default small Node image, and without these
+  # packages an install there fails closed with CONFIG_NATIVE_UNAVAILABLE.
+  artifacts-musl:
+    name: Native artifact (musl, ${{ matrix.target }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            target: linux-x64-musl
+          - runner: ubuntu-24.04-arm
+            target: linux-arm64-musl
+    runs-on: ${{ matrix.runner }}
+    container: node:22.23.5-alpine
+    timeout-minutes: 20
+    steps:
+      - name: Install the build prerequisites
+        run: apk add --no-cache bash build-base curl git perl xz
+
+      - uses: actions/checkout@v4
+
+      # rustup resolves rust-toolchain.toml, and inside this container its host
+      # triple is <arch>-unknown-linux-musl, which is the target being shipped.
+      - name: Install the pinned Rust toolchain
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+          echo "$HOME/.cargo/bin" >> "$GITHUB_ENV"
+
+      - name: Pin npm
+        run: |
+          npm install --global npm@12.2.2
+          npm --version
+
+      - name: Verify the toolchain
+        run: |
+          node --version
+          rustc --version
+          cargo --version
+
+      - name: Build the native artifact
+        run: node scripts/build-artifact.mjs
+
+      - name: Load the artifact
+        run: |
+          node -e "
+            const { readdirSync } = require('node:fs');
+            const file = readdirSync('artifacts').find((name) => name.endsWith('.node'));
+            if (!file) throw new Error('no artifact produced');
+            const addon = require('./artifacts/' + file);
+            if (!addon.Transport) throw new Error('no Transport export in ' + file);
+            console.log('loaded', file);
+          "
+
+      - name: Install workspace dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Stage the artifact as the bundled addon
+        run: cp artifacts/*.node ts/sendust.node
+
+      - name: Build the facade package
+        run: npm --workspace ./ts run build
+
+      - name: Publish manifest
+        run: node scripts/prepare-publish.mjs
+
+      - name: Release evidence
+        run: node scripts/assemble-rc.mjs
+
+      # The full facade suite against this container's own binary.
+      - name: Per-target behaviour suite
+        run: npm --workspace ./ts run test
+
+      # Installs the packed facade plus this platform package in a fresh
+      # consumer, so the loader's fallback path is proven on musl rather than
+      # assumed. Bun and Deno are not claimed on musl, so those checks skip.
+      - name: Resolve the artifact through the published layout
+        run: node scripts/verify-platform.mjs
+
+      - name: Behaviour harness (Node.js)
+        run: node tests/runtime/behaviour.mjs
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sendust-${{ matrix.target }}
+          path: artifacts/*.node
+          if-no-files-found: error
+
   # Assembles one release-candidate bundle from every target's artifact, so the
   # candidate has the complete hash set instead of per-job fragments. No
   # publication action.
   rc:
     name: Release candidate bundle
-    needs: artifacts
+    needs: [artifacts, artifacts-musl]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -356,7 +445,7 @@ jobs:
         with:
           node-version: "22.23.5"
 
-      - name: Download the five artifacts
+      - name: Download every artifact
         uses: actions/download-artifact@v4
         with:
           pattern: sendust-*

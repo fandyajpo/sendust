@@ -33,6 +33,8 @@ const json = (path) => JSON.parse(read(path));
 const SUPPORTED = {
   "linux-x64-gnu": ["linux", "x64"],
   "linux-arm64-gnu": ["linux", "arm64"],
+  "linux-x64-musl": ["linux", "x64"],
+  "linux-arm64-musl": ["linux", "arm64"],
   "macos-x64": ["darwin", "x64"],
   "macos-arm64": ["darwin", "arm64"],
   "windows-x64": ["win32", "x64"],

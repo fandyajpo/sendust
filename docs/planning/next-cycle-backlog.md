@@ -25,6 +25,11 @@ None of these changes the package. They change what the project can claim.
 
 ## 2. Priority 1 — Linux musl (`linux-x64-musl`, `linux-arm64-musl`)
 
+**Status (2026-11-22): implemented, awaiting CI evidence.** The loader map, the
+packaging and release scripts, the CI `artifacts-musl` job and the ADR-0020
+amendment are in the tree. A support claim needs the first green run; the
+[platform matrix](../qa/platform-matrix.md) rows stay PENDING until then.
+
 **Why first.** `node:alpine` is the default small Node image, and every musl
 install currently fails closed with `CONFIG_NATIVE_UNAVAILABLE`. This is the
 single most likely install failure for a new team, and it is a platform, not a

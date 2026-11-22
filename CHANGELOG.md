@@ -8,7 +8,14 @@ tag format, version sources, and compatibility promises — are in
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- `linux-x64-musl` and `linux-arm64-musl` native targets. The addon is built and
+  loaded inside a musl container on the runner of that architecture, so Alpine
+  and other musl images resolve a real package instead of failing closed with
+  `CONFIG_NATIVE_UNAVAILABLE`. The loader, packaging and release manifest know
+  the two keys; the artifacts ship with the next release, and until then the
+  packages stay absent from the registry.
 
 ## [1.0.2] - 2026-11-21
 

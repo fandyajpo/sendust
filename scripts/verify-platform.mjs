@@ -43,7 +43,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 const shell = process.platform === "win32";
 
-const OS = { "linux-x64-gnu": "linux", "linux-arm64-gnu": "linux", "macos-x64": "darwin", "macos-arm64": "darwin", "windows-x64": "win32" };
+const OS = { "linux-x64-gnu": "linux", "linux-arm64-gnu": "linux", "linux-x64-musl": "linux", "linux-arm64-musl": "linux", "macos-x64": "darwin", "macos-arm64": "darwin", "windows-x64": "win32" };
 const CPU = { x64: "x64", arm64: "arm64" };
 
 const FACADE_CHECK = `

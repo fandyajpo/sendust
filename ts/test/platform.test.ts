@@ -55,13 +55,14 @@ describe("platform package mapping", () => {
   it("names the optional package for each supported target", () => {
     expect(platformPackageName("linux", "x64", "gnu")).toBe("@sendust/ts-linux-x64-gnu");
     expect(platformPackageName("linux", "arm64", "gnu")).toBe("@sendust/ts-linux-arm64-gnu");
+    expect(platformPackageName("linux", "x64", "musl")).toBe("@sendust/ts-linux-x64-musl");
+    expect(platformPackageName("linux", "arm64", "musl")).toBe("@sendust/ts-linux-arm64-musl");
     expect(platformPackageName("darwin", "arm64")).toBe("@sendust/ts-macos-arm64");
     expect(platformPackageName("darwin", "x64")).toBe("@sendust/ts-macos-x64");
     expect(platformPackageName("win32", "x64")).toBe("@sendust/ts-windows-x64");
   });
 
   it("returns nothing for platforms without a build", () => {
-    expect(platformPackageName("linux", "x64", "musl")).toBeUndefined();
     expect(platformPackageName("win32", "arm64")).toBeUndefined();
     expect(platformPackageName("freebsd", "x64")).toBeUndefined();
   });
@@ -110,13 +111,14 @@ describe("native resolution failures", () => {
     const error = thrown(() =>
       resolveNative({
         ...linuxX64,
-        libc: "musl",
+        platform: "win32",
+        arch: "arm64",
         require: fakeRequire({}),
       }),
     );
 
     expect(error.code).toBe("CONFIG_NATIVE_UNAVAILABLE");
-    expect(error.message).toContain("no native build for linux-x64");
+    expect(error.message).toContain("no native build for win32-arm64");
   });
 
   it("uses the bundled addon without consulting the platform package", () => {
@@ -153,7 +155,9 @@ describe("platform package names", () => {
 
     expect(names.sort()).toEqual([
       "@sendust/ts-linux-arm64-gnu",
+      "@sendust/ts-linux-arm64-musl",
       "@sendust/ts-linux-x64-gnu",
+      "@sendust/ts-linux-x64-musl",
       "@sendust/ts-macos-arm64",
       "@sendust/ts-macos-x64",
       "@sendust/ts-windows-x64",

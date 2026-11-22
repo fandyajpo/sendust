@@ -16,9 +16,16 @@ Publish **per-platform packages**, resolved through optional dependencies:
 | --- | --- |
 | `linux-x64-gnu` | `@sendust/ts-linux-x64-gnu` |
 | `linux-arm64-gnu` | `@sendust/ts-linux-arm64-gnu` |
+| `linux-x64-musl` | `@sendust/ts-linux-x64-musl` |
+| `linux-arm64-musl` | `@sendust/ts-linux-arm64-musl` |
 | `macos-x64` | `@sendust/ts-macos-x64` |
 | `macos-arm64` | `@sendust/ts-macos-arm64` |
 | `windows-x64` | `@sendust/ts-windows-x64` |
+
+The two musl keys were added on 2026-11-22: Alpine is the default small Node
+image, and every install there failed closed. They follow the same rule as the
+rest — the binary is built and loaded inside a musl container on the runner of
+that architecture, never cross-compiled.
 
 - Each platform package contains only `sendust.node` and a `package.json` declaring `os`, `cpu`, `files`, `main` (unused but required by npm tooling) and no scripts.
 - `@sendust/ts` lists them under `optionalDependencies`, so an install on an unsupported platform succeeds but has no addon.

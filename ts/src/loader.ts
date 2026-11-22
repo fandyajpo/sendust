@@ -35,10 +35,18 @@ interface ProcessLike {
   report?: { getReport?(): { header?: { glibcVersionRuntime?: string } } };
 }
 
-/** Platform key to its optional native package (ADR-0020). */
+/**
+ * Platform key to its optional native package (ADR-0020).
+ *
+ * Linux has two C libraries, so the key carries the libc suffix; every other
+ * platform ignores it. Alpine and other musl images resolve through the
+ * `-musl` entries and nothing else.
+ */
 export const PLATFORM_PACKAGES: Record<string, string> = {
   "linux-x64-gnu": "@sendust/ts-linux-x64-gnu",
   "linux-arm64-gnu": "@sendust/ts-linux-arm64-gnu",
+  "linux-x64-musl": "@sendust/ts-linux-x64-musl",
+  "linux-arm64-musl": "@sendust/ts-linux-arm64-musl",
   "macos-x64": "@sendust/ts-macos-x64",
   "macos-arm64": "@sendust/ts-macos-arm64",
   "windows-x64": "@sendust/ts-windows-x64",

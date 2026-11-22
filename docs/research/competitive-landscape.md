@@ -52,7 +52,8 @@ What it actually guarantees, from the code rather than the README:
   session reused for up to 100 messages or 30 s idle, then released.
 - **Runtimes:** Node.js ≥ 22.23.5, Bun 1.4.4, Deno 2.9.8 (FFI, local
   `node_modules`). Platforms: `linux-x64-gnu`, `linux-arm64-gnu`,
-  `macos-x64`, `macos-arm64`, `windows-x64`.
+  `macos-x64`, `macos-arm64`, `windows-x64`, with `linux-x64-musl` and
+  `linux-arm64-musl` implemented and pending their first green CI run.
 
 ## 2. Feature comparison
 
@@ -215,10 +216,11 @@ engine and a real contract", not "a better provider".
 
 ## 8. Where Sendust loses, ranked
 
-1. **Alpine / musl Linux is unsupported.** `linux-x64-gnu` and
-   `linux-arm64-gnu` only; `node:alpine` fails closed with
-   `CONFIG_NATIVE_UNAVAILABLE`. This is the single most likely install-blocker
-   in real deployments.
+1. **Alpine / musl Linux was unsupported.** `linux-x64-gnu` and
+   `linux-arm64-gnu` only, so `node:alpine` failed closed with
+   `CONFIG_NATIVE_UNAVAILABLE`. Both musl targets are implemented as of
+   2026-11-22 (loader, packaging, CI job); they become a support claim and a
+   published package with the next release.
 2. **No OAuth2.** Tenants that disable basic auth (Microsoft 365, Google
    Workspace with modern policy) cannot use Sendust at all, because `PLAIN` and
    `LOGIN` are the only mechanisms.
@@ -242,7 +244,7 @@ engine and a real contract", not "a better provider".
 
 | Priority | Move | Why |
 | --- | --- | --- |
-| 1 | Publish `linux-x64-musl` and `linux-arm64-musl` builds | Removes the most common install failure (Alpine containers) |
+| 1 | Publish `linux-x64-musl` and `linux-arm64-musl` builds | Removes the most common install failure (Alpine containers) — code and CI landed 2026-11-22, awaiting the first green run |
 | 2 | Add XOAUTH2 and DKIM | Unlocks Microsoft 365 / Google Workspace tenants and self-hosted-MTA users |
 | 3 | Move to npm trusted publishing (OIDC) with provenance | Closes the provenance gap and the January 2027 token deadline |
 | 4 | Ship a mock transport | Test ergonomics; upyo treats it as table stakes |

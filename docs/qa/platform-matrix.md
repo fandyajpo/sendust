@@ -9,7 +9,7 @@
 **Decided (ADR-0020): per-platform packages.**
 
 - `@sendust/ts` stays the facade and bundles a `sendust.node` only for local builds.
-- Each target publishes `@sendust/ts-<platform>-<arch>[-<libc>]` holding just its addon: `linux-x64-gnu`, `linux-arm64-gnu`, `macos-x64`, `macos-arm64`, `windows-x64`.
+- Each target publishes `@sendust/ts-<platform>-<arch>[-<libc>]` holding just its addon: `linux-x64-gnu`, `linux-arm64-gnu`, `linux-x64-musl`, `linux-arm64-musl`, `macos-x64`, `macos-arm64`, `windows-x64`.
 - The facade declares them as `optionalDependencies`; npm skips the ones that do not match the platform.
 - The loader tries the bundled addon first (source tree, local build), then the mapped optional package, then fails with `CONFIG_NATIVE_UNAVAILABLE` naming the expected package. Unsupported platforms get the same stable code with a "no native build" message.
 
@@ -26,6 +26,8 @@ Artifact naming: `sendust-<os>-<arch>[-<libc>].node`
 | Linux | x64 | glibc | `ubuntu-24.04` | `x86_64-unknown-linux-gnu` | `sendust-linux-x64-gnu.node` | CI BUILD + LOAD: PASS |
 | Linux | arm64 | glibc | `ubuntu-24.04-arm` | `aarch64-unknown-linux-gnu` | `sendust-linux-arm64-gnu.node` | CI BUILD + LOAD: PASS |
 | Windows | x64 | MSVC | `windows-2022` | `x86_64-pc-windows-msvc` | `sendust-windows-x64.node` | CI BUILD + LOAD: PASS |
+| Linux | x64 | musl | `ubuntu-24.04` in `node:22.23.5-alpine` | `x86_64-unknown-linux-musl` | `sendust-linux-x64-musl.node` | CI BUILD + LOAD: PENDING FIRST RUN |
+| Linux | arm64 | musl | `ubuntu-24.04-arm` in `node:22.23.5-alpine` | `aarch64-unknown-linux-musl` | `sendust-linux-arm64-musl.node` | CI BUILD + LOAD: PENDING FIRST RUN |
 
 Every row builds with the pinned Rust 1.100.0 toolchain on a native runner via `npm run build:artifact`, which compiles `sendust-napi` and stages `sendust-<os>-<arch>[-<libc>].node` under `artifacts/`. The same runner then loads the artifact to prove it is the target it claims to be — no cross-compiled, unloaded binary counts. The feature set is identical everywhere: Node-API 8 (`napi8`, `async`), `rustls` with the `ring` provider and `webpki-roots`, no `native-tls`, no alternate verifier. The architecture check enforces those rules for every build, so no target can weaken TLS.
 
@@ -47,10 +49,14 @@ The artifact is renamed at the end of the build; no artifact may be produced by 
 
 These must not appear in publication inputs:
 
-- Linux arm64 musl and x64 musl — needs cross tooling and a musl runtime check that is not set up.
 - Windows arm64 MSVC — no runner or support claim.
 - Big-endian targets — untested and not claimed (R-06).
 - WASM, serverless, edge and browser environments — outside the product (C-36, C-30).
+
+Linux musl left this list on 2026-11-22: the `artifacts-musl` job builds and
+loads both musl targets inside a musl container, so the target is produced by a
+runner that can load it. It is not a support claim until that job is green and
+the row above says PASS.
 
 No “best effort” build may be published: a target is either in the matrix above with passing P14-004 evidence, or absent.
 

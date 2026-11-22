@@ -66,11 +66,18 @@ const artifacts = join(root, "artifacts");
 const OS = {
   "linux-x64-gnu": "linux",
   "linux-arm64-gnu": "linux",
+  "linux-x64-musl": "linux",
+  "linux-arm64-musl": "linux",
   "macos-x64": "darwin",
   "macos-arm64": "darwin",
   "windows-x64": "win32",
 };
-const LIBC = { "linux-x64-gnu": ["glibc"], "linux-arm64-gnu": ["glibc"] };
+const LIBC = {
+  "linux-x64-gnu": ["glibc"],
+  "linux-arm64-gnu": ["glibc"],
+  "linux-x64-musl": ["musl"],
+  "linux-arm64-musl": ["musl"],
+};
 
 /** The manifest of one `@sendust/ts-<target>` package. */
 function platformManifest(target) {
