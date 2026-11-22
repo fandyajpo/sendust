@@ -91,7 +91,8 @@ impl SmtpCredentials {
         username: impl Into<String>,
         token: impl Into<String>,
     ) -> Result<Self, Error> {
-        Self::new(username, token).map(|credentials| credentials.with_mechanism(AuthMechanism::XOAuth2))
+        Self::new(username, token)
+            .map(|credentials| credentials.with_mechanism(AuthMechanism::XOAuth2))
     }
 
     pub fn mechanism(&self) -> Option<AuthMechanism> {
