@@ -103,14 +103,20 @@ function assertKnownKeys(value: object, allowed: Set<string>): void {
 /** One bearer token, validated as a non-empty string without control characters. */
 function resolveToken(value: string | (() => string) | undefined): string {
   const resolved = typeof value === "function" ? value() : value;
-  if (
-    typeof resolved !== "string" ||
-    resolved.length === 0 ||
-    /[\u0000-\u001f\u007f]/.test(resolved)
-  ) {
+  if (typeof resolved !== "string" || resolved.length === 0 || hasControlCharacter(resolved)) {
     throw invalidOption();
   }
   return resolved;
+}
+
+function hasControlCharacter(value: string): boolean {
+  for (const character of value) {
+    const code = character.codePointAt(0) ?? 0;
+    if (code < 0x20 || code === 0x7f) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /**
