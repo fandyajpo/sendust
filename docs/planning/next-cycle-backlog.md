@@ -58,6 +58,10 @@ binary size and build time grow. Nothing in the public contract moves.
 
 ## 3. Priority 2 — XOAUTH2 authentication
 
+**Status (2026-11-22): implemented, awaiting release.** `AUTH XOAUTH2` is in the
+core, the adapter and the facade, with [ADR-0023](../architecture/decisions/0023-xoauth2-authentication.md)
+and tests at both levels. It ships with the next release.
+
 **Why.** Microsoft 365 and Google Workspace tenants increasingly disable basic
 authentication. Today `PLAIN` and `LOGIN` are the only mechanisms, so those
 tenants cannot use Sendust at all.
