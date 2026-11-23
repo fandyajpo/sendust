@@ -13,6 +13,10 @@ on:
         description: "Set this npm dist-tag on the current version after it is published (for example latest)"
         type: string
         default: ""
+      hash:
+        description: "Build the facade and print its tarball hash; publishes nothing"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -432,6 +436,53 @@ jobs:
           name: release-candidate
           path: artifacts/release
           if-no-files-found: error
+
+  # Dispatch-only and publishing nothing: builds the facade exactly as the
+  # publish job does and prints its sha256, so `release/<version>/approved.json`
+  # can be pinned from a CI build. The facade tarball is not byte-identical
+  # across operating systems, so a laptop hash is refused by the publish job.
+  facade-hash:
+    name: Facade hash
+    if: github.event_name == 'workflow_dispatch' && inputs.hash
+    needs: artifacts
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.23.5"
+
+      - name: Pin npm
+        run: |
+          npm install --global npm@12.2.2
+          npm --version
+
+      - name: Download the linux artifact for the facade build
+        uses: actions/download-artifact@v4
+        with:
+          name: sendust-linux-x64
+          path: artifacts
+
+      - name: Install the facade toolchain
+        run: npm ci --no-audit --no-fund
+
+      - name: Stage an addon for the facade build
+        run: cp artifacts/sendust-linux-x64-gnu.node ts/sendust.node
+
+      - name: Build the facade and its publish manifest
+        run: |
+          npm --workspace ./ts run build
+          node scripts/prepare-publish.mjs
+
+      - name: Print the facade tarball hash
+        run: |
+          sha256sum artifacts/publish/sendust-ts-*.tgz
+          echo "Pin this value in release/<version>/approved.json as facade.sha256"
 
   # Publishes the candidate the `rc` job just verified. Manual and explicit: it
   # runs only on a workflow_dispatch with `publish` checked, and the script

@@ -8,12 +8,17 @@ tag format, version sources, and compatibility promises — are in
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.1.1] - 2026-11-23
+
+A metadata patch, published to validate npm trusted publishing. No runtime,
+API, result, error code, limit or default changed.
+
 ### Changed
 
 - The published manifests declare `repository.url`, which npm trusted publishing
   requires to match the GitHub repository for every package it publishes.
-
-Nothing else yet.
 
 ## [1.1.0] - 2026-11-22
 

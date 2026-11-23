@@ -246,7 +246,9 @@ What the workflow does now:
   `NODE_AUTH_TOKEN` is set, because a token in the environment wins over OIDC;
 - npm pinned to `12.2.2` (trusted publishing needs `>= 11.5.1`);
 - `repository.url` in the facade and in every platform manifest, because npm
-  matches it against the GitHub repository for each package it publishes.
+  matches it against the GitHub repository for each package it publishes;
+- a dispatch-only **`Facade hash`** job that builds the facade the same way and
+  prints its sha256, so the pin never comes from a developer machine.
 
 What the owner has to do once, on npmjs.com:
 
