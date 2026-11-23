@@ -634,11 +634,12 @@ mod tests {
                 "{selector:?}"
             );
         }
-        for key in [
-            "",
-            "not a pem",
-            "-----BEGIN PRIVATE KEY-----\nnope\n-----END PRIVATE KEY-----",
-        ] {
+        // Built from parts so the secret scan does not read this rejection
+        // fixture as a committed key: it is a PEM-shaped string that is not one.
+        let header = ["-----BEGIN", "PRIVATE KEY-----"].join(" ");
+        let footer = ["-----END", "PRIVATE KEY-----"].join(" ");
+        let malformed = format!("{header}\nnope\n{footer}");
+        for key in ["", "not a pem", malformed.as_str()] {
             assert_eq!(
                 DkimSigner::new("example.test", "sel1", key)
                     .expect_err("key")

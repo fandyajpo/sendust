@@ -22,14 +22,14 @@ received anything.
 
 ## 2. Installation
 
-The package is published as `@sendust/ts`, and `latest` resolves the stable
-`1.1.1`:
+The package is published as `@sendust/ts`, and `latest` follows the newest stable
+release:
 
 ```text
 npm install @sendust/ts
 ```
 
-Pin it (`npm install @sendust/ts@1.1.1`) when an install must not float, or
+Pin it (`npm install @sendust/ts@1.2.0`) when an install must not float, or
 follow the `next` tag (`npm install @sendust/ts@next`, currently `1.0.0`). A bare
 install fails with `ETARGET No matching version found for @sendust/ts@*` when npm
 reads cached or mirrored metadata from before the publish, or when the consumer's
@@ -44,9 +44,9 @@ To build the package from a checkout instead:
 npm ci
 npm run build:native            # stages ts/sendust.node
 npm run build --workspace ts    # compiles dist/ (ESM and CommonJS)
-npm run prepare:publish         # artifacts/publish/sendust-ts-1.1.1.tgz
+npm run prepare:publish         # artifacts/publish/sendust-ts-1.2.0.tgz
 
-npm install ./artifacts/publish/sendust-ts-1.1.1.tgz
+npm install ./artifacts/publish/sendust-ts-1.2.0.tgz
 ```
 
 The publish manifest declares the per-platform packages as
@@ -203,6 +203,32 @@ try {
 `tlsRootCertificate` adds anchors to the bundled public roots. It cannot remove
 roots, cannot disable verification, and a malformed PEM fails with
 `VALIDATION_INVALID_OPTION`.
+
+To have Sendust sign the message itself, add `dkim` with the key your selector
+already publishes in DNS. Signing is `rsa-sha256` with relaxed/relaxed
+canonicalization, the body is hashed in full, and `From` is always covered:
+
+```js
+const signing = createTransport({
+  host: "smtp.example.test",
+  port: 587,
+  secure: "starttls",
+  auth: { user: "sender@example.test", pass: process.env.SMTP_PASS },
+  dkim: {
+    domain: "example.test",
+    selector: "sendust",
+    privateKey: process.env.DKIM_PRIVATE_KEY, // PKCS#1 or PKCS#8 PEM, 1024–4096 bits
+  },
+});
+```
+
+The key is parsed when the transport is created, so an unusable one fails with
+`CONFIG_INVALID_DKIM_KEY` before any connection; the signature is part of the
+wire, so `limits.maxWireBytes` covers it. Sendust publishes no DNS record and
+rotates nothing: `_domainkey` records, selector choice and rotation stay with you
+([ADR-0024](../architecture/decisions/0024-dkim-signing.md)). Relays accept by
+envelope, so a signature that fails verification at the receiver is still reported
+as `accepted` here.
 
 ## 6. Where to go next
 

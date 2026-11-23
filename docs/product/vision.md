@@ -56,12 +56,15 @@ Non-personas for MVP: marketing operators, campaign managers, mailbox hosting ad
 
 Connection pooling, bounded retries and session reuse shipped in `1.0.0`
 ([ADR-0021](../architecture/decisions/0021-autonomous-delivery-engine.md),
-[ADR-0022](../architecture/decisions/0022-session-reuse.md)). Still candidates,
+[ADR-0022](../architecture/decisions/0022-session-reuse.md)); Linux musl builds
+and XOAUTH2 shipped in `1.1.0`, and DKIM signing in `1.2.0`
+([ADR-0023](../architecture/decisions/0023-xoauth2-authentication.md),
+[ADR-0024](../architecture/decisions/0024-dkim-signing.md)). Still candidates,
 each with its own decision: SMTPUTF8, public AbortSignal cancellation, streaming
-attachments, additional transports, DKIM, XOAUTH2, musl Linux builds, and
-observability hooks. Queue/job orchestration and queue adapters remain **outside
-the product**: no API, adapter contract, persistence model, worker, or
-implementation is being designed. See [MVP scope](mvp-scope.md) and the
+attachments, additional transports, Ed25519 DKIM signatures, and observability
+hooks. Queue/job orchestration and queue adapters remain **outside the product**:
+no API, adapter contract, persistence model, worker, or implementation is being
+designed. See [MVP scope](mvp-scope.md) and the
 [feature matrix](../planning/feature-matrix.md).
 
 ### Explicit non-goals

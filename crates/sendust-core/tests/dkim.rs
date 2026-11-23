@@ -16,8 +16,8 @@ use rsa::{Pkcs1v15Sign, RsaPrivateKey};
 use sha2::{Digest as _, Sha256};
 
 use sendust_core::{
-    AttachmentPolicy, DkimSigner, ErrorCode, Limits, Mailbox, OutgoingMessage,
-    DEFAULT_SIGNED_HEADERS, serialize_at,
+    AttachmentPolicy, DEFAULT_SIGNED_HEADERS, DkimSigner, ErrorCode, Limits, Mailbox,
+    OutgoingMessage, serialize_at,
 };
 
 /// The same throwaway 1024-bit RSA key the core unit tests use, as PKCS#1 DER.
@@ -262,7 +262,11 @@ fn the_default_header_set_is_the_documented_one() {
         ]
     );
     assert_eq!(
-        signer().headers().iter().map(String::as_str).collect::<Vec<_>>(),
+        signer()
+            .headers()
+            .iter()
+            .map(String::as_str)
+            .collect::<Vec<_>>(),
         DEFAULT_SIGNED_HEADERS
     );
 }

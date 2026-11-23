@@ -8,9 +8,9 @@ configure. A result reports relay acceptance, never mailbox delivery.
 
 ## Status
 
-Stable. `1.0.1` is published on npm and the `latest` tag resolves it. A
-published version is never replaced, so this file reaches npm with the next
-release.
+Stable. `1.2.0` adds optional DKIM signing; every earlier capability is
+unchanged. A published version is never replaced, so this file describes the API
+at the version it shipped with.
 
 ## Usage
 
@@ -22,6 +22,12 @@ const transport = createTransport({
   port: 465,
   secure: "tls",
   auth: { user: "sender@example.test", pass: process.env.SMTP_PASS },
+  // Optional: sign with the key your selector already publishes in DNS.
+  dkim: {
+    domain: "example.test",
+    selector: "sendust",
+    privateKey: process.env.DKIM_PRIVATE_KEY,
+  },
 });
 
 try {
@@ -48,5 +54,8 @@ try {
 - The queue is bounded; beyond it, `send()` rejects with `LIMIT_QUEUE_FULL`.
 - Attachments from file paths are disabled unless `attachments.allowFileAccess`
   is set.
+- A DKIM key is parsed when the transport is created, so an unusable one fails
+  with `CONFIG_INVALID_DKIM_KEY` before any connection. Sendust publishes no DNS
+  record and stores no key.
 
 See the repository for the full public API contract and its ADRs.

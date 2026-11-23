@@ -63,8 +63,9 @@ There is one class per category: `SendustValidationError`,
 | Code | Cause | Caller action |
 | --- | --- | --- |
 | `CONFIG_INVALID_RELAY` | Empty/invalid host or port | Fix the relay |
+| `CONFIG_INVALID_DKIM_KEY` | The DKIM key does not parse, or is not a 1024–4096 bit RSA key | Export the key as PKCS#1 or PKCS#8 PEM and check its size; the key is read at `createTransport` |
 | `CONFIG_UNSUPPORTED_SECURITY` | Security mode outside `tls`/`starttls` | Use a supported mode; there is no plaintext |
-| `CONFIG_UNSUPPORTED_AUTH` | Auth mechanism outside `plain`/`login` | Use a supported mechanism |
+| `CONFIG_UNSUPPORTED_AUTH` | Auth mechanism outside `plain`/`login`/`xoauth2`, or a forced mechanism the relay does not advertise | Use a supported mechanism, or omit `auth.method` |
 | `CONFIG_FILE_ACCESS_DISABLED` | Path attachment without opt-in | Set `attachments.allowFileAccess` deliberately, or use buffer attachments |
 | `CONFIG_ATTACHMENT_UNREADABLE` | Missing, unreadable, or non-regular file | Fix the path; only bounded regular files are read |
 | `CONFIG_NATIVE_UNAVAILABLE` | The addon is missing or cannot load on this platform | Install the build for this OS/CPU; no fallback build exists |
