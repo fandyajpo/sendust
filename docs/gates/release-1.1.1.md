@@ -1,7 +1,10 @@
 # Release gate — 1.1.1
 
-**Decision:** AWAITING PROJECT OWNER APPROVAL.
+**Decision:** APPROVED — project owner, 2026-11-23. The owner asked for this
+patch to validate the npm trusted-publisher configuration before it expires on
+2026-11-25, and ran the `Facade hash` dispatch so the pin comes from CI.
 **Release:** `@sendust/ts@1.1.1`, dist-tag `latest`.
+**Candidate commit:** `1f17ece033618753676d9b736152227854cc1a90`.
 **Related:** [release notes](../releases/1.1.1.md),
 [publication checklist](../engineering/publication-checklist.md) §8,
 [reproducible build](../engineering/reproducible-build.md) §7.
@@ -25,7 +28,7 @@ ships the required field, and keeps the deadline away from a feature release.
 
 | Check | Evidence |
 | --- | --- |
-| Owner approval recorded | This record, once approved |
+| Owner approval recorded | This record, 2026-11-23 |
 | Contract unchanged | `public-api.md`, `error-model.md`, `types.ts` untouched |
 | Rust suite, clippy, fmt | CI `Rust workspace` |
 | TypeScript typecheck, tests, format | CI `TypeScript` jobs; 74 tests locally |
@@ -38,9 +41,9 @@ ships the required field, and keeps the deadline away from a feature release.
 ## 4. Binary verification
 
 `release/1.1.1/approved.json` pins the approved commit, the dist-tag, the facade
-hash produced by the `Facade hash` job, and all seven platform entries. No
-byte-reproducibility claim: each target is identified by the approval bundle's
-checksums.
+hash `e6a76a0f…` produced by the `Facade hash` job on `1f17ece` (job
+137410204743), and all seven platform entries. No byte-reproducibility claim:
+each target is identified by the approval bundle's checksums.
 
 ## 5. Publication
 
