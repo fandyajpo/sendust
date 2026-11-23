@@ -267,8 +267,8 @@ impl Transport {
         let progress = Arc::new(DeliveryProgress::new());
         let dkim = match options.dkim {
             Some(dkim) => {
-                let mut signer =
-                    DkimSigner::new(dkim.domain, dkim.selector, &dkim.private_key).map_err(to_napi)?;
+                let mut signer = DkimSigner::new(dkim.domain, dkim.selector, &dkim.private_key)
+                    .map_err(to_napi)?;
                 if let Some(headers) = dkim.headers {
                     signer = signer.with_headers(&headers).map_err(to_napi)?;
                 }

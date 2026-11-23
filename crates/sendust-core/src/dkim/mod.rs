@@ -164,8 +164,8 @@ impl DkimSigner {
     /// The same bytes and the same instant always produce the same signature, so
     /// a caller can pin the output in a test.
     pub fn sign(&self, wire: &[u8], now: SystemTime) -> Result<Vec<u8>, Error> {
-        let text =
-            std::str::from_utf8(wire).map_err(|_| Error::new(ErrorCode::ValidationInvalidHeader))?;
+        let text = std::str::from_utf8(wire)
+            .map_err(|_| Error::new(ErrorCode::ValidationInvalidHeader))?;
         let separator = text
             .find("\r\n\r\n")
             .ok_or_else(|| Error::new(ErrorCode::ValidationInvalidHeader))?;
@@ -503,7 +503,10 @@ mod tests {
     fn relaxes_a_header_value_as_rfc_6376_describes() {
         assert_eq!(relaxed_header("A", " X"), "a:X");
         assert_eq!(relaxed_header("B", " Y\t\r\n\tZ  "), "b:Y Z");
-        assert_eq!(relaxed_header("From", " Alice <a@b.test>"), "from:Alice <a@b.test>");
+        assert_eq!(
+            relaxed_header("From", " Alice <a@b.test>"),
+            "from:Alice <a@b.test>"
+        );
     }
 
     #[test]
@@ -534,7 +537,10 @@ mod tests {
         );
         assert!(text.contains("bh="), "{text}");
         assert!(text.contains("b="), "{text}");
-        assert!(text.contains("\r\nFrom: \"Alice\" <alice@example.test>"), "{text}");
+        assert!(
+            text.contains("\r\nFrom: \"Alice\" <alice@example.test>"),
+            "{text}"
+        );
     }
 
     #[test]
@@ -565,7 +571,10 @@ mod tests {
         let signer = test_support::signer()
             .with_headers(&["subject".to_string()])
             .expect("headers");
-        assert_eq!(signer.headers(), ["from".to_string(), "subject".to_string()]);
+        assert_eq!(
+            signer.headers(),
+            ["from".to_string(), "subject".to_string()]
+        );
 
         let text = String::from_utf8(signer.sign(&wire(), fixed()).expect("signed")).expect("utf8");
         assert!(text.contains("h=from:subject;"), "{text}");
@@ -601,7 +610,13 @@ mod tests {
     #[test]
     fn rejects_an_invalid_domain_selector_or_key() {
         let pem = test_support::pem();
-        for domain in ["", "example", ".example.test", "example.test.", "exa mple.test"] {
+        for domain in [
+            "",
+            "example",
+            ".example.test",
+            "example.test.",
+            "exa mple.test",
+        ] {
             assert_eq!(
                 DkimSigner::new(domain, "sel1", &pem)
                     .expect_err("domain")
@@ -619,7 +634,11 @@ mod tests {
                 "{selector:?}"
             );
         }
-        for key in ["", "not a pem", "-----BEGIN PRIVATE KEY-----\nnope\n-----END PRIVATE KEY-----"] {
+        for key in [
+            "",
+            "not a pem",
+            "-----BEGIN PRIVATE KEY-----\nnope\n-----END PRIVATE KEY-----",
+        ] {
             assert_eq!(
                 DkimSigner::new("example.test", "sel1", key)
                     .expect_err("key")
@@ -660,7 +679,11 @@ mod tests {
 
     #[test]
     fn rejects_wire_that_is_not_a_message() {
-        for bytes in [b"".as_slice(), b"no separator".as_slice(), b"\r\n\r\n".as_slice()] {
+        for bytes in [
+            b"".as_slice(),
+            b"no separator".as_slice(),
+            b"\r\n\r\n".as_slice(),
+        ] {
             let error = test_support::signer()
                 .sign(bytes, fixed())
                 .expect_err("not a message");

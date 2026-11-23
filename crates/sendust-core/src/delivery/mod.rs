@@ -408,7 +408,10 @@ mod tests {
         assert_eq!(calls.load(Ordering::SeqCst), 1);
         let bytes = wire.lock().expect("lock").clone();
         let text = String::from_utf8_lossy(&bytes);
-        assert!(text.starts_with("DKIM-Signature: v=1; a=rsa-sha256;"), "{text}");
+        assert!(
+            text.starts_with("DKIM-Signature: v=1; a=rsa-sha256;"),
+            "{text}"
+        );
         assert!(text.contains("\r\nFrom: alice@example.test"), "{text}");
     }
 
