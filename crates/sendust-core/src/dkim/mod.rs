@@ -24,6 +24,7 @@ use rsa::pkcs1::DecodeRsaPrivateKey;
 use rsa::pkcs1v15::SigningKey;
 use rsa::pkcs8::DecodePrivateKey;
 use rsa::signature::{SignatureEncoding, Signer};
+use rsa::traits::PublicKeyParts;
 use sha2::{Digest as _, Sha256};
 
 use crate::errors::{Error, ErrorCode};
@@ -97,7 +98,7 @@ impl DkimSigner {
         }
 
         let key = parse_key(private_key_pem)?;
-        let bits = key.size() * 8;
+        let bits = key.n().bits();
         if !(MIN_KEY_BITS..=MAX_KEY_BITS).contains(&bits) {
             return Err(Error::new(ErrorCode::ConfigInvalidDkimKey));
         }
@@ -628,9 +629,12 @@ mod tests {
                 .expect("fixture der"),
         )
         .expect("fixture key");
-        assert_eq!(key.size() * 8, MIN_KEY_BITS);
-        // The fixture sits exactly on the floor, so a 512-bit key would be less.
-        assert!(!(MIN_KEY_BITS..=MAX_KEY_BITS).contains(&(key.size() * 8 - 1)));
+
+        // The fixture sits exactly on the floor, and the window has two ends.
+        assert_eq!(key.n().bits(), MIN_KEY_BITS);
+        assert!((MIN_KEY_BITS..=MAX_KEY_BITS).contains(&key.n().bits()));
+        assert!(!(MIN_KEY_BITS..=MAX_KEY_BITS).contains(&(MIN_KEY_BITS - 1)));
+        assert!(!(MIN_KEY_BITS..=MAX_KEY_BITS).contains(&(MAX_KEY_BITS + 1)));
     }
 
     #[test]
