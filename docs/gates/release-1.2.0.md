@@ -4,8 +4,8 @@
 third item of the [next-cycle backlog](../planning/next-cycle-backlog.md) and
 asked for that release.
 **Release:** `@sendust/ts@1.2.0`, dist-tag `latest`.
-**Candidate commit:** the `release: prepare 1.2.0` commit on `main`; recorded in
-`release/1.2.0/approved.json` once the facade hash exists.
+**Candidate commit:** `421ee0283b78e1461718c326c56cbc40ea722d87`, the commit that
+carries the 1.2.0 tree and the CI facade hash.
 **Related:** [release notes](../releases/1.2.0.md),
 [ADR-0024](../architecture/decisions/0024-dkim-signing.md),
 [dependency policy](../engineering/dependency-policy.md) §2,
@@ -48,10 +48,13 @@ that relays through its own MTA had no way to sign with Sendust at all
 
 ## 4. Binary verification
 
-Not yet pinned. `release/1.2.0/approved.json` is written once the `Facade hash`
-job reports the tarball digest for the candidate commit; `publish-release.mjs`
-refuses to publish a facade whose digest differs from the pinned value, which is
-how `1.1.0` caught a macOS-computed hash
+`release/1.2.0/approved.json` pins the approved commit, the dist-tag `latest`, the
+facade hash `be29213daeee25a13ac034f3ec8aaad9c808bb90bc00e3da8f7155be10005334`
+produced by the `Facade hash` job on that commit (job 137491718675), and all seven
+platform entries. No byte-reproducibility claim: each target is identified by the
+approval bundle's own checksums, as in `1.1.1`. `publish-release.mjs` refuses to
+publish a facade whose digest differs from the pinned value, which is how `1.1.0`
+caught a macOS-computed hash
 ([reproducible build](../engineering/reproducible-build.md) §7).
 
 ## 5. Publication
