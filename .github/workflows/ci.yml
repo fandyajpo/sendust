@@ -501,10 +501,9 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    # The runner exports NODE_AUTH_TOKEN (setup-node writes the npmrc that
-    # references it), and a token in the environment wins over OIDC. Pinned empty
-    # for the whole job so npm takes the trusted-publishing path; the guard step
-    # fails if a real value is ever introduced at a lower level.
+    # A token in the environment wins over OIDC, so the variable is pinned empty
+    # for the whole job as a backstop; the guard step fails if a real value is
+    # introduced at a lower level.
     env:
       NODE_AUTH_TOKEN: ""
     timeout-minutes: 15
