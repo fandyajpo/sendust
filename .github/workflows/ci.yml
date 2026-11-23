@@ -515,11 +515,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      # No `registry-url` here: setup-node answers it by exporting
+      # NODE_AUTH_TOKEN with its own token, which then wins over OIDC. npm's
+      # default registry is already npmjs.org, so the OIDC exchange is used.
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22.23.5"
-          registry-url: "https://registry.npmjs.org"
 
       # Trusted publishing needs npm >= 11.5.1; the runner image ships older.
       - name: Pin npm for trusted publishing
