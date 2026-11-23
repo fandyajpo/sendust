@@ -1,3 +1,4 @@
+import { generateKeyPairSync } from "node:crypto";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer, type Socket } from "node:net";
 import { tmpdir } from "node:os";
@@ -83,8 +84,11 @@ function tlsFixture(name: string): string {
  */
 async function fakeTlsRelay(
   final: "accepted" | "rejected" | "drop" = "accepted",
-): Promise<{ port: number; close: () => Promise<void> }> {
+): Promise<{ port: number; close: () => Promise<void>; payloads: string[][] }> {
   const sockets = new Set<Socket>();
+  /** One entry per DATA transaction: the message lines the relay received. */
+  const payloads: string[][] = [];
+  let current: string[] = [];
   const server = createTlsServer(
     { key: tlsFixture("valid-server.key"), cert: tlsFixture("valid-server.crt") },
     (socket) => {
@@ -105,6 +109,8 @@ async function fakeTlsRelay(
           buffer = buffer.slice(index + 2);
           if (inData) {
             if (line === ".") {
+              payloads.push(current);
+              current = [];
               inData = false;
               if (final === "drop") {
                 socket.destroy();
@@ -113,6 +119,8 @@ async function fakeTlsRelay(
               socket.write(
                 final === "rejected" ? "451 4.3.0 try again later\r\n" : "250 2.0.0 accepted\r\n",
               );
+            } else {
+              current.push(line);
             }
             continue;
           }
@@ -142,6 +150,7 @@ async function fakeTlsRelay(
   const port = typeof address === "object" && address ? address.port : 1;
   return {
     port,
+    payloads,
     close: async () => {
       for (const socket of sockets) {
         socket.destroy();
@@ -163,6 +172,61 @@ describe("sendust facade", () => {
     } catch (error) {
       expect(error).toBeInstanceOf(SendustError);
       expect((error as SendustError).code).toBe("CONFIG_INVALID_RELAY");
+    }
+  });
+
+  it.skipIf(!available)("rejects a DKIM key the core cannot use", () => {
+    try {
+      createTransport({
+        host: "127.0.0.1",
+        port: 465,
+        secure: "tls",
+        dkim: { domain: "example.test", selector: "sel1", privateKey: "not a pem" },
+      });
+      throw new Error("a bad DKIM key must be rejected");
+    } catch (error) {
+      expect(error).toBeInstanceOf(SendustError);
+      expect((error as SendustError).code).toBe("CONFIG_INVALID_DKIM_KEY");
+    }
+  });
+
+  it.skipIf(!available)("signs a message with DKIM before DATA", async () => {
+    const relay = await fakeTlsRelay();
+    const { privateKey } = generateKeyPairSync("rsa", {
+      modulusLength: 1024,
+      privateKeyEncoding: { type: "pkcs8", format: "pem" },
+      publicKeyEncoding: { type: "spki", format: "pem" },
+    });
+    const transport = createTransport({
+      host: "127.0.0.1",
+      port: relay.port,
+      secure: "tls",
+      tlsRootCertificate: tlsFixture("ca.crt"),
+      dkim: { domain: "example.test", selector: "sel1", privateKey: String(privateKey) },
+      delivery: { maxAttempts: 1 },
+    });
+
+    try {
+      const result = await transport.send({
+        from: "sender@example.test",
+        to: ["rcpt@example.test"],
+        subject: "Signed by Sendust",
+        text: "hello",
+      });
+
+      expect(result.status).toBe("accepted");
+      const message = relay.payloads[0] ?? [];
+      expect(message[0]).toMatch(
+        /^DKIM-Signature: v=1; a=rsa-sha256; c=relaxed\/relaxed; d=example\.test; s=sel1;/,
+      );
+      expect(message.join("\n")).toContain(
+        "h=from:to:subject:date:message-id:mime-version:content-type:content-transfer-encoding;",
+      );
+      expect(message.join("\n")).toContain("bh=");
+      expect(message.join("\n")).toContain("\nFrom: sender@example.test");
+    } finally {
+      await transport.close();
+      await relay.close();
     }
   });
 

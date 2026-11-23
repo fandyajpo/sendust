@@ -87,6 +87,17 @@ audit and `check-secrets` must be extended to cover the new field.
 
 ## 4. Priority 3 — DKIM signing
 
+**Status (2026-11-23): implemented, awaiting publication in 1.2.0.** The signer
+lives in `crates/sendust-core/src/dkim`, `Delivery::with_dkim` signs the composed
+wire before the port is called, and the option is `dkim: { domain, selector,
+privateKey, headers? }` on the transport. `rsa` 0.9.10 and `sha2` 0.10.9 are pinned
+through the [dependency policy](../engineering/dependency-policy.md), the refusal
+of RFC 6376's forbidden fields and the key-size window are enforced at
+construction, and conformance is an independent verifier in
+`crates/sendust-core/tests/dkim.rs`
+([ADR-0024](../architecture/decisions/0024-dkim-signing.md)). Still open:
+Ed25519 (`ed25519-sha256`), multiple signatures, and `i=`/`q=`/`l=` tags.
+
 **Why.** Behind an ESP that signs, DKIM is invisible. For a team running its own
 MTA, or trying to pass DMARC while relaying through a plain SMTP hop, the client
 is the only place to sign — and Nodemailer, Upyo and every hosted SDK already

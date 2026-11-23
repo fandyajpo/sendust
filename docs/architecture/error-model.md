@@ -92,6 +92,7 @@ export type ErrorCategory =
 | `CONFIG_FILE_ACCESS_DISABLED` | configuration | Promise rejection from send | File attachment used without opt-in | No |
 | `CONFIG_ATTACHMENT_UNREADABLE` | configuration | Promise rejection from send | File attachment is missing, unreadable, or not a regular file | No |
 | `CONFIG_INVALID_RELAY` | configuration | sync | Empty/invalid host or port | No |
+| `CONFIG_INVALID_DKIM_KEY` | configuration | sync at createTransport | The DKIM private key does not parse, or is not a 1024–4096 bit RSA key (ADR-0024) | No |
 | `CONFIG_NATIVE_UNAVAILABLE` | configuration | sync at createTransport | The bundled native addon is missing or cannot be loaded on this platform; no fallback build is used | No, install a build for this platform |
 | `LIMIT_RECIPIENTS` | limit | Promise rejection from send | More than 100 recipients | No |
 | `LIMIT_ATTACHMENT_BYTES` | limit | Promise rejection from send | Attachment exceeds 10 MiB | No |

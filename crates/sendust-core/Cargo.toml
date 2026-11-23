@@ -21,6 +21,9 @@ tokio-rustls.workspace = true
 rustls.workspace = true
 rustls-pki-types.workspace = true
 webpki-roots.workspace = true
+# DKIM signing (ADR-0024): RSA PKCS#1 v1.5 signatures over a SHA-256 digest.
+rsa.workspace = true
+sha2.workspace = true
 
 [target.'cfg(unix)'.dependencies]
 # O_NOFOLLOW and O_NONBLOCK for the safe attachment file reader (P08-002).

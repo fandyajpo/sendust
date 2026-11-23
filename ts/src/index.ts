@@ -32,6 +32,7 @@ export type {
   BufferAttachment,
   DeliveryOptions,
   DeliveryStatus,
+  DkimOptions,
   FileAttachment,
   HeaderLike,
   LimitOptions,

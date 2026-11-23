@@ -6,6 +6,7 @@ import {
   type Attachment,
   type AuthOptions,
   type DeliveryStatus,
+  type DkimOptions,
   type LimitOptions,
   type Message,
   type RecipientOutcome,
@@ -66,7 +67,11 @@ describe("public contract types", () => {
       | "limits"
       | "attachments"
       | "tlsRootCertificate"
+      | "dkim"
       | "delivery"
+    >();
+    expectTypeOf<keyof DkimOptions>().toEqualTypeOf<
+      "domain" | "selector" | "privateKey" | "headers"
     >();
     expectTypeOf<keyof AuthOptions>().toEqualTypeOf<"user" | "pass" | "accessToken" | "method">();
     expectTypeOf<keyof TimeoutOptions>().toEqualTypeOf<

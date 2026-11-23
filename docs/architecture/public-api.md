@@ -34,6 +34,7 @@ No plugin registry, no transport subclasses, no streaming API, no callback API, 
 | `auth` | `{ user, pass?, accessToken?, method? }` | undefined | user non-empty; exactly one of `pass` or `accessToken`; `method` `"plain"`, `"login"` or `"xoauth2"`, and `"xoauth2"` requires a token (ADR-0023); anything else is `VALIDATION_INVALID_OPTION` |
 | `ehloName` | `string` | `localhost` | one printable ASCII token: 1–255 bytes, no space, control or non-ASCII character |
 | `tlsRootCertificate` | `string` | none | one PEM bundle of trust anchors added on top of the bundled roots; never replaces them and never disables verification; a malformed PEM is `VALIDATION_INVALID_OPTION` (ADR-0018) |
+| `dkim` | `{ domain, selector, privateKey, headers? }` | undefined | `domain` is dot-separated ASCII labels, `selector` one label, `privateKey` a PEM RSA key of 1024–4096 bits; `headers` names valid fields, `From` is always signed, an absent field is skipped and a field RFC 6376 forbids is `VALIDATION_INVALID_HEADER`; an unusable key is `CONFIG_INVALID_DKIM_KEY` (ADR-0024) |
 | `timeouts.connectMs` | `number` | 10000 | integer 1000–10000; ≤ totalMs |
 | `timeouts.operationMs` | `number` | 30000 | integer 1000–30000; ≤ totalMs |
 | `timeouts.totalMs` | `number` | 120000 | integer 1000–120000; ≥ connectMs and operationMs |
@@ -47,6 +48,11 @@ No plugin registry, no transport subclasses, no streaming API, no callback API, 
 Timeout values may be lowered but not raised above the documented maxima. Limits may be lowered but not raised. A caller cannot configure a value above the documented hard cap. Unknown option keys are rejected with `VALIDATION_INVALID_OPTION` to catch typos.
 
 There is no option to disable TLS verification, no plaintext SMTP mode, no pool size, no retry count, and no proxy configuration in MVP. The only trust input is the additive `tlsRootCertificate` (ADR-0018).
+
+DKIM is the only signing input (ADR-0024). Sendust publishes no DNS record, stores
+no key and rotates nothing: it signs with the key it is given, with `rsa-sha256`
+and relaxed/relaxed canonicalization, and the signature is part of the wire, so
+the wire cap covers it.
 
 ## 3. Message shape
 
@@ -188,7 +194,6 @@ The following are intentionally absent and must not appear in the MVP type surfa
 - `abortSignal` option; the MVP only exposes explicit bounded `close()` and timeout-based internal cancellation
 - `stream`, `streamTransport`
 - `url` attachments
-- `dkim`
 - `template`, `render`
 - provider-specific options (`ses`, `sendgrid`, `mailgun`)
 - `verify()` connection probe (post-MVP candidate)

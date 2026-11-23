@@ -55,6 +55,7 @@ const MODULE_LAYERS = new Map([
   ["address", "domain"],
   ["attachments", "domain"],
   ["config", "domain"],
+  ["dkim", "domain"],
   ["errors", "domain"],
   ["message", "domain"],
   ["mime", "domain"],

@@ -80,7 +80,7 @@ Sendust MVP is a production-usable npm package that sends one transactional emai
 | Public AbortSignal cancellation | POST-MVP | MVP exposes explicit bounded close and timeouts only; no public AbortSignal option |
 | Streaming attachments | POST-MVP | Conflicts with wire-size accounting and bounded memory simplicity |
 | URL attachment fetch | OUT OF SCOPE | SSRF, network, and trust surface |
-| DKIM signing | POST-MVP | Key management and canonicalization scope |
+| DKIM signing | POST-MVP, DELIVERED in 1.2.0 | Optional `rsa-sha256` relaxed/relaxed signing with a caller-supplied key; no key store, no DNS publication ([ADR-0024](../architecture/decisions/0024-dkim-signing.md)) |
 | Additional transports (SES, SendGrid, Mailgun, sendmail) | POST-MVP | MVP is SMTP-first |
 | Templates | OUT OF SCOPE | Application concern |
 | Queue/job integration or adapters | HELD | Not part of the current product roadmap; no queue API, worker, persistence, or adapter contract will be designed in this phase |

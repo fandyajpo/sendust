@@ -6,6 +6,7 @@
 
 use crate::attachments::{Attachment, AttachmentPolicy, normalize_filename, read_attachment};
 use crate::config::Limits;
+use crate::dkim::DkimSigner;
 use crate::errors::{Error, ErrorCode};
 use crate::message::OutgoingMessage;
 use crate::mime;
@@ -17,6 +18,7 @@ pub struct Delivery<P> {
     port: P,
     limits: Limits,
     attachment_policy: AttachmentPolicy,
+    signer: Option<DkimSigner>,
 }
 
 impl<P: DeliveryPort> Delivery<P> {
@@ -25,7 +27,15 @@ impl<P: DeliveryPort> Delivery<P> {
             port,
             limits,
             attachment_policy,
+            signer: None,
         }
+    }
+
+    /// Signs every composed message with DKIM before it reaches the port
+    /// (ADR-0024). Without a signer the wire bytes are sent exactly as composed.
+    pub fn with_dkim(mut self, signer: DkimSigner) -> Self {
+        self.signer = Some(signer);
+        self
     }
 
     pub fn port(&self) -> &P {
@@ -42,12 +52,17 @@ impl<P: DeliveryPort> Delivery<P> {
         // precedence holds: identity and recipients outrank attachment reads.
         message.validate(self.limits, self.attachment_policy)?;
         let message = load_attachments(message, self.limits, self.attachment_policy)?;
-        let wire = mime::serialize_at(
-            &message,
-            self.limits,
-            self.attachment_policy,
-            std::time::SystemTime::now(),
-        )?;
+        // One instant stamps `Date`, `Message-ID` and the DKIM `t=` tag, so the
+        // signed headers carry the date the signature claims.
+        let now = std::time::SystemTime::now();
+        let mut wire = mime::serialize_at(&message, self.limits, self.attachment_policy, now)?;
+        if let Some(signer) = &self.signer {
+            wire = signer.sign(&wire, now)?;
+            // The signature is part of the wire, so the cap has to cover it.
+            if wire.len() as u64 > self.limits.max_wire_bytes() {
+                return Err(Error::new(ErrorCode::LimitWireBytes));
+            }
+        }
         let request = DeliveryRequest { message, wire };
         self.port.deliver(request).await
     }
@@ -380,5 +395,43 @@ mod tests {
         assert_eq!(calls.load(Ordering::SeqCst), 0);
 
         remove_temp(&path);
+    }
+
+    #[tokio::test]
+    async fn signs_the_wire_before_it_reaches_the_port() {
+        let (port, calls, wire) = fake(None);
+        let mut delivery = Delivery::new(port, Limits::default(), AttachmentPolicy::Disabled)
+            .with_dkim(crate::dkim::test_support::signer());
+
+        delivery.send(message()).await.expect("sent");
+
+        assert_eq!(calls.load(Ordering::SeqCst), 1);
+        let bytes = wire.lock().expect("lock").clone();
+        let text = String::from_utf8_lossy(&bytes);
+        assert!(text.starts_with("DKIM-Signature: v=1; a=rsa-sha256;"), "{text}");
+        assert!(text.contains("\r\nFrom: alice@example.test"), "{text}");
+    }
+
+    #[tokio::test]
+    async fn a_signature_that_overflows_the_wire_cap_never_reaches_the_port() {
+        let (port, _, wire) = fake(None);
+        let mut delivery = Delivery::new(port, Limits::default(), AttachmentPolicy::Disabled);
+        delivery.send(message()).await.expect("unsigned");
+        let unsigned = wire.lock().expect("lock").len() as u64;
+
+        let limits = Limits::default()
+            .with_max_wire_bytes(unsigned)
+            .expect("lowering is allowed");
+        let (port, calls, _) = fake(None);
+        let mut delivery = Delivery::new(port, limits, AttachmentPolicy::Disabled)
+            .with_dkim(crate::dkim::test_support::signer());
+
+        let error = delivery
+            .send(message())
+            .await
+            .expect_err("the signature is over the cap");
+
+        assert_eq!(error.code(), ErrorCode::LimitWireBytes);
+        assert_eq!(calls.load(Ordering::SeqCst), 0);
     }
 }

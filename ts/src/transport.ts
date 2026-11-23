@@ -16,6 +16,7 @@ import type {
   Attachment,
   AuthOptions,
   DeliveryOptions,
+  DkimOptions,
   Message,
   SendResult,
   TransportOptions,
@@ -33,8 +34,10 @@ const TRANSPORT_KEYS = new Set([
   "limits",
   "attachments",
   "tlsRootCertificate",
+  "dkim",
   "delivery",
 ]);
+const DKIM_KEYS = new Set(["domain", "selector", "privateKey", "headers"]);
 const AUTH_KEYS = new Set(["user", "pass", "accessToken", "method"]);
 const TIMEOUT_KEYS = new Set(["connectMs", "operationMs", "totalMs", "closeMs"]);
 const LIMIT_KEYS = new Set([
@@ -309,12 +312,34 @@ function headerPairs(headers: Message["headers"]): Array<{ name: string; value: 
   return Object.entries(headers).map(([name, value]) => ({ name, value }));
 }
 
+/**
+ * The `dkim` record the native layer takes (ADR-0024).
+ *
+ * The key is passed through as given: the core parses it, and a key it cannot
+ * use is rejected when the transport is built rather than on the first send.
+ */
+function nativeDkim(dkim: DkimOptions): Record<string, unknown> {
+  if (!dkim.domain || !dkim.selector || !dkim.privateKey) {
+    throw invalidOption();
+  }
+  const native: Record<string, unknown> = {
+    domain: dkim.domain,
+    selector: dkim.selector,
+    privateKey: dkim.privateKey,
+  };
+  if (dkim.headers !== undefined) {
+    native.headers = dkim.headers;
+  }
+  return native;
+}
+
 function toNativeOptions(options: TransportOptions): Record<string, unknown> {
   assertKnownKeys(options, TRANSPORT_KEYS);
   if (options.auth) assertKnownKeys(options.auth, AUTH_KEYS);
   if (options.timeouts) assertKnownKeys(options.timeouts, TIMEOUT_KEYS);
   if (options.limits) assertKnownKeys(options.limits, LIMIT_KEYS);
   if (options.attachments) assertKnownKeys(options.attachments, ATTACHMENT_KEYS);
+  if (options.dkim) assertKnownKeys(options.dkim, DKIM_KEYS);
 
   const native: Record<string, unknown> = {
     host: options.host,
@@ -330,6 +355,9 @@ function toNativeOptions(options: TransportOptions): Record<string, unknown> {
   }
   if (options.tlsRootCertificate !== undefined) {
     native.tlsRootCertificate = options.tlsRootCertificate;
+  }
+  if (options.dkim !== undefined) {
+    native.dkim = nativeDkim(options.dkim);
   }
 
   const timeouts = options.timeouts;

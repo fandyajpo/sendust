@@ -12,8 +12,8 @@ use napi::Status;
 use napi::bindgen_prelude::{Result, Uint8Array};
 use napi_derive::napi;
 use sendust_core::{
-    Attachment, AuthMechanism, Delivery, DeliveryProgress, Error as CoreError, ErrorCode,
-    FileDescriptor, Header, Limits, Mailbox, OutgoingMessage, ReusePolicy, SmtpConfig,
+    Attachment, AuthMechanism, Delivery, DeliveryProgress, DkimSigner, Error as CoreError,
+    ErrorCode, FileDescriptor, Header, Limits, Mailbox, OutgoingMessage, ReusePolicy, SmtpConfig,
     SmtpCredentials, SmtpSecurity, SmtpTransport, Timeouts,
 };
 
@@ -42,6 +42,20 @@ pub struct AuthOptions {
     pub method: Option<String>,
 }
 
+/// DKIM signing (ADR-0024). The key is parsed in the constructor, so a key that
+/// is not usable fails `new Transport(...)` rather than the first send.
+#[napi(object)]
+pub struct DkimOptions {
+    /// Signing domain, the DKIM `d=` tag.
+    pub domain: String,
+    /// Key selector, the DKIM `s=` tag.
+    pub selector: String,
+    /// PEM private key, PKCS#1 or PKCS#8.
+    pub private_key: String,
+    /// Header fields to sign; the core default applies when omitted.
+    pub headers: Option<Vec<String>>,
+}
+
 /// Transport configuration. Mirrors the public contract; core validates it.
 #[napi(object)]
 pub struct TransportOptions {
@@ -65,6 +79,8 @@ pub struct TransportOptions {
     pub max_messages_per_session: Option<u32>,
     /// How long an idle session may be reused before a fresh dial (ADR-0022).
     pub idle_reuse_ms: Option<u32>,
+    /// DKIM signing; a message is sent unsigned only when this is absent.
+    pub dkim: Option<DkimOptions>,
 }
 
 /// One custom header.
@@ -137,6 +153,7 @@ struct Inner {
     filesystem: bool,
     close_timeout: Duration,
     progress: Arc<DeliveryProgress>,
+    dkim: Option<DkimSigner>,
 }
 
 /// One open transport. One active send; concurrent sends fail with BUSY.
@@ -248,6 +265,17 @@ impl Transport {
         }
 
         let progress = Arc::new(DeliveryProgress::new());
+        let dkim = match options.dkim {
+            Some(dkim) => {
+                let mut signer =
+                    DkimSigner::new(dkim.domain, dkim.selector, &dkim.private_key).map_err(to_napi)?;
+                if let Some(headers) = dkim.headers {
+                    signer = signer.with_headers(&headers).map_err(to_napi)?;
+                }
+                Some(signer)
+            }
+            None => None,
+        };
         Ok(Self {
             inner: Arc::new(Inner {
                 slot: tokio::sync::Mutex::new(Some(
@@ -260,6 +288,7 @@ impl Transport {
                 filesystem: options.allow_file_access.unwrap_or(false),
                 close_timeout: timeouts.close(),
                 progress,
+                dkim,
             }),
         })
     }
@@ -333,6 +362,9 @@ impl Transport {
                 inner.limits,
                 sendust_core::AttachmentPolicy::from_flag(inner.filesystem),
             );
+            if let Some(signer) = inner.dkim.clone() {
+                delivery = delivery.with_dkim(signer);
+            }
             let outcome = delivery.send(prepared).await;
             (transport, outcome)
         });

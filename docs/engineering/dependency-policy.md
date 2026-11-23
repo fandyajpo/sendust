@@ -24,12 +24,16 @@ A direct dependency may be added only through the review in section 6. Transitiv
 | `webpki-roots` | `=1.0.12` | normal | default | on | `sendust-core` | Bundled trust store for the native client (ADR-0003) |
 | `rustls-pki-types` | `=1.16.0` | normal | default | on | `sendust-core` | `ServerName` and certificate types for the native client |
 | `mail-parser` | `=0.11.9` | dev | default | on | `sendust-core` | Independent MIME parser for conformance tests (P07-005); never ships |
+| `rsa` | `=0.9.10` | normal | `std`, `pem` | off | `sendust-core` | RSASSA-PKCS1-v1_5 signatures for DKIM (ADR-0024) |
+| `sha2` | `=0.10.9` | normal | `std`, `oid` | off | `sendust-core` | SHA-256 for the DKIM body and header hashes (ADR-0024) |
 
 `sendust-core` declares no build script and no binding, runtime, or Node.js dependency. `sendust-napi` depends on `sendust-core` and never the reverse. No third-party SMTP engine is declared anywhere, in any kind of dependency, after PHASE-06 (ADR-0017).
 
 `base64` and `idna` are the vetted primitives ADR-0010 requires; both are declared directly and add no new transitive weight. `idna` is declared directly so the core cannot silently drift from the resolver's choice.
 
 `libc` was already in the build graph through `tokio`, `mio`, and `socket2`; it is declared directly only so the attachment reader can pass `O_NOFOLLOW` and `O_NONBLOCK`, which the standard library does not expose. The dependency is target-gated to unix and adds no new package to the lockfile.
+
+`rsa` and `sha2` were admitted for DKIM signing under ADR-0024, after the review in section 6: RSA signing is a security primitive ADR-0010 forbids hand-rolling, both are RustCrypto crates under `MIT OR Apache-2.0`, and neither pulls OpenSSL, `native-tls`, or a second TLS stack. `rsa` is pinned to `0.9.10` rather than `0.10.0`: the 0.10 line was published three weeks before this pin and reworked the encoding and signature feature layout, while 0.9.10 is the mature line with the same PKCS#1 v1.5 semantics; `sha2` is pinned to `0.10.9` to match the `digest` generation `rsa` 0.9 is built on. `sha2`'s `oid` feature is required because a PKCS#1 v1.5 signing key has to name the digest it signs with.
 
 Test-only dependencies (MIME verification, fake SMTP/TLS tooling, benchmarks) are introduced by the phase that needs them, pinned exactly at that time, recorded in this table with kind `dev`, and never enabled for published artifacts.
 
@@ -94,6 +98,8 @@ Every direct dependency must have one row. The inventory is completed before rel
 | `rustls` | `0.23.46` | Apache-2.0 OR ISC OR MIT | https://crates.io/crates/rustls | P04-005 |
 | `libc` | `0.2.191` | MIT | https://crates.io/crates/libc | P08-002 (target-gated; already transitive via `tokio`) |
 | `mail-parser` | `0.11.9` | Apache-2.0 OR MIT | https://crates.io/crates/mail-parser | P07-005 (dev-only) |
+| `rsa` | `0.9.10` | MIT OR Apache-2.0 | https://crates.io/crates/rsa | 1.2.0 (ADR-0024) |
+| `sha2` | `0.10.9` | MIT OR Apache-2.0 | https://crates.io/crates/sha2 | 1.2.0 (ADR-0024) |
 
 ## 9. npm development tool pins
 

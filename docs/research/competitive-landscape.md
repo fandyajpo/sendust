@@ -72,7 +72,7 @@ Legend: ✅ first-class, ◐ partial or via a plugin, ❌ absent.
 | First-class `unknown` outcome | ✅ | ❌ | ◐ structured errors | ❌ | ❌ |
 | Hard caps on recipients/size | ✅ | ❌ | ◐ size bounds | ✅ plan quotas | ✅ plan quotas |
 | TLS verification cannot be disabled | ✅ | ❌ (`tls.rejectUnauthorized`) | ◐ per-transport options | n/a | n/a |
-| DKIM signing | ❌ | ✅ | ✅ rsa + ed25519 | ◐ provider-side | ◐ provider-side |
+| DKIM signing | ✅ (1.2.0) | ✅ | ✅ rsa + ed25519 | ◐ provider-side | ◐ provider-side |
 | OAuth2 / XOAUTH2 | ❌ | ✅ | ✅ | n/a | n/a |
 | Templates | ❌ by design | ❌ (plugins) | ❌ | ✅ dashboard | ✅ React Email |
 | Tracking, webhooks, analytics | ❌ by design | ❌ | ◐ provider passthrough | ✅ | ✅ |
@@ -226,7 +226,10 @@ engine and a real contract", not "a better provider".
    Workspace with modern policy) cannot use Sendust at all, because `PLAIN` and
    `LOGIN` are the only mechanisms.
 3. **No DKIM signing.** Fine behind an ESP that signs; a blocker for teams
-   running their own MTA that expect the client to sign.
+   running their own MTA that expect the client to sign. **Closed in 1.2.0**
+   ([ADR-0024](../architecture/decisions/0024-dkim-signing.md)): `rsa-sha256`
+   relaxed/relaxed signing with a caller-supplied key. Ed25519 is still absent,
+   and so are multiple signatures.
 4. **No HTTP provider transports and no edge support.** Every serverless or
    edge deployment is out of reach by construction.
 5. **Adoption and trust.** 457 weekly downloads against Nodemailer's 40.5
@@ -246,7 +249,7 @@ engine and a real contract", not "a better provider".
 | Priority | Move | Why |
 | --- | --- | --- |
 | 1 | Publish `linux-x64-musl` and `linux-arm64-musl` builds | Removes the most common install failure (Alpine containers) — code and CI landed 2026-11-22, awaiting the first green run |
-| 2 | Add XOAUTH2 and DKIM | Unlocks Microsoft 365 / Google Workspace tenants and self-hosted-MTA users |
+| 2 | Add XOAUTH2 and DKIM | Unlocks Microsoft 365 / Google Workspace tenants and self-hosted-MTA users — **shipped: XOAUTH2 in 1.1.0, DKIM in 1.2.0** |
 | 3 | Move to npm trusted publishing (OIDC) with provenance | Closes the provenance gap and the January 2027 token deadline |
 | 4 | Ship a mock transport | Test ergonomics; upyo treats it as table stakes |
 | 5 | `AbortSignal` mapped to bounded close | Already a post-MVP candidate; callers expect it |

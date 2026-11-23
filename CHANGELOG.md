@@ -8,7 +8,21 @@ tag format, version sources, and compatibility promises — are in
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- Optional DKIM signing (RFC 6376), so a team that relays through its own MTA can
+  pass DMARC without an ESP that signs: `dkim: { domain, selector, privateKey }`.
+  The core signs the composed wire — `rsa-sha256`, relaxed/relaxed — and prepends
+  one `DKIM-Signature` before `DATA`, so the bytes the transport sends are the
+  bytes that were signed. `From` is always covered, an absent field is skipped, a
+  field RFC 6376 forbids signing is rejected, and the body is hashed in full (no
+  `l=`). The key is parsed when the transport is created, so an unusable key fails
+  with `CONFIG_INVALID_DKIM_KEY` instead of after the relay has seen a message,
+  and the wire cap covers the signature
+  ([ADR-0024](docs/architecture/decisions/0024-dkim-signing.md)).
+
+- Two pinned dependencies for it, `rsa` 0.9.10 and `sha2` 0.10.9, both RustCrypto
+  and `MIT OR Apache-2.0` ([dependency policy](docs/engineering/dependency-policy.md)).
 
 ## [1.1.1] - 2026-11-23
 

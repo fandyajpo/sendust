@@ -43,6 +43,16 @@ rustls-pki-types = { version = "=1.16.0" }
 # never ships and it re-parses the emitted bytes with a second implementation.
 mail-parser = { version = "=0.11.9" }
 
+# RSA signatures for DKIM (RFC 6376, ADR-0024). Signing stays in the core; the
+# padding and bignum arithmetic stay in a vetted RustCrypto crate rather than
+# being hand-rolled. `pem` reads the caller's key, `std` keeps the crate in the
+# same build mode as the rest of the core.
+rsa = { version = "=0.9.10", default-features = false, features = ["std", "pem"] }
+
+# SHA-256 for the DKIM body hash and header hash. `oid` is what a PKCS#1 v1.5
+# signing key needs to name the digest it signs with.
+sha2 = { version = "=0.10.9", default-features = false, features = ["std", "oid"] }
+
 # Node-API 8 binding surface, used by sendust-napi only.
 napi = { version = "=3.16.2", features = ["napi8", "async"] }
 napi-derive = "=3.7.0"

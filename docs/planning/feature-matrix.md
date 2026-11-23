@@ -39,7 +39,7 @@ Every `REQUIRED FOR MVP` row must map to at least one implementation task and at
 | F-SMTP-13 | Connection pooling | POST-MVP | P18-003 research only | — | See ADR-0006 |
 | F-SMTP-14 | Automatic retry/backoff | POST-MVP | Future ADR/research decision | — | No automatic retry in MVP; unknown outcomes require caller judgment |
 | F-SMTP-15 | SMTPUTF8 | POST-MVP | P18-002 research only | — | ASCII local parts in MVP |
-| F-SMTP-16 | DKIM signing | POST-MVP | — | — | Post-MVP candidate |
+| F-SMTP-16 | DKIM signing | DELIVERED (1.2.0) | ADR-0024 | `crates/sendust-core/tests/dkim.rs` | Optional `rsa-sha256`, relaxed/relaxed, caller-supplied key; no DNS, no key store |
 | F-SMTP-17 | `verify()` connection probe | POST-MVP | — | — | Not required to send |
 | F-SMTP-18 | Reject unsupported security/auth modes before connect | REQUIRED | P06-002 | P06-005 | Configuration error |
 
@@ -167,7 +167,7 @@ Every `REQUIRED FOR MVP` row must map to at least one implementation task and at
 
 | PM-09 | Observability hooks | Operational demand | P18-002 |
 | PM-10 | `verify()` probe | Diagnostics demand | P18-002 |
-| PM-11 | DKIM signing | Deliverability demand | P18-002 |
+| PM-11 | DKIM signing | Deliverability demand | DELIVERED in 1.2.0 ([ADR-0024](../architecture/decisions/0024-dkim-signing.md)) |
 | PM-12 | Enterprise CA / platform verifier | Enterprise demand | P18-002 |
 
 ## Out-of-scope product areas (permanent)

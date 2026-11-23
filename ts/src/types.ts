@@ -99,6 +99,39 @@ export interface LimitOptions {
 }
 
 /**
+ * DKIM signing (RFC 6376, ADR-0024). Absent, a message is sent unsigned.
+ *
+ * Sendust signs with `rsa-sha256` and relaxed/relaxed canonicalization: the body
+ * is hashed, the headers named in `headers` are canonicalized, and one
+ * `DKIM-Signature` field is prepended before `DATA`. Signing happens on the
+ * composed bytes, so the wire cap includes the signature.
+ *
+ * The key is a PEM RSA private key, PKCS#1 or PKCS#8, of 1024 to 4096 bits. It is
+ * parsed when the transport is created, which is also where an unusable key is
+ * rejected — never after the relay has seen a message. Sendust publishes no
+ * `DKIM-Signature` record: the DNS side, the selector and its rotation stay with
+ * the caller.
+ */
+export interface DkimOptions {
+  /** Signing domain, the DKIM `d=` tag. ASCII labels separated by dots. */
+  readonly domain: string;
+  /** Key selector, the DKIM `s=` tag: one label, no dot. */
+  readonly selector: string;
+  /** PEM RSA private key; PKCS#1 (`BEGIN RSA PRIVATE KEY`) or PKCS#8. */
+  readonly privateKey: string;
+  /**
+   * Header fields to sign, case-insensitive, in signing order. Omit it for
+   * `from`, `to`, `cc`, `reply-to`, `subject`, `date`, `message-id`,
+   * `mime-version`, `content-type` and `content-transfer-encoding`.
+   *
+   * `From` is always signed. A field the message does not carry is skipped, and
+   * a field RFC 6376 forbids signing (`Bcc`, `Received`, `Return-Path`, …) is
+   * rejected with `VALIDATION_INVALID_HEADER`.
+   */
+  readonly headers?: string[];
+}
+
+/**
  * Transport configuration. `secure` has no plaintext mode, and there is no
  * option to disable TLS verification.
  */
@@ -123,6 +156,8 @@ export interface TransportOptions {
   readonly tlsRootCertificate?: string;
   /** Filesystem access for path attachments; disabled unless explicitly enabled. */
   readonly attachments?: { readonly allowFileAccess?: boolean };
+  /** DKIM signing; every message is sent unsigned when this is absent. */
+  readonly dkim?: DkimOptions;
   /**
    * Automatic delivery management. Every field is an optional override: the
    * defaults accept bursts, pool sessions, bound the queue, and retry only

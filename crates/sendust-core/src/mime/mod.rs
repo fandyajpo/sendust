@@ -17,7 +17,9 @@ use crate::message::OutgoingMessage;
 
 mod headers;
 
-use headers::CRLF;
+// The DKIM signer renders its own field with the same limits, so the two paths
+// cannot drift apart on folding or line length.
+pub(crate) use headers::{CRLF, FOLD_WIDTH, MAX_LINE};
 
 // Header order is owned here (ADR-0010) and is fixed: `From`, `To`, `Cc`,
 // `Reply-To`, `Subject`, then the caller's custom headers in insertion order,

@@ -116,6 +116,11 @@ error_codes! {
         "attachment file is not a readable regular file"
     ),
     ConfigInvalidRelay => ("CONFIG_INVALID_RELAY", Configuration, "invalid relay configuration"),
+    ConfigInvalidDkimKey => (
+        "CONFIG_INVALID_DKIM_KEY",
+        Configuration,
+        "DKIM signing key is not usable"
+    ),
     LimitRecipients => ("LIMIT_RECIPIENTS", Limit, "too many recipients"),
     LimitAttachmentBytes => ("LIMIT_ATTACHMENT_BYTES", Limit, "attachment exceeds the per-file limit"),
     LimitAttachmentTotal => ("LIMIT_ATTACHMENT_TOTAL", Limit, "attachments exceed the aggregate limit"),
@@ -328,6 +333,7 @@ mod tests {
         ("CONFIG_FILE_ACCESS_DISABLED", "configuration"),
         ("CONFIG_ATTACHMENT_UNREADABLE", "configuration"),
         ("CONFIG_INVALID_RELAY", "configuration"),
+        ("CONFIG_INVALID_DKIM_KEY", "configuration"),
         ("LIMIT_RECIPIENTS", "limit"),
         ("LIMIT_ATTACHMENT_BYTES", "limit"),
         ("LIMIT_ATTACHMENT_TOTAL", "limit"),
