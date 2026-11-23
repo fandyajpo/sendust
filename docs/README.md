@@ -3,7 +3,7 @@
 **Sendust — Standalone Native Email Delivery Engine for Node.js, Bun, and Deno**  
 Planning baseline: 2026-11-13.
 
-This documentation set is the source of truth for product scope, requirements, approved architecture design, decisions, and execution planning. Repository-wide AI/contributor behavior is governed by [AGENTS.md](../AGENTS.md) and the [AI implementation contract](engineering/ai-implementation-contract.md). QG-00, QG-01, and QG-02 are approved. The two-crate workspace, the native SMTP engine (P06), MIME composition (P07), the Node-API binding, the runtime-neutral TypeScript facade, and blocking CI exist; attachment file policy (P08), public API validation (P09), runtime and platform support claims, and publication are complete, and `@sendust/ts@0.1.0-rc.1` with its five platform packages is published.
+This documentation set is the source of truth for product scope, requirements, approved architecture design, decisions, and execution planning. Repository-wide AI/contributor behavior is governed by [AGENTS.md](../AGENTS.md) and the [AI implementation contract](engineering/ai-implementation-contract.md). QG-00, QG-01, and QG-02 are approved. The two-crate workspace, the native SMTP engine (P06), MIME composition (P07), the Node-API binding, the runtime-neutral TypeScript facade, attachment file policy (P08), public API validation (P09), runtime and platform support claims, and publication are complete. `@sendust/ts` is published through npm trusted publishing with provenance, on seven native targets; the current tree is `1.2.0`, which adds DKIM signing on top of the musl targets and XOAUTH2 in `1.1.0` ([release notes](releases/1.2.0.md), [gate record](gates/release-1.2.0.md)).
 
 ## 1. Start here
 
@@ -84,6 +84,7 @@ This documentation set is the source of truth for product scope, requirements, a
 | 70 | [Lifecycle, timeouts, concurrency, and limits](guides/lifecycle-limits.md) | P15-002 state machine, close, BUSY, the four timeout budgets, and the four hard caps with boundary behaviour |
 | 71 | [Addresses, MIME, and attachments](guides/addressing-mime-attachments.md) | P15-003 address rules, header safety, body shapes, attachment opt-in and caps, and the content-type map |
 | 72 | [Errors, security, and operations](guides/errors-security-operations.md) | P15-004 error catalog with caller actions, redaction, TLS posture, and operational guidance |
+| 72a | [DKIM signing](guides/dkim-signing.md) | 1.2.0: what is signed, key creation, the DNS record, verification, rotation, and troubleshooting |
 | 73 | [Maintainer guide](guides/maintainer.md) | P15-005 repository layout, commands, test harness, documentation rules, and release inputs |
 | 74 | [PHASE-15 documentation record](gates/phase-15.md) | QG-15 checklist, guide coverage, accuracy instruments, findings, and the approved decision |
 | 75 | [Versioning, tagging, and changelog policy](engineering/versioning-policy.md) | P16-001 semantic versioning, pre-release and tag format, version sources, changelog, and compatibility promises |
@@ -187,7 +188,7 @@ P00–P16 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 | P18-003 | COMPLETED — connection pooling research; reuse deferred, no queue |
 | P18-004 | COMPLETED — compatibility and deprecation policy |
 | P18-005 | COMPLETED — PHASE-18 approved 2026-11-18; planning program closed |
-| Next step | The release is tagged `v0.1.0-rc.1`; post-MVP work starts from the backlog with its own ADR |
+| Next step | Releases through `1.2.0` are tagged (`v0.1.0-rc.1` … `v1.2.0`); post-MVP work starts from the [next-cycle backlog](planning/next-cycle-backlog.md) with its own ADR |
 
 ## 5. Conventions
 
@@ -197,7 +198,7 @@ P00–P16 are COMPLETED with approved evidence. ADR-0017 supersedes ADR-0002 and
 - Open questions: OQ-01–OQ-07.
 - Phase IDs: P00–P18.
 - Task IDs: Pxx-00y.
-- Decision IDs: ADR-0001–ADR-0020.
+- Decision IDs: ADR-0001–ADR-0024.
 - Risk IDs: R-001–R-049.
 - Gate IDs: QG-00–QG-18, QG-03A, QG-A01, QG-A02.
 - Milestones: M0–M7.

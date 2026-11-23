@@ -234,6 +234,8 @@ as `accepted` here.
 
 - Lifecycle, timeouts, concurrency, and hard caps:
   [lifecycle and limits](lifecycle-limits.md).
+- DKIM: key creation, the DNS record, rotation, and troubleshooting:
+  [DKIM signing](dkim-signing.md).
 - Addresses, MIME, and attachments: P15-003 guide.
 - Error catalog, security, and operations: P15-004 guide.
 - Maintainer guide and testing map: P15-005 guide.

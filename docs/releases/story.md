@@ -1,6 +1,6 @@
 # The Sendust story
 
-**From an empty folder to `1.0.1`.**
+**From an empty folder to `1.2.0`.**
 Dates are real; every claim links to the record that backs it.
 
 Sendust is a Rust email delivery engine with a TypeScript face, for Node.js, Bun,
@@ -150,6 +150,23 @@ by either failure.
 That is `1.1.1`, published on 2026-11-23; it is what a bare
 `npm install @sendust/ts` installs.
 
+Then the last gap the competitive audit ranked above the rest. Behind an ESP that
+signs, DKIM is invisible; for a team running its own MTA it is the difference
+between a message that authenticates and one that does not — and the client was
+the only place Sendust could sign. `1.2.0` signs the composed bytes with
+`rsa-sha256` and relaxed/relaxed canonicalization, so what the socket receives is
+exactly what the signature covers; it hashes the body in full, refuses to sign a
+field RFC 6376 forbids, and parses the key at `createTransport` so an unusable one
+fails before any connection
+([ADR-0024](../architecture/decisions/0024-dkim-signing.md)). It cost one red CI
+round to learn that a rejection fixture spelling a PEM header trips this
+repository's own secret scan: the scan was right and the fixture was wrong. The
+signature was then checked by an implementation this project does not own —
+`dkimpy` returned `True` against the fixture's published key.
+
+That is `1.2.0`, tagged `v1.2.0` on 2026-11-23, and the first feature release
+published through trusted publishing.
+
 ## 6. Version timeline
 
 | Version | Date | What changed |
@@ -161,6 +178,7 @@ That is `1.1.1`, published on 2026-11-23; it is what a bare
 | `1.0.2` | 2026-11-21 | Idle sessions released; options validated before the native transport |
 | `1.1.0` | 2026-11-22 | Linux musl targets; XOAUTH2 with a bearer token |
 | `1.1.1` | 2026-11-23 | Trusted publishing with provenance; `repository.url` in every manifest |
+| `1.2.0` | 2026-11-23 | DKIM signing: `rsa-sha256`, relaxed/relaxed, caller-supplied key |
 
 ## 7. What Sendust is now
 
@@ -184,8 +202,7 @@ the application or cannot be observed honestly.
 
 - Provider policy profiles: documented limits only, with `421` as a first-class
   signal rather than something inferred from `4xx`.
-- A re-run of the owner's Gmail benchmark against `1.0.1`, to replace the
-  projection in the analysis with a measurement.
-- Trusted publishing before the npm bypass-2FA token deadline in January 2027.
-- Deferred until someone needs them: SMTPUTF8, `AbortSignal`, Windows arm64 and
-  Linux musl.
+- A Gmail re-measure against the current release, to replace the projection in
+  the analysis with a measurement.
+- Deferred until someone needs them: SMTPUTF8, `AbortSignal`, Windows arm64,
+  Ed25519 DKIM signatures, and streaming attachments.
