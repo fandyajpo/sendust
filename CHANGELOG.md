@@ -8,6 +8,14 @@ tag format, version sources, and compatibility promises — are in
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.2.0] - 2026-11-23
+
+Signing, not a new transport. Optional and additive: a caller who does not set
+`dkim` sends byte-identical messages to `1.1.1`. One append-only error code is
+added.
+
 ### Added
 
 - Optional DKIM signing (RFC 6376), so a team that relays through its own MTA can

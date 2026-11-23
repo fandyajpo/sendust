@@ -113,3 +113,8 @@ changes, and one append-only error code is added. Under the
 - `ts/test/transport.test.ts`: a loopback relay receives a `DKIM-Signature` with the
   documented tags and header order before `DATA`, and an unusable key fails
   `createTransport` with `CONFIG_INVALID_DKIM_KEY`.
+- External verification, 2026-11-23: the same signed message was validated by
+  `dkimpy` — an independent Python DKIM implementation — against the fixture's
+  public key published as a `v=DKIM1; k=rsa; p=…` record, and `dkim.verify()`
+  returned `True`. That is a third-party verifier agreeing, not this repository
+  checking itself.

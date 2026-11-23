@@ -1,6 +1,6 @@
 {
   "name": "@sendust/ts",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Standalone native email delivery engine for Node.js, Bun, and Deno: a narrow TypeScript facade over a bundled Node-API addon",
   "license": "MIT OR Apache-2.0",
   "repository": {
