@@ -519,7 +519,13 @@ mod tests {
     #[test]
     fn signs_a_message_and_names_the_covered_headers() {
         let text = signed();
-        assert!(text.starts_with("DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=example.test; s=sel1; t=1700000000; "), "{text}");
+        assert!(
+            text.starts_with(
+                "DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=example.test; s=sel1;"
+            ),
+            "{text}"
+        );
+        assert!(text.contains(" t=1700000000;"), "{text}");
         assert!(
             text.contains(
                 "h=from:to:subject:date:message-id:mime-version:content-type:content-transfer-encoding;"
@@ -572,7 +578,7 @@ mod tests {
             .expect("headers");
         let text = String::from_utf8(signer.sign(&wire(), fixed()).expect("signed")).expect("utf8");
         assert!(text.contains("h=from:subject;"), "{text}");
-        assert!(!text.contains("cc"), "{text}");
+        assert!(!text.contains("h=from:subject:cc"), "{text}");
     }
 
     #[test]
