@@ -242,8 +242,10 @@ are public.
 
 What the workflow does now:
 
-- `id-token: write` on the `publish` job, and a step that fails if
-  `NODE_AUTH_TOKEN` is set, because a token in the environment wins over OIDC;
+- `id-token: write` on the `publish` job, and `NODE_AUTH_TOKEN` pinned empty at
+  job level, because `actions/setup-node` exports it for the npmrc it writes and
+  a token in the environment wins over OIDC. A guard step fails the run if a real
+  value is ever introduced at a lower level;
 - npm pinned to `12.2.2` (trusted publishing needs `>= 11.5.1`);
 - `repository.url` in the facade and in every platform manifest, because npm
   matches it against the GitHub repository for each package it publishes;
