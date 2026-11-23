@@ -97,6 +97,13 @@ function platformManifest(target) {
     // for every package it publishes, so the platform packages carry it too.
     manifest.repository = facade.repository;
   }
+  // Each platform package is its own npm page. It carries the facade's project
+  // links and keywords rather than looking like an orphan package.
+  for (const field of ["homepage", "bugs", "keywords"]) {
+    if (facade[field]) {
+      manifest[field] = facade[field];
+    }
+  }
   if (LIBC[target]) {
     manifest.libc = LIBC[target];
   }

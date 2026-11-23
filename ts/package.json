@@ -7,6 +7,30 @@
     "type": "git",
     "url": "git+https://github.com/fandyajpo/sendust.git"
   },
+  "homepage": "https://sendust-docs.vercel.app",
+  "bugs": {
+    "url": "https://github.com/fandyajpo/sendust/issues"
+  },
+  "keywords": [
+    "email",
+    "smtp",
+    "smtp-client",
+    "mail",
+    "sendmail",
+    "transactional-email",
+    "dkim",
+    "xoauth2",
+    "oauth2",
+    "mime",
+    "attachments",
+    "typescript",
+    "nodejs",
+    "bun",
+    "deno",
+    "native",
+    "rust",
+    "napi"
+  ],
   "private": true,
   "type": "module",
   "main": "./dist/index.js",
