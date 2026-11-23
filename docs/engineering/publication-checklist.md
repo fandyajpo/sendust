@@ -1,7 +1,7 @@
 # Publication checklist and authorization (P17-003)
 
-**Status:** complete. `0.1.0-rc.1`, `1.0.0`, `1.0.1`, `1.0.2`, and `1.1.0` are
-published; the current record is §5d.
+**Status:** complete. `0.1.0-rc.1`, `1.0.0`, `1.0.1`, `1.0.2`, `1.1.0`, and
+`1.1.1` are published; the current record is §5e.
 **Date:** 2026-11-18.
 **Original candidate:** `0.1.0-rc.1`, verified in the
 [RC verification record](../qa/rc-verification.md).
@@ -195,6 +195,32 @@ pin was corrected to the CI value and the second dispatch published. A clean
 install on macOS arm64 added two packages — the facade and
 `@sendust/ts-macos-arm64` — and reported `version 1.1.0`. The two musl packages
 were verified from registry metadata and by CI, not installed by hand here.
+
+## 5e. 1.1.1 publication record
+
+**Published 2026-11-23** from the CI `publish` job through npm trusted
+publishing — the first release with no npm token. `@sendust/ts@1.1.1` and all
+seven platform packages at `1.1.1`.
+
+| Check | Result |
+| --- | --- |
+| Publisher | registry metadata: `GitHub Actions`, `trustedPublisher.id: github` |
+| Provenance | `attestations.provenance.predicateType: https://slsa.dev/provenance/v1` |
+| Registry artifact hash | `npm pack @sendust/ts@1.1.1` → `e6a76a0fc70ed5015377ad961e83df7fac34fc829c0c6d0af5279ad82b90c0bb`, the approved value from the `Facade hash` job |
+| Dist-tags | `latest` `1.1.1`, `next` `1.0.0` |
+| Platform packages | all seven resolve `1.1.1` |
+| Manifest | `repository.url` present, which trusted publishing requires |
+| Tag | `v1.1.1` → `1f17ece033618753676d9b736152227854cc1a90` |
+
+Two dispatches failed before this one, both at the publish job's own guard and
+both before npm ran: `actions/setup-node` exports `NODE_AUTH_TOKEN` when given
+`registry-url`, and a token in the environment wins over OIDC. The job no longer
+passes `registry-url`. Nothing was published by the failed runs.
+
+Remaining for the owner: set *Publishing access → Require two-factor
+authentication and disallow tokens* on the eight packages, enable **`npm
+dist-tag`** on the trusted publisher if the manual tag job is to keep working,
+and then revoke the old `NPM_TOKEN` secret.
 
 ## 6. Authorization
 

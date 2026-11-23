@@ -47,8 +47,25 @@ each target is identified by the approval bundle's checksums.
 
 ## 5. Publication
 
-Dispatch `publish` with the `distTag` input empty and `hash` unchecked, once the
-facade hash is pinned. This is the first trusted-publishing run: the job takes an
-OIDC token instead of a stored token, and npm attaches a provenance attestation.
-After it succeeds, the checklist §8 step 3 applies — disallow tokens on the eight
-packages and revoke `NPM_TOKEN`.
+**Executed 2026-11-23.** The CI `publish` job published `@sendust/ts@1.1.1` and
+all seven platform packages over npm trusted publishing. The registry records
+`GitHub Actions` as the publisher with an OIDC configuration, and the package
+carries a SLSA provenance attestation; no npm token was used.
+
+Two dispatches failed first, both in the publish job's own guard and both before
+any npm command that could publish:
+
+1. the guard refused a `NODE_AUTH_TOKEN` that `actions/setup-node` exports for
+   the npmrc it writes from `registry-url`;
+2. the same guard fired again after the variable was pinned empty at job level,
+   because setup-node runs later and overwrites it.
+
+The fix was to drop `registry-url` from the publish job: npm's default registry
+is already `registry.npmjs.org`, so nothing exports a token and npm takes the
+OIDC path. The empty pin and the guard stay as backstops. Nothing reached the
+registry during the failed runs.
+
+Post-publication verification: `npm pack @sendust/ts@1.1.1` reproduces
+`e6a76a0fc70ed5015377ad961e83df7fac34fc829c0c6d0af5279ad82b90c0bb`, all seven
+platform packages resolve `1.1.1`, and `latest` resolves `1.1.1` while `next`
+stays on `1.0.0`.

@@ -23,13 +23,13 @@ received anything.
 ## 2. Installation
 
 The package is published as `@sendust/ts`, and `latest` resolves the stable
-`1.1.0`:
+`1.1.1`:
 
 ```text
 npm install @sendust/ts
 ```
 
-Pin it (`npm install @sendust/ts@1.1.0`) when an install must not float, or
+Pin it (`npm install @sendust/ts@1.1.1`) when an install must not float, or
 follow the `next` tag (`npm install @sendust/ts@next`, currently `1.0.0`). A bare
 install fails with `ETARGET No matching version found for @sendust/ts@*` when npm
 reads cached or mirrored metadata from before the publish, or when the consumer's
@@ -44,9 +44,9 @@ To build the package from a checkout instead:
 npm ci
 npm run build:native            # stages ts/sendust.node
 npm run build --workspace ts    # compiles dist/ (ESM and CommonJS)
-npm run prepare:publish         # artifacts/publish/sendust-ts-1.1.0.tgz
+npm run prepare:publish         # artifacts/publish/sendust-ts-1.1.1.tgz
 
-npm install ./artifacts/publish/sendust-ts-1.1.0.tgz
+npm install ./artifacts/publish/sendust-ts-1.1.1.tgz
 ```
 
 The publish manifest declares the per-platform packages as

@@ -137,7 +137,17 @@ caller-supplied token. It also cost a day to an honest mistake: the facade pin
 came from a laptop, the publish job rebuilt it on the runner and refused, and
 nothing was published until the hash matched the CI build.
 
-That is `1.1.0`, published on 2026-11-22; it is what a bare
+That is `1.1.0`. Then the last credential left the release path: publishing moved
+to npm trusted publishing, where GitHub mints a short-lived OIDC token for the
+job and npm answers with a publish credential that lives for minutes. The
+registry now records the publisher and attaches a provenance attestation, and
+`1.1.1` exists because that required one field — `repository.url` — in every
+manifest. It took three dispatches: the first two stopped on a guard of our own
+making, because `actions/setup-node` exports an npm token the moment it is given
+a registry URL, and a token in the environment beats OIDC. Nothing was published
+by either failure.
+
+That is `1.1.1`, published on 2026-11-23; it is what a bare
 `npm install @sendust/ts` installs.
 
 ## 6. Version timeline
@@ -150,6 +160,7 @@ That is `1.1.0`, published on 2026-11-22; it is what a bare
 | `1.0.1` | 2026-11-21 | Demand-driven pool; one fewer round trip per message |
 | `1.0.2` | 2026-11-21 | Idle sessions released; options validated before the native transport |
 | `1.1.0` | 2026-11-22 | Linux musl targets; XOAUTH2 with a bearer token |
+| `1.1.1` | 2026-11-23 | Trusted publishing with provenance; `repository.url` in every manifest |
 
 ## 7. What Sendust is now
 
