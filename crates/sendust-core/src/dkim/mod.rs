@@ -428,11 +428,14 @@ pub(crate) mod test_support {
     use base64::Engine as _;
     use base64::engine::general_purpose::STANDARD;
     use rsa::RsaPrivateKey;
-    use rsa::pkcs8::{DecodePrivateKey, EncodePrivateKey, LineEnding};
+    use rsa::pkcs1::DecodeRsaPrivateKey;
+    use rsa::pkcs8::{EncodePrivateKey, LineEnding};
 
     use super::DkimSigner;
 
-    /// A throwaway 1024-bit RSA key in PKCS#8 DER, base64 without line breaks.
+    /// A throwaway 1024-bit RSA key in PKCS#1 DER — the form
+    /// `openssl genpkey -algorithm RSA -outform DER` writes — base64 without line
+    /// breaks.
     ///
     /// 1024 bits is the smallest size the signer accepts, which keeps the
     /// fixture short; it protects nothing and exists only for tests.
@@ -441,7 +444,7 @@ pub(crate) mod test_support {
     /// The fixture key as a PKCS#8 PEM, the form the facade passes in.
     pub(crate) fn pem() -> String {
         let der = STANDARD.decode(KEY_DER_B64).expect("fixture der");
-        let key = RsaPrivateKey::from_pkcs8_der(&der).expect("fixture key");
+        let key = RsaPrivateKey::from_pkcs1_der(&der).expect("fixture key");
         let pem = key.to_pkcs8_pem(LineEnding::LF).expect("fixture pem");
         pem.as_str().to_string()
     }
@@ -623,7 +626,7 @@ mod tests {
 
     #[test]
     fn rejects_a_key_outside_the_supported_size() {
-        let key = rsa::RsaPrivateKey::from_pkcs8_der(
+        let key = rsa::RsaPrivateKey::from_pkcs1_der(
             &STANDARD
                 .decode(test_support::KEY_DER_B64)
                 .expect("fixture der"),

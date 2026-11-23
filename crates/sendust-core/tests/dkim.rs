@@ -10,7 +10,8 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use base64::Engine as _;
 use base64::engine::general_purpose::STANDARD;
-use rsa::pkcs8::{DecodePrivateKey, EncodePrivateKey};
+use rsa::pkcs1::DecodeRsaPrivateKey;
+use rsa::pkcs8::EncodePrivateKey;
 use rsa::{Pkcs1v15Sign, RsaPrivateKey};
 use sha2::{Digest as _, Sha256};
 
@@ -19,7 +20,7 @@ use sendust_core::{
     DEFAULT_SIGNED_HEADERS, serialize_at,
 };
 
-/// The same throwaway 1024-bit RSA key the core unit tests use.
+/// The same throwaway 1024-bit RSA key the core unit tests use, as PKCS#1 DER.
 const KEY_DER_B64: &str = "MIICXQIBAAKBgQC03ufx4VKPV3ayvt/DbXKSUaFZhHgldIUzLJDo1nJEVNjLNjsfoio1bunv7LN/BgO4c07HfDxQ1LS3VdwUKeJWQ/EO5vqlbGyhHWu0PoGFulE8dSZofA62RUg6Mo0fu7uziAUgPuMoSoS1sNfyRhoRgIvE+QeK/jYBGJ/2EgRKawIDAQABAoGBAKUsPvMECwo+HHbFmsD0TUHT7B48vB+wVgfStg7772P5e/Wv87RCunsLa/Wf2pewnWsvWg0QpmBGrzYR4aZETZ1hp+YvMGJrwCmiDvcPQUoBcYuNadmyHlmxUWNyjzKciY6cRuCvAMooPVzhtwFU1WSkSXgwRaN+LviNgXtc93ohAkEA6Ubg+xOIu/kc9OON2DfWYz/NMRdKyCiF2/Z+h3Z3LnThM8cXIwRCN0A9sBOgZkI74YKdo3olobpGbgWaWp4RewJBAMZ9MtcVA812ainWkmmN5nkbBTc2Uo8gOvpjVNj+0/6dco/3TMP4w4ArK+g7ZQ8yCO9GjvTBOgGHwiiPcnUkf9ECQQDoXZsDXmzoWPd4FCcZxlz+VfJNwRbTlFHqTnmw89c55mDhE6K/VaGjqZEJEDPJSJafRl1CFwzfMU6wj1I2i5d7AkArWikChRqBg72ISc9MsquGA/rNplW94QJAsfVUN8RBtk3RV+gyXWEF22gJnv9hpEIDUNvkZVewAeDMTxhmsYQhAkBh9lZSf2QlQh6kZGQaP6lKR9Oc9NKpxK1F5ySrEBG6wMia1X0PnPfdCodJs+NOm+UjJ6ipvTzqJrXD427tyVXi";
 
 fn fixed() -> SystemTime {
@@ -28,7 +29,7 @@ fn fixed() -> SystemTime {
 
 fn key() -> RsaPrivateKey {
     let der = STANDARD.decode(KEY_DER_B64).expect("fixture der");
-    RsaPrivateKey::from_pkcs8_der(&der).expect("fixture key")
+    RsaPrivateKey::from_pkcs1_der(&der).expect("fixture key")
 }
 
 fn signer() -> DkimSigner {
