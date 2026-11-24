@@ -34,7 +34,7 @@ describe("public contract types", () => {
     expectTypeOf(createTransport).parameter(0).toEqualTypeOf<TransportOptions>();
     expectTypeOf(createTransport).returns.toEqualTypeOf<Transport>();
     expectTypeOf<Transport["state"]>().toEqualTypeOf<TransportState>();
-    expectTypeOf<TransportState>().toEqualTypeOf<"open" | "closing" | "closed">();
+    expectTypeOf<TransportState>().toEqualTypeOf<"open" | "closing" | "closed" | "failed">();
     expectTypeOf(version).toEqualTypeOf<string>();
   });
 
