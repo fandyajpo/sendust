@@ -10,6 +10,68 @@ tag format, version sources, and compatibility promises — are in
 
 Nothing yet.
 
+## [1.3.0] - 2026-11-24
+
+The fixes from the source audit of `1.2.1`, plus one additive state. A caller
+who neither reads `transport.state` nor sets `delivery.sessionIdleMs: 0` sees no
+API change; the wire changes only where the relay advertises `SIZE`.
+
+### Added
+
+- `transport.state` and `stats.state` report `failed` when the engine stops on a
+  condition that cannot heal — rejected or unsupported credentials. Every later
+  `send()` rejects with that same error and dials nothing, where it used to read
+  `open` and then reject with `TRANSPORT_CLOSED`, so a health check keyed on the
+  state reported healthy forever. There is no in-process reset: rotate the
+  credential and build a new transport. `close()` still settles `closed`
+  ([public API](docs/architecture/public-api.md) §7).
+- `MAIL FROM` declares `SIZE=<n>` when the relay advertises `SIZE` (RFC 1870),
+  and a message above the relay's own limit fails locally with
+  `LIMIT_WIRE_BYTES` at `stage: "mail"` before the envelope opens — instead of
+  being disconnected mid-`DATA` and reported as `unknown`.
+
+### Fixed
+
+- An `AUTH` line is no longer held to the 512-octet command line: a bearer token
+  and a base64 challenge answer serialise up to the 1,228-octet floor RFC 4954
+  requires of servers (12,288 here), so an XOAUTH2 token from Microsoft 365 or
+  Google Workspace works. A value over that bound is `VALIDATION_INVALID_OPTION`,
+  not `VALIDATION_HEADER_INJECTION`, which accused the caller of injecting a
+  command.
+- A send whose spawned task ended abnormally no longer answers
+  `TRANSPORT_BUSY` for the life of the process: it reports `INTERNAL`, and the
+  transport is `failed` rather than looking merely busy.
+- A pooled session is released exactly once when the native result fails
+  mapping; a second release could hand one session to two sends at once.
+- A session is reused only after the relay answers the `RSET` that closes the
+  transaction with a positive reply; any other reply drops it, as ADR-0022 says.
+- A cancelled send no longer reports the previous message's recipients as
+  `unknown`: cancellation progress is reset before composition starts.
+- `delivery.sessionIdleMs: 0` means no idle reuse on both sides: the session is
+  closed when its message settles, which the core already did, instead of being
+  pooled and then refused on reuse.
+- `host` rejects embedded whitespace with `CONFIG_INVALID_RELAY`, as the
+  documented contract says, instead of failing later as a connection reset.
+
+### Changed
+
+- CI runs the native binding on every claimed Node.js version — 22.23.5, 24.22.3
+  and 26.13.1 — instead of one, and `tsc` type-checks the whole test suite
+  rather than two of seven files, so a wrong type in the largest test file no
+  longer reaches `main`. `@types/node` is pinned to `22.20.5`, the newest 22.x,
+  so a test cannot type-check against an API the newest supported runtime lacks.
+- The audit that found all of this is committed under `audit/code-audit/`: six
+  documents, two HIGH, 13 MEDIUM, 15 LOW and 10 INFORMATIONAL findings, from a
+  static review of the same tree.
+
+### Verification
+
+- Rust workspace: `cargo test --workspace --all-targets`, `cargo clippy
+  --workspace --all-targets -- -D warnings`, `cargo fmt --all -- --check`.
+- TypeScript: `tsc` over the whole suite, Biome lint and format, and 79 Vitest
+  tests, including the new pool-release and failed-state proofs.
+- `npm run check`: architecture, links, doc claims and version agreement.
+
 ## [1.2.1] - 2026-11-24
 
 A metadata patch for the npm page. No runtime, API, result, error code, limit or

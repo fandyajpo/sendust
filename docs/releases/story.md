@@ -175,7 +175,29 @@ lesson worth writing down: a package npm has accepted can still answer 404 for a
 few minutes while the registry ingests it, so the job log — not a lookup a minute
 later — says whether a publication worked.
 
-## 6. Version timeline
+Then an audit. The owner asked for the source to be read the way a stranger reads
+it, and six documents came out of that review with two HIGH, 13 MEDIUM, 15 LOW and
+10 INFORMATIONAL findings. Both HIGH ones had been in the shipped path since the
+binding existed: an `AUTH` line was held to the 512-octet command line, so an
+XOAUTH2 bearer token — a JWT of 800 to 2,000+ characters — failed with
+`VALIDATION_HEADER_INJECTION`, a code that accuses the caller of injecting a
+command; and one abnormal end of the spawned send task left a transport that
+answered `TRANSPORT_BUSY` for the life of the process. Neither was theoretical
+for the providers most likely to need them.
+
+The MEDIUM set was mostly the wrapper disagreeing with itself. A rejected
+credential stopped the engine, correctly, but the state still read `"open"`, so a
+health check keyed on it reported healthy forever. A pooled session could be
+released twice when the native result failed mapping, and two sends could then run
+on one session. The relay's `SIZE` was parsed and ignored, the `RSET` reply was
+never checked before reuse, and a cancellation could inherit the previous
+message's recipients. Each is fixed and pinned by a test in `1.3.0`
+([gate record](../gates/release-1.3.0.md), [release notes](1.3.0.md)). The audit
+also found four contracts nothing calls — the core's lifecycle module,
+`validate_in_order`, two error details and `PROTOCOL_REJECTED` — and those are
+left as decisions, because deleting a documented error code is not a patch.
+
+## 7. Version timeline
 
 | Version | Date | What changed |
 | --- | --- | --- |
@@ -188,8 +210,9 @@ later — says whether a publication worked.
 | `1.1.1` | 2026-11-23 | Trusted publishing with provenance; `repository.url` in every manifest |
 | `1.2.0` | 2026-11-23 | DKIM signing: `rsa-sha256`, relaxed/relaxed, caller-supplied key |
 | `1.2.1` | 2026-11-24 | npm page: homepage, issue tracker, keywords, README as the page |
+| `1.3.0` | 2026-11-24 | Audit fixes: `failed` state, `SIZE`, long `AUTH` lines, wrapper reliability |
 
-## 7. What Sendust is now
+## 8. What Sendust is now
 
 - One transport per process, not per request: the engine queues what callers
   hand it and keeps the pool at the level the work needs.
@@ -200,14 +223,14 @@ later — says whether a publication worked.
 - `accepted` means the relay took responsibility. There is no `delivered`.
 - TLS verification cannot be turned off. There is no plaintext mode.
 
-## 8. What it is not, by decision
+## 9. What it is not, by decision
 
 No persistent queue, no scheduler, no worker process, no queue adapters, no
 delivery or open tracking, no provider-specific quota tables — those are
 [rejected with reasons](../planning/post-mvp-backlog.md), because they belong to
 the application or cannot be observed honestly.
 
-## 9. What comes next
+## 10. What comes next
 
 - Provider policy profiles: documented limits only, with `421` as a first-class
   signal rather than something inferred from `4xx`.
