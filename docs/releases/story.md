@@ -197,6 +197,11 @@ also found four contracts nothing calls — the core's lifecycle module,
 `validate_in_order`, two error details and `PROTOCOL_REJECTED` — and those are
 left as decisions, because deleting a documented error code is not a patch.
 
+That is `1.3.0`, published on 2026-11-24; `latest` resolves it. This time all
+seven platform packages answered on the first lookup, which is the opposite of the
+`1.2.1` lesson and a reminder that the lesson was about npm's ingestion, not
+about a missing publish.
+
 ## 7. Version timeline
 
 | Version | Date | What changed |

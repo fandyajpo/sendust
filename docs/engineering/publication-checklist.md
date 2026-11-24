@@ -1,7 +1,7 @@
 # Publication checklist and authorization (P17-003)
 
 **Status:** complete. `0.1.0-rc.1`, `1.0.0`, `1.0.1`, `1.0.2`, `1.1.0`, `1.1.1`,
-`1.2.0` and `1.2.1` are published; the current record is §5g.
+`1.2.0`, `1.2.1` and `1.3.0` are published; the current record is §5h.
 **Date:** 2026-11-18.
 **Original candidate:** `0.1.0-rc.1`, verified in the
 [RC verification record](../qa/rc-verification.md).
@@ -264,6 +264,27 @@ Remaining for the owner: set *Publishing access → Require two-factor
 authentication and disallow tokens* on the eight packages, enable **`npm
 dist-tag`** on the trusted publisher if the manual tag job is to keep working,
 and then revoke the old `NPM_TOKEN` secret.
+
+## 5h. 1.3.0 publication record
+
+**Published 2026-11-24** from the CI `publish` job through npm trusted
+publishing: eight packages in one run, from the approved candidate `e39b786`, on
+the pin commit `2a721ba`.
+
+| Check | Result |
+| --- | --- |
+| Publisher | registry metadata: `GitHub Actions` |
+| Provenance | `attestations.provenance.predicateType: https://slsa.dev/provenance/v1` on every package |
+| Registry artifact hash | `npm pack @sendust/ts@1.3.0` → `1953fd075e651f2a5724366e76e30c85862184b932eeb36e1fa9a4839adccb77`, the approved value from the `Facade hash` job (138421784504) |
+| Registry shasum | `5f861ed7fc4a65a371e98db9ade1b7462b595153`, 42 files, 175.0 kB unpacked |
+| Dist-tags | `latest` `1.3.0`, `next` `1.0.0` |
+| Platform packages | all seven resolve `1.3.0`; `windows-x64` answered on the first lookup this time, unlike `1.2.1` |
+| npm page | `homepage`, `bugs.url` and 18 keywords present |
+| Tag | `v1.3.0` → `e39b7862c7d4c7839a892f83445800d84f51b662` |
+
+No `already exists` refusal: the version was new, and the facade digest in the
+tarball is the pinned one, which is the check `publish-release.mjs` performs
+before it publishes anything.
 
 ## 6. Authorization
 

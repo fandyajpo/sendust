@@ -75,8 +75,28 @@ facade whose digest differs from the pinned value
 
 ## 5. Publication
 
-Not executed. The `publish` job publishes `@sendust/ts@1.3.0` and the seven
-platform packages over npm trusted publishing (OIDC), with no npm token. After it
-runs, this section records the result, the tag and the post-publication `npm pack`
-digest, and the [publication checklist](../engineering/publication-checklist.md)
-gains its record.
+**Executed 2026-11-24.** The CI `publish` job published `@sendust/ts@1.3.0` and
+all seven platform packages over npm trusted publishing, eight packages in one
+run, from the job's own `+ <name>@1.3.0` lines and a closing
+`published 8 package(s) at 1.3.0 with tag latest`. What the registry records:
+
+| Check | Value |
+| --- | --- |
+| `@sendust/ts@1.3.0` | present; `latest` → `1.3.0`, `next` still `1.0.0` |
+| `npm pack @sendust/ts@1.3.0` | `1953fd075e651f2a5724366e76e30c85862184b932eeb36e1fa9a4839adccb77`, the approved facade hash |
+| Registry shasum | `5f861ed7fc4a65a371e98db9ade1b7462b595153`, 42 files, 175.0 kB unpacked |
+| Publisher | `GitHub Actions` with an OIDC trusted-publisher configuration; no npm token |
+| Provenance | `attestations.provenance.predicateType` = `https://slsa.dev/provenance/v1`, one transparency-log entry per package |
+| npm page | `homepage` = `https://sendust-docs.vercel.app`, `bugs.url` = the issue tracker, 18 keywords |
+| Platform packages | all seven resolve `1.3.0`, each carrying the same project fields |
+| Optional dependencies | all seven pinned to `1.3.0` |
+
+The registry tarball reproduces the pinned digest byte for byte, so the release
+carries no caveat about which build went up. `publish-release.mjs` is what makes
+that checkable: it refuses a facade whose digest differs from `approved.json`, and
+it published here because the registry's `npm pack` reads back the same value.
+
+The job ran on `2a721ba`, the pin commit one step after the approved candidate
+`e39b786`, and it published because a later commit is accepted only while none of
+the build inputs changed — which the script compares against the approved commit
+before anything goes up.
