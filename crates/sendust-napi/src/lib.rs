@@ -20,6 +20,8 @@ use sendust_core::{
 const OPEN: u8 = 0;
 const CLOSING: u8 = 1;
 const CLOSED: u8 = 2;
+/// The spawned send ended abnormally; the transport cannot be used again.
+const FAILED: u8 = 3;
 
 /// Diagnostic version string for the native adapter and the core it wraps.
 #[napi]
@@ -303,11 +305,24 @@ impl Transport {
         }
     }
 
+    /// The error a caller sees before a send, if the transport cannot take one.
+    ///
+    /// A transport whose send ended abnormally reports `INTERNAL`: the failure is
+    /// in this library, not an ambiguous relay answer, and it is not
+    /// `TRANSPORT_BUSY`, which would suggest another send owns the transport.
+    fn phase_error(&self) -> Option<napi::Error> {
+        match self.inner.phase.load(Ordering::SeqCst) {
+            OPEN => None,
+            FAILED => Some(to_napi(CoreError::new(ErrorCode::Internal))),
+            _ => Some(to_napi(CoreError::new(ErrorCode::TransportClosed))),
+        }
+    }
+
     /// Submits one message. Inputs are copied before the first await.
     #[napi]
     pub async fn send(&self, message: MessageOptions) -> Result<SendResultJs> {
-        if self.inner.phase.load(Ordering::SeqCst) != OPEN {
-            return Err(to_napi(CoreError::new(ErrorCode::TransportClosed)));
+        if let Some(error) = self.phase_error() {
+            return Err(error);
         }
 
         {
@@ -402,7 +417,14 @@ impl Transport {
                 Some(outcome) => Ok(to_result(outcome)),
                 None => Err(to_napi(CoreError::new(ErrorCode::TransportClosed))),
             },
-            Err(_) => Err(to_napi(CoreError::new(ErrorCode::Internal))),
+            Err(_) => {
+                // The task ended abnormally and took the transport with it, so the
+                // slot stays empty. That state is recorded explicitly, or every
+                // later send would report TRANSPORT_BUSY forever, with the wrong
+                // cause and no way to recover.
+                self.inner.phase.store(FAILED, Ordering::SeqCst);
+                Err(to_napi(CoreError::new(ErrorCode::Internal)))
+            }
         }
     }
 
@@ -586,4 +608,65 @@ fn escape(value: &str) -> String {
         }
     }
     out
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Options that build a transport without opening a connection: the core
+    /// validates the relay at construction and dials only on the first send.
+    fn options() -> TransportOptions {
+        TransportOptions {
+            host: "127.0.0.1".to_string(),
+            port: 1,
+            secure: "tls".to_string(),
+            auth: None,
+            ehlo_name: None,
+            connect_ms: None,
+            operation_ms: None,
+            total_ms: None,
+            close_ms: None,
+            max_recipients: None,
+            max_attachment_bytes: None,
+            max_total_attachment_bytes: None,
+            max_wire_bytes: None,
+            allow_file_access: None,
+            tls_root_certificate: None,
+            max_messages_per_session: None,
+            idle_reuse_ms: None,
+            dkim: None,
+        }
+    }
+
+    #[test]
+    fn a_transport_is_open_before_any_send() {
+        let transport = Transport::new(options()).expect("constructed");
+        assert!(transport.phase_error().is_none());
+        assert_eq!(transport.state(), "open");
+    }
+
+    #[test]
+    fn a_transport_whose_task_ended_abnormally_is_internal_and_never_busy() {
+        let transport = Transport::new(options()).expect("constructed");
+        // The abnormal end of the spawned task leaves the slot empty. Before the
+        // fix this was indistinguishable from "another send owns it", so every
+        // later send answered TRANSPORT_BUSY for the life of the process.
+        transport.inner.phase.store(FAILED, Ordering::SeqCst);
+
+        let error = transport.phase_error().expect("an error").reason.clone();
+        assert!(error.contains("\"code\":\"INTERNAL\""), "{error}");
+        assert!(!error.contains("TRANSPORT_BUSY"), "{error}");
+        assert_eq!(transport.state(), "closed");
+    }
+
+    #[test]
+    fn a_closed_transport_reports_closed() {
+        let transport = Transport::new(options()).expect("constructed");
+        transport.inner.phase.store(CLOSED, Ordering::SeqCst);
+
+        let error = transport.phase_error().expect("an error").reason.clone();
+        assert!(error.contains("\"code\":\"TRANSPORT_CLOSED\""), "{error}");
+    }
 }

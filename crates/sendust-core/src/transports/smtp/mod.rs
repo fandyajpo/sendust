@@ -131,7 +131,15 @@ pub struct SmtpConfig {
 impl SmtpConfig {
     pub fn new(host: impl Into<String>, port: u16, security: SmtpSecurity) -> Result<Self, Error> {
         let host = host.into();
-        if host.trim().is_empty() || host.chars().any(char::is_control) || port == 0 {
+        // The published contract says the host carries no whitespace, so any
+        // whitespace is a configuration error here rather than a failed dial that
+        // would surface later as a connection reset.
+        if host.is_empty()
+            || host
+                .chars()
+                .any(|character| character.is_control() || character.is_whitespace())
+            || port == 0
+        {
             return Err(Error::new(ErrorCode::ConfigInvalidRelay)
                 .with_details(ErrorDetails::default().host(host).port(port)));
         }
@@ -441,8 +449,16 @@ impl SmtpTransport {
             let _ = tokio::time::timeout(budget, session.quit()).await;
             return;
         }
-        if needs_reset && session.reset().await.is_err() {
-            return;
+        if needs_reset {
+            // ADR-0022 keeps a session only when the relay *answers* the RSET that
+            // closes the transaction. A refusal leaves the transaction state
+            // unknown, so the session is dropped instead of stored: reusing it
+            // would put the next MAIL FROM inside an envelope the relay never
+            // closed.
+            match session.reset().await {
+                Ok(reply) if reply.is_positive() => {}
+                _ => return,
+            }
         }
         self.session = Some(session);
         self.idle_since = Some(Instant::now());
@@ -833,6 +849,17 @@ mod tests {
                 .code(),
             ErrorCode::ConfigInvalidRelay
         );
+        // The published contract says the host carries no whitespace, and a host
+        // that does can only fail later as a connection reset.
+        for host in ["re lay.example.test", " relay.example.test", "   "] {
+            assert_eq!(
+                SmtpConfig::new(host, 587, SmtpSecurity::StartTls)
+                    .expect_err("whitespace in the host")
+                    .code(),
+                ErrorCode::ConfigInvalidRelay,
+                "{host:?}"
+            );
+        }
         assert_eq!(
             SmtpConfig::new("relay.example.test", 587, SmtpSecurity::StartTls)
                 .expect("valid")

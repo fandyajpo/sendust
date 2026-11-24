@@ -95,6 +95,37 @@ async fn authenticates_with_xoauth2() {
 }
 
 #[tokio::test]
+async fn authenticates_with_a_long_xoauth2_token() {
+    // A Microsoft 365 or Graph access token is an 800-2,000+ character JWT, so the
+    // base64 payload is far past the 512-octet command line RFC 5321 caps. Every
+    // other AUTH case here uses a short token, which is why the cap went unnoticed.
+    let script = Script {
+        ehlo: xoauth2_ehlo(),
+        auth_flow: vec![Reply::line("235 2.7.0 Authentication successful")],
+        ..Script::default()
+    };
+    let server = serving(script);
+    let mut session = Session::open(&config(server.addr(), SmtpSecurity::ImplicitTls))
+        .await
+        .expect("open");
+
+    let token = format!("ya29.{}", "a".repeat(1_400));
+    session
+        .authenticate(
+            "sender@example.test",
+            &token,
+            Some(AuthMechanism::XOAuth2),
+        )
+        .await
+        .expect("a long bearer token authenticates");
+
+    assert_eq!(server.trace().count_prefix("AUTH"), 1);
+    let payload = auth_payload(&server);
+    assert!(payload.starts_with("user=sender@example.test\u{1}auth=Bearer ya29."));
+    assert!(payload.contains(&token), "the whole token must reach the relay");
+}
+
+#[tokio::test]
 async fn an_xoauth2_error_challenge_gets_the_final_failure() {
     let script = Script {
         ehlo: xoauth2_ehlo(),

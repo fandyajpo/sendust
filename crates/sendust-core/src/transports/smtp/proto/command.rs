@@ -12,6 +12,14 @@ use crate::errors::{Error, ErrorCode};
 /// Maximum command line length including CRLF (RFC 5321 §4.5.3.1.6).
 pub const MAX_COMMAND_BYTES: usize = 512;
 
+/// Maximum length of an `AUTH` or challenge-response line including CRLF.
+///
+/// RFC 4954 §4 lets an initial response exceed the 512-octet command line —
+/// servers must accept at least 1,228 octets — and a bearer token is routinely
+/// far longer than a password. The bound matches the largest response
+/// `validate_token` accepts, so the two limits cannot disagree.
+pub const MAX_AUTH_LINE_BYTES: usize = 12_288 + 64;
+
 /// AUTH mechanisms Sendust implements (ADR-0017, ADR-0023).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AuthMechanism {
@@ -100,8 +108,16 @@ impl Command {
             Self::Quit => "QUIT".to_string(),
         };
 
-        if line.len() + 2 > MAX_COMMAND_BYTES {
-            return Err(protocol_error());
+        // A bearer token is not a password: XOAUTH2's initial response, and the
+        // base64 challenge answers of AUTH LOGIN, are far longer than the command
+        // line RFC 5321 §4.5.3.1.6 caps. Those two variants use the bound their
+        // own validator already enforces.
+        let limit = match self {
+            Self::Auth { .. } | Self::AuthResponse { .. } => MAX_AUTH_LINE_BYTES,
+            _ => MAX_COMMAND_BYTES,
+        };
+        if line.len() + 2 > limit {
+            return Err(invalid_option());
         }
         let mut bytes = line.into_bytes();
         bytes.extend_from_slice(b"\r\n");
@@ -127,7 +143,12 @@ pub fn auth_xoauth2_initial(user: &str, token: &str) -> String {
 }
 
 fn validate_token(value: &str, max: usize) -> Result<(), Error> {
-    if value.is_empty() || value.len() > max || value.chars().any(|c| c.is_control() || c == ' ') {
+    // A value that is too long is a limit, not an injection attempt: the two are
+    // different failures for the caller, and only the second is a security report.
+    if value.is_empty() || value.len() > max {
+        return Err(invalid_option());
+    }
+    if value.chars().any(|c| c.is_control() || c == ' ') {
         return Err(protocol_error());
     }
     Ok(())
@@ -144,6 +165,12 @@ fn validate_address(value: &str) -> Result<(), Error> {
     Ok(())
 }
 
+/// A caller-supplied value outside the protocol's bound.
+fn invalid_option() -> Error {
+    Error::new(ErrorCode::ValidationInvalidOption)
+}
+
+/// A caller-supplied value that could inject a command.
 fn protocol_error() -> Error {
     Error::new(ErrorCode::ValidationHeaderInjection)
 }
@@ -240,5 +267,51 @@ mod tests {
             .to_bytes()
             .expect_err("must be rejected");
         assert_eq!(error.code(), ErrorCode::ValidationHeaderInjection);
+    }
+
+    #[test]
+    fn an_auth_line_may_exceed_the_command_line_limit() {
+        // A Microsoft 365 or Graph access token is a JWT of 800-2,000+
+        // characters, so base64 of the XOAUTH2 payload is far past 512 octets.
+        let token = "a".repeat(1_400);
+        let response = auth_xoauth2_initial("sender@example.test", &token);
+        assert!(
+            response.len() > MAX_COMMAND_BYTES,
+            "the fixture must exceed the command line, or it proves nothing"
+        );
+
+        let bytes = Command::Auth {
+            mechanism: AuthMechanism::XOAuth2,
+            initial_response: Some(response),
+        }
+        .to_bytes()
+        .expect("a long bearer token is a valid AUTH line");
+
+        assert!(bytes.starts_with(b"AUTH XOAUTH2 "));
+        assert!(bytes.ends_with(b"\r\n"));
+        assert!(bytes.len() > MAX_COMMAND_BYTES + 2);
+    }
+
+    #[test]
+    fn an_auth_response_beyond_the_protocol_bound_is_rejected() {
+        let response = "a".repeat(MAX_AUTH_LINE_BYTES);
+        let error = Command::Auth {
+            mechanism: AuthMechanism::Plain,
+            initial_response: Some(response),
+        }
+        .to_bytes()
+        .expect_err("over the protocol bound");
+        // Too long is a limit; it is not the injection code.
+        assert_eq!(error.code(), ErrorCode::ValidationInvalidOption);
+    }
+
+    #[test]
+    fn an_over_long_argument_is_a_limit_not_an_injection() {
+        let error = Command::Ehlo {
+            identity: "a".repeat(256),
+        }
+        .to_bytes()
+        .expect_err("over the identity bound");
+        assert_eq!(error.code(), ErrorCode::ValidationInvalidOption);
     }
 }
