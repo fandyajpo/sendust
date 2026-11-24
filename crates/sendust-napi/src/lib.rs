@@ -610,7 +610,6 @@ fn escape(value: &str) -> String {
     out
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

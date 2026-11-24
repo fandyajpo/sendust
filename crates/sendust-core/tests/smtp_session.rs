@@ -111,18 +111,17 @@ async fn authenticates_with_a_long_xoauth2_token() {
 
     let token = format!("ya29.{}", "a".repeat(1_400));
     session
-        .authenticate(
-            "sender@example.test",
-            &token,
-            Some(AuthMechanism::XOAuth2),
-        )
+        .authenticate("sender@example.test", &token, Some(AuthMechanism::XOAuth2))
         .await
         .expect("a long bearer token authenticates");
 
     assert_eq!(server.trace().count_prefix("AUTH"), 1);
     let payload = auth_payload(&server);
     assert!(payload.starts_with("user=sender@example.test\u{1}auth=Bearer ya29."));
-    assert!(payload.contains(&token), "the whole token must reach the relay");
+    assert!(
+        payload.contains(&token),
+        "the whole token must reach the relay"
+    );
 }
 
 #[tokio::test]
