@@ -313,7 +313,9 @@ async fn declares_the_size_only_when_it_is_advertised() {
         "the mail command is sent without a size"
     );
     assert_eq!(
-        plain.trace().count_prefix("MAIL FROM:<ALICE@EXAMPLE.TEST> SIZE="),
+        plain
+            .trace()
+            .count_prefix("MAIL FROM:<ALICE@EXAMPLE.TEST> SIZE="),
         0,
         "no SIZE parameter without the extension"
     );
@@ -326,7 +328,10 @@ async fn runs_a_full_transaction_with_dot_stuffing() {
         .await
         .expect("open");
 
-    let reply = session.mail_from("alice@example.test", None).await.expect("mail");
+    let reply = session
+        .mail_from("alice@example.test", None)
+        .await
+        .expect("mail");
     assert_eq!(reply.value(), 250);
 
     let reply = session.rcpt_to("bob@example.test").await.expect("rcpt");
