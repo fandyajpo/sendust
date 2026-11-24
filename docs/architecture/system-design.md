@@ -326,7 +326,7 @@ export interface SendResult {
 export interface Transport {
   send(message: Message): Promise<SendResult>;
   close(): Promise<void>;
-  readonly state: "open" | "closing" | "closed";
+  readonly state: "open" | "closing" | "closed" | "failed";
 }
 
 export function createTransport(options: TransportOptions): Transport;

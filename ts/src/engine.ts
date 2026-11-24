@@ -173,6 +173,17 @@ export class DeliveryEngine {
   }
 
   /**
+   * The error a refused send reports.
+   *
+   * A failed engine names the cause that stopped it, so a caller who retries
+   * after an auth failure is told `AUTH_FAILED` rather than `TRANSPORT_CLOSED`,
+   * which would suggest the transport is merely shutting down.
+   */
+  get refusal(): SendustError {
+    return this.#state === "failed" && this.#fatal ? this.#fatal : closedError();
+  }
+
+  /**
    * Queues one message. The returned promise settles with its own outcome.
    *
    * The native message record is already built, so the caller's buffers were
@@ -180,10 +191,7 @@ export class DeliveryEngine {
    */
   submit(nativeMessage: Record<string, unknown>, bytes: number): Promise<SendResult> {
     if (this.#state !== "open") {
-      return Promise.reject(closedError());
-    }
-    if (this.#fatal) {
-      return Promise.reject(this.#fatal);
+      return Promise.reject(this.refusal);
     }
     if (
       this.#queue.length >= this.#options.maxQueue ||
@@ -424,12 +432,17 @@ export class DeliveryEngine {
    * Bad credentials cannot recover by waiting, so the whole transport stops:
    * queued work and scheduled retries fail fast with the same error instead of
    * hammering the relay, and later sends reject without I/O.
+   *
+   * The state moves to `failed` in the same synchronous step, so a health check
+   * that reads `stats.state` after the rejected send does not see `open` while
+   * every send fails.
    */
   #abortWith(error: SendustError): void {
     if (this.#fatal) {
       return;
     }
     this.#fatal = error;
+    this.#state = "failed";
     for (const job of this.#queue.splice(0)) {
       this.#queueBytes -= job.bytes;
       job.reject(error);
@@ -492,6 +505,13 @@ export class DeliveryEngine {
   }
 
   #release(transport: NativeTransport): void {
+    if (this.#state === "failed") {
+      // A failed engine can never send again, so the session is closed now
+      // rather than left open until the caller gets round to `close()`.
+      this.#all.delete(transport);
+      void transport.close().catch(() => undefined);
+      return;
+    }
     // Only an open engine re-pools a transport. While closing, `#closeImpl`
     // owns every session it captured and awaits its close.
     if (this.#state !== "open") {

@@ -220,8 +220,18 @@ export interface Message {
   readonly attachments?: Attachment[];
 }
 
-/** Transport lifecycle state, observed synchronously. */
-export type TransportState = "open" | "closing" | "closed";
+/**
+ * Transport lifecycle state, observed synchronously.
+ *
+ * `failed` is terminal for sending: the engine stopped on a condition that does
+ * not heal, so every later `send()` rejects with that same error and dials
+ * nothing. Rejected credentials are the case today — `AUTH_FAILED` and
+ * `AUTH_UNSUPPORTED`. Only a new transport recovers from it: there is no reset,
+ * because a credential rotation belongs to the caller, who can rebuild the
+ * transport with a fresh token. `close()` still works, and moves the state to
+ * `closed`.
+ */
+export type TransportState = "open" | "closing" | "closed" | "failed";
 
 /**
  * Automatic delivery management. Defaults are safe for normal workloads and

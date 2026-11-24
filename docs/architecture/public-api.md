@@ -135,7 +135,7 @@ await transport.close();
 
 - Idempotent; repeated calls resolve once the transport is closed.
 - Bounded by `closeMs` (125 s default).
-- Transitions `open -> closing -> closed`.
+- Transitions `open -> closing -> closed`, and `failed -> closing -> closed`.
 - Close requests cancellation of an in-flight operation and awaits bounded cleanup. If cancellation occurs once message transmission has begun and the final SMTP disposition is not observed, the send outcome is `unknown`; close must not rewrite that uncertainty as a definitive cancellation or rejection.
 - After close, `send` rejects with `TRANSPORT_CLOSED`.
 - No GC/finalizer dependency.
@@ -143,10 +143,12 @@ await transport.close();
 ## 7. State
 
 ```ts
-transport.state; // "open" | "closing" | "closed"
+transport.state; // "open" | "closing" | "closed" | "failed"
 ```
 
 Read-only. Reflects the state machine synchronously.
+
+`failed` is terminal for sending. The engine stops when a condition cannot heal, which today means rejected or unsupported credentials (`AUTH_FAILED`, `AUTH_UNSUPPORTED`): every later `send()` rejects with that same error and dials nothing, and `stats.state` reports `failed` too, so a health check cannot read `open` while every send fails. There is no reset, because a credential rotation belongs to the caller: build a new transport with the fresh secret. `close()` still works, and settles `closed`.
 
 ## 8. Concurrency and delivery management
 

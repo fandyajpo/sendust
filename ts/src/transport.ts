@@ -8,7 +8,7 @@
  */
 
 import { DeliveryEngine, type EngineOptions } from "./engine.ts";
-import { SendustClosedError, SendustError, SendustValidationError, fromNative } from "./errors.ts";
+import { SendustError, SendustValidationError, fromNative } from "./errors.ts";
 import { DEFAULT_LIMITS, assertAttachmentBudget } from "./limits.ts";
 import { loadNative, type NativeTransport } from "./loader.ts";
 import type {
@@ -77,14 +77,6 @@ const DELIVERY_DEFAULTS = {
 const CLOSE_MS_DEFAULT = 125_000;
 /** The core's default whole-send budget, reused as the retry budget. */
 const TOTAL_MS_DEFAULT = 120_000;
-
-function closedError(): SendustClosedError {
-  return new SendustClosedError({
-    code: "TRANSPORT_CLOSED",
-    category: "closed",
-    message: "transport is closed",
-  });
-}
 
 function invalidOption(): SendustValidationError {
   return new SendustValidationError({
@@ -548,10 +540,12 @@ export class Transport {
    * `LIMIT_QUEUE_FULL`), TLS, auth, timeout, closed, and internal failures.
    */
   async send(message: Message): Promise<SendResult> {
-    // Refused synchronously once close has been requested, so the race between
-    // `close()` and a send cannot depend on when the native call is polled.
+    // Refused before any native call once the engine stopped accepting work, so
+    // the race between `close()` and a send cannot depend on when the native
+    // call is polled. The engine names the cause: a failed transport reports
+    // the error that stopped it rather than `TRANSPORT_CLOSED`.
     if (this.#engine.state !== "open") {
-      throw closedError();
+      throw this.#engine.refusal;
     }
     // Built before submitting: every buffer is copied now, so the caller may
     // mutate its message as soon as send() has been called.

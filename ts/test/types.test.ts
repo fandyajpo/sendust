@@ -134,6 +134,17 @@ describe("public contract types", () => {
     };
     void mutate;
 
+    // A stopped engine is a state a caller can read and branch on; it is not a
+    // fourth kind of result or a second close.
+    const failed: TransportState = "failed";
+    expectTypeOf(failed).toMatchTypeOf<TransportState>();
+    const open: TransportState = "open";
+    expectTypeOf(open).toMatchTypeOf<TransportState>();
+
+    // @ts-expect-error no other state names a lifecycle phase
+    const withdrawn: TransportState = "stopped";
+    void withdrawn;
+
     // @ts-expect-error subject is required
     const message: Message = { from: "a@example.test", text: "body" };
     void message;

@@ -72,6 +72,8 @@ Enforced by P02-003, P04-004, P09-004, P10-001.
 
 Lifecycle is `open -> closing -> closed`. `close()` MUST be explicit, idempotent, deadline-bounded (default 125 s), and MUST NOT depend on garbage collection, finalizers, or process exit. Sends during `closing` or after `closed` MUST fail with a stable error.
 
+A condition that cannot heal — rejected or unsupported credentials — MUST move the transport to a terminal `failed` state that `transport.state` and the delivery stats both report, MUST make every later send reject with that same error without dialling, and MUST NOT reset in process: a new transport is the recovery. `close()` MUST still work on a failed transport and settle `closed`.
+
 Enforced by P02-003, P04-004, P09-004, P10-001.
 
 ### C-10 — Timeout budgets

@@ -97,8 +97,8 @@ remove them or turn verification off.
 
 | Code | Cause | Caller action |
 | --- | --- | --- |
-| `AUTH_FAILED` | Relay rejected the credentials | Fix credentials; do not retry blindly |
-| `AUTH_UNSUPPORTED` | Relay offered no supported mechanism | Enable `PLAIN`/`LOGIN` at the relay |
+| `AUTH_FAILED` | Relay rejected the credentials | Fix credentials, then build a new transport; it is `failed`, so it never sends again |
+| `AUTH_UNSUPPORTED` | Relay offered no supported mechanism | Enable `PLAIN`/`LOGIN` at the relay, then build a new transport; it is `failed` |
 | `PROTOCOL_REJECTED` | A protocol failure prevented a trustworthy outcome | Investigate the relay; a definitive SMTP refusal is a `rejected` result, not this error |
 | `PROTOCOL_UNEXPECTED_RESPONSE` | Malformed or unexpected reply | Investigate; retry only if you know the stage |
 | `PROTOCOL_CONNECTION_RESET` | Peer closed the connection | Retry only when you know it was before DATA; after DATA, expect `unknown` |

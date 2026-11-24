@@ -136,6 +136,7 @@ Test paths are relative to the repository root. `core tests` are Rust integratio
 | Wire message | 30 MiB | `wire_cap_is_inclusive_and_exact`, `enforces_the_default_wire_cap_on_large_bodies` | Cap inclusive, exact |
 | Active sends per transport | 1 | `a_second_send_is_busy_and_dials_nothing` | Second send is `TRANSPORT_BUSY` |
 | Lifecycle order | open → closing → closed | `close_is_idempotent_and_refuses_new_sends`, `closes concurrently without drifting past closed` | No backward transition |
+| Stopped engine | `failed`, reported by `state` and `stats` | `reports a failed engine in state, and its cause on a later send` | No reset; a new transport recovers |
 | Close deadline | 125 s | `close_drain_times_out_without_the_active_send_finishing` | `TIMEOUT_CLOSE` at the budget |
 | Error codes | Unique, documented, categorised | `every_code_is_documented_and_unique`, `categories_expose_stable_strings`, `stages_expose_stable_strings`; `ts/test/errors.test.ts` | Enum, docs, and classes agree |
 

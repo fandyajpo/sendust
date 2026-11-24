@@ -102,8 +102,8 @@ export type ErrorCategory =
 | `TLS_CERTIFICATE` | tls | async | Certificate/hostname verification failed | No, configuration/trust issue |
 | `TLS_HANDSHAKE` | tls | async | TLS negotiation failed | Maybe, only with corrected config |
 | `TLS_PROTOCOL` | tls | async | Unsupported TLS version/cipher | No |
-| `AUTH_FAILED` | authentication | async | Relay rejected credentials | No, fix credentials |
-| `AUTH_UNSUPPORTED` | authentication | async | Relay offered no supported mechanism, or `AUTH XOAUTH2` was forced while the relay did not advertise it | No |
+| `AUTH_FAILED` | authentication | async | Relay rejected credentials | No, fix credentials and build a new transport: this one is `failed` |
+| `AUTH_UNSUPPORTED` | authentication | async | Relay offered no supported mechanism, or `AUTH XOAUTH2` was forced while the relay did not advertise it | No, change the relay and build a new transport: this one is `failed` |
 | `PROTOCOL_REJECTED` | protocol | async | Malformed or unexpected protocol failure that prevents a trustworthy outcome; definitive SMTP refusals are `rejected` outcomes | No |
 | `PROTOCOL_UNEXPECTED_RESPONSE` | protocol | async | Malformed/unexpected reply | Maybe |
 | `PROTOCOL_CONNECTION_RESET` | protocol | async | Peer closed unexpectedly | Only when known to be pre-DATA; if final disposition is uncertain after DATA, return `unknown` and do not automatically retry |

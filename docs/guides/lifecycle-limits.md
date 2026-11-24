@@ -13,15 +13,23 @@ facade's pre-flight check and the architecture checker keep the two in step.
     │ send()          │ send() ─► TRANSPORT_CLOSED
     ▼                 ▼
   one send                       no new work
+
+  open ── AUTH_FAILED / AUTH_UNSUPPORTED ──► failed ── close() ──► closed
 ```
 
 `transport.state` is a synchronous, read-only snapshot:
-`"open"`, `"closing"`, or `"closed"`.
+`"open"`, `"closing"`, `"closed"`, or `"failed"`.
 
 - `open` — accepts exactly one send at a time.
 - `closing` — `close()` has been called. New sends are refused with
   `TRANSPORT_CLOSED`; an in-flight send is being cancelled or drained.
 - `closed` — no further work; `send()` rejects with `TRANSPORT_CLOSED`.
+- `failed` — the engine stopped on a condition that does not heal: rejected or
+  unsupported credentials (`AUTH_FAILED`, `AUTH_UNSUPPORTED`). Every `send()`
+  rejects with that same error and dials nothing, and `stats.state` reports
+  `failed` too, so a health check keyed on it does not read `open` while every
+  send fails. There is no reset in process; rotate the credential and build a new
+  transport. `close()` still works, and settles `closed`.
 
 A send that was cancelled **before** the message body was transmitted rejects
 with `TRANSPORT_CLOSED`. If the body may already have reached the relay, the
@@ -58,6 +66,7 @@ each session runs one SMTP transaction at a time.
 | Many concurrent `send()` calls | Queued and scheduled; results settle per message |
 | Queue at `delivery.maxQueue` or `maxQueueBytes` | Rejects with `LIMIT_QUEUE_FULL`; nothing is silently dropped |
 | `send()` while `closing` or `closed` | Rejects with `TRANSPORT_CLOSED` |
+| `send()` while `failed` | Rejects with the error that stopped it — `AUTH_FAILED` or `AUTH_UNSUPPORTED` — and dials nothing |
 | Two `close()` calls | Both resolve; one shutdown |
 | Two transports | Independent queues, pools, and limits |
 
@@ -123,6 +132,11 @@ Lowering a cap is allowed; raising it is not.
   send can still drain.
 - **One transport per service, not per request.** The engine already queues and
   pools; a transport per request multiplies connections and defeats the pool.
+- **A failed transport is not a closed one.** After `AUTH_FAILED` or
+  `AUTH_UNSUPPORTED`, `state` and `stats.state` report `failed`, and every send
+  rejects with that code. Rotate the credential and build a new transport; there
+  is no in-process reset, and retrying on the same transport only repeats the
+  error.
 - **Lower timeouts for interactive paths.** A relay that stalls will otherwise
   hold a request for the full 120 s total budget.
 - **Watch the caps, not the provider.** Rejecting a 12 MiB attachment locally is
