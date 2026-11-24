@@ -663,3 +663,28 @@ async fn a_malformed_greeting_is_a_protocol_error() {
     );
     assert_eq!(server.trace().count_prefix("MAIL"), 0);
 }
+
+
+/// A relay whose advertised `SIZE` is below the message is refused before
+/// `MAIL`: a disconnect mid-`DATA` would be reported as `unknown`, forcing a
+/// human to decide whether to resend.
+#[tokio::test]
+async fn a_relay_size_limit_below_the_wire_is_refused_before_mail() {
+    let script = Script {
+        ehlo: Reply::lines(&["250-sendust.test", "250-SIZE 1024", "250 8BITMIME"]),
+        ..Script::default()
+    };
+    let server = serving(script);
+    let mut delivery = delivery(config(server.addr()));
+    let mut message = message(&["bob@example.test"]);
+    message.text = Some("a".repeat(4 * 1024));
+
+    let error = delivery
+        .send(message)
+        .await
+        .expect_err("over the relay size");
+
+    assert_eq!(error.code(), ErrorCode::LimitWireBytes);
+    assert_eq!(error.details().operation_stage(), Some(Stage::Mail));
+    assert_eq!(server.trace().count_prefix("MAIL"), 0);
+}

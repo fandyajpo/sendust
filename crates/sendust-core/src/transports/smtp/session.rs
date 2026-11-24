@@ -63,11 +63,13 @@ impl Session {
             .await
     }
 
-    pub async fn mail_from(&mut self, address: &str) -> Result<Reply, Error> {
+    /// `MAIL FROM`, with the `SIZE` the relay advertised when it has one.
+    pub async fn mail_from(&mut self, address: &str, size: Option<u64>) -> Result<Reply, Error> {
         self.connection
             .command(
                 Command::MailFrom {
                     address: address.to_owned(),
+                    size,
                 },
                 Stage::Mail,
             )

@@ -55,6 +55,9 @@ pub enum Command {
     },
     MailFrom {
         address: String,
+        /// The message size to declare, when the relay advertises `SIZE`
+        /// (RFC 1870). A relay that never advertises it must not be sent one.
+        size: Option<u64>,
     },
     RcptTo {
         address: String,
@@ -94,9 +97,12 @@ impl Command {
                     response.clone()
                 }
             }
-            Self::MailFrom { address } => {
+            Self::MailFrom { address, size } => {
                 validate_address(address)?;
-                format!("MAIL FROM:<{address}>")
+                match size {
+                    Some(size) => format!("MAIL FROM:<{address}> SIZE={size}"),
+                    None => format!("MAIL FROM:<{address}>"),
+                }
             }
             Self::RcptTo { address } => {
                 validate_address(address)?;
@@ -194,9 +200,18 @@ mod tests {
         assert_eq!(text(Command::StartTls), "STARTTLS\r\n");
         assert_eq!(
             text(Command::MailFrom {
-                address: "alice@example.test".to_string()
+                address: "alice@example.test".to_string(),
+                size: None,
             }),
             "MAIL FROM:<alice@example.test>\r\n"
+        );
+        // RFC 1870: the size is declared only when the relay advertises SIZE.
+        assert_eq!(
+            text(Command::MailFrom {
+                address: "alice@example.test".to_string(),
+                size: Some(2_048),
+            }),
+            "MAIL FROM:<alice@example.test> SIZE=2048\r\n"
         );
         assert_eq!(
             text(Command::RcptTo {
@@ -263,9 +278,12 @@ mod tests {
     #[test]
     fn rejects_overlong_commands() {
         let address = format!("{}@example.test", "a".repeat(MAX_COMMAND_BYTES));
-        let error = Command::MailFrom { address }
-            .to_bytes()
-            .expect_err("must be rejected");
+        let error = Command::MailFrom {
+            address,
+            size: None,
+        }
+        .to_bytes()
+        .expect_err("must be rejected");
         // An address longer than the protocol allows is a limit, not injection.
         assert_eq!(error.code(), ErrorCode::ValidationInvalidOption);
     }

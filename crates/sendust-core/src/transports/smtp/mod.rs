@@ -477,7 +477,22 @@ impl SmtpTransport {
     ) -> Result<(SendOutcome, SessionState), Error> {
         let config = &self.config;
         self.mark(Stage::Mail);
-        match session.mail_from(&envelope.from).await {
+        // RFC 1870: declare the size, and refuse locally when the relay's own
+        // limit is below the composed wire. A relay that would disconnect in the
+        // middle of `DATA` turns a definite message into an ambiguous one.
+        let declared = match session.capabilities().size() {
+            Some(limit) if wire.len() as u64 > limit => {
+                return Err(Error::new(ErrorCode::LimitWireBytes).with_details(
+                    ErrorDetails::default()
+                        .host(config.host.clone())
+                        .port(config.port)
+                        .stage(Stage::Mail),
+                ));
+            }
+            Some(_) => Some(wire.len() as u64),
+            None => None,
+        };
+        match session.mail_from(&envelope.from, declared).await {
             Ok(reply) if reply.is_positive() => {}
             Ok(reply) => {
                 return match verdict(&reply) {

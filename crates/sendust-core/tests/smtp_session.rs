@@ -275,6 +275,44 @@ async fn auth_before_tls_is_refused() {
 }
 
 #[tokio::test]
+async fn declares_the_size_only_when_it_is_advertised() {
+    // RFC 1870: the size is a MAIL parameter, so it is sent only to a relay
+    // that advertised SIZE — sending it to one that did not is a 555 refusal.
+    let script = Script {
+        ehlo: Reply::lines(&["250-sendust.test", "250-SIZE 10240", "250 8BITMIME"]),
+        ..Script::default()
+    };
+    let server = serving(script);
+    let mut session = Session::open(&config(server.addr(), SmtpSecurity::ImplicitTls))
+        .await
+        .expect("open");
+
+    session
+        .mail_from("alice@example.test", Some(700))
+        .await
+        .expect("mail");
+    let trace = server.trace();
+    assert!(
+        trace.contains("MAIL FROM:<alice@example.test> SIZE=700"),
+        "{trace}"
+    );
+
+    let plain = serving(Script::default());
+    let mut session = Session::open(&config(plain.addr(), SmtpSecurity::ImplicitTls))
+        .await
+        .expect("open");
+    session
+        .mail_from("alice@example.test", None)
+        .await
+        .expect("mail");
+    assert!(
+        plain.trace().contains("MAIL FROM:<alice@example.test>\r\n"),
+        "{}",
+        plain.trace()
+    );
+}
+
+#[tokio::test]
 async fn runs_a_full_transaction_with_dot_stuffing() {
     let server = serving(Script::default());
     let mut session = Session::open(&config(server.addr(), SmtpSecurity::ImplicitTls))
