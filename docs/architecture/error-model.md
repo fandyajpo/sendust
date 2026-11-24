@@ -78,14 +78,14 @@ export type ErrorCategory =
 
 | Code | Category | Public surface | Meaning | Retryable by caller? |
 | --- | --- | --- | --- | --- |
-| `VALIDATION_INVALID_OPTION` | validation | sync at createTransport; Promise rejection from send | Unknown/malformed transport option | No, fix input |
+| `VALIDATION_INVALID_OPTION` | validation | sync at createTransport; Promise rejection from send | Unknown, malformed, or over-long option, address, or `AUTH` value | No, fix input |
 | `VALIDATION_INVALID_TIMEOUT` | validation | sync at createTransport | Non-finite, zero, negative, or out-of-range timeout | No |
 | `VALIDATION_MISSING_FROM` | validation | Promise rejection from send | No From address | No |
 | `VALIDATION_MISSING_RECIPIENT` | validation | Promise rejection from send | No To/CC/BCC | No |
 | `VALIDATION_INVALID_ADDRESS` | validation | Promise rejection from send | Unparseable address | No |
 | `VALIDATION_NON_ASCII_LOCAL_PART` | validation | Promise rejection from send | SMTPUTF8 not supported in MVP | No |
 | `VALIDATION_INVALID_HEADER` | validation | Promise rejection from send | Illegal header name or value | No |
-| `VALIDATION_HEADER_INJECTION` | validation | Promise rejection from send | CRLF/control characters in header or address | No |
+| `VALIDATION_HEADER_INJECTION` | validation | Promise rejection from send | CRLF or control characters in a header, address, or command argument — never a length | No |
 | `VALIDATION_INVALID_ATTACHMENT` | validation | Promise rejection from send | Missing filename, invalid content type, unsupported shape | No |
 | `CONFIG_UNSUPPORTED_SECURITY` | configuration | sync | Security mode not supported | No |
 | `CONFIG_UNSUPPORTED_AUTH` | configuration | sync | Auth mode not supported | No |
@@ -136,6 +136,7 @@ Codes are append-only within a major version. Removing or renaming a code is a b
 | Address parse/IDNA failure | validation | `VALIDATION_INVALID_ADDRESS` |
 | Non-ASCII local part | validation | `VALIDATION_NON_ASCII_LOCAL_PART` |
 | Header control characters | validation | `VALIDATION_HEADER_INJECTION` |
+| Over-long argument or `AUTH` value | validation | `VALIDATION_INVALID_OPTION` |
 | File attachment open, `fstat`, or type check failure | configuration | `CONFIG_ATTACHMENT_UNREADABLE` |
 | Cap exceeded | limit | `LIMIT_*` |
 | rustls certificate error | tls | `TLS_CERTIFICATE` |
