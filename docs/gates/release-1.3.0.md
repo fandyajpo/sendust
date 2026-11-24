@@ -90,6 +90,7 @@ run, from the job's own `+ <name>@1.3.0` lines and a closing
 | npm page | `homepage` = `https://sendust-docs.vercel.app`, `bugs.url` = the issue tracker, 18 keywords |
 | Platform packages | all seven resolve `1.3.0`, each carrying the same project fields |
 | Optional dependencies | all seven pinned to `1.3.0` |
+| GitHub Release | [Sendust 1.3.0](https://github.com/fandyajpo/sendust/releases/tag/v1.3.0), published 2026-11-24; the repository's only release, so GitHub marks it Latest |
 
 The registry tarball reproduces the pinned digest byte for byte, so the release
 carries no caveat about which build went up. `publish-release.mjs` is what makes

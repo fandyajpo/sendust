@@ -281,6 +281,7 @@ the pin commit `2a721ba`.
 | Platform packages | all seven resolve `1.3.0`; `windows-x64` answered on the first lookup this time, unlike `1.2.1` |
 | npm page | `homepage`, `bugs.url` and 18 keywords present |
 | Tag | `v1.3.0` → `e39b7862c7d4c7839a892f83445800d84f51b662` |
+| GitHub Release | [Sendust 1.3.0](https://github.com/fandyajpo/sendust/releases/tag/v1.3.0), published 2026-11-24; the repository's only release, so GitHub marks it Latest |
 
 No `already exists` refusal: the version was new, and the facade digest in the
 tarball is the pinned one, which is the check `publish-release.mjs` performs
