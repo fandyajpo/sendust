@@ -4,14 +4,18 @@ import { dirname, join } from "node:path";
 import { createServer as createTlsServer } from "node:tls";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { DeliveryEngine } from "../src/engine.ts";
 import {
+  SendustAuthenticationError,
   SendustError,
+  SendustInternalError,
   createTransport,
   type DeliveryOptions,
   type Message,
   type SendResult,
   type Transport,
 } from "../src/index.ts";
+import type { NativeSendResult, NativeTransport } from "../src/loader.ts";
 
 let available = true;
 try {
@@ -162,6 +166,76 @@ async function settleCode(promise: Promise<unknown>): Promise<string | null> {
   } catch (error) {
     return error instanceof SendustError ? error.code : "unknown-error";
   }
+}
+
+/** A native transport stand-in, so a contract violation is provable without I/O. */
+class FakeTransport implements NativeTransport {
+  /** Sends this session is running at once; the pool must keep it at one. */
+  inFlight = 0;
+  /** The most it ever ran at once, which is how a double release shows. */
+  overlapping = 0;
+  calls = 0;
+  closed = 0;
+  readonly #respond: (index: number) => NativeSendResult;
+
+  constructor(respond: (index: number) => NativeSendResult) {
+    this.#respond = respond;
+  }
+
+  state(): string {
+    return "open";
+  }
+
+  /** The native message record is opaque to the engine, so it is not read. */
+  async send(): Promise<NativeSendResult> {
+    this.calls += 1;
+    this.inFlight += 1;
+    this.overlapping = Math.max(this.overlapping, this.inFlight);
+    const index = this.calls - 1;
+    try {
+      // A short turn, so two copies of this session in the idle list would
+      // really overlap on the next two sends instead of serializing by luck.
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      return this.#respond(index);
+    } finally {
+      this.inFlight -= 1;
+    }
+  }
+
+  async close(): Promise<void> {
+    this.closed += 1;
+  }
+}
+
+/** A native payload the mapping rejects: one undocumented status is enough. */
+function nativeOutcome(status: string): NativeSendResult {
+  return { status, recipients: [{ address: "recipient@example.test", status }] };
+}
+
+/** A native rejection, shaped as the addon writes it (a redacted payload). */
+function nativeFailure(code: string, category: string): Error {
+  return new Error(`SENDUST:${JSON.stringify({ code, category, message: code })}`);
+}
+
+/** An engine whose pool is one stand-in session, with two slots of concurrency. */
+function engineOver(transport: NativeTransport): DeliveryEngine {
+  return new DeliveryEngine({
+    maxConcurrent: 2,
+    maxConnections: 1,
+    maxQueue: 10,
+    maxQueueBytes: 1 << 20,
+    messagesPerSecond: 0,
+    maxAttempts: 1,
+    retryBaseMs: 0,
+    retryMaxMs: 0,
+    closeMs: 125_000,
+    totalMs: 120_000,
+    sessionIdleMs: 30_000,
+    createTransport: () => {
+      throw new Error("the pool must not grow past its one session");
+    },
+    first: transport,
+  });
 }
 
 describe("autonomous delivery engine", () => {
@@ -397,5 +471,54 @@ describe("autonomous delivery engine", () => {
         delivery: { retryBaseMs: 500, retryMaxMs: 100 },
       }),
     ).toThrow(SendustError);
+  });
+});
+
+describe("delivery engine contract seams", () => {
+  it("releases a pool session once when the native result fails mapping", async () => {
+    const transport = new FakeTransport(() => nativeOutcome("delivered"));
+    const engine = engineOver(transport);
+    try {
+      const first = await engine.submit({}, 1).catch((error: unknown) => error);
+      expect(first).toBeInstanceOf(SendustInternalError);
+      expect((first as SendustError).code).toBe("INTERNAL");
+
+      // Two more sends must not run at once on the pool's one session: a second
+      // release would have left that same session in the idle list twice.
+      await Promise.allSettled([engine.submit({}, 1), engine.submit({}, 1)]);
+      expect(transport.overlapping).toBe(1);
+      expect(transport.calls).toBe(3);
+    } finally {
+      await engine.close();
+    }
+  });
+
+  it("reports a failed engine in state, and its cause on a later send", async () => {
+    const transport = new FakeTransport(() => {
+      throw nativeFailure("AUTH_FAILED", "authentication");
+    });
+    const engine = engineOver(transport);
+    try {
+      const first = await engine.submit({}, 1).catch((error: unknown) => error);
+      expect(first).toBeInstanceOf(SendustAuthenticationError);
+
+      // A health check reads this: it must not stay `open` while every send
+      // fails, and `failed` says a new transport is the only recovery.
+      expect(engine.state).toBe("failed");
+      expect(engine.stats.state).toBe("failed");
+
+      // The later send names the cause that stopped the engine, and dials
+      // nothing.
+      const later = await engine.submit({}, 1).catch((error: unknown) => error);
+      expect((later as SendustError).code).toBe("AUTH_FAILED");
+      expect(transport.calls).toBe(1);
+    } finally {
+      await engine.close();
+    }
+
+    // A failed engine can never send again, so the abandoned session was closed
+    // when its send settled; closing the engine still works and settles closed.
+    expect(transport.closed).toBe(1);
+    expect(engine.state).toBe("closed");
   });
 });
