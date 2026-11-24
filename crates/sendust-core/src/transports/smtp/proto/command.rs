@@ -266,7 +266,8 @@ mod tests {
         let error = Command::MailFrom { address }
             .to_bytes()
             .expect_err("must be rejected");
-        assert_eq!(error.code(), ErrorCode::ValidationHeaderInjection);
+        // An address longer than the protocol allows is a limit, not injection.
+        assert_eq!(error.code(), ErrorCode::ValidationInvalidOption);
     }
 
     #[test]
