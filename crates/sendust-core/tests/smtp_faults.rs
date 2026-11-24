@@ -664,7 +664,6 @@ async fn a_malformed_greeting_is_a_protocol_error() {
     assert_eq!(server.trace().count_prefix("MAIL"), 0);
 }
 
-
 /// A relay whose advertised `SIZE` is below the message is refused before
 /// `MAIL`: a disconnect mid-`DATA` would be reported as `unknown`, forcing a
 /// human to decide whether to resend.
