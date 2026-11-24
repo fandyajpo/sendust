@@ -10,6 +10,23 @@ tag format, version sources, and compatibility promises — are in
 
 Nothing yet.
 
+## [1.2.1] - 2026-11-24
+
+A metadata patch for the npm page. No runtime, API, result, error code, limit or
+default changed; the code and the wire are byte-identical to `1.2.0`.
+
+### Changed
+
+- The published manifest declares `homepage` (the documentation site) and `bugs`
+  (the issue tracker), and carries the keywords npm search needs. `1.2.0` shipped
+  without them, so its page linked only to the repository and could not be found
+  by protocol or capability.
+- `ts/README.md`, which *is* the npm page, now reads as one: install, a quick
+  start, both authentication modes, DKIM, the engine's guarantees, the seven
+  targets, runtime requirements and links into the documentation.
+- The seven platform packages copy `homepage`, `bugs` and `keywords` from the
+  facade, so their pages carry the same project links.
+
 ## [1.2.0] - 2026-11-23
 
 Signing, not a new transport. Optional and additive: a caller who does not set

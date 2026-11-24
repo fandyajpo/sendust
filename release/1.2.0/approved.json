@@ -1,10 +1,10 @@
 {
   "version": "1.2.0",
-  "commit": "4a74817dc6c3f36d5e7c5cdba46be032f8107d20",
+  "commit": "421ee0283b78e1461718c326c56cbc40ea722d87",
   "distTag": "latest",
   "facade": {
     "name": "@sendust/ts",
-    "sha256": "a93f5ef00a139fc88061d82b9ea44f246c4d8b9932b07a692a361acaf130d8a4"
+    "sha256": "be29213daeee25a13ac034f3ec8aaad9c808bb90bc00e3da8f7155be10005334"
   },
   "artifacts": {
     "linux-x64-gnu": null,

@@ -4,8 +4,8 @@
 third item of the [next-cycle backlog](../planning/next-cycle-backlog.md) and
 asked for that release.
 **Release:** `@sendust/ts@1.2.0`, dist-tag `latest`.
-**Candidate commit:** `4a74817dc6c3f36d5e7c5cdba46be032f8107d20`, the commit that
-carries the 1.2.0 tree and the CI facade hash.
+**Candidate commit:** `421ee0283b78e1461718c326c56cbc40ea722d87`, the commit the
+published facade was built from.
 **Related:** [release notes](../releases/1.2.0.md),
 [ADR-0024](../architecture/decisions/0024-dkim-signing.md),
 [dependency policy](../engineering/dependency-policy.md) §2,
@@ -49,24 +49,37 @@ that relays through its own MTA had no way to sign with Sendust at all
 ## 4. Binary verification
 
 `release/1.2.0/approved.json` pins the approved commit, the dist-tag `latest`, the
-facade hash `a93f5ef00a139fc88061d82b9ea44f246c4d8b9932b07a692a361acaf130d8a4`
-produced by the `Facade hash` job on that commit (job 137505719905), and all seven
+facade hash `be29213daeee25a13ac034f3ec8aaad9c808bb90bc00e3da8f7155be10005334`
+produced by the `Facade hash` job on that commit (job 137491718675), and all seven
 platform entries. No byte-reproducibility claim: each target is identified by the
 approval bundle's own checksums, as in `1.1.1`. `publish-release.mjs` refuses to
 publish a facade whose digest differs from the pinned value, which is how `1.1.0`
 caught a macOS-computed hash
 ([reproducible build](../engineering/reproducible-build.md) §7).
 
-The candidate was pinned twice. The first pin was `421ee02` with facade
-`be29213d…`; the npm-page work (homepage, issue tracker, keywords, and a
-README written as the package page) changed the published manifest and README,
-both of which are part of the tarball, so the pin and the `v1.2.0` tag moved to
-the commit that carries them. Nothing had been published at either point.
+A second candidate was prepared for the npm-page metadata — `homepage`, the issue
+tracker, keywords and a README written as the package page — at `4a74817` with
+facade `a93f5ef0…` (job 137505719905). Its publish run stopped on
+`@sendust/ts-linux-x64-gnu@1.2.0 already exists; refusing to replace it`: `1.2.0`
+had already been published from the first candidate, and npm never replaces a
+version. That metadata therefore ships in `1.2.1`, and this record and the
+approval bundle name the bytes that are actually on the registry.
 
 ## 5. Publication
 
-Not executed. The `publish` job publishes `@sendust/ts@1.2.0` and the seven
-platform packages over npm trusted publishing (OIDC), with no npm token, and the
-registry must record `GitHub Actions` as the publisher and a SLSA provenance
-attestation. After it runs, this section records the result, the tag and the
-post-publication `npm pack` digest.
+**Executed 2026-11-23.** The CI `publish` job published `@sendust/ts@1.2.0` and all
+seven platform packages over npm trusted publishing. What the registry records:
+
+| Check | Value |
+| --- | --- |
+| `@sendust/ts@1.2.0` | present; `latest` → `1.2.0`, `next` still `1.0.0` |
+| `npm pack @sendust/ts@1.2.0` | `be29213daeee25a13ac034f3ec8aaad9c808bb90bc00e3da8f7155be10005334`, the approved facade hash |
+| Registry shasum | `b31be1908f703fe57e61d2be42a98752749262e4`, 42 files, 166 977 bytes unpacked |
+| Publisher | `GitHub Actions` with an OIDC trusted-publisher configuration; no npm token |
+| Provenance | `attestations.provenance.predicateType` = `https://slsa.dev/provenance/v1` |
+| Platform packages | all seven resolve `1.2.0` |
+
+A later publish attempt on the npm-page candidate failed at the first platform
+package with `already exists; refusing to replace it`, which is the registry
+working as designed: a published version is immutable, so the metadata went to
+`1.2.1` instead.

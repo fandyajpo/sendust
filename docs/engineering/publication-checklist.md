@@ -1,7 +1,7 @@
 # Publication checklist and authorization (P17-003)
 
-**Status:** complete. `0.1.0-rc.1`, `1.0.0`, `1.0.1`, `1.0.2`, `1.1.0`, and
-`1.1.1` are published; the current record is §5e.
+**Status:** complete. `0.1.0-rc.1`, `1.0.0`, `1.0.1`, `1.0.2`, `1.1.0`, `1.1.1`,
+and `1.2.0` are published; the current record is §5f.
 **Date:** 2026-11-18.
 **Original candidate:** `0.1.0-rc.1`, verified in the
 [RC verification record](../qa/rc-verification.md).
@@ -216,6 +216,29 @@ Two dispatches failed before this one, both at the publish job's own guard and
 both before npm ran: `actions/setup-node` exports `NODE_AUTH_TOKEN` when given
 `registry-url`, and a token in the environment wins over OIDC. The job no longer
 passes `registry-url`. Nothing was published by the failed runs.
+
+## 5f. 1.2.0 publication record
+
+**Published 2026-11-23** from the CI `publish` job through npm trusted
+publishing. `@sendust/ts@1.2.0` and all seven platform packages at `1.2.0`, built
+from the approved candidate `421ee02`.
+
+| Check | Result |
+| --- | --- |
+| Publisher | registry metadata: `GitHub Actions`, `trustedPublisher.id: github` |
+| Provenance | `attestations.provenance.predicateType: https://slsa.dev/provenance/v1` |
+| Registry artifact hash | `npm pack @sendust/ts@1.2.0` → `be29213daeee25a13ac034f3ec8aaad9c808bb90bc00e3da8f7155be10005334`, the approved value from the `Facade hash` job (137491718675) |
+| Registry shasum | `b31be1908f703fe57e61d2be42a98752749262e4`, 42 files, 166 977 bytes unpacked |
+| Dist-tags | `latest` `1.2.0`, `next` `1.0.0` |
+| Platform packages | all seven resolve `1.2.0` |
+| Tag | `v1.2.0` → `421ee0283b78e1461718c326c56cbc40ea722d87` |
+
+A later publish attempt on the npm-page candidate (`4a74817`, facade
+`a93f5ef0…`) stopped at `@sendust/ts-linux-x64-gnu@1.2.0 already exists;
+refusing to replace it`. That is the registry working as designed: a published
+version is immutable, so the metadata ships in `1.2.1` and this record keeps the
+bytes that are actually on the registry. The `v1.2.0` tag was moved back to
+`421ee02` for the same reason — it must identify the published source.
 
 Remaining for the owner: set *Publishing access → Require two-factor
 authentication and disallow tokens* on the eight packages, enable **`npm
