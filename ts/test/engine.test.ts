@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
+import { type Socket } from "node:net";
 import { dirname, join } from "node:path";
-import { createServer as createTlsServer, type Socket } from "node:tls";
+import { createServer as createTlsServer } from "node:tls";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
