@@ -297,7 +297,6 @@ export class DeliveryEngine {
     let accepted = false;
     try {
       const raw = await transport.send(job.nativeMessage);
-      this.#release(transport);
 
       const result = toSendResult(raw);
       const decision = retryAfterResult(result, this.#ledger(job), this.#backoff);
@@ -311,8 +310,6 @@ export class DeliveryEngine {
         job.resolve(result);
       }
     } catch (error) {
-      this.#release(transport);
-
       const mapped = fromNative(error) ?? error;
       const decision = retryAfterError(mapped, this.#ledger(job), this.#backoff);
       const fatal = decision.retry === false && decision.fatal === true;
@@ -327,6 +324,10 @@ export class DeliveryEngine {
         this.#fail(job, mapped);
       }
     } finally {
+      // Released exactly once, on every exit. `toSendResult` can throw after a
+      // send that succeeded, and releasing again in the catch path would hand
+      // that same session to a waiter already using it.
+      this.#release(transport);
       this.#active -= 1;
       if (accepted) {
         this.#grow();
@@ -499,6 +500,14 @@ export class DeliveryEngine {
     const waiter = this.#waiters.shift();
     if (waiter) {
       waiter.resolve(transport);
+      return;
+    }
+    if (this.#options.sessionIdleMs <= 0) {
+      // Zero means no idle reuse, which is the rule the core applies: the
+      // session is closed now rather than pooled. Pooling it would leave the
+      // core refusing a session this engine keeps handing out.
+      this.#all.delete(transport);
+      void transport.close().catch(() => undefined);
       return;
     }
     this.#idle.push(transport);

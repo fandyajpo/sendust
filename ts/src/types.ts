@@ -260,7 +260,11 @@ export interface DeliveryOptions {
   readonly retryMaxMs?: number;
   /** Messages one authenticated SMTP session may serve before it is closed. */
   readonly maxMessagesPerSession?: number;
-  /** How long an idle session may be reused before a fresh connection. */
+  /**
+   * How long an idle session may be reused before a fresh connection. `0` means
+   * no idle reuse: a session is closed as soon as its message settles, which is
+   * the same rule the core applies.
+   */
   readonly sessionIdleMs?: number;
 }
 

@@ -370,6 +370,10 @@ impl Transport {
         };
 
         let inner = Arc::clone(&self.inner);
+        // Reset the cancellation progress before the task exists: a close that
+        // lands before the task reaches `run` must not read the previous
+        // message's stage and recipients as this message's.
+        self.inner.progress.reset();
         let handle = tokio::spawn(async move {
             let mut transport = transport;
             let mut delivery = Delivery::new(

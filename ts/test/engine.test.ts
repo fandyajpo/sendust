@@ -361,6 +361,22 @@ describe("autonomous delivery engine", () => {
     }
   });
 
+  it.skipIf(!available)("never reuses a session when sessionIdleMs is zero", async () => {
+    const relay = await fakeRelay();
+    const transport = transportFor(relay, { sessionIdleMs: 0, maxAttempts: 1 });
+    try {
+      await transport.send(message(1));
+      await transport.send(message(2));
+      // Zero is "no idle reuse", the rule the core applies too: the session
+      // that served the first message is closed when it settles, so the second
+      // message dials again.
+      expect(relay.connections()).toBe(2);
+    } finally {
+      await transport.close();
+      await relay.close();
+    }
+  });
+
   it("rejects an out-of-range delivery option before any I/O", () => {
     expect(() =>
       createTransport({
