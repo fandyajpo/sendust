@@ -91,7 +91,7 @@ async function fakeTlsRelay(
   let current: string[] = [];
   const server = createTlsServer(
     { key: tlsFixture("valid-server.key"), cert: tlsFixture("valid-server.crt") },
-    (socket) => {
+    (socket: Socket) => {
       sockets.add(socket);
       socket.on("close", () => sockets.delete(socket));
       socket.setEncoding("utf8");
@@ -712,7 +712,7 @@ describe("sendust facade", () => {
   it.skipIf(!available)("queues a second concurrent send instead of rejecting it", async () => {
     const gate = connectionGate();
     let connections = 0;
-    const server = createServer((socket) => {
+    const server = createServer((socket: Socket) => {
       connections += 1;
       gate.accept(socket);
     });

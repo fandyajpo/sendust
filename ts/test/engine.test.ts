@@ -57,7 +57,9 @@ function transportFor(relay: Relay, delivery?: DeliveryOptions): Transport {
     port: relay.port,
     secure: "tls",
     tlsRootCertificate: tlsFixture("ca.crt"),
-    delivery,
+    // `exactOptionalPropertyTypes` forbids an explicit undefined here, so the
+    // key is present only when the test configured it.
+    ...(delivery ? { delivery } : {}),
   });
 }
 
@@ -82,7 +84,7 @@ async function fakeRelay(behaviour: () => Final = () => "accepted"): Promise<Rel
 
   const server = createTlsServer(
     { key: tlsFixture("valid-server.key"), cert: tlsFixture("valid-server.crt") },
-    (socket) => {
+    (socket: Socket) => {
       connections += 1;
       sockets.add(socket);
       socket.on("close", () => sockets.delete(socket));
