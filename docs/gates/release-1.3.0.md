@@ -60,13 +60,17 @@ why the fixes ship here and the release records them.
 | Documentation guards | `npm run check` PASS at 1.3.0 |
 | Secret scan | `node scripts/check-secrets.mjs` |
 | Native artifacts | CI `Native artifact` and `Native artifact (musl)` jobs on the candidate commit |
-| Facade hash | to be produced by the `Facade hash` dispatch on the candidate commit; never from a laptop |
+| Facade hash | `1953fd075e651f2a5724366e76e30c85862184b932eeb36e1fa9a4839adccb77` from the `Facade hash` dispatch on the candidate commit (`e39b786`, job 138421784504); never from a laptop |
 
 ## 4. Binary verification
 
-Not yet pinned. `release/1.3.0/approved.json` is written once the `Facade hash`
-job reports the tarball digest for the candidate commit, and
-`publish-release.mjs` refuses a facade whose digest differs from it
+`release/1.3.0/approved.json` pins the approved commit
+`e39b7862c7d4c7839a892f83445800d84f51b662`, the dist-tag `latest`, the facade
+hash `1953fd075e651f2a5724366e76e30c85862184b932eeb36e1fa9a4839adccb77`
+produced by the `Facade hash` job on that commit (job 138421784504), and all seven
+platform entries. No byte-reproducibility claim: each target is identified by the
+approval bundle's own checksums, as in `1.2.1`. `publish-release.mjs` refuses a
+facade whose digest differs from the pinned value
 ([reproducible build](../engineering/reproducible-build.md) §7).
 
 ## 5. Publication
