@@ -3,7 +3,7 @@
 **Decision:** APPROVED — project owner, 2026-11-24. The owner asked for the npm
 page to be fixed; `1.2.0` is published and immutable, so the metadata ships as a
 patch.
-**Release:** `@sendust/ts@1.2.1`, dist-tag `latest`.
+**Release:** `@sendust/ts@1.2.1`, dist-tag `latest`, published 2026-11-24.
 **Candidate commit:** `2190bf4cebcd48d8a6b0c7a1d789f86d123d0deb`, the `release:
 prepare 1.2.1` commit, and the commit the `v1.2.1` tag points at.
 **Related:** [release notes](../releases/1.2.1.md),
@@ -54,7 +54,23 @@ facade whose digest differs from the pinned value
 
 ## 5. Publication
 
-Not executed. The `publish` job publishes `@sendust/ts@1.2.1` and the seven
-platform packages over npm trusted publishing (OIDC), with no npm token. After it
-runs, this section records the result, the tag and the post-publication `npm pack`
-digest.
+**Executed 2026-11-24.** The CI `publish` job published `@sendust/ts@1.2.1` and all
+seven platform packages over npm trusted publishing, eight packages in one run.
+What the registry records:
+
+| Check | Value |
+| --- | --- |
+| `@sendust/ts@1.2.1` | present; `latest` → `1.2.1`, `next` still `1.0.0` |
+| `npm pack @sendust/ts@1.2.1` | `1b6de9ecdca2ddbbf59e09ecb8691a0c13b0e09152921ae30c5aae102ce1375c`, the approved facade hash |
+| Registry shasum | `503f0711c94b7c8384f64efe7a28d023741aed62`, 42 files, 170 009 bytes unpacked |
+| Publisher | `GitHub Actions` with an OIDC trusted-publisher configuration; no npm token |
+| Provenance | `attestations.provenance.predicateType` = `https://slsa.dev/provenance/v1` |
+| npm page | `homepage` = `https://sendust-docs.vercel.app`, `bugs` = the issue tracker, 18 keywords — the point of the release |
+| Platform packages | all seven resolve `1.2.1`, each carrying the same project fields; `macos-x64` was the last to appear while npm finished ingesting it, and its shasum (`48e61c92…`) matches the one printed by the publish job |
+
+The job logged `+ @sendust/ts-macos-x64@1.2.1` and then "your package is being
+processed and may take a few minutes to become available"; a lookup minutes later
+still answered 404 for that one version while the other seven resolved. It
+resolved once ingestion finished. That is worth remembering when checking a
+publication straight after the job: read the job log for the authoritative
+`succeeded` line before concluding a package is missing.

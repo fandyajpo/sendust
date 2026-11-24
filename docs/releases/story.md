@@ -167,6 +167,14 @@ signature was then checked by an implementation this project does not own —
 That is `1.2.0`, tagged `v1.2.0` on 2026-11-23, and the first feature release
 published through trusted publishing.
 
+Then the storefront. `1.2.0` reached npm with a description and nothing else: no
+homepage, no issue tracker, no keywords, so the page pointed only at the
+repository and npm search could not find it. A published version cannot be
+edited, so `1.2.1` exists for that page and for nothing else. It also left one
+lesson worth writing down: a package npm has accepted can still answer 404 for a
+few minutes while the registry ingests it, so the job log — not a lookup a minute
+later — says whether a publication worked.
+
 ## 6. Version timeline
 
 | Version | Date | What changed |
@@ -179,6 +187,7 @@ published through trusted publishing.
 | `1.1.0` | 2026-11-22 | Linux musl targets; XOAUTH2 with a bearer token |
 | `1.1.1` | 2026-11-23 | Trusted publishing with provenance; `repository.url` in every manifest |
 | `1.2.0` | 2026-11-23 | DKIM signing: `rsa-sha256`, relaxed/relaxed, caller-supplied key |
+| `1.2.1` | 2026-11-24 | npm page: homepage, issue tracker, keywords, README as the page |
 
 ## 7. What Sendust is now
 

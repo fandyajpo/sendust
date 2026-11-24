@@ -1,7 +1,7 @@
 # Publication checklist and authorization (P17-003)
 
 **Status:** complete. `0.1.0-rc.1`, `1.0.0`, `1.0.1`, `1.0.2`, `1.1.0`, `1.1.1`,
-and `1.2.0` are published; the current record is §5f.
+`1.2.0` and `1.2.1` are published; the current record is §5g.
 **Date:** 2026-11-18.
 **Original candidate:** `0.1.0-rc.1`, verified in the
 [RC verification record](../qa/rc-verification.md).
@@ -239,6 +239,26 @@ refusing to replace it`. That is the registry working as designed: a published
 version is immutable, so the metadata ships in `1.2.1` and this record keeps the
 bytes that are actually on the registry. The `v1.2.0` tag was moved back to
 `421ee02` for the same reason — it must identify the published source.
+
+## 5g. 1.2.1 publication record
+
+**Published 2026-11-24** from the CI `publish` job through npm trusted
+publishing: eight packages in one run, from the approved candidate `2190bf4`.
+
+| Check | Result |
+| --- | --- |
+| Publisher | registry metadata: `GitHub Actions`, `trustedPublisher.id: github` |
+| Provenance | `attestations.provenance.predicateType: https://slsa.dev/provenance/v1` |
+| Registry artifact hash | `npm pack @sendust/ts@1.2.1` → `1b6de9ecdca2ddbbf59e09ecb8691a0c13b0e09152921ae30c5aae102ce1375c`, the approved value from the `Facade hash` job (138178294946) |
+| Registry shasum | `503f0711c94b7c8384f64efe7a28d023741aed62`, 42 files, 170 009 bytes unpacked |
+| Dist-tags | `latest` `1.2.1`, `next` `1.0.0` |
+| Platform packages | all seven resolve `1.2.1`; `macos-x64` appeared last, after npm finished ingesting it — its shasum matches the one the job printed |
+| npm page | `homepage`, `bugs` and 18 keywords present, on the facade and on every platform package |
+| Tag | `v1.2.1` → `2190bf4cebcd48d8a6b0c7a1d789f86d123d0eb` |
+
+The one thing to remember from this run: the job logs `+ <name>@<version>` when
+npm accepts a package, and the read path can still answer 404 for a version
+minutes later. Check the job log first, then the registry.
 
 Remaining for the owner: set *Publishing access → Require two-factor
 authentication and disallow tokens* on the eight packages, enable **`npm
