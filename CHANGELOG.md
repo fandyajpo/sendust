@@ -10,6 +10,45 @@ tag format, version sources, and compatibility promises — are in
 
 Nothing yet.
 
+## [1.4.0] - 2026-11-25
+
+The audit's delete-or-wire decisions: one owner per contract, two documented
+fields that are now produced, and one code deprecated rather than deleted.
+
+### Added
+
+- `details.recipient` and `details.smtpEnhancedCode` are populated where the
+  relay supplies them. The `RCPT` loop names the address an unexpected reply is
+  about, and every reply carrying an RFC 3463 code (`535 5.7.8`) attaches it, at
+  AUTH and at the transaction's stages; a reply without one adds nothing
+  ([ADR-0026](docs/architecture/decisions/0026-populate-error-details.md)).
+
+### Changed
+
+- The core no longer carries its own `lifecycle` module. The binding owns the
+  transport state machine, so the copy only described it a second time, with
+  tests that ran a machine no caller reached. `SendDeadlines` stays public and
+  moves to `config`, where it is defined
+  ([ADR-0025](docs/architecture/decisions/0025-delete-dead-core-modules.md)).
+- The `validation` module and `validate_in_order` are deleted. Precedence is the
+  order in which `OutgoingMessage::validate` runs its stages, which is what has
+  always decided the error a caller sees.
+
+### Deprecated
+
+- `PROTOCOL_REJECTED` is deprecated: no path produces it, a definitive refusal
+  is a `rejected` outcome, and a malformed reply is
+  `PROTOCOL_UNEXPECTED_RESPONSE`. It stays in the catalogue because codes are
+  append-only within a major version, and the next major removes it.
+
+### Verification
+
+- Rust: `cargo test --workspace --all-targets --locked` (14 suites, 184 core
+  tests), clippy `-D warnings`, `cargo fmt --check`.
+- TypeScript: `tsc`, Biome, 79 Vitest tests against the rebuilt addon.
+- `npm run check`: architecture (with both modules gone), links, claims and
+  version agreement.
+
 ## [1.3.0] - 2026-11-24
 
 The fixes from the source audit of `1.2.1`, plus one additive state. A caller

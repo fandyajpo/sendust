@@ -1,6 +1,6 @@
 {
   "name": "sendust",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Standalone native email delivery engine for Node.js, Bun, and Deno",
   "license": "MIT OR Apache-2.0",
   "repository": {

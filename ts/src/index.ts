@@ -49,4 +49,4 @@ export type {
 } from "./types.ts";
 
 /** Package version; kept in step with package.json at release time. */
-export const version = "1.3.0";
+export const version = "1.4.0";

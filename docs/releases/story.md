@@ -202,6 +202,18 @@ seven platform packages answered on the first lookup, which is the opposite of t
 `1.2.1` lesson and a reminder that the lesson was about npm's ingestion, not
 about a missing publish.
 
+The four findings the audit left as questions were the ones where the code had
+two answers and neither was wrong on its own. The core carried a second copy of
+the transport state machine, with tests that ran a machine no caller reached; it
+also carried `validate_in_order`, which claimed to own error precedence while
+`OutgoingMessage::validate` decided it inline. The owner chose delete-or-wire
+rather than a third copy, so `1.4.0` deletes both and lets the binding and the
+stages own their rules. The same release populates the two error details that
+were documented and never produced — a `535 5.7.8` now carries its `5.7.8`, and
+an unexpected `RCPT` reply names its address — and deprecates
+`PROTOCOL_REJECTED`, because no path produces it and codes are append-only
+inside a major version.
+
 ## 7. Version timeline
 
 | Version | Date | What changed |
@@ -216,6 +228,7 @@ about a missing publish.
 | `1.2.0` | 2026-11-23 | DKIM signing: `rsa-sha256`, relaxed/relaxed, caller-supplied key |
 | `1.2.1` | 2026-11-24 | npm page: homepage, issue tracker, keywords, README as the page |
 | `1.3.0` | 2026-11-24 | Audit fixes: `failed` state, `SIZE`, long `AUTH` lines, wrapper reliability |
+| `1.4.0` | 2026-11-25 | Delete-or-wire: dead modules deleted, error details populated, one code deprecated |
 
 ## 8. What Sendust is now
 
