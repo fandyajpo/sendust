@@ -169,8 +169,8 @@ impl OutgoingMessage {
     ///
     /// Stages 1 (transport configuration) and 8 (wire size) are owned elsewhere:
     /// the transport validates its options, and wire size needs the serialized
-    /// bytes produced by `mime`. Callers run all stages through
-    /// `validation::validate_in_order`, so precedence stays stable.
+    /// bytes produced by `mime`. Precedence is the order these stages run in, so
+    /// the earliest stage that fails decides the error the caller sees.
     pub fn validate(&self, limits: Limits, policy: AttachmentPolicy) -> Result<(), Error> {
         // Stage 2: message identity. `from` is a typed mailbox, so a missing
         // From address is rejected where absence is representable (the binding),

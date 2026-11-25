@@ -12,21 +12,18 @@ mod config;
 mod delivery;
 mod dkim;
 mod errors;
-mod lifecycle;
 mod message;
 mod mime;
 mod ports;
 mod results;
 mod transports;
-mod validation;
 
 pub use crate::address::Mailbox;
 pub use crate::attachments::{Attachment, AttachmentPolicy, FileDescriptor, read_attachment};
-pub use crate::config::{Limits, MIB, Timeouts};
+pub use crate::config::{Limits, MIB, SendDeadlines, Timeouts};
 pub use crate::delivery::Delivery;
 pub use crate::dkim::{DEFAULT_SIGNED_HEADERS, DkimSigner};
 pub use crate::errors::{Error, ErrorCategory, ErrorCode, ErrorDetails, Stage};
-pub use crate::lifecycle::{LifecycleState, SendDeadlines, SendPermit, Transport};
 pub use crate::message::{Header, HeaderName, HeaderValue, OutgoingMessage};
 pub use crate::mime::{serialize, serialize_at};
 pub use crate::ports::{DeliveryPort, DeliveryRequest};
@@ -38,7 +35,6 @@ pub use crate::transports::smtp::{
     AuthMechanism, ReusePolicy, SmtpConfig, SmtpCredentials, SmtpSecurity, SmtpSession,
     SmtpTransport,
 };
-pub use crate::validation::{Failures as ValidationFailures, ValidationStage, validate_in_order};
 
 #[doc(hidden)]
 pub mod __internal {

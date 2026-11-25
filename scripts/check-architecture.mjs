@@ -60,9 +60,7 @@ const MODULE_LAYERS = new Map([
   ["message", "domain"],
   ["mime", "domain"],
   ["results", "domain"],
-  ["validation", "application"],
   ["delivery", "application"],
-  ["lifecycle", "application"],
   ["ports", "port"],
   ["transports", "adapter"],
 ]);
