@@ -369,7 +369,7 @@ impl Connection {
         preferred: Option<AuthMechanism>,
     ) -> Result<(), Error> {
         if !self.encrypted {
-            return Err(auth_error(ErrorCode::AuthUnsupported, None));
+            return Err(auth_unsupported());
         }
 
         let mechanism = choose_auth(
@@ -378,7 +378,7 @@ impl Connection {
             self.capabilities.supports_auth(AuthMechanism::XOAuth2),
             preferred,
         )
-        .ok_or_else(|| auth_error(ErrorCode::AuthUnsupported, None))?;
+        .ok_or_else(auth_unsupported)?;
 
         match mechanism {
             AuthMechanism::Plain => {
@@ -512,6 +512,12 @@ fn auth_error(code: ErrorCode, reply: &Reply) -> Error {
         details = details.smtp_enhanced_code(enhanced.raw());
     }
     Error::new(code).with_details(details)
+}
+
+/// The relay offered no mechanism this client can use, so no reply exists.
+fn auth_unsupported() -> Error {
+    Error::new(ErrorCode::AuthUnsupported)
+        .with_details(ErrorDetails::default().stage(Stage::Auth))
 }
 
 #[cfg(test)]

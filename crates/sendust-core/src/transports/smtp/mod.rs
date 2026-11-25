@@ -538,12 +538,11 @@ impl SmtpTransport {
                 Ok(reply) => {
                     // The address is what makes this reply's owner knowable, so
                     // it travels with the error rather than being dropped here.
-                    let address = recipient.address();
                     return Err(unexpected_reply(
                         config,
                         Stage::Rcpt,
                         &reply,
-                        Some(&address),
+                        Some(recipient),
                     ));
                 }
                 Err(error) => return Err(annotate(error, config, deadlines, Stage::Rcpt)),
