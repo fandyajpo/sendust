@@ -130,6 +130,9 @@ error_codes! {
     TlsProtocol => ("TLS_PROTOCOL", Tls, "TLS protocol not supported"),
     AuthFailed => ("AUTH_FAILED", Authentication, "authentication failed"),
     AuthUnsupported => ("AUTH_UNSUPPORTED", Authentication, "no supported authentication mechanism"),
+    // No path produces this code since 1.4.0: a definitive refusal is a
+    // `rejected` outcome. Kept because codes are append-only within a major
+    // version (ADR-0026), and removed in the next major.
     ProtocolRejected => ("PROTOCOL_REJECTED", Protocol, "protocol rejected the message"),
     ProtocolUnexpectedResponse => ("PROTOCOL_UNEXPECTED_RESPONSE", Protocol, "unexpected SMTP response"),
     ProtocolConnectionReset => ("PROTOCOL_CONNECTION_RESET", Protocol, "connection reset by the relay"),

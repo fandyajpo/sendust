@@ -22,14 +22,12 @@ sendust/
 │   │       ├── config/
 │   │       ├── address/
 │   │       ├── message/
-│   │       ├── validation/
 │   │       ├── attachments/
 │   │       ├── mime/
 │   │       ├── delivery/
 │   │       ├── ports/
 │   │       ├── transports/
 │   │       │   └── smtp/
-│   │       ├── lifecycle/
 │   │       ├── errors/
 │   │       └── results/
 │   └── sendust-napi/
@@ -232,14 +230,12 @@ sendust-core/src/
 ├── config/                # relay, TLS/auth, timeout and limit config
 ├── address/               # mailbox parsing and normalization
 ├── message/               # message and header model
-├── validation/            # deterministic cross-field and injection checks
 ├── attachments/           # bounded buffer/file attachment policy
 ├── mime/                  # MIME tree, encoding and wire-size accounting
 ├── delivery/              # send use-case orchestration and delivery certainty
 ├── ports/                 # narrow internal outbound delivery contract
 ├── transports/
 │   └── smtp/              # native SMTP session, TLS, AUTH, envelope, RCPT/DATA
-├── lifecycle/             # open/closing/closed, BUSY and bounded close
 ├── errors/                # internal error taxonomy
 └── results/               # accepted/rejected/unknown and recipient outcomes
 ```

@@ -28,6 +28,8 @@ Architectural decisions for Sendust. One decision per file. ADR-0016 defines the
 | [0022](0022-session-reuse.md) | Reuse one authenticated SMTP session across messages, reset by `RSET`, dropped on error or `unknown` | ACCEPTED (project owner decision 2026-11-19; adopts option B of the pooling research) | `crates/sendust-core/tests/smtp_reuse.rs` |
 | [0023](0023-xoauth2-authentication.md) | XOAUTH2 with a caller-supplied bearer token; never chosen implicitly, never refreshed by the library | ACCEPTED (project owner decision 2026-11-22) | `crates/sendust-core/tests/smtp_session.rs`, `ts/test/transport.test.ts` |
 | [0024](0024-dkim-signing.md) | Optional DKIM signing (RFC 6376) in the core: `rsa-sha256`, relaxed/relaxed, caller-supplied key, no DNS and no key store | ACCEPTED (project owner decision 2026-11-23; supersedes ADR-0017's DKIM exclusion) | `crates/sendust-core/tests/dkim.rs`, `ts/test/transport.test.ts` |
+| | [0025](0025-delete-dead-core-modules.md) | Delete the core's dead `lifecycle` and `validation` modules: the binding owns the state machine and precedence is inline | ACCEPTED (project owner decision 2026-11-25; internal only) | `cargo test --workspace`, `npm run check` |
+| | [0026](0026-populate-error-details.md) | Populate `details.recipient` and `details.smtpEnhancedCode`; deprecate `PROTOCOL_REJECTED` rather than delete it inside a major | ACCEPTED (project owner decision 2026-11-25; details additive, code deprecated) | `crates/sendust-core/tests/smtp_faults.rs` |
 | [0019](0019-installable-typescript-package.md) | Installable `@sendust/ts` package with the addon bundled; supersedes ADR-0011's packaging shape | ACCEPTED (project owner decision; packaging evidence P14-001 onward) | P14-001, P14-002 |
 
 ## ADR format

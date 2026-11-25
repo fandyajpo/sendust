@@ -99,7 +99,7 @@ remove them or turn verification off.
 | --- | --- | --- |
 | `AUTH_FAILED` | Relay rejected the credentials | Fix credentials, then build a new transport; it is `failed`, so it never sends again |
 | `AUTH_UNSUPPORTED` | Relay offered no supported mechanism | Enable `PLAIN`/`LOGIN` at the relay, then build a new transport; it is `failed` |
-| `PROTOCOL_REJECTED` | A protocol failure prevented a trustworthy outcome | Investigate the relay; a definitive SMTP refusal is a `rejected` result, not this error |
+| `PROTOCOL_REJECTED` | Nothing: deprecated in 1.4.0, no path produces it, and it is removed in the next major | Treat a definitive SMTP refusal as a `rejected` result, and a malformed reply as `PROTOCOL_UNEXPECTED_RESPONSE` |
 | `PROTOCOL_UNEXPECTED_RESPONSE` | Malformed or unexpected reply | Investigate; retry only if you know the stage |
 | `PROTOCOL_CONNECTION_RESET` | Peer closed the connection | Retry only when you know it was before DATA; after DATA, expect `unknown` |
 

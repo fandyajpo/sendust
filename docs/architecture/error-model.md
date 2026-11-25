@@ -104,7 +104,7 @@ export type ErrorCategory =
 | `TLS_PROTOCOL` | tls | async | Unsupported TLS version/cipher | No |
 | `AUTH_FAILED` | authentication | async | Relay rejected credentials | No, fix credentials and build a new transport: this one is `failed` |
 | `AUTH_UNSUPPORTED` | authentication | async | Relay offered no supported mechanism, or `AUTH XOAUTH2` was forced while the relay did not advertise it | No, change the relay and build a new transport: this one is `failed` |
-| `PROTOCOL_REJECTED` | protocol | async | Malformed or unexpected protocol failure that prevents a trustworthy outcome; definitive SMTP refusals are `rejected` outcomes | No |
+| `PROTOCOL_REJECTED` | protocol | async | No path produces it; a definitive SMTP refusal is a `rejected` outcome, and a malformed reply is `PROTOCOL_UNEXPECTED_RESPONSE`. Deprecated in 1.4.0 and removed in the next major | No |
 | `PROTOCOL_UNEXPECTED_RESPONSE` | protocol | async | Malformed/unexpected reply | Maybe |
 | `PROTOCOL_CONNECTION_RESET` | protocol | async | Peer closed unexpectedly | Only when known to be pre-DATA; if final disposition is uncertain after DATA, return `unknown` and do not automatically retry |
 | `TIMEOUT_CONNECT` | timeout | async | Connect budget exceeded | Yes |
