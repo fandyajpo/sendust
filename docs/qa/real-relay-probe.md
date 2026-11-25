@@ -70,6 +70,44 @@ This is the first authenticated real-relay send: AUTH, `MAIL FROM`, `RCPT TO`,
 `DATA`, and the final `250` all worked, and the facade reported the relay's own
 reply unchanged.
 
+## 3. The published 1.3.0 against Gmail
+
+**Date:** 2026-11-25. **Build:** `@sendust/ts@1.3.0`, installed from the
+registry into an empty folder, on Node.js 22.23.5.
+
+| Field | Value |
+| --- | --- |
+| Relay | `smtp.gmail.com:465`, `tls`, app-password auth |
+| Package | `@sendust/ts@1.3.0`, the pinned tarball, not a local build |
+| Status | `accepted`, `250`, 4.8 s |
+| One attempt | `delivery: { maxAttempts: 1 }`, so a transient reply would be reported, not retried away |
+
+Gmail's own `EHLO`, read separately with `openssl s_client`, is what makes this
+run exercise `1.3.0`'s new wire rather than the old one:
+
+```text
+250-smtp.gmail.com at your service, [38.86.221.124]
+250-SIZE 35882577
+250-8BITMIME
+250-AUTH LOGIN PLAIN XOAUTH2 PLAIN-CLIENTTOKEN OAUTHBEARER XOAUTH
+250-ENHANCEDSTATUSCODES
+250-PIPELINING
+250-CHUNKING
+250-SMTPUTF8
+250 LIMITS MAILMAX=1000 RCPTMAX=100
+```
+
+`SIZE` is advertised, so the core declared `SIZE=<n>` on `MAIL FROM` (RFC 1870)
+and the relay accepted the message with that declaration — the first real relay to
+see the `1.3.0` `SIZE` path. `XOAUTH2` is advertised too, so a token run on this
+relay is meaningful; it has not been done, and it is the remaining real-relay gap
+for the `AUTH` line change.
+
+The same check on Node.js **21.2.0** failed before any socket with
+`CONFIG_NATIVE_UNAVAILABLE`, "no require bridge on this runtime": 21 is below the
+supported floor, so the loader refuses rather than loading something older than the
+package supports. That is the documented floor working, not a defect.
+
 ## What these checks do not prove
 
 - **Not delivery.** `accepted` is the relay taking responsibility; nothing here
