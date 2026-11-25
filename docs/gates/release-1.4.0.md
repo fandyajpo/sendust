@@ -75,6 +75,15 @@ run, from the job's own `+ <name>@1.4.0` lines and a closing
 | npm page | `homepage` = `https://sendust-docs.vercel.app`, `bugs.url` = the issue tracker, 18 keywords |
 | Platform packages | all seven resolve `1.4.0` |
 | Optional dependencies | all seven pinned to `1.4.0` |
+| GitHub Release | [v1.4.0](https://github.com/fandyajpo/sendust/releases/tag/v1.4.0), published 2026-11-25, and pages for `v1.3.0`, `v1.2.1` and `v1.2.0` after it |
+| Owner settings | the owner reports both remaining publication settings done on 2026-11-25: publishing access on the eight packages, and the old `NPM_TOKEN` secret removed. Neither is observable from this tree |
+
+The `v1.2.0` and `v1.2.1` pages carry GitHub's generated changelog link,
+and `v1.3.0` carries the curated notes; the full notes for all four are in
+`docs/releases/`. One gap the API shows: the repository's *Latest* badge still
+points at `v1.3.0`, so `v1.4.0` has to be edited once with **Set as the latest
+release** ticked — a release page created with both boxes cleared becomes Latest
+only when it is the newest at creation.
 
 The registry tarball reproduces the pinned digest byte for byte. npm's read path
 lagged the job by about five minutes: `npm view …@1.4.0` and `npm pack` answered
