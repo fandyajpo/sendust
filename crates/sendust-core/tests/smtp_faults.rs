@@ -198,6 +198,9 @@ async fn auth_failure_is_an_error_and_never_mails() {
 
     assert_eq!(error.code(), ErrorCode::AuthFailed);
     assert_eq!(error.details().smtp_status(), Some(535));
+    // The relay explained the 535 with an RFC 3463 code, so it travels with the
+    // error instead of being dropped at the adapter.
+    assert_eq!(error.details().smtp_enhanced(), Some("5.7.8"));
     let rendered = format!("{error:?} {error}");
     assert!(!rendered.contains("hunter2"), "password leaked: {rendered}");
     assert!(
@@ -305,7 +308,7 @@ async fn a_refused_sender_is_a_rejected_outcome() {
 
 #[tokio::test]
 async fn an_intermediate_rcpt_reply_is_a_protocol_error() {
-    let script = Script::default().rcpt_reply(Reply::line("354 Send data now"));
+    let script = Script::default().rcpt_reply(Reply::line("354 5.5.1 Send data now"));
     let server = serving(script);
     let mut delivery = delivery(config(server.addr()));
 
@@ -317,6 +320,13 @@ async fn an_intermediate_rcpt_reply_is_a_protocol_error() {
     assert_eq!(error.code(), ErrorCode::ProtocolUnexpectedResponse);
     assert_eq!(error.details().operation_stage(), Some(Stage::Rcpt));
     assert_eq!(error.details().smtp_status(), Some(354));
+    // One recipient owned this reply, so the error names it, and the enhanced
+    // code the relay supplied travels too.
+    assert_eq!(
+        error.details().recipient_address(),
+        Some("bob@example.test")
+    );
+    assert_eq!(error.details().smtp_enhanced(), Some("5.5.1"));
     assert_eq!(server.trace().count_prefix("DATA"), 0);
 }
 

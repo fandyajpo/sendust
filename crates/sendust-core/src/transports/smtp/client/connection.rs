@@ -420,7 +420,7 @@ impl Connection {
                 while reply.value() == 334 {
                     challenges += 1;
                     if challenges > 1 {
-                        return Err(auth_error(ErrorCode::AuthFailed, Some(reply.value())));
+                        return Err(auth_error(ErrorCode::AuthFailed, &reply));
                     }
                     reply = self
                         .command(
@@ -496,14 +496,20 @@ fn confirm_auth(reply: Reply) -> Result<(), Error> {
         } else {
             ErrorCode::ProtocolUnexpectedResponse
         },
-        Some(reply.value()),
+        &reply,
     ))
 }
 
-fn auth_error(code: ErrorCode, smtp_code: Option<u16>) -> Error {
-    let mut details = ErrorDetails::default().stage(Stage::Auth);
-    if let Some(smtp_code) = smtp_code {
-        details = details.smtp_code(smtp_code);
+/// The relay's AUTH failure, with the enhanced status it supplied (RFC 3463).
+///
+/// The enhanced code is what `535` usually explains itself with ("5.7.8 …"), and
+/// it is copied only when the relay sent one, so `details` stays honest.
+fn auth_error(code: ErrorCode, reply: &Reply) -> Error {
+    let mut details = ErrorDetails::default()
+        .stage(Stage::Auth)
+        .smtp_code(reply.value());
+    if let Some(enhanced) = reply.enhanced() {
+        details = details.smtp_enhanced_code(enhanced.raw());
     }
     Error::new(code).with_details(details)
 }

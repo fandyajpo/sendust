@@ -505,7 +505,7 @@ impl SmtpTransport {
                         SessionState::clean(),
                     )),
                     Verdict::Complete | Verdict::Invalid => {
-                        Err(unexpected_response(config, Stage::Mail, reply.value()))
+                        Err(unexpected_reply(config, Stage::Mail, &reply, None))
                     }
                 };
             }
@@ -536,7 +536,15 @@ impl SmtpTransport {
                     statuses[index] = RecipientStatus::Rejected;
                 }
                 Ok(reply) => {
-                    return Err(unexpected_response(config, Stage::Rcpt, reply.value()));
+                    // The address is what makes this reply's owner knowable, so
+                    // it travels with the error rather than being dropped here.
+                    let address = recipient.address();
+                    return Err(unexpected_reply(
+                        config,
+                        Stage::Rcpt,
+                        &reply,
+                        Some(&address),
+                    ));
                 }
                 Err(error) => return Err(annotate(error, config, deadlines, Stage::Rcpt)),
             }
@@ -567,11 +575,9 @@ impl SmtpTransport {
                         ),
                         SessionState::aborted(reply.value() != 421),
                     )),
-                    Verdict::Complete | Verdict::Invalid => Err(unexpected_response(
-                        config,
-                        Stage::DataCommand,
-                        reply.value(),
-                    )),
+                    Verdict::Complete | Verdict::Invalid => {
+                        Err(unexpected_reply(config, Stage::DataCommand, &reply, None))
+                    }
                 };
             }
             Err(error) => return Err(annotate(error, config, deadlines, Stage::DataCommand)),
@@ -806,14 +812,30 @@ fn annotate(error: Error, config: &SmtpConfig, deadlines: SendDeadlines, stage: 
     Error::new(error.code()).with_details(details)
 }
 
-fn unexpected_response(config: &SmtpConfig, stage: Stage, code: u16) -> Error {
-    Error::new(ErrorCode::ProtocolUnexpectedResponse).with_details(
-        ErrorDetails::default()
-            .host(config.host.clone())
-            .port(config.port)
-            .stage(stage)
-            .smtp_code(code),
-    )
+/// The error for a reply that is neither an acceptance nor an ordinary refusal.
+///
+/// The recipient is carried only where one address owns the reply, which is the
+/// `RCPT` loop, and the RFC 3463 enhanced code only when the relay supplied
+/// one. `details` then reports every fact the reply made observable and invents
+/// nothing: an enhanced code the relay never sent stays absent.
+fn unexpected_reply(
+    config: &SmtpConfig,
+    stage: Stage,
+    reply: &Reply,
+    recipient: Option<&str>,
+) -> Error {
+    let mut details = ErrorDetails::default()
+        .host(config.host.clone())
+        .port(config.port)
+        .stage(stage)
+        .smtp_code(reply.value());
+    if let Some(enhanced) = reply.enhanced() {
+        details = details.smtp_enhanced_code(enhanced.raw());
+    }
+    if let Some(recipient) = recipient {
+        details = details.recipient(recipient);
+    }
+    Error::new(ErrorCode::ProtocolUnexpectedResponse).with_details(details)
 }
 
 fn millis(duration: Duration) -> u64 {
