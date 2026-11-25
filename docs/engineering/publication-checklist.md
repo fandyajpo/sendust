@@ -304,6 +304,7 @@ the pin commit `3e6fa73`.
 | Dist-tags | `latest` `1.4.0`, `next` `1.0.0` |
 | Platform packages | all seven resolve `1.4.0` |
 | GitHub Release | `v1.4.0` published 2026-11-25, with pages for `v1.3.0`, `v1.2.1` and `v1.2.0` |
+| Latest badge | the page was created with both boxes cleared and `v1.3.0` held Latest, so the owner set `v1.4.0` with **Set as the latest release** on 2026-11-25; `releases/latest` returns `v1.4.0` |
 | Owner settings | reported done 2026-11-25: publishing access on the eight packages, and the `NPM_TOKEN` secret removed; neither is observable from this tree |
 | npm page | `homepage`, `bugs.url` and 18 keywords present |
 | Tag | `v1.4.0` → `efb8867db0ab2889ff7a73135e6f6939827e4e68` |

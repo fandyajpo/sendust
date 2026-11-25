@@ -80,10 +80,12 @@ run, from the job's own `+ <name>@1.4.0` lines and a closing
 
 The `v1.2.0` and `v1.2.1` pages carry GitHub's generated changelog link,
 and `v1.3.0` carries the curated notes; the full notes for all four are in
-`docs/releases/`. One gap the API shows: the repository's *Latest* badge still
-points at `v1.3.0`, so `v1.4.0` has to be edited once with **Set as the latest
-release** ticked — a release page created with both boxes cleared becomes Latest
-only when it is the newest at creation.
+`docs/releases/`. The one gap this record first opened is closed: `v1.4.0` was
+created with both boxes cleared, while `v1.3.0` already held *Latest*, so the
+badge stayed on `v1.3.0` until the owner edited `v1.4.0` once with **Set as the
+latest release** ticked on 2026-11-25. `releases/latest` now returns `v1.4.0`,
+which is what a release page created with both boxes cleared cannot do on its own:
+it becomes Latest only when it is the newest at creation.
 
 The registry tarball reproduces the pinned digest byte for byte. npm's read path
 lagged the job by about five minutes: `npm view …@1.4.0` and `npm pack` answered
