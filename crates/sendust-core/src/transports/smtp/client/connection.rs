@@ -516,8 +516,7 @@ fn auth_error(code: ErrorCode, reply: &Reply) -> Error {
 
 /// The relay offered no mechanism this client can use, so no reply exists.
 fn auth_unsupported() -> Error {
-    Error::new(ErrorCode::AuthUnsupported)
-        .with_details(ErrorDetails::default().stage(Stage::Auth))
+    Error::new(ErrorCode::AuthUnsupported).with_details(ErrorDetails::default().stage(Stage::Auth))
 }
 
 #[cfg(test)]
