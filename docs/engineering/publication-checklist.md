@@ -282,6 +282,7 @@ the pin commit `2a721ba`.
 | npm page | `homepage`, `bugs.url` and 18 keywords present |
 | Tag | `v1.3.0` → `e39b7862c7d4c7839a892f83445800d84f51b662` |
 | A real relay | one message to `smtp.gmail.com:465` from the published package on Node.js 22.23.5: `accepted`, `250`, 4.8 s, with `SIZE 35882577` advertised ([record](../qa/real-relay-probe.md) §3) |
+| A long `AUTH` line | a 1,472-octet random token reached `smtp.gmail.com`, which answered `555` at `stage: auth`; the old cap refused it locally ([record](../qa/real-relay-probe.md) §3) |
 | GitHub Release | [Sendust 1.3.0](https://github.com/fandyajpo/sendust/releases/tag/v1.3.0), published 2026-11-24; the repository's only release, so GitHub marks it Latest |
 
 No `already exists` refusal: the version was new, and the facade digest in the

@@ -103,6 +103,26 @@ see the `1.3.0` `SIZE` path. `XOAUTH2` is advertised too, so a token run on this
 relay is meaningful; it has not been done, and it is the remaining real-relay gap
 for the `AUTH` line change.
 
+### A token far beyond the old 512-octet cap
+
+A 1,472-character token proved the `AUTH` fix, and it needs no Google account:
+the token was random bytes, not a credential, so nothing could leak. Gmail
+answered:
+
+| Field | Value |
+| --- | --- |
+| `error` | `PROTOCOL_UNEXPECTED_RESPONSE` |
+| `stage` | `auth` |
+| `smtpCode` | `555` |
+| `elapsedMs` | 2.9 s |
+
+A relay reply at `stage: auth` is the proof: the composed `AUTH XOAUTH2` line was
+about 2,000 octets, and the relay read it and answered it. Under `1.2.1` the same
+token never left the process, because the 512-octet command-line cap refused it
+with `VALIDATION_HEADER_INJECTION` before a socket existed. This does not claim
+that Gmail accepts XOAUTH2 with a valid token; it claims that the line reaches a
+real relay, which is what the fix changed.
+
 The same check on Node.js **21.2.0** failed before any socket with
 `CONFIG_NATIVE_UNAVAILABLE`, "no require bridge on this runtime": 21 is below the
 supported floor, so the loader refuses rather than loading something older than the
