@@ -214,6 +214,13 @@ an unexpected `RCPT` reply names its address — and deprecates
 `PROTOCOL_REJECTED`, because no path produces it and codes are append-only
 inside a major version.
 
+That is `1.4.0`, published on 2026-11-25; `latest` resolves it. npm's read
+path lagged the job by five minutes again — `npm pack` answered `ETARGET` while
+three platform packages already resolved `1.4.0` — which is the same lesson
+`1.2.1` taught, now twice learned: the job log says it went up, and hashing the
+version document's own tarball is what checks the bytes while `npm pack` still
+lags.
+
 ## 7. Version timeline
 
 | Version | Date | What changed |

@@ -1,7 +1,7 @@
 # Publication checklist and authorization (P17-003)
 
 **Status:** complete. `0.1.0-rc.1`, `1.0.0`, `1.0.1`, `1.0.2`, `1.1.0`, `1.1.1`,
-`1.2.0`, `1.2.1` and `1.3.0` are published; the current record is §5h.
+`1.2.0`, `1.2.1`, `1.3.0` and `1.4.0` are published; the current record is §5i.
 **Date:** 2026-11-18.
 **Original candidate:** `0.1.0-rc.1`, verified in the
 [RC verification record](../qa/rc-verification.md).
@@ -288,6 +288,29 @@ the pin commit `2a721ba`.
 No `already exists` refusal: the version was new, and the facade digest in the
 tarball is the pinned one, which is the check `publish-release.mjs` performs
 before it publishes anything.
+
+## 5i. 1.4.0 publication record
+
+**Published 2026-11-25** from the CI `publish` job through npm trusted
+publishing: eight packages in one run, from the approved candidate `efb8867`, on
+the pin commit `3e6fa73`.
+
+| Check | Result |
+| --- | --- |
+| Publisher | registry metadata: `GitHub Actions` |
+| Provenance | `attestations.provenance.predicateType: https://slsa.dev/provenance/v1` on every package |
+| Registry artifact hash | the tarball at `dist.tarball` hashes to `4e47363beaadb9a3ca7e6a283558a80f0f138a2fc48f9640d6756e25a1a459b8`, the approved value from the `Facade hash` job (138935627083) |
+| Registry shasum | `0398c66bee4ce9096912daa47e5496f04b592008`, 42 files, 175.0 kB unpacked |
+| Dist-tags | `latest` `1.4.0`, `next` `1.0.0` |
+| Platform packages | all seven resolve `1.4.0` |
+| npm page | `homepage`, `bugs.url` and 18 keywords present |
+| Tag | `v1.4.0` → `efb8867db0ab2889ff7a73135e6f6939827e4e68` |
+
+npm's read path lagged this run by about five minutes: `npm pack` answered
+`ETARGET … 1.4.0` while three platform packages already resolved `1.4.0`, and
+the facade followed. The job log is the authoritative line, as in `1.2.1`; reading
+the version document directly (`registry.npmjs.org/@sendust/ts/1.4.0`) and hashing
+its `dist.tarball` is what confirmed the bytes while `npm pack` still lagged.
 
 ## 6. Authorization
 

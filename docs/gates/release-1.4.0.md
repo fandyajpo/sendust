@@ -61,8 +61,29 @@ facade whose digest differs from the pinned value
 
 ## 5. Publication
 
-Not executed. The `publish` job publishes `@sendust/ts@1.4.0` and the seven
-platform packages over npm trusted publishing (OIDC), with no npm token. After it
-runs, this section records the result, the tag and the post-publication
-`npm pack` digest, and the [publication checklist](../engineering/publication-checklist.md)
-gains its record.
+**Executed 2026-11-25.** The CI `publish` job published `@sendust/ts@1.4.0` and
+all seven platform packages over npm trusted publishing, eight packages in one
+run, from the job's own `+ <name>@1.4.0` lines and a closing
+`published 8 package(s) at 1.4.0 with tag latest`. What the registry records:
+
+| Check | Value |
+| --- | --- |
+| `@sendust/ts@1.4.0` | present; `latest` → `1.4.0`, `next` still `1.0.0` |
+| Registry artifact | the tarball at `dist.tarball` hashes to `4e47363beaadb9a3ca7e6a283558a80f0f138a2fc48f9640d6756e25a1a459b8`, the pinned facade digest; shasum `0398c66bee4ce9096912daa47e5496f04b592008`, 42 files, 175.0 kB |
+| Publisher | `GitHub Actions` with an OIDC trusted-publisher configuration; no npm token |
+| Provenance | `attestations.provenance.predicateType` = `https://slsa.dev/provenance/v1`, one transparency-log entry per package |
+| npm page | `homepage` = `https://sendust-docs.vercel.app`, `bugs.url` = the issue tracker, 18 keywords |
+| Platform packages | all seven resolve `1.4.0` |
+| Optional dependencies | all seven pinned to `1.4.0` |
+
+The registry tarball reproduces the pinned digest byte for byte. npm's read path
+lagged the job by about five minutes: `npm view …@1.4.0` and `npm pack` answered
+`E404` and `ETARGET` while three platform packages already resolved `1.4.0`, and
+the facade's manifest, tarball and `dist-tags` followed. That is the same
+ingestion lag the `1.2.1` record kept, so the job log remains the authoritative
+"it went up".
+
+The job ran on `3e6fa73`, the pin commit one step after the approved candidate
+`efb8867`, and it published because a later commit is accepted only while none of
+the build inputs changed — which the script compares against the approved commit
+before anything goes up.
