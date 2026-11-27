@@ -113,12 +113,19 @@ values. The peaks and the residual memory are stable across all three runs.
 
 ## 4. Binary verification
 
-`release/1.4.1/approved.json` pins the approved commit, the dist-tag `latest`,
-the facade hash the `Facade hash` job produced on that commit, and all seven
-platform entries. No byte-reproducibility claim: each target is identified by the
-approval bundle's own checksums, as in `1.4.0`. `publish-release.mjs` refuses a
-facade whose digest differs from the pinned value
+`release/1.4.1/approved.json` pins the approved commit
+`24bd21a3c47237a9cdf16d079c528f7d17830f59`, the dist-tag `latest`, the facade
+hash `814bf6c1c0c6b755667cf874c4f125ee72437fc7d3212667a8ea58c54d2e8e67`
+produced by the `Facade hash` job on that commit (job 140607675601, run
+46028597942), and all seven platform entries. No byte-reproducibility claim: each
+target is identified by the approval bundle's own checksums, as in `1.4.0`.
+`publish-release.mjs` refuses a facade whose digest differs from the pinned value
 ([reproducible build](../engineering/reproducible-build.md) §7).
+
+The hash was produced at `24bd21a`, the evidence commit one step after the
+prepare commit `5c3423a`. That step changed documentation only, so the build
+inputs are byte-identical to the prepare commit's — which is exactly the
+comparison `publish-release.mjs` makes before it publishes from a later commit.
 
 ## 5. Publication
 
