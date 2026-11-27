@@ -944,6 +944,10 @@ mod body_tests {
         assert_eq!(normalize_body("a\r\nb"), b"a\r\nb");
         assert_eq!(normalize_body("a\n\nb"), b"a\r\n\r\nb");
         assert_eq!(normalize_body("plain"), b"plain");
+        // The scan is over bytes, and a multi-byte sequence carries neither
+        // terminator, so a Unicode body takes the same path as an ASCII one.
+        assert_eq!(normalize_body("ü\nö\r\n"), "ü\r\nö\r\n".as_bytes());
+        assert_eq!(normalized_len("ü\nö\r\n"), "ü\r\nö\r\n".len() as u64);
     }
 
     #[test]

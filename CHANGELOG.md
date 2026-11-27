@@ -8,7 +8,15 @@ tag format, version sources, and compatibility promises — are in
 
 ## [Unreleased]
 
-Nothing yet.
+### Changed
+
+- The MIME serializer sizes the wire and every part buffer once, reuses one
+  base64 line buffer instead of allocating a string per encoded line, and walks
+  body bytes rather than characters; the DKIM body canonicalization uses one
+  buffer instead of a buffer per line, and a file attachment is read into a
+  buffer of its own length. No public API, result, error code, limit or default
+  changes, and the emitted bytes are identical
+  ([measurements](docs/audits/2026-11-27-rust-performance-audit.md)).
 
 ## [1.4.0] - 2026-11-25
 
