@@ -129,4 +129,30 @@ comparison `publish-release.mjs` makes before it publishes from a later commit.
 
 ## 5. Publication
 
-To be recorded here once the CI `publish` job has run.
+**Executed 2026-11-27.** The CI `publish` job published `@sendust/ts@1.4.1` and
+all seven platform packages over npm trusted publishing, eight packages in one
+run, from the job's own `+ <name>@1.4.1` lines and a closing
+`published 8 package(s) at 1.4.1 with tag latest` (job 140610806837, run
+46029411338, from the pin commit `8fee138`, whose bundle names the approved
+`24bd21a`). What the registry records:
+
+| Check | Value |
+| --- | --- |
+| `@sendust/ts@1.4.1` | present; `latest` → `1.4.1`, `next` still `1.0.0` |
+| Registry artifact | the tarball at `dist.tarball` hashes to `814bf6c1c0c6b755667cf874c4f125ee72437fc7d3212667a8ea58c54d2e8e67`, the pinned facade digest; shasum `5b9f836942fb90b81b8d1aec367ab6ce0c473c27`, 42 files, 43.0 kB packed, 175.0 kB unpacked |
+| Publisher | `GitHub Actions` with an OIDC trusted-publisher configuration; no npm token |
+| Provenance | `dist.attestations.provenance.predicateType` = `https://slsa.dev/provenance/v1` on every package |
+| npm page | `homepage` = `https://sendust-docs.vercel.app`, `bugs.url` = the issue tracker, 18 keywords |
+| Platform packages | six of the seven resolved `1.4.1` on the first lookup; `linux-arm64-musl` still answered `404` while the job had printed `+ @sendust/ts-linux-arm64-musl@1.4.1` with shasum `121312f4cb404a3d99fad473bb524a00c398aacc`, which is the ingestion lag described below |
+| Optional dependencies | all seven pinned to `1.4.1` |
+
+The registry tarball reproduces the pinned digest byte for byte. npm's read path
+lagged the job again, for the third release in a row: `/-/package/@sendust/ts/dist-tags`
+still answered `latest 1.4.0` for a few minutes after the job logged
+`published 8 package(s) at 1.4.1`, and one platform package answered `404` while
+the others already resolved `1.4.1`. The job log is the authoritative "it went
+up", and hashing the version document's `dist.tarball` is what confirms the
+bytes while `npm pack` still lags.
+
+The tag `v1.4.1` and its GitHub Release page are the owner's step, and the tag
+points at the approved commit `24bd21a`, which `approved.json` names.

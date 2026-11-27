@@ -1,7 +1,8 @@
 # Publication checklist and authorization (P17-003)
 
 **Status:** complete. `0.1.0-rc.1`, `1.0.0`, `1.0.1`, `1.0.2`, `1.1.0`, `1.1.1`,
-`1.2.0`, `1.2.1`, `1.3.0` and `1.4.0` are published; the current record is §5i.
+`1.2.0`, `1.2.1`, `1.3.0`, `1.4.0` and `1.4.1` are published; the current record
+is §5j.
 **Date:** 2026-11-18.
 **Original candidate:** `0.1.0-rc.1`, verified in the
 [RC verification record](../qa/rc-verification.md).
@@ -314,6 +315,31 @@ npm's read path lagged this run by about five minutes: `npm pack` answered
 the facade followed. The job log is the authoritative line, as in `1.2.1`; reading
 the version document directly (`registry.npmjs.org/@sendust/ts/1.4.0`) and hashing
 its `dist.tarball` is what confirmed the bytes while `npm pack` still lagged.
+
+## 5j. 1.4.1 publication record
+
+**Published 2026-11-27** from the CI `publish` job through npm trusted
+publishing: eight packages in one run, from the bundle of the approved
+`24bd21a`, at the pin commit `8fee138`.
+
+| Check | Result |
+| --- | --- |
+| Publisher | registry metadata: `GitHub Actions` |
+| Provenance | `dist.attestations.provenance.predicateType: https://slsa.dev/provenance/v1` on every package |
+| Registry artifact hash | the tarball at `dist.tarball` hashes to `814bf6c1c0c6b755667cf874c4f125ee72437fc7d3212667a8ea58c54d2e8e67`, the approved facade value from the `Facade hash` job (140607675601) |
+| Registry shasum | `5b9f836942fb90b81b8d1aec367ab6ce0c473c27`, 42 files, 43.0 kB packed, 175.0 kB unpacked |
+| Dist-tags | `latest` `1.4.1`, `next` `1.0.0` |
+| Platform packages | six of seven resolved `1.4.1` on the first lookup; `linux-arm64-musl` still answered `404` while the job had printed its `+ @sendust/ts-linux-arm64-musl@1.4.1` line |
+| npm page | `homepage`, `bugs.url` and 18 keywords present |
+| Tag | pending the owner: `v1.4.1` on the approved commit `24bd21a3c47237a9cdf16d079c528f7d17830f59` |
+| GitHub Release | pending the owner |
+
+npm's read path lagged this run too, for the third release in a row:
+`/-/package/@sendust/ts/dist-tags` still answered `latest 1.4.0` for a few minutes
+after the job logged `published 8 package(s) at 1.4.1 with tag latest`, and one
+platform package answered `404` after the others had resolved. The job log is the
+authoritative line; hashing the version document's `dist.tarball` is what
+confirmed the bytes.
 
 ## 6. Authorization
 

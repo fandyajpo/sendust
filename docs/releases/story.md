@@ -221,6 +221,21 @@ three platform packages already resolved `1.4.0` — which is the same lesson
 version document's own tarball is what checks the bytes while `npm pack` still
 lags.
 
+Then the code was read a third time, this time for what it costs rather than what
+it says: an unused `String` per 57-byte base64 chunk, a 13 MiB buffer doubling
+its way up because nothing had measured the payload first, a body normalizer that
+decoded UTF-8 to find `\r` and `\n`, and a DKIM canonicalizer that allocated a
+buffer per line of a signed attachment. None of those changed a byte of output, so
+`1.4.1` is a patch: a 1 MiB message serializes in about half the time, a 10 MiB
+attachment peaks at 27 MiB instead of 61, and the measurement is recorded rather
+than claimed ([gate record](../gates/release-1.4.1.md),
+[release notes](1.4.1.md),
+[audit](../audits/2026-11-27-rust-performance-audit.md)).
+
+That is `1.4.1`, published on 2026-11-27; `latest` resolves it. The read path
+lagged once more, which is now the expected shape of a publish rather than a
+surprise.
+
 ## 7. Version timeline
 
 | Version | Date | What changed |
@@ -236,6 +251,7 @@ lags.
 | `1.2.1` | 2026-11-24 | npm page: homepage, issue tracker, keywords, README as the page |
 | `1.3.0` | 2026-11-24 | Audit fixes: `failed` state, `SIZE`, long `AUTH` lines, wrapper reliability |
 | `1.4.0` | 2026-11-25 | Delete-or-wire: dead modules deleted, error details populated, one code deprecated |
+| `1.4.1` | 2026-11-27 | Performance: buffers sized once, per-line allocations gone, same emitted bytes |
 
 ## 8. What Sendust is now
 
