@@ -333,7 +333,7 @@ publishing: eight packages in one run, from the bundle of the approved
 | npm page | `homepage`, `bugs.url` and 18 keywords present |
 | Tag | `v1.4.1`, annotated (object `24a750aa3111fd8195ef5dfff757648a4107361b`), pointing at the approved commit `24bd21a3c47237a9cdf16d079c528f7d17830f59` |
 | GitHub Release | `v1.4.1` published 2026-11-27T16:15:00Z, not a draft and not a pre-release; `releases/latest` returns it |
-| Release body | pasted from the notes before their last correction, so the page still has relative links and the six-of-seven registry row; one edit settles both |
+| Release body | edited 2026-11-27T16:19:31Z: absolute links, and the all-seven registry row |
 
 npm's read path lagged this run too, for the third release in a row:
 `/-/package/@sendust/ts/dist-tags` still answered `latest 1.4.0` for a few minutes
