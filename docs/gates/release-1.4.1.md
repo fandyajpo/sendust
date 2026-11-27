@@ -154,5 +154,10 @@ the others already resolved `1.4.1`. The job log is the authoritative "it went
 up", and hashing the version document's `dist.tarball` is what confirms the
 bytes while `npm pack` still lags.
 
-The tag `v1.4.1` and its GitHub Release page are the owner's step, and the tag
-points at the approved commit `24bd21a`, which `approved.json` names.
+The owner then created the tag and the GitHub Release on 2026-11-27:
+
+| Check | Value |
+| --- | --- |
+| Tag | `v1.4.1` is an annotated tag (object `24a750aa3111fd8195ef5dfff757648a4107361b`) that points at `24bd21a3c47237a9cdf16d079c528f7d17830f59`, the approved commit rather than the publication-record commit |
+| GitHub Release | [v1.4.1](https://github.com/fandyajpo/sendust/releases/tag/v1.4.1), published 2026-11-27T16:15:00Z, not a draft and not a pre-release; `releases/latest` returns it, so the badge moved without the follow-up edit `1.4.0` needed |
+| Release body | pasted from [the notes](../releases/1.4.1.md) before the notes' last correction, so the page still carries that file's relative links and the registry row that read six of seven platform packages; one edit to the page settles both |
