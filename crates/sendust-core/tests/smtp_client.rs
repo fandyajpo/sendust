@@ -124,9 +124,10 @@ async fn a_transient_ehlo_reply_is_not_worked_around() {
     };
     let server = serving(script);
 
-    let error = Connection::connect(&config(server.addr(), SmtpSecurity::ImplicitTls))
-        .await
-        .expect_err("a 421 must be reported");
+    let error = match Connection::connect(&config(server.addr(), SmtpSecurity::ImplicitTls)).await {
+        Ok(_) => panic!("a 421 must be reported"),
+        Err(error) => error,
+    };
 
     assert_eq!(error.code(), ErrorCode::ProtocolUnexpectedResponse);
     assert_eq!(error.details().smtp_status(), Some(421));
@@ -142,9 +143,10 @@ async fn a_refused_helo_is_the_same_protocol_error() {
     };
     let server = serving(script);
 
-    let error = Connection::connect(&config(server.addr(), SmtpSecurity::ImplicitTls))
-        .await
-        .expect_err("no greeting is understood");
+    let error = match Connection::connect(&config(server.addr(), SmtpSecurity::ImplicitTls)).await {
+        Ok(_) => panic!("no greeting is understood"),
+        Err(error) => error,
+    };
 
     assert_eq!(error.code(), ErrorCode::ProtocolUnexpectedResponse);
     assert_eq!(error.details().smtp_status(), Some(502));
