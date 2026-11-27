@@ -44,6 +44,11 @@ pub enum Command {
     Ehlo {
         identity: String,
     },
+    /// The fallback greeting a server that refuses `EHLO` requires
+    /// (RFC 5321 §4.1.1.1).
+    Helo {
+        identity: String,
+    },
     StartTls,
     Auth {
         mechanism: AuthMechanism,
@@ -75,6 +80,10 @@ impl Command {
             Self::Ehlo { identity } => {
                 validate_token(identity, 255)?;
                 format!("EHLO {identity}")
+            }
+            Self::Helo { identity } => {
+                validate_token(identity, 255)?;
+                format!("HELO {identity}")
             }
             Self::StartTls => "STARTTLS".to_string(),
             Self::Auth {
@@ -196,6 +205,12 @@ mod tests {
                 identity: "client.example.test".to_string()
             }),
             "EHLO client.example.test\r\n"
+        );
+        assert_eq!(
+            text(Command::Helo {
+                identity: "client.example.test".to_string()
+            }),
+            "HELO client.example.test\r\n"
         );
         assert_eq!(text(Command::StartTls), "STARTTLS\r\n");
         assert_eq!(

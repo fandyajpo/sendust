@@ -8,7 +8,15 @@ tag format, version sources, and compatibility promises — are in
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- A relay that refuses `EHLO` with a 5xx is asked `HELO` instead, as RFC 5321
+  §4.1.1.1 requires, instead of failing the send at `connection_setup`. The
+  session then advertises no extensions, so `STARTTLS`, `AUTH` and `SIZE` are all
+  unavailable and the client records exactly that: a required STARTTLS still fails
+  closed, a credential is `AUTH_UNSUPPORTED`, and no `SIZE` is declared. A 4xx
+  reply is reported rather than worked around, and a refused `HELO` is the same
+  `PROTOCOL_UNEXPECTED_RESPONSE` with the relay's code it always was.
 
 ## [1.4.1] - 2026-11-27
 

@@ -196,8 +196,29 @@ impl Connection {
                 Stage::ConnectionSetup,
             )
             .await?;
-        expect(&ehlo, 250, Stage::ConnectionSetup)?;
-        self.capabilities = Capabilities::parse(&ehlo);
+        if ehlo.value() == 250 {
+            self.capabilities = Capabilities::parse(&ehlo);
+            return Ok(());
+        }
+
+        // RFC 5321 §4.1.1.1: a server may refuse EHLO, and the client must
+        // then try HELO. A server that answers only HELO advertises no
+        // extensions, so STARTTLS, AUTH and SIZE are all unavailable — the
+        // client records exactly that instead of guessing at them. A transient
+        // 4xx is reported, because retrying the greeting cannot help it.
+        if !(500..600).contains(&ehlo.value()) {
+            return Err(unexpected(&ehlo, Stage::ConnectionSetup));
+        }
+        let helo = self
+            .command(
+                Command::Helo {
+                    identity: self.hello.clone(),
+                },
+                Stage::ConnectionSetup,
+            )
+            .await?;
+        expect(&helo, 250, Stage::ConnectionSetup)?;
+        self.capabilities = Capabilities::default();
         Ok(())
     }
 
@@ -325,12 +346,14 @@ fn expect(reply: &Reply, code: u16, stage: Stage) -> Result<(), Error> {
     if reply.value() == code {
         return Ok(());
     }
-    Err(
-        Error::new(ErrorCode::ProtocolUnexpectedResponse).with_details(
-            ErrorDetails::default()
-                .stage(stage)
-                .smtp_code(reply.value()),
-        ),
+    Err(unexpected(reply, stage))
+}
+
+fn unexpected(reply: &Reply, stage: Stage) -> Error {
+    Error::new(ErrorCode::ProtocolUnexpectedResponse).with_details(
+        ErrorDetails::default()
+            .stage(stage)
+            .smtp_code(reply.value()),
     )
 }
 

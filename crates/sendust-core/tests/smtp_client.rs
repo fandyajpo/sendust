@@ -92,6 +92,87 @@ async fn refuses_starttls_when_not_advertised() {
     assert_eq!(error.code(), ErrorCode::TlsHandshake);
 }
 
+#[tokio::test]
+async fn falls_back_to_helo_when_ehlo_is_refused() {
+    // RFC 5321 §4.1.1.1: a server may refuse EHLO, and the client must then
+    // try HELO. The session works, but it advertises no extensions at all.
+    let script = Script {
+        ehlo: Reply::line("500 5.5.1 Command unrecognized"),
+        helo: Reply::line("250 sendust.test"),
+        ..Script::default()
+    };
+    let server = serving(script);
+
+    let connection = Connection::connect(&config(server.addr(), SmtpSecurity::ImplicitTls))
+        .await
+        .expect("connected with HELO");
+
+    assert!(!connection.capabilities().starttls());
+    assert!(connection.capabilities().auth_mechanisms().is_empty());
+    assert_eq!(connection.capabilities().size(), None);
+    assert_eq!(server.trace().count_prefix("EHLO"), 1);
+    assert_eq!(server.trace().count_prefix("HELO"), 1);
+}
+
+#[tokio::test]
+async fn a_transient_ehlo_reply_is_not_worked_around() {
+    // A 4xx is the relay saying "later", not "I do not speak EHLO", so the
+    // greeting is reported instead of retried in another form.
+    let script = Script {
+        ehlo: Reply::line("421 4.3.2 Service not available"),
+        ..Script::default()
+    };
+    let server = serving(script);
+
+    let error = Connection::connect(&config(server.addr(), SmtpSecurity::ImplicitTls))
+        .await
+        .expect_err("a 421 must be reported");
+
+    assert_eq!(error.code(), ErrorCode::ProtocolUnexpectedResponse);
+    assert_eq!(error.details().smtp_status(), Some(421));
+    assert_eq!(server.trace().count_prefix("HELO"), 0);
+}
+
+#[tokio::test]
+async fn a_refused_helo_is_the_same_protocol_error() {
+    let script = Script {
+        ehlo: Reply::line("502 5.5.1 Command not implemented"),
+        helo: Reply::line("502 5.5.1 Command not implemented"),
+        ..Script::default()
+    };
+    let server = serving(script);
+
+    let error = Connection::connect(&config(server.addr(), SmtpSecurity::ImplicitTls))
+        .await
+        .expect_err("no greeting is understood");
+
+    assert_eq!(error.code(), ErrorCode::ProtocolUnexpectedResponse);
+    assert_eq!(error.details().smtp_status(), Some(502));
+    assert_eq!(server.trace().count_prefix("EHLO"), 1);
+    assert_eq!(server.trace().count_prefix("HELO"), 1);
+}
+
+#[tokio::test]
+async fn a_helo_only_relay_can_never_starttls() {
+    // Nothing is advertised without EHLO, so a required STARTTLS still fails
+    // closed: there is no plaintext fallback to find here.
+    let script = Script {
+        ehlo: Reply::line("500 5.5.1 Command unrecognized"),
+        helo: Reply::line("250 sendust.test"),
+        ..Script::default()
+    };
+    let server = serving_starttls(script);
+
+    let mut connection = Connection::connect(&config(server.addr(), SmtpSecurity::StartTls))
+        .await
+        .expect("connected with HELO");
+
+    assert!(!connection.capabilities().starttls());
+    let error = connection.starttls().await.expect_err("must fail closed");
+    assert_eq!(error.code(), ErrorCode::TlsHandshake);
+    assert_eq!(server.trace().count_prefix("STARTTLS"), 0);
+}
+
 fn config_port(port: u16, security: SmtpSecurity) -> SmtpConfig {
     SmtpConfig::new("127.0.0.1", port, security)
         .expect("valid relay")

@@ -77,6 +77,8 @@ pub enum AfterBody {
 pub struct Script {
     pub greeting: Reply,
     pub ehlo: Reply,
+    /// Reply to `HELO`, the fallback a server that refuses `EHLO` requires.
+    pub helo: Reply,
     pub start_tls: Reply,
     pub auth: Reply,
     /// Replies for a multi-step AUTH exchange (334 challenges, final 235/5xx).
@@ -103,6 +105,7 @@ impl Default for Script {
         Self {
             greeting: Reply::line("220 sendust.test ESMTP ready"),
             ehlo: Reply::lines(&["250-sendust.test", "250-PIPELINING", "250 8BITMIME"]),
+            helo: Reply::line("250 sendust.test"),
             start_tls: Reply::line("220 2.0.0 Ready to start TLS"),
             auth: Reply::line("235 2.7.0 Authentication successful"),
             auth_flow: Vec::new(),
@@ -424,7 +427,8 @@ fn serve(stream: TcpStream, script: &Script, trace: &Trace) {
         }
 
         let selection = match verb.as_str() {
-            "EHLO" | "HELO" => Some((Stage::Ehlo, &script.ehlo)),
+            "EHLO" => Some((Stage::Ehlo, &script.ehlo)),
+            "HELO" => Some((Stage::Ehlo, &script.helo)),
             "STARTTLS" => Some((Stage::StartTls, &script.start_tls)),
             "AUTH" => Some((Stage::Auth, &script.auth)),
             "MAIL" => Some((Stage::Mail, &script.mail)),
