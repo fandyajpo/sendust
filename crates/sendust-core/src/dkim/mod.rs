@@ -314,26 +314,32 @@ fn relaxed_header(name: &str, value: &str) -> String {
 
 /// RFC 6376 §3.4.4: one space for a whitespace run, no trailing whitespace, no
 /// empty lines at the end, and a single CRLF after a non-empty body.
+///
+/// One buffer and one reusable line buffer: a signed 10 MiB attachment is about
+/// 184 000 lines, and a buffer per line was an allocation per line.
 fn canonical_body(body: &[u8]) -> Vec<u8> {
-    let mut lines: Vec<Vec<u8>> = Vec::new();
+    let mut out = Vec::with_capacity(body.len() + 2);
+    let mut line = Vec::new();
+    // Separators owed before the next non-empty line: a blank line is kept only
+    // when a non-empty line follows it, so its CRLF is counted until then.
+    let mut owed = 0usize;
     for raw in body.split(|byte| *byte == b'\n') {
-        let line = if raw.last() == Some(&b'\r') {
+        let raw = if raw.last() == Some(&b'\r') {
             &raw[..raw.len() - 1]
         } else {
             raw
         };
-        lines.push(relaxed_line(line));
-    }
-    while lines.last().is_some_and(|line| line.is_empty()) {
-        lines.pop();
-    }
-
-    let mut out = Vec::new();
-    for (index, line) in lines.iter().enumerate() {
-        if index > 0 {
+        line.clear();
+        relaxed_line_into(&mut line, raw);
+        if line.is_empty() {
+            owed += 1;
+            continue;
+        }
+        for _ in 0..owed {
             out.extend_from_slice(CRLF.as_bytes());
         }
-        out.extend_from_slice(line);
+        out.extend_from_slice(&line);
+        owed = 1;
     }
     if !out.is_empty() {
         out.extend_from_slice(CRLF.as_bytes());
@@ -341,8 +347,7 @@ fn canonical_body(body: &[u8]) -> Vec<u8> {
     out
 }
 
-fn relaxed_line(line: &[u8]) -> Vec<u8> {
-    let mut out = Vec::with_capacity(line.len());
+fn relaxed_line_into(out: &mut Vec<u8>, line: &[u8]) {
     let mut pending = false;
     for byte in line {
         if *byte == b' ' || *byte == b'\t' {
@@ -355,7 +360,6 @@ fn relaxed_line(line: &[u8]) -> Vec<u8> {
         }
         out.push(*byte);
     }
-    out
 }
 
 /// Renders the signature field, folding between tags only.

@@ -6,15 +6,22 @@
 /// CRLF followed by `.<CRLF>` so the terminator is unambiguous.
 pub fn encode(wire: &[u8]) -> Vec<u8> {
     let mut out = Vec::with_capacity(wire.len() + 8);
+    let mut copied = 0;
+    let mut index = 0;
     let mut at_line_start = true;
 
-    for &byte in wire {
-        if at_line_start && byte == b'.' {
+    // Copy whole runs between the lines that need a dot, so a body that has none
+    // costs one memcpy per line run rather than one `push` per byte.
+    while index < wire.len() {
+        if at_line_start && wire[index] == b'.' {
+            out.extend_from_slice(&wire[copied..index]);
             out.push(b'.');
+            copied = index;
         }
-        out.push(byte);
-        at_line_start = byte == b'\n';
+        at_line_start = wire[index] == b'\n';
+        index += 1;
     }
+    out.extend_from_slice(&wire[copied..]);
 
     if !wire.ends_with(b"\r\n") {
         out.extend_from_slice(b"\r\n");

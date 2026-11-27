@@ -71,7 +71,7 @@ fn compose(
     }
 
     let cap = limits.max_wire_bytes();
-    preflight(message, cap)?;
+    let budget = preflight(message, cap)?;
     let body = build_body(message, cap)?;
     let attachments: Vec<Vec<u8>> = message
         .attachments
@@ -91,7 +91,9 @@ fn compose(
         })
         .collect::<Result<_, Error>>()?;
 
-    let mut out = Vec::new();
+    // Preflight measured the encoded bodies, so the wire buffer is sized once
+    // instead of doubling its way up to 13 MiB on a large attachment.
+    let mut out = Vec::with_capacity(usize::try_from(budget).unwrap_or(0) + 4096);
     push_address_header(&mut out, "From", std::slice::from_ref(&message.from))?;
     push_address_header(&mut out, "To", &message.to)?;
     if !message.cc.is_empty() {
@@ -136,7 +138,7 @@ fn compose(
 
 enum Body {
     Single {
-        content_type: String,
+        content_type: &'static str,
         bytes: Vec<u8>,
     },
     Multipart {
@@ -178,8 +180,25 @@ impl Body {
         }
     }
 
+    /// Encoded size of this body as one part, plus room for its own headers, so
+    /// the part buffer is reserved once rather than grown.
+    fn capacity(&self) -> usize {
+        let headers = 256;
+        match self {
+            Self::Single { bytes, .. } => {
+                usize::try_from(base64_wire_len(bytes.len() as u64)).unwrap_or(0) + headers
+            }
+            Self::Multipart {
+                boundary, parts, ..
+            } => {
+                let content: usize = parts.iter().map(Vec::len).sum();
+                content + parts.len() * (boundary.len() + 4) + boundary.len() + 8 + headers
+            }
+        }
+    }
+
     fn as_part(&self, cap: u64) -> Result<Vec<u8>, Error> {
-        let mut part = Vec::new();
+        let mut part = Vec::with_capacity(self.capacity());
         self.push_top_headers(&mut part)?;
         part.extend_from_slice(CRLF.as_bytes());
         self.push_content(&mut part, cap)?;
@@ -193,22 +212,22 @@ fn build_body(message: &OutgoingMessage, cap: u64) -> Result<Body, Error> {
 
     Ok(match (message.text.is_some(), message.html.is_some()) {
         (true, false) => Body::Single {
-            content_type: "text/plain; charset=utf-8".to_string(),
+            content_type: "text/plain; charset=utf-8",
             bytes: normalize_body(text),
         },
         (false, true) => Body::Single {
-            content_type: "text/html; charset=utf-8".to_string(),
+            content_type: "text/html; charset=utf-8",
             bytes: normalize_body(html),
         },
         (true, true) => {
             let parts = vec![
                 Body::Single {
-                    content_type: "text/plain; charset=utf-8".to_string(),
+                    content_type: "text/plain; charset=utf-8",
                     bytes: normalize_body(text),
                 }
                 .as_part(cap)?,
                 Body::Single {
-                    content_type: "text/html; charset=utf-8".to_string(),
+                    content_type: "text/html; charset=utf-8",
                     bytes: normalize_body(html),
                 }
                 .as_part(cap)?,
@@ -221,7 +240,7 @@ fn build_body(message: &OutgoingMessage, cap: u64) -> Result<Body, Error> {
             }
         }
         (false, false) => Body::Single {
-            content_type: "text/plain; charset=utf-8".to_string(),
+            content_type: "text/plain; charset=utf-8",
             bytes: Vec::new(),
         },
     })
@@ -230,24 +249,39 @@ fn build_body(message: &OutgoingMessage, cap: u64) -> Result<Body, Error> {
 /// RFC 5322 body lines end with CRLF. CRLF, bare CR, and bare LF all normalize
 /// to CRLF; no other byte changes, and the final line keeps whatever ending the
 /// caller supplied.
+///
+/// The scan is over bytes, not characters: a multi-byte UTF-8 sequence never
+/// contains `\r` or `\n`, so the two are equivalent and the byte scan copies
+/// whole runs instead of one character at a time.
 fn normalize_body(text: &str) -> Vec<u8> {
-    let mut out = Vec::with_capacity(text.len());
-    let mut characters = text.chars().peekable();
-    while let Some(character) = characters.next() {
-        match character {
-            '\r' => {
-                if characters.peek() == Some(&'\n') {
-                    characters.next();
-                }
+    let bytes = text.as_bytes();
+    // The normalized length is already measured by preflight's own helper, so the
+    // buffer is exact and this loop never reallocates.
+    let mut out = Vec::with_capacity(usize::try_from(normalized_len(text)).unwrap_or(bytes.len()));
+    let mut copied = 0;
+    let mut index = 0;
+    while index < bytes.len() {
+        match bytes[index] {
+            b'\r' => {
+                out.extend_from_slice(&bytes[copied..index]);
                 out.extend_from_slice(b"\r\n");
+                index += if bytes.get(index + 1) == Some(&b'\n') {
+                    2
+                } else {
+                    1
+                };
+                copied = index;
             }
-            '\n' => out.extend_from_slice(b"\r\n"),
-            other => {
-                let mut buffer = [0u8; 4];
-                out.extend_from_slice(other.encode_utf8(&mut buffer).as_bytes());
+            b'\n' => {
+                out.extend_from_slice(&bytes[copied..index]);
+                out.extend_from_slice(b"\r\n");
+                index += 1;
+                copied = index;
             }
+            _ => index += 1,
         }
     }
+    out.extend_from_slice(&bytes[copied..]);
     out
 }
 
@@ -258,7 +292,9 @@ fn build_attachment_part(
     cap: u64,
 ) -> Result<Vec<u8>, Error> {
     let filename = crate::attachments::normalize_filename(filename)?;
-    let mut part = Vec::new();
+    let mut part = Vec::with_capacity(
+        usize::try_from(base64_wire_len(bytes.len() as u64)).unwrap_or(0) + 512,
+    );
     push_header(
         &mut part,
         "Content-Type",
@@ -277,11 +313,16 @@ fn build_attachment_part(
 
 fn push_multipart(out: &mut Vec<u8>, boundary: &str, parts: &[Vec<u8>]) {
     for part in parts {
-        out.extend_from_slice(format!("--{boundary}{CRLF}").as_bytes());
+        out.extend_from_slice(b"--");
+        out.extend_from_slice(boundary.as_bytes());
+        out.extend_from_slice(CRLF.as_bytes());
         out.extend_from_slice(part);
         out.extend_from_slice(CRLF.as_bytes());
     }
-    out.extend_from_slice(format!("--{boundary}--{CRLF}").as_bytes());
+    out.extend_from_slice(b"--");
+    out.extend_from_slice(boundary.as_bytes());
+    out.extend_from_slice(b"--");
+    out.extend_from_slice(CRLF.as_bytes());
 }
 
 fn push_address_header(
@@ -436,8 +477,9 @@ fn contains(haystack: &[u8], needle: &[u8]) -> bool {
 }
 
 /// Rejects a message whose encoded bodies alone cannot fit the wire cap, before
-/// any body is normalized or base64-encoded.
-fn preflight(message: &OutgoingMessage, cap: u64) -> Result<(), Error> {
+/// any body is normalized or base64-encoded, and returns the encoded size so the
+/// wire buffer can be reserved once.
+fn preflight(message: &OutgoingMessage, cap: u64) -> Result<u64, Error> {
     let mut needed: u64 = 0;
     for text in [message.text.as_deref(), message.html.as_deref()]
         .into_iter()
@@ -453,24 +495,27 @@ fn preflight(message: &OutgoingMessage, cap: u64) -> Result<(), Error> {
     if needed > cap {
         return Err(Error::new(ErrorCode::LimitWireBytes));
     }
-    Ok(())
+    Ok(needed)
 }
 
 /// Length of the CRLF-normalized UTF-8 form, without allocating it.
+///
+/// Counted over bytes: `\r` and `\n` are single ASCII bytes, and a multi-byte
+/// UTF-8 sequence contains neither, so the byte length is the character length.
 fn normalized_len(text: &str) -> u64 {
-    let mut len: u64 = 0;
-    let mut characters = text.chars().peekable();
-    while let Some(character) = characters.next() {
-        len += match character {
-            '\r' => {
-                if characters.peek() == Some(&'\n') {
-                    characters.next();
-                }
-                2
+    let bytes = text.as_bytes();
+    let mut len = bytes.len() as u64;
+    let mut index = 0;
+    while index < bytes.len() {
+        match bytes[index] {
+            // A CRLF pair already occupies the two bytes it normalizes to.
+            b'\r' if bytes.get(index + 1) == Some(&b'\n') => index += 2,
+            b'\r' | b'\n' => {
+                len += 1;
+                index += 1;
             }
-            '\n' => 2,
-            other => other.len_utf8() as u64,
-        };
+            _ => index += 1,
+        }
     }
     len
 }
@@ -486,9 +531,12 @@ fn base64_wire_len(raw: u64) -> u64 {
 
 fn push_base64(out: &mut Vec<u8>, data: &[u8], cap: u64) -> Result<(), Error> {
     // 57 raw bytes encode to exactly 76 base64 characters, so each chunk is one
-    // output line and no complete encoded string is ever allocated.
+    // output line and one reusable line buffer serves the whole payload: a 10 MiB
+    // attachment would otherwise allocate about 184 000 short strings.
+    let mut line = String::with_capacity(76);
     for chunk in data.chunks(57) {
-        let line = STANDARD.encode(chunk);
+        line.clear();
+        STANDARD.encode_string(chunk, &mut line);
         let needed = out.len() as u64 + line.len() as u64 + 2;
         if needed > cap {
             return Err(Error::new(ErrorCode::LimitWireBytes));

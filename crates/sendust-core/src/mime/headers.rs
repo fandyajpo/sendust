@@ -21,6 +21,11 @@ pub(crate) const CRLF: &str = "\r\n";
 
 /// Renders one header as folded `Name: value\r\n`.
 pub(crate) fn render(name: &str, value: &str) -> Result<Vec<u8>, Error> {
+    // ASCII is the common case and `fold` copies it once, so no encoded copy is
+    // made for it; a non-ASCII value is encoded before folding.
+    if value.is_ascii() {
+        return fold(name, value);
+    }
     let text = encode_text(value);
     match fold(name, &text) {
         Ok(bytes) => Ok(bytes),
@@ -102,16 +107,17 @@ fn push_word(out: &mut String, chunk: &[u8]) {
 /// a CRLF immediately followed by a space is removed by RFC 5322 unfolding, and
 /// that space is the separator the fold replaced.
 fn fold(name: &str, value: &str) -> Result<Vec<u8>, Error> {
-    let prefix = format!("{name}:");
-    let mut out = String::with_capacity(prefix.len() + value.len() + 16);
-    out.push_str(&prefix);
+    let mut out = String::with_capacity(name.len() + value.len() + 17);
+    out.push_str(name);
+    out.push(':');
+    let prefix_len = out.len();
 
     if value.is_empty() {
         out.push_str(CRLF);
         return Ok(out.into_bytes());
     }
 
-    let mut line_len = prefix.len();
+    let mut line_len = prefix_len;
     for token in value.split(' ') {
         if line_len + 1 + token.len() > FOLD_WIDTH {
             out.push_str(CRLF);

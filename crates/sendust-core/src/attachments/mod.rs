@@ -309,7 +309,15 @@ fn open_regular(path: &Path) -> Result<File, Error> {
 fn read_bounded(file: File, cap: u64) -> Result<Vec<u8>, Error> {
     use std::io::Read;
 
-    let mut bytes = Vec::new();
+    // The descriptor is already known to be a regular file, so its own length is
+    // the expected read size; the bound still comes from `cap` and `take`, so a
+    // file that grew after the open cannot read past it.
+    let expected = file
+        .metadata()
+        .map(|metadata| metadata.len())
+        .unwrap_or(0)
+        .min(cap.saturating_add(1));
+    let mut bytes = Vec::with_capacity(usize::try_from(expected).unwrap_or(0));
     file.take(cap.saturating_add(1))
         .read_to_end(&mut bytes)
         .map_err(|_| unreadable())?;
