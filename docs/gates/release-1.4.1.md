@@ -53,9 +53,63 @@ all seven targets, and streaming composition needs an ADR.
 | TypeScript | `tsc`, Biome lint and format, 79 Vitest tests against the rebuilt addon |
 | Documentation guards | `npm run check` PASS at 1.4.1 |
 | Secret scan | `node scripts/check-secrets.mjs` |
-| Performance | All four harnesses in [the budget](../qa/performance-budget.md) §4 at the candidate commit; the metric lines are in the [release notes](../releases/1.4.1.md) and the [audit](../audits/2026-11-27-rust-performance-audit.md) §2 |
+| Performance | All four harnesses in [the budget](../qa/performance-budget.md) §4 at the candidate commit; the printed metric lines are in §3a |
 | Native artifacts | CI `Native artifact` and `Native artifact (musl)` jobs on the candidate commit |
 | Facade hash | from the `Facade hash` dispatch on the candidate commit; never from a laptop |
+
+## 3a. Performance evidence
+
+Run at the candidate commit `5c3423a` on the macOS reference host with the pinned
+toolchain, release profile (`lto = "thin"`, `codegen-units = 1`), and
+`--test-threads=1`. Each line is `metric, p50, p95, min, max, iterations` in
+microseconds, or the named unit where the line says one. Every value is inside
+its budget in [the performance budget](../qa/performance-budget.md) §2.
+
+```text
+cargo test -p sendust-core --release --test perf_serialize -- --ignored --nocapture --test-threads=1
+serialize.1mib_text, 3200, 5070, 2288, 6148, 20
+linearity.1kib, 3, 3, 3, 3, 20
+linearity.1mib, 2387, 2524, 2207, 3069, 20
+linearity.throughput_bytes_per_us, 341.33, 439.29
+validate.small_text, 0, 0, 0, 0, 20
+serialize.small_text, 9, 9, 9, 9, 20
+serialize.10mib_attachment, 30820, 35563, 30117, 36138, 20
+serialize.unicode_long_headers, 167, 188, 138, 228, 20
+```
+
+```text
+cargo test -p sendust-core --release --test perf_attachments -- --ignored --nocapture --test-threads=1
+copy.10mib, 1449, 2093, 20
+read.10mib_file, 1515, 1951, 20
+read.10mib_file.peak_mib, 10.0
+read.over_limit.peak_mib, 10.0
+repeat.20x10mib.residual_mib, 0.0
+serialize.attachment_10mib, 33275, 36798, 20
+serialize.attachment_10mib.peak_mib, 27.4
+serialize.attachment_20mib, 64356, 92654, 20
+serialize.attachment_20mib.peak_mib, 54.7
+serialize.attachment_20mib.wire_mib, 27.4
+```
+
+```text
+npm run build:native && node tests/perf/lifecycle.mjs
+busy.rejection, 17.8, 93.4, 9.3, 102.2, 20
+close.idle, 13.7, 30.0, 10.6, 319.8, 20
+close.during_send, 17.6, 20.2, 15.9, 20.7, 20
+close.cycles, 1000, descriptor_delta, 0
+Node v22.23.5: lifecycle probe passed
+```
+
+```text
+npm run build:native && npm --workspace ./ts run build && node tests/perf/facade.mjs
+facade.send_copy_10mib, 594.1, 1044.7, 476.7, 1201.1, 20
+Node v22.23.5: facade copy probe passed
+```
+
+The two runs of the same harness recorded before the candidate commit moved the
+1 MiB text and the 10 MiB read metrics by more than 20%, so those two are
+recorded as ranges in the [release notes](../releases/1.4.1.md), not as single
+values. The peaks and the residual memory are stable across all three runs.
 
 ## 4. Binary verification
 
