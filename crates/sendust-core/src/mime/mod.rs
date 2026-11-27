@@ -292,9 +292,8 @@ fn build_attachment_part(
     cap: u64,
 ) -> Result<Vec<u8>, Error> {
     let filename = crate::attachments::normalize_filename(filename)?;
-    let mut part = Vec::with_capacity(
-        usize::try_from(base64_wire_len(bytes.len() as u64)).unwrap_or(0) + 512,
-    );
+    let mut part =
+        Vec::with_capacity(usize::try_from(base64_wire_len(bytes.len() as u64)).unwrap_or(0) + 512);
     push_header(
         &mut part,
         "Content-Type",
