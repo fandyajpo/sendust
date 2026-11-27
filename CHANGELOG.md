@@ -8,6 +8,14 @@ tag format, version sources, and compatibility promises — are in
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.4.1] - 2026-11-27
+
+A performance patch from the Rust performance audit of the same day: the buffers
+are sized once, the per-line allocations are gone, and the emitted bytes are
+identical to `1.4.0`.
+
 ### Changed
 
 - The MIME serializer sizes the wire and every part buffer once, reuses one
