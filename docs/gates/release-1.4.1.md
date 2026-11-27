@@ -143,7 +143,7 @@ run, from the job's own `+ <name>@1.4.1` lines and a closing
 | Publisher | `GitHub Actions` with an OIDC trusted-publisher configuration; no npm token |
 | Provenance | `dist.attestations.provenance.predicateType` = `https://slsa.dev/provenance/v1` on every package |
 | npm page | `homepage` = `https://sendust-docs.vercel.app`, `bugs.url` = the issue tracker, 18 keywords |
-| Platform packages | six of the seven resolved `1.4.1` on the first lookup; `linux-arm64-musl` still answered `404` while the job had printed `+ @sendust/ts-linux-arm64-musl@1.4.1` with shasum `121312f4cb404a3d99fad473bb524a00c398aacc`, which is the ingestion lag described below |
+| Platform packages | all seven resolve `1.4.1`; `linux-arm64-musl` answered `404` on the first two lookups and resolved with shasum `121312f4cb404a3d99fad473bb524a00c398aacc`, which is the ingestion lag described below |
 | Optional dependencies | all seven pinned to `1.4.1` |
 
 The registry tarball reproduces the pinned digest byte for byte. npm's read path

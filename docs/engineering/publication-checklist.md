@@ -329,7 +329,7 @@ publishing: eight packages in one run, from the bundle of the approved
 | Registry artifact hash | the tarball at `dist.tarball` hashes to `814bf6c1c0c6b755667cf874c4f125ee72437fc7d3212667a8ea58c54d2e8e67`, the approved facade value from the `Facade hash` job (140607675601) |
 | Registry shasum | `5b9f836942fb90b81b8d1aec367ab6ce0c473c27`, 42 files, 43.0 kB packed, 175.0 kB unpacked |
 | Dist-tags | `latest` `1.4.1`, `next` `1.0.0` |
-| Platform packages | six of seven resolved `1.4.1` on the first lookup; `linux-arm64-musl` still answered `404` while the job had printed its `+ @sendust/ts-linux-arm64-musl@1.4.1` line |
+| Platform packages | all seven resolve `1.4.1`; `linux-arm64-musl` answered `404` on the first two lookups and resolved afterwards with shasum `121312f4cb404a3d99fad473bb524a00c398aacc` |
 | npm page | `homepage`, `bugs.url` and 18 keywords present |
 | Tag | pending the owner: `v1.4.1` on the approved commit `24bd21a3c47237a9cdf16d079c528f7d17830f59` |
 | GitHub Release | pending the owner |
